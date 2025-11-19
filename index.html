@@ -3,91 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baddonz - Skrypt Użytkownika</title>
+    <title>Baddonz - Skrypty Użytkownika</title>
     <style>
-        /* GLOBALNE STYLOWANIE I TŁO */
+        /* CSS RESET I GLOBALNE STYLOWANIE */
         body {
-            background-color: #0d1117; /* Bardzo ciemne tło */
-            color: #c9d1d9; /* Jasny tekst na ciemnym tle */
+            background-color: #0d1117; 
+            color: #c9d1d9;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
+            overflow-x: hidden; /* Zapobieganie przewijaniu w poziomie podczas animacji */
+            scroll-behavior: smooth; /* Płynne przewijanie do sekcji */
+        }
+        
+        /* GŁÓWNA SEKCJA (WIDOK STARTOWY) */
+        .header-section {
+            height: 100vh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
             text-align: center;
-            overflow: hidden; /* Zapobieganie przewijaniu przy animacjach */
         }
 
-        /* NAGŁÓWEK */
+        /* NAGŁÓWEK Z ANIMACJĄ Z GÓRY */
         h1 {
-            font-size: 4em;
-            margin-bottom: 40px;
-            color: #58a6ff; /* Kolor nagłówka (spójny z linkiem instalacyjnym) */
-            text-shadow: 0 0 15px rgba(88, 166, 255, 0.7); /* Większa poświata */
-            font-weight: 700;
-            transition: color 0.5s ease-in-out; /* Delikatna animacja koloru przycisku */
+            font-size: 5em;
+            margin-bottom: 20px;
+            color: #58a6ff; 
+            text-shadow: 0 0 20px rgba(88, 166, 255, 0.7);
+            font-weight: 800;
+            opacity: 0; /* Ukryty na początku */
+            animation: flyDown 1.5s ease-out forwards; /* Animacja opadania */
+        }
+        @keyframes flyDown {
+            0% { transform: translateY(-100px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
         }
 
-        /* PRZYCISK ZAINSTALUJ */
+        /* SEKCJA INSTALACJI (DOCELOWA) */
+        .install-section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 50px 0;
+            background-color: #161b22; /* Lekko inny odcień dla kontrastu */
+            border-top: 3px solid #58a6ff;
+            text-align: center;
+        }
+        .install-section h2 {
+            font-size: 2.5em;
+            color: #58a6ff;
+            margin-bottom: 50px;
+        }
+
+        /* IKONA DISCORDA (W LEWYM DOLNYM ROGU) */
+        .discord-icon {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+            opacity: 0; /* Ukryta na początku */
+            animation: flyLeft 1s ease-out 1s forwards; /* Animacja przylotu z opóźnieniem */
+        }
+        @keyframes flyLeft {
+            0% { transform: translateX(-100px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        .discord-icon img {
+            width: 50px;
+            height: 50px;
+            transition: transform 0.2s ease-in-out;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(88, 166, 255, 0.5);
+        }
+        .discord-icon img:hover {
+            transform: scale(1.1);
+        }
+        
+        /* --- STYLOWANIE I ANIMACJE PRZYCISKU (Z POPRZEDNIEJ WERSJI) --- */
         .install-button {
             display: inline-block;
-            padding: 18px 45px; /* Trochę większy przycisk */
-            font-size: 1.6em; /* Nieco większy tekst */
+            padding: 18px 45px;
+            font-size: 1.6em;
             font-weight: bold;
             text-decoration: none;
-            color: #ffffff; /* Biały tekst na przycisku */
-            background: linear-gradient(135deg, #58a6ff, #8a2be2); /* Gradient jako tło przycisku */
-            border-radius: 12px; /* Bardziej zaokrąglone rogi */
+            color: #ffffff;
+            background: linear-gradient(135deg, #58a6ff, #8a2be2);
+            border-radius: 12px;
             transition: background 0.4s ease-in-out, transform 0.3s ease-out, box-shadow 0.3s ease-out;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8); /* Mocniejszy cień */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
             border: none;
             cursor: pointer;
             position: relative;
-            overflow: hidden; /* Aby animacja gradientu działała w tle */
+            overflow: hidden;
             z-index: 1;
         }
-
         /* ANIMACJA TĘCZOWA DLA TEKSTU "ZAINSTALUJ" */
         .install-button span {
             position: relative;
-            z-index: 2; /* Upewnia się, że tekst jest nad gradientem */
-            background: linear-gradient(
-                90deg,
-                #ff0000, /* Czerwony */
-                #ffa500, /* Pomarańczowy */
-                #ffff00, /* Żółty */
-                #008000, /* Zielony */
-                #0000ff, /* Niebieski */
-                #4b0082, /* Indygo */
-                #ee82ee  /* Fioletowy */
-            );
-            background-size: 400% 100%; /* Rozciągnij gradient, aby animacja była płynna */
-            -webkit-background-clip: text; /* Przytnij tło do kształtu tekstu */
-            -webkit-text-fill-color: transparent; /* Spraw, aby tekst był przezroczysty i widoczny był gradient */
-            animation: rainbow 6s linear infinite; /* Animacja tęczy */
+            z-index: 2; 
+            background: linear-gradient(90deg, #ff0000, #ffa500, #ffff00, #008000, #0000ff, #4b0082, #ee82ee);
+            background-size: 400% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow 6s linear infinite; 
         }
-
         @keyframes rainbow {
             0% { background-position: 0% 50%; }
             100% { background-position: 100% 50%; }
         }
-
         /* EFEKT HOVER (najechanie myszką) */
         .install-button:hover {
-            background: linear-gradient(135deg, #8a2be2, #58a6ff); /* Odwrócony lub zmieniony gradient */
-            transform: translateY(-5px) scale(1.03); /* Większe podniesienie i delikatne powiększenie */
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.9); /* Jeszcze mocniejszy cień */
+            background: linear-gradient(135deg, #8a2be2, #58a6ff); 
+            transform: translateY(-5px) scale(1.03); 
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.9); 
         }
 
-        /* W przypadku, gdy chcesz, żeby cały przycisk był tęczowy, a nie tylko tekst, 
-           usuń `.install-button span` i przenieś styl `background: linear-gradient(...)` 
-           do `.install-button` oraz usuń `--webkit-background-clip` itd. */
+        /* ANIMACJA PRZEWIJANIA PO ZAŁADOWANIU (ZA POMOCĄ JAVASCRIPT) */
+        /* Ten styl jest ważny, aby strona zjechała do sekcji instalacji */
     </style>
 </head>
-<body>
-    <div>
+<body onload="setTimeout(scrollToInstall, 1500)"> 
+    <a 
+        href="TWOJA_NAZWA_SERWERA_DISCORD" 
+        target="_blank" 
+        class="discord-icon"
+        title="Dołącz do Discorda Baddonz"
+    >
+         
+    </a>
+    
+    <div class="header-section">
         <h1>Baddonz</h1>
+    </div>
+
+    <div class="install-section" id="instalacja">
+        <h2>Instalacja Skryptu Użytkownika</h2>
         
         <a 
             href="https://besiak6.github.io/scripts/baddonz/autox.js" 
@@ -97,5 +150,15 @@
             <span>Zainstaluj</span>
         </a>
     </div>
+
+    <script>
+        function scrollToInstall() {
+            // Przewija stronę do elementu o id="instalacja" z płynnym efektem
+            document.getElementById('instalacja').scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+    </script>
 </body>
 </html>
