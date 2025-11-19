@@ -7,51 +7,82 @@
     <style>
         /* GLOBALNE STYLOWANIE I TŁO */
         body {
-            /* Nowoczesne, bardzo ciemne tło */
-            background-color: #0d1117; 
+            background-color: #0d1117; /* Bardzo ciemne tło */
             color: #c9d1d9; /* Jasny tekst na ciemnym tle */
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             display: flex;
-            justify-content: center; /* Wyśrodkowanie w poziomie */
-            align-items: center;     /* Wyśrodkowanie w pionie */
+            justify-content: center;
+            align-items: center;
             min-height: 100vh;
             text-align: center;
+            overflow: hidden; /* Zapobieganie przewijaniu przy animacjach */
         }
 
         /* NAGŁÓWEK */
         h1 {
             font-size: 4em;
             margin-bottom: 40px;
-            /* Kolor podobny do logo GitHub lub akcent zielony */
-            color: #58a6ff; 
-            text-shadow: 0 0 10px rgba(88, 166, 255, 0.5); /* Lekka poświata */
+            color: #58a6ff; /* Kolor nagłówka (spójny z linkiem instalacyjnym) */
+            text-shadow: 0 0 15px rgba(88, 166, 255, 0.7); /* Większa poświata */
             font-weight: 700;
+            transition: color 0.5s ease-in-out; /* Delikatna animacja koloru przycisku */
         }
 
         /* PRZYCISK ZAINSTALUJ */
         .install-button {
             display: inline-block;
-            padding: 15px 40px;
-            font-size: 1.5em;
+            padding: 18px 45px; /* Trochę większy przycisk */
+            font-size: 1.6em; /* Nieco większy tekst */
             font-weight: bold;
             text-decoration: none;
-            color: #ffffff;
-            /* Czysty, wyraźny kolor przycisku */
-            background-color: #238636; 
-            border-radius: 8px;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6); /* Mocniejszy cień */
+            color: #ffffff; /* Biały tekst na przycisku */
+            background: linear-gradient(135deg, #58a6ff, #8a2be2); /* Gradient jako tło przycisku */
+            border-radius: 12px; /* Bardziej zaokrąglone rogi */
+            transition: background 0.4s ease-in-out, transform 0.3s ease-out, box-shadow 0.3s ease-out;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8); /* Mocniejszy cień */
             border: none;
             cursor: pointer;
+            position: relative;
+            overflow: hidden; /* Aby animacja gradientu działała w tle */
+            z-index: 1;
+        }
+
+        /* ANIMACJA TĘCZOWA DLA TEKSTU "ZAINSTALUJ" */
+        .install-button span {
+            position: relative;
+            z-index: 2; /* Upewnia się, że tekst jest nad gradientem */
+            background: linear-gradient(
+                90deg,
+                #ff0000, /* Czerwony */
+                #ffa500, /* Pomarańczowy */
+                #ffff00, /* Żółty */
+                #008000, /* Zielony */
+                #0000ff, /* Niebieski */
+                #4b0082, /* Indygo */
+                #ee82ee  /* Fioletowy */
+            );
+            background-size: 400% 100%; /* Rozciągnij gradient, aby animacja była płynna */
+            -webkit-background-clip: text; /* Przytnij tło do kształtu tekstu */
+            -webkit-text-fill-color: transparent; /* Spraw, aby tekst był przezroczysty i widoczny był gradient */
+            animation: rainbow 6s linear infinite; /* Animacja tęczy */
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
         }
 
         /* EFEKT HOVER (najechanie myszką) */
         .install-button:hover {
-            background-color: #38b44e; /* Jaśniejszy kolor przy najechaniu */
-            transform: translateY(-3px); /* Subtelne podniesienie */
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+            background: linear-gradient(135deg, #8a2be2, #58a6ff); /* Odwrócony lub zmieniony gradient */
+            transform: translateY(-5px) scale(1.03); /* Większe podniesienie i delikatne powiększenie */
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.9); /* Jeszcze mocniejszy cień */
         }
+
+        /* W przypadku, gdy chcesz, żeby cały przycisk był tęczowy, a nie tylko tekst, 
+           usuń `.install-button span` i przenieś styl `background: linear-gradient(...)` 
+           do `.install-button` oraz usuń `--webkit-background-clip` itd. */
     </style>
 </head>
 <body>
@@ -59,11 +90,11 @@
         <h1>Baddonz</h1>
         
         <a 
-            href="https://besiak6.github.io/scripts/baddonz.user.js" 
+            href="https://besiak6.github.io/scripts/baddonz/autox.js" 
             class="install-button"
             target="_blank"  
         >
-            Zainstaluj
+            <span>Zainstaluj</span>
         </a>
     </div>
 </body>
