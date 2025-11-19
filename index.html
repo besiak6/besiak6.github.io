@@ -12,128 +12,107 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             display: flex;
+            flex-direction: column; /* Umożliwia stopce bycie na dole */
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             text-align: center;
-            overflow: hidden; /* Tylko to jest potrzebne, aby nic nie wychodziło poza ekran */
+            overflow: hidden; 
         }
-        
-        /* GŁÓWNY KONTENER NA CAŁĄ TREŚĆ */
+
+        /* GŁÓWNY KONTENER Z ANIMACJĄ HOVER */
         .main-container {
-            /* Wyjściowa pozycja: niewidoczna i przesunięta w dół */
+            /* Animacja przylotu z góry */
             opacity: 0; 
-            transform: translateY(50px);
-            
-            /* Animacja: Zniknięcie z cienia, wyśrodkowanie */
-            animation: fadeInAndCenter 1.5s ease-out forwards; 
-            animation-delay: 0.5s; /* Opóźnienie po załadowaniu */
+            transform: translateY(-50px);
+            animation: flyDown 1.5s ease-out forwards;
+            animation-delay: 0.2s;
+
+            /* Ustawienia dla animacji rozszerzania */
+            height: 100px; /* Początkowa wysokość (tylko na tytuł) */
+            transition: all 0.5s ease-in-out; /* Płynna zmiana wysokości */
+            overflow: hidden; /* Ukrywa przycisk */
 
             padding: 40px;
             border-radius: 15px;
             background-color: #161b22;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            cursor: pointer; /* Wizualna wskazówka, że można kliknąć/najechać */
         }
 
-        /* ANIMACJA POJAWIANIA SIĘ CAŁEGO KONTENERA */
-        @keyframes fadeInAndCenter {
-            0% { opacity: 0; transform: translateY(50px); box-shadow: 0 0 0 rgba(0, 0, 0, 0); }
-            100% { opacity: 1; transform: translateY(0); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
+        /* ANIMACJA PRZYLOTU TYTUŁU Z GÓRY */
+        @keyframes flyDown {
+            0% { transform: translateY(-100px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
         }
 
         /* NAGŁÓWEK (Tekst Baddonz) */
         h1 {
             font-size: 4em;
-            margin-bottom: 40px;
+            margin-bottom: 0; /* Usunięcie marginesu, by móc go powiększyć przy hover */
             color: #58a6ff; 
             text-shadow: 0 0 15px rgba(88, 166, 255, 0.7);
             font-weight: 700;
         }
 
+        /* STAN HOVER: ROZSZERZANIE I ODSŁONIĘCIE PRZYCISKU */
+        .main-container:hover {
+            height: 250px; /* Nowa, większa wysokość */
+            box-shadow: 0 15px 50px rgba(88, 166, 255, 0.3); /* Cień podświetlony na niebiesko */
+        }
+        
         /* PRZYCISK ZAINSTALUJ */
         .install-button {
-            display: inline-block;
-            padding: 18px 45px;
-            font-size: 1.6em;
+            display: block; /* Ustawienie na blok, by był pod tytułem */
+            margin-top: 50px; /* Odstęp od tytułu po rozwinięciu */
+            padding: 15px 40px;
+            font-size: 1.5em;
             font-weight: bold;
             text-decoration: none;
             color: #ffffff;
-            /* Lepszy, bardziej spójny gradient przycisku */
-            background: linear-gradient(135deg, #58a6ff, #8a2be2); 
-            border-radius: 12px;
-            transition: background 0.4s ease-in-out, transform 0.3s ease-out, box-shadow 0.3s ease-out;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8); 
+            /* Prosty, czysty styl dla przycisku */
+            background-color: #58a6ff; 
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); 
             border: none;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            z-index: 1;
         }
 
-        /* ANIMACJA TĘCZOWA DLA TEKSTU "ZAINSTALUJ" (Bez zmian) */
-        .install-button span {
-            position: relative;
-            z-index: 2; 
-            background: linear-gradient(90deg, #ff0000, #ffa500, #ffff00, #008000, #0000ff, #4b0082, #ee82ee);
-            background-size: 400% 100%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: rainbow 6s linear infinite; 
-        }
-        @keyframes rainbow {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 100% 50%; }
-        }
-
-        /* NOWA LEPSZA ANIMACJA HOVER PRZYCISKU */
+        /* ANIMACJA HOVER PRZYCISKU */
         .install-button:hover {
-            background: linear-gradient(135deg, #8a2be2, #58a6ff); 
-            transform: scale(1.05); /* Płynne, duże powiększenie */
-            box-shadow: 0 15px 40px rgba(88, 166, 255, 0.5); /* Duży, niebieski cień */
+            background-color: #79b7ff; /* Jaśniejszy kolor */
+            transform: scale(1.05); /* Lekkie powiększenie */
         }
-        
-        /* IKONA DISCORDA - LEWY DÓŁ */
-        .discord-icon {
+
+        /* --- PASEK STOPKI NA DOLE STRONY --- */
+        .footer-bar {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            z-index: 1000;
-            opacity: 0; 
-            transform: translateX(-100px); /* Początkowa pozycja: poza ekranem po lewej */
-            
-            /* Animacja: Wjazd z lewej strony z lekkim opóźnieniem */
-            animation: flyIn 1s ease-out 1.2s forwards; 
+            bottom: 0;
+            width: 100%;
+            background-color: #1f242d; /* Ciemniejszy kolor dla kontrastu */
+            padding: 10px 0;
+            text-align: center;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
         }
-        @keyframes flyIn {
-            0% { transform: translateX(-100px); opacity: 0; }
-            100% { transform: translateX(0); opacity: 1; }
+        .footer-icon-link {
+            display: inline-block;
+            margin: 0 15px;
+            transition: transform 0.2s ease-in-out;
         }
-        .discord-icon img {
-            width: 50px;
-            height: 50px;
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s;
-            border-radius: 50%;
-            /* Oficjalna ikona Discorda, hostowana na CDN */
-            content: url('https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/discord.svg'); 
-            filter: invert(1); /* Odwrócenie koloru SVG na biały */
+        .footer-icon-link:hover {
+            transform: translateY(-3px) scale(1.1); /* Podniesienie i powiększenie ikony */
         }
-        .discord-icon img:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 20px #58a6ff; /* Niebieski cień przy najechaniu */
+        .footer-icon-link img {
+            width: 30px;
+            height: 30px;
+            /* Użycie ikony Discorda z CDN */
+            content: url('https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/discord.svg');
+            filter: invert(0.8); /* Jasna ikona na ciemnym tle */
         }
         
     </style>
 </head>
 <body>
-    
-    <a 
-        href="TUTAJ_WKLEJ_SWÓJ_LINK_DO_DISCORDA" 
-        target="_blank" 
-        class="discord-icon"
-        title="Dołącz do Discorda Baddonz"
-    >
-        <img alt="Discord Logo">
-    </a>
     
     <div class="main-container">
         <h1>Baddonz</h1>
@@ -143,8 +122,19 @@
             class="install-button"
             target="_blank"  
         >
-            <span>Zainstaluj</span>
+            Zainstaluj
         </a>
     </div>
+
+    <div class="footer-bar">
+        <a 
+            href="TUTAJ_WKLEJ_SWÓJ_LINK_DO_DISCORDA" 
+            target="_blank" 
+            class="footer-icon-link"
+            title="Dołącz do Discorda"
+        >
+            <img alt="Discord Logo">
+        </a>
+        </div>
 </body>
 </html>
