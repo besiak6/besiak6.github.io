@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baddonz - Skrypt Użytkownika</title>
+    <style>
+        /* GLOBALNE STYLOWANIE I TŁO */
+        body {
+            /* Nowoczesne, bardzo ciemne tło */
+            background-color: #0d1117; 
+            color: #c9d1d9; /* Jasny tekst na ciemnym tle */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center; /* Wyśrodkowanie w poziomie */
+            align-items: center;     /* Wyśrodkowanie w pionie */
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        /* NAGŁÓWEK */
+        h1 {
+            font-size: 4em;
+            margin-bottom: 40px;
+            /* Kolor podobny do logo GitHub lub akcent zielony */
+            color: #58a6ff; 
+            text-shadow: 0 0 10px rgba(88, 166, 255, 0.5); /* Lekka poświata */
+            font-weight: 700;
+        }
+
+        /* PRZYCISK ZAINSTALUJ */
+        .install-button {
+            display: inline-block;
+            padding: 15px 40px;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-decoration: none;
+            color: #ffffff;
+            /* Czysty, wyraźny kolor przycisku */
+            background-color: #238636; 
+            border-radius: 8px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6); /* Mocniejszy cień */
+            border: none;
+            cursor: pointer;
+        }
+
+        /* EFEKT HOVER (najechanie myszką) */
+        .install-button:hover {
+            background-color: #38b44e; /* Jaśniejszy kolor przy najechaniu */
+            transform: translateY(-3px); /* Subtelne podniesienie */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1>Baddonz</h1>
+        
+        <a 
+            href="https://besiak6.github.io/scripts/baddonz.user.js" 
+            class="install-button"
+            target="_blank"  
+        >
+            Zainstaluj
+        </a>
+    </div>
+</body>
+</html>
