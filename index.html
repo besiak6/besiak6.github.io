@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baddonz - Skrypty Użytkownika</title>
+    <title>Baddonz - Skrypt Użytkownika</title>
     <style>
         /* CSS RESET I GLOBALNE STYLOWANIE */
         body {
@@ -11,78 +11,46 @@
             color: #c9d1d9;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            overflow-x: hidden; /* Zapobieganie przewijaniu w poziomie podczas animacji */
-            scroll-behavior: smooth; /* Płynne przewijanie do sekcji */
-        }
-        
-        /* GŁÓWNA SEKCJA (WIDOK STARTOWY) */
-        .header-section {
-            height: 100vh;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
-            text-align: center;
-        }
-
-        /* NAGŁÓWEK Z ANIMACJĄ Z GÓRY */
-        h1 {
-            font-size: 5em;
-            margin-bottom: 20px;
-            color: #58a6ff; 
-            text-shadow: 0 0 20px rgba(88, 166, 255, 0.7);
-            font-weight: 800;
-            opacity: 0; /* Ukryty na początku */
-            animation: flyDown 1.5s ease-out forwards; /* Animacja opadania */
-        }
-        @keyframes flyDown {
-            0% { transform: translateY(-100px); opacity: 0; }
-            100% { transform: translateY(0); opacity: 1; }
-        }
-
-        /* SEKCJA INSTALACJI (DOCELOWA) */
-        .install-section {
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 50px 0;
-            background-color: #161b22; /* Lekko inny odcień dla kontrastu */
-            border-top: 3px solid #58a6ff;
             text-align: center;
-        }
-        .install-section h2 {
-            font-size: 2.5em;
-            color: #58a6ff;
-            margin-bottom: 50px;
-        }
-
-        /* IKONA DISCORDA (W LEWYM DOLNYM ROGU) */
-        .discord-icon {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            z-index: 1000;
-            opacity: 0; /* Ukryta na początku */
-            animation: flyLeft 1s ease-out 1s forwards; /* Animacja przylotu z opóźnieniem */
-        }
-        @keyframes flyLeft {
-            0% { transform: translateX(-100px); opacity: 0; }
-            100% { transform: translateX(0); opacity: 1; }
-        }
-        .discord-icon img {
-            width: 50px;
-            height: 50px;
-            transition: transform 0.2s ease-in-out;
-            border-radius: 50%;
-            box-shadow: 0 0 15px rgba(88, 166, 255, 0.5);
-        }
-        .discord-icon img:hover {
-            transform: scale(1.1);
+            overflow: hidden; /* Tylko to jest potrzebne, aby nic nie wychodziło poza ekran */
         }
         
-        /* --- STYLOWANIE I ANIMACJE PRZYCISKU (Z POPRZEDNIEJ WERSJI) --- */
+        /* GŁÓWNY KONTENER NA CAŁĄ TREŚĆ */
+        .main-container {
+            /* Wyjściowa pozycja: niewidoczna i przesunięta w dół */
+            opacity: 0; 
+            transform: translateY(50px);
+            
+            /* Animacja: Zniknięcie z cienia, wyśrodkowanie */
+            animation: fadeInAndCenter 1.5s ease-out forwards; 
+            animation-delay: 0.5s; /* Opóźnienie po załadowaniu */
+
+            padding: 40px;
+            border-radius: 15px;
+            background-color: #161b22;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ANIMACJA POJAWIANIA SIĘ CAŁEGO KONTENERA */
+        @keyframes fadeInAndCenter {
+            0% { opacity: 0; transform: translateY(50px); box-shadow: 0 0 0 rgba(0, 0, 0, 0); }
+            100% { opacity: 1; transform: translateY(0); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
+        }
+
+        /* NAGŁÓWEK (Tekst Baddonz) */
+        h1 {
+            font-size: 4em;
+            margin-bottom: 40px;
+            color: #58a6ff; 
+            text-shadow: 0 0 15px rgba(88, 166, 255, 0.7);
+            font-weight: 700;
+        }
+
+        /* PRZYCISK ZAINSTALUJ */
         .install-button {
             display: inline-block;
             padding: 18px 45px;
@@ -90,17 +58,19 @@
             font-weight: bold;
             text-decoration: none;
             color: #ffffff;
-            background: linear-gradient(135deg, #58a6ff, #8a2be2);
+            /* Lepszy, bardziej spójny gradient przycisku */
+            background: linear-gradient(135deg, #58a6ff, #8a2be2); 
             border-radius: 12px;
             transition: background 0.4s ease-in-out, transform 0.3s ease-out, box-shadow 0.3s ease-out;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8); 
             border: none;
             cursor: pointer;
             position: relative;
             overflow: hidden;
             z-index: 1;
         }
-        /* ANIMACJA TĘCZOWA DLA TEKSTU "ZAINSTALUJ" */
+
+        /* ANIMACJA TĘCZOWA DLA TEKSTU "ZAINSTALUJ" (Bez zmian) */
         .install-button span {
             position: relative;
             z-index: 2; 
@@ -114,33 +84,59 @@
             0% { background-position: 0% 50%; }
             100% { background-position: 100% 50%; }
         }
-        /* EFEKT HOVER (najechanie myszką) */
+
+        /* NOWA LEPSZA ANIMACJA HOVER PRZYCISKU */
         .install-button:hover {
             background: linear-gradient(135deg, #8a2be2, #58a6ff); 
-            transform: translateY(-5px) scale(1.03); 
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.9); 
+            transform: scale(1.05); /* Płynne, duże powiększenie */
+            box-shadow: 0 15px 40px rgba(88, 166, 255, 0.5); /* Duży, niebieski cień */
         }
-
-        /* ANIMACJA PRZEWIJANIA PO ZAŁADOWANIU (ZA POMOCĄ JAVASCRIPT) */
-        /* Ten styl jest ważny, aby strona zjechała do sekcji instalacji */
+        
+        /* IKONA DISCORDA - LEWY DÓŁ */
+        .discord-icon {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+            opacity: 0; 
+            transform: translateX(-100px); /* Początkowa pozycja: poza ekranem po lewej */
+            
+            /* Animacja: Wjazd z lewej strony z lekkim opóźnieniem */
+            animation: flyIn 1s ease-out 1.2s forwards; 
+        }
+        @keyframes flyIn {
+            0% { transform: translateX(-100px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+        .discord-icon img {
+            width: 50px;
+            height: 50px;
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s;
+            border-radius: 50%;
+            /* Oficjalna ikona Discorda, hostowana na CDN */
+            content: url('https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/discord.svg'); 
+            filter: invert(1); /* Odwrócenie koloru SVG na biały */
+        }
+        .discord-icon img:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 20px #58a6ff; /* Niebieski cień przy najechaniu */
+        }
+        
     </style>
 </head>
-<body onload="setTimeout(scrollToInstall, 1500)"> 
+<body>
+    
     <a 
-        href="TWOJA_NAZWA_SERWERA_DISCORD" 
+        href="TUTAJ_WKLEJ_SWÓJ_LINK_DO_DISCORDA" 
         target="_blank" 
         class="discord-icon"
         title="Dołącz do Discorda Baddonz"
     >
-         
+        <img alt="Discord Logo">
     </a>
     
-    <div class="header-section">
+    <div class="main-container">
         <h1>Baddonz</h1>
-    </div>
-
-    <div class="install-section" id="instalacja">
-        <h2>Instalacja Skryptu Użytkownika</h2>
         
         <a 
             href="https://besiak6.github.io/scripts/baddonz/autox.js" 
@@ -150,15 +146,5 @@
             <span>Zainstaluj</span>
         </a>
     </div>
-
-    <script>
-        function scrollToInstall() {
-            // Przewija stronę do elementu o id="instalacja" z płynnym efektem
-            document.getElementById('instalacja').scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-    </script>
 </body>
 </html>
