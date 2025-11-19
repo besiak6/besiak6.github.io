@@ -25,6 +25,25 @@
             overflow: hidden;
         }
 
+        /* --- ANIMACJE (KLUCZOWE KLATKI) --- */
+
+        @keyframes slideDown {
+            0% { transform: translateY(-100px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            0% { transform: translateY(50px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes slideLeft {
+            0% { transform: translateX(-100px); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        /* --- STYLOWANIE I APLIKOWANIE ANIMACJI --- */
+
         .content {
             padding: 40px 20px;
             z-index: 10;
@@ -36,12 +55,22 @@
             color: #58a6ff; 
             text-shadow: 0 0 15px rgba(88, 166, 255, 0.5);
             font-weight: 800;
+            
+            /* Animacja: Nagłówek (Baddonz) - Z góry */
+            opacity: 0;
+            animation: slideDown 1s ease-out forwards; 
+            animation-delay: 0.3s;
         }
 
         .subtitle {
             font-size: 1.2em;
             margin-bottom: 40px;
             color: #c9d1d9;
+            
+            /* Animacja: Opis (Subtitle) - Z dołu */
+            opacity: 0;
+            animation: slideUp 1s ease-out forwards; 
+            animation-delay: 0.7s; 
         }
 
         .install-button {
@@ -56,6 +85,11 @@
             transition: background-color 0.2s, transform 0.2s;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); 
             border: none;
+            
+            /* Animacja: Przycisk (Button) - Z dołu (później) */
+            opacity: 0;
+            animation: slideUp 1s ease-out forwards; 
+            animation-delay: 1.1s;
         }
 
         .install-button:hover {
@@ -70,9 +104,14 @@
             left: 20px;
             z-index: 1000;
             transition: transform 0.2s;
-            color: #58a6ff; /* Kolor niebieski dla Font Awesome */
-            font-size: 40px; /* Rozmiar ikony */
+            color: #58a6ff; 
+            font-size: 40px; 
             text-decoration: none;
+            
+            /* Animacja: Ikona Discorda - Z lewej */
+            opacity: 0;
+            animation: slideLeft 1s ease-out forwards; 
+            animation-delay: 1.5s; 
         }
 
         .discord-icon-fixed:hover {
