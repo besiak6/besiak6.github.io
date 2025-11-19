@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baddonz - Skrypty Użytkownika</title>
+    
+    <title>Baddonz - Skrypt Użytkownika</title>
+    
+    <link rel="icon" type="image/png" href="https://i.imgur.com/OAtRFEw.png">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <style>
-        /* CSS RESET I GLOBALNE STYLOWANIE */
         body {
-            /* Tło podobne do przykładu: gradient ciemny fiolet/niebieski */
-            background: linear-gradient(135deg, #0d1117, #1b0033, #0d1117); 
+            background: linear-gradient(135deg, #0d1117, #1b0033); 
             color: #c9d1d9;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
@@ -21,31 +25,25 @@
             overflow: hidden;
         }
 
-        /* GŁÓWNY KONTENER (Centralna Zawartość) */
-        .main-content {
+        .content {
             padding: 40px 20px;
-            background-color: rgba(22, 27, 34, 0.5); /* Półprzezroczyste tło dla lepszego kontrastu */
-            border-radius: 10px;
+            z-index: 10;
         }
 
-        /* NAGŁÓWEK BADDONZ */
         h1 {
             font-size: 5em;
             margin-bottom: 5px;
-            /* Kolor spójny z tłem (fiolet/niebieski akcent) */
-            color: #8a2be2; 
-            text-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+            color: #58a6ff; 
+            text-shadow: 0 0 15px rgba(88, 166, 255, 0.5);
             font-weight: 800;
         }
 
-        /* PODNAGŁÓWEK */
         .subtitle {
             font-size: 1.2em;
             margin-bottom: 40px;
             color: #c9d1d9;
         }
 
-        /* PRZYCISK ZAINSTALUJ (PROSTY) */
         .install-button {
             display: inline-block;
             padding: 12px 30px;
@@ -53,34 +51,30 @@
             font-weight: 600;
             text-decoration: none;
             color: #ffffff;
-            /* Jednolity, czysty kolor */
-            background-color: #8a2be2; 
+            background-color: #58a6ff; 
             border-radius: 6px;
-            transition: background-color 0.2s ease; /* Subtelna zmiana przy najechaniu */
+            transition: background-color 0.2s, transform 0.2s;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); 
             border: none;
         }
 
-        /* MINIMALNY HOVER PRZYCISKU */
         .install-button:hover {
-            background-color: #9c4be9; /* Lekko jaśniejszy kolor fioletu */
+            background-color: #79b7ff; 
+            transform: translateY(-2px);
         }
 
-        /* --- IKONA DISCORDA (Lewy Dolny Róg) --- */
+        /* IKONA DISCORDA - LEWY DÓŁ */
         .discord-icon-fixed {
             position: fixed;
             bottom: 20px;
             left: 20px;
             z-index: 1000;
             transition: transform 0.2s;
+            color: #58a6ff; /* Kolor niebieski dla Font Awesome */
+            font-size: 40px; /* Rozmiar ikony */
+            text-decoration: none;
         }
-        .discord-icon-fixed img {
-            width: 40px;
-            height: 40px;
-            /* Użycie ikony Discorda z CDN */
-            content: url('https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/discord.svg'); 
-            filter: invert(1); /* Odwrócenie koloru SVG na biały */
-        }
+
         .discord-icon-fixed:hover {
             transform: scale(1.1);
         }
@@ -88,7 +82,7 @@
 </head>
 <body>
     
-    <div class="main-content">
+    <div class="content">
         <h1>Baddonz</h1>
         
         <p class="subtitle">Dodatki do Margonem na Nowy Interfejs</p>
@@ -108,7 +102,7 @@
         class="discord-icon-fixed"
         title="Dołącz do Discorda Baddonz"
     >
-        <img alt="Discord Logo">
+        <i class="fab fa-discord"></i>
     </a>
 </body>
 </html>
