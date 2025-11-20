@@ -1356,67 +1356,96 @@ min-width: 220px;
 .baddonz-type-icon.cl-29 {
     background-position: -401px -100px;
 }
-.baddonz-changelog-card {
-    padding: 12px 14px;
-    background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.06));
-    border-color: #666;
-    max-width: 100%;
-}
+/* ==================================================== */
+/* --- SEKCJA CHANGELOGS (NAPRAWIONE WCIĘCIA) --- */
+/* (Wymaga klasy baddonz-changelog-content na kontenerze logów) */
+/* ==================================================== */
 
-.baddonz-changelog-title {
-    padding-left: 4px;
-    font-size: 13px;
-    color: beige;
-}
-
+/* GŁÓWNY KONTENER DLA CHANGELOGÓW */
 .baddonz-changelog-content {
-    padding-left: 4px;
+    /* Upewnienie się, że tło jest przezroczyste lub pasuje do reszty */
+    padding: 0 10px 10px 10px; /* Lekkie wcięcie wewnętrzne */
+    background: none;
     color: #ccc;
 }
 
-/* H1 - version header (closest to left edge) */
-.baddonz-changelog-card h1 {
-    margin: 0 0 8px 0;
-    padding-left: 0;
-    font-size: 15px;
-    font-weight: 800;
-    color: #fff;
+/* KARTA/BLOK POJEDYNCZEJ WERSJI (STYL DLA ELEMENTÓW WEWNĄTRZ) */
+/* Dodajemy górny margines dla separacji kolejnych wpisów logów */
+.baddonz-changelog-content h3, 
+.baddonz-changelog-content div {
+    /* Stosujemy ten sam styl do h3 (tytuł wersji) i div (zawartość) */
+    background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.08));
+    border: 1px solid #444;
+    border-radius: 4px;
+    margin: 15px 0 0 0; /* Separacja od poprzedniego wpisu */
+    padding: 8px 12px;
+}
+.baddonz-changelog-content h3 {
+    padding: 10px 12px;
+    margin-top: 20px; /* Większa separacja dla nowego bloku wersji */
 }
 
-/* H2 - sections */
-.baddonz-changelog-card h2 {
-    margin: 8px 0 6px 0;
-    padding-left: 15px;
+
+/* STYLIZACJA TYTUŁU WERSJI (np. Wersja 1.06) */
+.baddonz-changelog-version {
+    font-size: 14px;
+    font-weight: bold;
+    color: #FEE7C8; /* Jasny, widoczny kolor */
+    border-bottom: 1px solid #8888;
+    margin-bottom: 0;
+    padding-bottom: 5px;
+    text-shadow: 1px 1px 2px #000;
+}
+
+/* GŁÓWNY KONTENER TREŚCI ZMIAN */
+.baddonz-changelog-changes {
+    /* Poprawiamy wygląd list i nagłówków wewnątrz */
+    border-top: none; /* Łączymy z h3 */
+    margin-top: -1px; /* Aby połączyło się z h3 */
+    padding-top: 10px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+/* Style dla wewnętrznych Nagłówków (H3/H4 z treści zmian, jak "Poprawiono", "Dodano") */
+/* W skrypcie używasz H3 wewnątrz changelogs (np. <h3>Poprawiono:</h3>) */
+.baddonz-changelog-changes h3 {
+    margin: 8px 0 4px 0;
+    padding: 0; /* Usuwamy padding karty z wewnątrz */
     font-size: 13px;
     font-weight: 700;
-    color: #dcdcdc;
+    color: #87CEEB; /* Jasnoniebieski dla sekcji (np. Zmiany:, Dodano:) */
+    background: none;
+    border: none;
+    border-radius: 0;
+    text-transform: uppercase;
+    
+}
+/* Style dla paragrafów wewnątrz (np. <i>Poprawiłem pare dodatków</i>) */
+.baddonz-changelog-changes p {
+    margin: 5px 0;
+    font-style: italic;
+    padding-left: 10px;
 }
 
-/* H3 - subitems (if used) */
-.baddonz-changelog-card h3 {
-    margin: 6px 0 4px 0;
-    padding-left: 25px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #cfcfcf;
+/* LISTY (UL) */
+.baddonz-changelog-changes ul {
+    /* Poprawiamy wcięcie listy */
+    padding-left: 20px; 
+    margin: 4px 0 10px 0;
+    list-style: disc; /* Domyślne kropki */
 }
 
-/* H4 - descriptions / bullet points */
-.baddonz-changelog-card h4 {
-    margin: 3px 0 3px 0;
-    padding-left: 35px;
+/* ELEMENTY LISTY (LI) */
+.baddonz-changelog-changes li {
+    margin-bottom: 3px;
     font-size: 12px;
-    font-weight: 400;
-    color: #bfbfbf;
+    color: #dcdcdc; /* Jaśniejszy tekst dla elementu listy */
+    line-height: 1.4;
 }
 
-/* Make sure lists inside changelogs look neat */
-.baddonz-changelog-card ul {
-    padding-left: 50px;
-    margin-top: 4px;
-    margin-bottom: 8px;
-}
-.baddonz-changelog-card li {
-    margin-bottom: 4px;
-    font-size: 12px;
+/* Wyróżnienie tekstu pogrubionego w treści (np. <b><i>...) */
+.baddonz-changelog-changes b {
+    color: #ffffff;
+    font-weight: bold;
 }
