@@ -2,81 +2,34 @@
     width: 380px;
     height: 450px;
 }
-
-.baddonz-manager .baddonz-tab-switcher {
-    width: 128px;
-}
-
-.baddonz-manager .baddonz-tab {
-    width: 512px;
-}
-
-/* KURSOR 5N DLA CAŁEGO MENEDŻERA */
 .baddonz-jsx-root {
     line-height: 1;
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
 }
-
-/* KURSOR 1N DLA PÓL TEKSTOWYCH I OBSZARÓW DO PISANIA */
 .baddonz-jsx-root .baddonz-textarea,
 .baddonz-jsx-root .baddonz-input:not(.keybind):not(.color-selector) {
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, text !important;
 }
-
-/* SCROLLBARY */
+.baddonz-card-title span,
+.baddonz-card p,
+.baddonz-text {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, auto !important;
+}
 .baddonz-jsx-root ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
 }
-
 .baddonz-jsx-root ::-webkit-scrollbar-track {
     background: #1414148f;
     border-radius: 3px;
 }
-
 .baddonz-jsx-root ::-webkit-scrollbar-thumb {
     background: #505050;
     border-radius: 3px;
 }
-
 .baddonz-jsx-root ::-webkit-scrollbar-thumb:hover {
     background: #808080;
 }
-
-/* FLEX */
-.baddonz-flex {
-    flex: 1;
-    justify-content: center;
-    max-width: 100%;
-    max-height: 100%;
-    display: flex;
-}
-
-.baddonz-flex.column {
-    flex-direction: column;
-}
-
-.baddonz-flex.inline {
-    display: inline-flex;
-}
-
-.baddonz-flex.around {
-    justify-content: space-around;
-}
-
-.baddonz-flex.between {
-    justify-content: space-between;
-}
-
-.baddonz-flex.centered {
-    align-items: center;
-}
-
-.baddonz-flex.end {
-    justify-content: flex-end;
-}
-
-/* OKNO GŁÓWNE */
 .baddonz-window {
     pointer-events: all;
     text-shadow: 1px 1px 1px #000;
@@ -93,59 +46,46 @@
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
     z-index: 99;
 }
-
 .baddonz-window.anon {
     min-width: unset;
 }
-
 .baddonz-window.anon .baddonz-window-controls {
     width: 26px;
 }
-
 .baddonz-window.top {
     z-index: 1;
 }
-
 .baddonz-window.blur {
     -webkit-backdrop-filter: blur(3px);
     backdrop-filter: blur(3px);
 }
-
 .baddonz-window.opacity-0 {
     background: 0 0;
 }
-
 .baddonz-window.opacity-1 {
     background: #0000004d;
 }
-
 .baddonz-window.opacity-2 {
     background: #0009;
 }
-
 .baddonz-window.opacity-3 {
     background: #000c;
 }
-
 .baddonz-window.opacity-4 {
     background: #000;
 }
-
 .baddonz-window.resizable {
     resize: both;
     overflow: hidden;
 }
-
 .baddonz-window.resizable-x {
     resize: horizontal;
     overflow-x: hidden;
 }
-
 .baddonz-window.resizable-y {
     resize: vertical;
     overflow-y: hidden;
 }
-
 .baddonz-window.collapsed {
     width: 90px !important;
     height: 25px !important;
@@ -154,24 +94,20 @@
     min-width: 90px !important;
     min-height: 25px !important;
 }
-
 .baddonz-window.collapsed .baddonz-window-body {
     display: none !important;
 }
-
 .baddonz-window-header {
-    white-space: nowrap;
     box-sizing: border-box;
     height: 25px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    white-space: nowrap;
 }
-
 .baddonz-window.collapsed .baddonz-window-header {
     width: 100% !important;
 }
-
 .baddonz-window-controls {
     flex-direction: row;
     align-items: center;
@@ -180,20 +116,12 @@
     padding: 0 5px;
     display: flex;
 }
-
 .baddonz-window-controls.right {
     justify-content: flex-end;
 }
-
 .baddonz-window-controls.left {
     justify-content: flex-start;
 }
-
-.baddonz-card-title span,
-.baddonz-card p {
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, auto !important;
-}
-
 .baddonz-window.collapsed .baddonz-window-controls {
     width: auto !important;
     min-width: unset !important;
@@ -201,7 +129,6 @@
     gap: 0;
     padding: 0 4px !important;
 }
-
 .baddonz-window-title {
     text-align: center;
     color: beige;
@@ -212,11 +139,9 @@
     flex-grow: 1;
     padding: 0 5px;
 }
-
 .baddonz-window.collapsed .baddonz-window-title {
     font-size: 9px;
 }
-
 .baddonz-window-body {
     color: #fff;
     box-sizing: border-box;
@@ -227,266 +152,73 @@
     display: flex;
     padding: 0 10px 10px 10px;
 }
-
 .baddonz-opacity-button {
     background: url(https://gordion.margonem.pl/img/gui/buttony.png) -725px -131px;
     width: 13px;
     height: 13px;
     margin-right: 0px;
 }
-
 .baddonz-opacity-button:hover {
     filter: brightness(1.3);
 }
-
 .baddonz-close-button {
     background: url(https://gordion.margonem.pl/img/gui/buttony.png) -624px -117px;
     width: 12px;
     height: 12px;
     margin-left: 0px;
 }
-
 .baddonz-close-button:hover {
     background-position: -726px -117px;
 }
-
-.baddonz-textarea {
-    color: #fff;
-    resize: none;
-    background: #0003;
-    border: 1px solid gray;
-    border-radius: 5px;
-    outline: 0;
-    height: 40px;
-    padding: 2px 3px;
-    font-size: 12px;
-    line-height: 1.5em;
-    box-shadow: inset 0 0 6px 1px #000000bf;
+.baddonz-settings-button {
+    background: url(https://gordion.margonem.pl/img/gui/buttony.png) -607px -117px;
+    width: 13px;
+    height: 13px;
 }
-
-.baddonz-box {
-    box-sizing: border-box;
-    background: #0003;
-    border: 1px solid gray;
-    flex-grow: 1;
-    padding: 0;
-    overflow: unset;
-    box-shadow: inset 0 0 6px 1px #000000bf;
-    display: flex;
-    flex-direction: column;
+.baddonz-settings-button:hover {
+    background-position: -659px -117px;
 }
-
-.baddonz-tab-content-container {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    background: none;
-    flex: 1;
-    overflow-y: auto;
-    box-sizing: border-box;
-    padding: 10px 10px 20px 10px;
-}
-
-.baddonz-tab-content-container.settings-list {
-    padding: 10px 10px 0 10px;
-}
-
-.baddonz-top .left-attached {
-    border-left-width: 0;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-}
-
-.baddonz-top .right-attached {
-    border-right-width: 0;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-}
-
-.baddonz-top .left-border {
-    border-left-width: 0;
-}
-
-.baddonz-input.color-text {
-    text-align: center;
-    border-right: none;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    width: 56px;
-    font-family: monospace;
-    font-size: 11px;
-}
-
-.baddonz-input.color {
-    box-sizing: border-box;
-    visibility: hidden;
-    border-width: 0;
-    width: 0;
-    height: 0;
-    margin: 0;
-    padding: 0;
-}
-
-.baddonz-input.color-selector {
-    box-sizing: border-box;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    width: 50px;
-}
-
-.baddonz-input.keybind {
-    text-align: center;
-    caret-color: #0000;
-    transition: none;
-    max-width: 140px;
-}
-
-/* INPUT ogólny */
-.baddonz-input {
-    box-sizing: border-box;
-    border: 1px solid #3b3b3b;
-    background-color: rgba(0, 0, 0, 0.05);
-    color: #fff;
-    padding: 2px 4px;
-    outline: none;
-    font-family: 'Arial', sans-serif;
-    font-size: 13px;
-    border-radius: 3px;
-    transition: none;
-    box-shadow: inset 0 0 6px 1px #000000bf;
-}
-
-/* Focus/Aktywny dla zwykłych inputów */
-.baddonz-input:focus,
-.baddonz-input.active {
-    border-color: #3b3b3b;
-    box-shadow: inset 0 0 6px 1px #000000bf;
-}
-
-/* Focus/Aktywny dla keybindów (z zieloną ramką) */
-.baddonz-input.keybind:focus,
-.baddonz-input.active-keybind-mode {
-    border-color: #96f096;
-    box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680;
-}
-
-/* ---------------------------------------------------- */
-/* --- SEKCJA SELECT - NAPRAWIONE Z WŁASNYMI STYLAMI --- */
-/* ---------------------------------------------------- */
-
-.baddonz-select {
-    color: #fff;
-    box-sizing: border-box;
-    background: #0003; /* Półprzezroczyste czarne tło (pole widoczne) */
-    border: 1px solid gray; /* Szara ramka */
-    border-radius: 5px; /* Zaokrąglone rogi */
-    outline: 0;
-    min-width: 0;
-    padding: 2px 3px;
-    line-height: 1.5em;
-    box-shadow: inset 0 0 6px 1px #000000bf; /* Wewnętrzny cień */
-
-    /* USUNIĘTO color-scheme: dark; */
-    -webkit-appearance: menulist; /* Zachowujemy natywny wygląd strzałki */
-    -moz-appearance: menulist;
-    appearance: menulist;
-}
-
-/* USUNIĘTO STYLOWANIE DLA .baddonz-select option, aby przeglądarka użyła domyślnych, jasnych stylów dla rozwijanej listy. */
-/* Opcje w rozwijanym oknie są teraz kontrolowane przez ustawienia systemowe/przeglądarki, co powinno dać efekt 'jasnego okna wyboru'. */
-
-/* ---------------------------------------------------- */
-/* ---------------------------------------------------- */
-
-.baddonz-input[type="number"] {
-    text-align: right;
-    appearance: textfield;
-    width: 50px;
-    min-width: 30px;
-}
-
-.baddonz-input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.baddonz-top .small {
+.baddonz-collapsed {
+    width: 16px;
     height: 14px;
+    background: url("https://gordion.margonem.pl/img/gui/buttony.png") -556px -399px;
 }
-
-.baddonz-top .adjacent-button {
-    height: 22px;
-    margin-top: 3px;
-    margin-bottom: 3px;
+.baddonz-collapsed:hover {
+    filter: brightness(1.2);
 }
-
-.baddonz-top .bottom-attached {
-    border-bottom-width: 0;
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
+.baddonz-enable-wnd {
+    background: url("https://gordion.margonem.pl/img/gui/buttony.png") -465px -399px;
+    width: 16px;
+    height: 16px;
 }
-
-.baddonz-top .left-attached,
-.baddonz-top .baddonz-alert-buttons.connected .baddonz-button:not(:first-child),
-.baddonz-alert-buttons.connected .baddonz-top .baddonz-button:not(:first-child) {
-    border-left-width: 0;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
+.baddonz-enable-wnd:hover {
+    filter: brightness(1.2);
 }
-
-.baddonz-top .right-attached,
-.baddonz-top .baddonz-alert-buttons.connected .baddonz-button:not(:last-child),
-.baddonz-alert-buttons.connected .baddonz-top .baddonz-button:not(:last-child) {
-    border-right-width: 0;
-    border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-}
-
-.baddonz-top .top-attached {
-    border-top-width: 0;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-}
-
-.baddonz-top .bottom-border {
-    border-bottom-width: 1px;
-}
-
-.baddonz-top .disabled {
-    color: #d3d3d3;
-    background: #3c3c3c66;
-}
-
-.baddonz-alert-segment {
-    text-align: center;
-    max-width: 230px;
-    margin: 2px;
-}
-
-.baddonz-alert-segment:last-child {
-    margin-bottom: 0;
-}
-
-.baddonz-alert-segment:first-child {
-    margin-top: 0;
-}
-
-.baddonz-alert-buttons {
-    flex-wrap: wrap;
+.baddonz-flex {
+    flex: 1;
     justify-content: center;
-    gap: 4px;
+    max-width: 100%;
+    max-height: 100%;
     display: flex;
 }
-
-.baddonz-alert-buttons.connected {
-    gap: 0;
+.baddonz-flex.column {
+    flex-direction: column;
 }
-
-.baddonz-alert-buttons .baddonz-button {
-    text-wrap: nowrap;
-    flex: 1;
+.baddonz-flex.inline {
+    display: inline-flex;
 }
-
+.baddonz-flex.around {
+    justify-content: space-around;
+}
+.baddonz-flex.between {
+    justify-content: space-between;
+}
+.baddonz-flex.centered {
+    align-items: center;
+}
+.baddonz-flex.end {
+    justify-content: flex-end;
+}
 .baddonz-button {
     background: #3c3c3c99;
     border: 1px solid gray;
@@ -499,195 +231,22 @@
     box-shadow: inset 0 0 6px 1px #000000bf;
     color: #fff;
 }
-
 .baddonz-button:hover {
     background: #5a5a5a99;
 }
-
 .baddonz-button.active {
     background: #46464666;
     border-color: #96f096;
     box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680;
 }
-
 .baddonz-button.no-margin {
     margin: 0;
 }
-
 .baddonz-button.icon {
     width: 32px;
     padding: 0;
     font-family: monospace;
 }
-
-.baddonz-show-eq {
-    flex-direction: column;
-    gap: 3px;
-    display: flex;
-}
-
-.baddonz-show-eq .baddonz-flex {
-    gap: 3px;
-}
-
-.baddonz-tab-switcher {
-    box-sizing: border-box;
-    background: #0003;
-    border: 1px solid gray;
-    min-width: 128px;
-    margin-right: 6px;
-    overflow-y: auto;
-    box-shadow: inset 0 0 6px 1px #000000bf;
-}
-
-.baddonz-tab {
-    box-sizing: border-box;
-    max-width: calc(100% - 134px);
-    display: flex;
-}
-
-.baddonz-flex .baddonz-tab {
-    flex: 1;
-}
-
-.baddonz-tab-selector {
-    background: linear-gradient(90deg, #4646464d 40%, #46464600);
-    padding: 6px;
-    font-size: 13px;
-    transition: background .1s, padding-left .1s;
-}
-
-.baddonz-tab-selector:hover {
-    background: linear-gradient(90deg, #46464659 50%, #46464600);
-    padding-left: 10px;
-}
-
-.baddonz-tab-selector:not(:last-child) {
-    margin-bottom: 1px;
-}
-
-.baddonz-tab-selector.active {
-    background: linear-gradient(90deg, #46464666 50%, #46464600);
-    padding-left: 10px;
-    font-weight: 700;
-}
-
-.baddonz-label-wrapper {
-    justify-content: space-between;
-    align-items: center;
-    display: flex;
-}
-
-.baddonz-label-wrapper .baddonz-label,
-.baddonz-label-wrapper .baddonz-labeled {
-    padding: 3px;
-}
-
-.baddonz-label-wrapper.inline {
-    display: inline-flex;
-}
-
-.baddonz-label-wrapper.reverse {
-    justify-content: unset;
-}
-
-.baddonz-checkbox {
-    box-sizing: border-box;
-    background-color: #54545479;
-    border: 1px solid #545454;
-    width: 16px;
-    min-width: 16px;
-    height: 16px;
-    min-height: 16px;
-    box-shadow: inset 0 2px 5px #00000080;
-}
-
-.baddonz-checkbox:after {
-    content: "";
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230dff00' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
-    width: 100%;
-    height: 100%;
-    transition: all .2s;
-    display: inline-block;
-    transform: scale(0);
-}
-
-.baddonz-checkbox.active:after {
-    transform: scale(1);
-}
-
-.baddonz-settings-button {
-    background: url(https://gordion.margonem.pl/img/gui/buttony.png) -607px -117px;
-    width: 13px;
-    height: 13px;
-}
-
-.baddonz-settings-button:hover {
-    background-position: -659px -117px;
-}
-
-.baddonz-text {
-    color: #fff;
-    text-shadow: 1px 1px 1px #000;
-    font-family: sans-serif;
-    font-size: 12px;
-    padding: 3px;
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, auto !important;
-}
-
-.baddonz-input-plus {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    width: 100%;
-}
-
-.baddonz-input-plus .baddonz-input {
-    flex-grow: 1;
-    border-top-right-radius: 3px !important;
-    border-bottom-right-radius: 3px !important;
-    height: 24px;
-    padding: 2px 5px;
-    font-size: 13px;
-    cursor: text !important;
-}
-
-.baddonz-input-plus .baddonz-button {
-    height: 24px;
-    width: 24px;
-    padding: 0;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    font-weight: normal;
-    font-size: 16px;
-    line-height: 1;
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
-}
-
-.baddonz-collapsed {
-    width: 16px;
-    height: 14px;
-    background: url("https://gordion.margonem.pl/img/gui/buttony.png") -556px -399px;
-}
-
-.baddonz-collapsed:hover {
-    filter: brightness(1.2);
-}
-
-.baddonz-enable-wnd {
-    background: url("https://gordion.margonem.pl/img/gui/buttony.png") -465px -399px;
-    width: 16px;
-    height: 16px;
-}
-
-.baddonz-enable-wnd:hover {
-    filter: brightness(1.2);
-}
-
 .baddonz-tab {
     box-sizing: border-box;
     color: #fff;
@@ -707,29 +266,24 @@
     justify-content: center;
     align-items: center;
 }
-
 .baddonz-tab:hover {
     background: #5a5a5a99;
     border-color: #808080;
     transform: translateY(-1px);
 }
-
 .baddonz-tab.active {
-    /* ZIELONA RAMKA dla aktywnej zakładki */
     background: linear-gradient(90deg, #46464666 50%, #46464600);
     border-color: #96f096;
     box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680;
     transform: translateY(0);
     pointer-events: none;
 }
-
 .baddonz-tabs-container {
     display: flex;
     gap: 5px;
     margin-bottom: 10px;
     flex-wrap: wrap;
 }
-
 .baddonz-card {
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
     box-sizing: border-box;
@@ -745,18 +299,17 @@
     display: flex;
     flex-direction: column;
 }
-
 .baddonz-card * {
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
 }
-.baddonz-card p, .baddonz-card-title span {
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, auto !important;
-}
-
 .baddonz-card:hover {
     background: #8c8c8c33;
 }
-
+.baddonz-card.active-addon {
+    background: #4a4a4a99;
+    border-color: #96f096;
+    box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680;
+}
 .baddonz-card-title {
     justify-content: flex-start;
     align-items: center;
@@ -765,33 +318,213 @@
     display: flex;
     width: 100%;
 }
-
-.baddonz-card.active-addon {
-    /* ZIELONA RAMKA dla aktywnej karty dodatku */
-    background: #4a4a4a99;
-    border-color: #96f096;
-    box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680;
-}
-
 .baddonz-card-title span {
     margin-left: 10px;
 }
-
-.baddonz-card-title .baddonz-checkbox {
-    margin-right: 5px;
-}
-
-.baddonz-enable-wnd {
-    margin-left: auto;
-}
-
 .baddonz-card p {
     margin-top: 5px;
     margin-bottom: 0;
     font-size: 11px;
     color: #ccc;
 }
-
+.baddonz-card-title .baddonz-checkbox {
+    margin-right: 5px;
+}
+.baddonz-input {
+    box-sizing: border-box;
+    border: 1px solid #3b3b3b;
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #fff;
+    padding: 2px 4px;
+    outline: none;
+    font-family: 'Arial', sans-serif;
+    font-size: 13px;
+    border-radius: 3px;
+    transition: none;
+    box-shadow: inset 0 0 6px 1px #000000bf;
+}
+.baddonz-input:focus,
+.baddonz-input.active {
+    border-color: #3b3b3b;
+    box-shadow: inset 0 0 6px 1px #000000bf;
+}
+.baddonz-input.keybind:focus,
+.baddonz-input.active-keybind-mode {
+    border-color: #96f096;
+    box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680;
+    caret-color: #0000;
+}
+.baddonz-input.color-text {
+    text-align: center;
+    border-right: none;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    width: 56px;
+    font-family: monospace;
+    font-size: 11px;
+}
+.baddonz-input.color {
+    box-sizing: border-box;
+    visibility: hidden;
+    border-width: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+.baddonz-input.color-selector {
+    box-sizing: border-box;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    width: 50px;
+}
+.baddonz-input.keybind {
+    text-align: center;
+    transition: none;
+    max-width: 140px;
+}
+.baddonz-input[type="number"] {
+    text-align: right;
+    appearance: textfield;
+    width: 50px;
+    min-width: 30px;
+}
+.baddonz-input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.baddonz-textarea {
+    color: #fff;
+    resize: none;
+    background: #0003;
+    border: 1px solid gray;
+    border-radius: 5px;
+    outline: 0;
+    height: 40px;
+    padding: 2px 3px;
+    font-size: 12px;
+    line-height: 1.5em;
+    box-shadow: inset 0 0 6px 1px #000000bf;
+}
+.baddonz-checkbox {
+    box-sizing: border-box;
+    background-color: #54545479;
+    border: 1px solid #545454;
+    width: 16px;
+    min-width: 16px;
+    height: 16px;
+    min-height: 16px;
+    box-shadow: inset 0 2px 5px #00000080;
+}
+.baddonz-checkbox:after {
+    content: "";
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230dff00' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+    width: 100%;
+    height: 100%;
+    transition: all .2s;
+    display: inline-block;
+    transform: scale(0);
+}
+.baddonz-checkbox.active:after {
+    transform: scale(1);
+}
+.baddonz-select {
+    color: #fff;
+    box-sizing: border-box;
+    background: #0003;
+    border: 1px solid gray;
+    border-radius: 5px;
+    outline: 0;
+    min-width: 0;
+    padding: 2px 3px;
+    line-height: 1.5em;
+    box-shadow: inset 0 0 6px 1px #000000bf;
+    -webkit-appearance: menulist;
+    -moz-appearance: menulist;
+    appearance: menulist;
+}
+.baddonz-box {
+    box-sizing: border-box;
+    background: #0003;
+    border: 1px solid gray;
+    flex-grow: 1;
+    padding: 0;
+    overflow: unset;
+    box-shadow: inset 0 0 6px 1px #000000bf;
+    display: flex;
+    flex-direction: column;
+}
+.baddonz-tab-content-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: none;
+    flex: 1;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 10px 10px 20px 10px;
+}
+.baddonz-tab-content-container.settings-list {
+    padding: 10px 10px 0 10px;
+}
+.baddonz-tab-switcher {
+    box-sizing: border-box;
+    background: #0003;
+    border: 1px solid gray;
+    min-width: 128px;
+    margin-right: 6px;
+    overflow-y: auto;
+    box-shadow: inset 0 0 6px 1px #000000bf;
+}
+.baddonz-tab-switcher {
+    width: 128px;
+}
+.baddonz-tab {
+    max-width: calc(100% - 134px);
+}
+.baddonz-flex .baddonz-tab {
+    flex: 1;
+}
+.baddonz-tab-selector {
+    background: linear-gradient(90deg, #4646464d 40%, #46464600);
+    padding: 6px;
+    font-size: 13px;
+    transition: background .1s, padding-left .1s;
+}
+.baddonz-tab-selector:hover {
+    background: linear-gradient(90deg, #46464659 50%, #46464600);
+    padding-left: 10px;
+}
+.baddonz-tab-selector:not(:last-child) {
+    margin-bottom: 1px;
+}
+.baddonz-tab-selector.active {
+    background: linear-gradient(90deg, #46464666 50%, #46464600);
+    padding-left: 10px;
+    font-weight: 700;
+}
+.baddonz-label-wrapper {
+    justify-content: space-between;
+    align-items: center;
+    display: flex;
+}
+.baddonz-label-wrapper .baddonz-label,
+.baddonz-label-wrapper .baddonz-labeled {
+    padding: 3px;
+}
+.baddonz-label-wrapper.inline {
+    display: inline-flex;
+}
+.baddonz-label-wrapper.reverse {
+    justify-content: unset;
+}
+.baddonz-text {
+    color: #fff;
+    text-shadow: 1px 1px 1px #000;
+    font-family: sans-serif;
+    font-size: 12px;
+    padding: 3px;
+}
 .baddonz-setting-row {
     display: flex;
     flex-direction: row;
@@ -805,26 +538,11 @@
     margin-bottom: 5px;
     line-height: normal;
 }
-
 .baddonz-setting-row .baddonz-label {
     margin: 0;
     padding: 0;
     line-height: normal;
 }
-
-#baddonz-toggle-hotkey-input {
-    border-radius: 3px;
-    transition: none;
-}
-
-#baddonz-toggle-hotkey-input.active-keybind-mode {
-    /* ZIELONA RAMKA - Input "Otwieraj Managera" */
-    border-color: #96f096 !important;
-    box-shadow: inset 0 0 6px 1px rgba(0, 0, 0, 0.75), 0 0 8px 1px rgba(150, 240, 150, 0.5) !important;
-    caret-color: transparent !important;
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
-}
-
 .baddonz-setting-row.hotkey-row {
     display: flex;
     flex-direction: row;
@@ -834,222 +552,127 @@
     width: 100%;
     margin-bottom: 5px;
 }
-
 .baddonz-setting-row.hotkey-row .baddonz-label {
     white-space: nowrap;
     flex-shrink: 0;
 }
-
 .baddonz-setting-row.hotkey-row #baddonz-toggle-hotkey-input {
     flex-grow: 1;
     min-width: 0;
 }
-
-/* Specific styles for Szybka Grupa */
-.baddon_set_button.ZAP {
+#baddonz-toggle-hotkey-input {
+    border-radius: 3px;
+    transition: none;
+}
+#baddonz-toggle-hotkey-input.active-keybind-mode {
+    border-color: #96f096 !important;
+    box-shadow: inset 0 0 6px 1px rgba(0, 0, 0, 0.75), 0 0 8px 1px rgba(150, 240, 150, 0.5) !important;
+    caret-color: transparent !important;
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
 }
-#zap-wnd {
-    min-width: 191px;
-}
-#zap-wnd .baddonz-window-body {
-    gap: 5px;
-}
-
-#zap-main-header-controls {
+.baddonz-input-plus {
     display: flex;
     align-items: center;
-    gap: 5px;
-    width: 100%;
-    justify-content: flex-start;
-}
-
-#zap-keybind-input.compact {
-    width: 100px;
-    flex-shrink: 0;
-    text-align: center;
-    padding: 1px 0px;
-    font-size: 11px;
-    height: 20px;
-    line-height: 18px;
-    margin-left: 5px;
-}
-
-#zap-wnd #zap-specific-nicks-list::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-#zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-track {
-    background: #1414148f;
-    border-radius: 3px;
-}
-#zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-thumb {
-    background: #505050;
-    border-radius: 3px;
-}
-#zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-thumb:hover {
-    background: #808080;
-}
-#zap-wnd .zap-remove-nick-x {
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
-}
-#zap-wnd input.zap-nick-display {
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
-}
-#zap-specific-nicks-list {
-    max-height: 86px;
-    overflow-y: auto;
-    padding-right: 2px;
+    gap: 0;
     width: 100%;
 }
-
-#zap-specific-nicks-list-section {
-    margin-top: 2px !important;
-    width: 100%;
-}
-
-#zap-level-range-section {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 5px;
-    margin-top: -3px;
-    margin-left: 0;
-    width: 100%;
-}
-#zap-level-range-section .baddonz-input.level-input {
+.baddonz-input-plus .baddonz-input {
     flex-grow: 1;
-    height: 20px;
-    text-align: center;
-    padding: 1px 0px;
-    font-size: 11px;
-    line-height: 18px;
-}
-#zap-level-range-section .separator {
-    color: #fff;
-    font-size: 16px;
-    line-height: 1;
-    margin: 0 2px;
-}
-
-#zap-accept-options-section {
-    gap: 3px;
-}
-
-.zap-accept-checkbox-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3px 10px;
-    width: 100%;
-    box-sizing: border-box;
-}
-.zap-accept-checkbox-grid .baddonz-label-wrapper {
-    width: auto;
-    justify-content: flex-start;
-}
-
-/* Styles for Auto Przywo addon */
-#ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-
-#ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-track {
-    background: #1414148f;
-    border-radius: 3px;
-}
-
-#ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-thumb {
-    background: #505050;
-    border-radius: 3px;
-}
-
-#ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-thumb:hover {
-    background: #808080;
-}
-
-#ap-wnd {
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
-}
-
-#ap-wnd .baddonz-window-controls > .baddonz-icon,
-#ap-wnd .baddonz-checkbox,
-#ap-wnd .ap-remove-nick-x,
-#ap-wnd input.ap-nick-display {
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
-}
-
-.ap-scroll-container {
-    max-height: 155px;
-    overflow-y: auto;
-    box-sizing: border-box;
-}
-
-.ap-remove-nick-x {
-    position: absolute;
-    right: 8px;
-    cursor: pointer;
-    color: #888;
-    font-weight: normal;
-    font-size: 12px;
-    line-height: 1;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 10px;
-    text-align: center;
-}
-
-.ap-nick-display {
-    flex-grow: 1;
-    padding-right: 20px;
+    border-top-right-radius: 3px !important;
+    border-bottom-right-radius: 3px !important;
     height: 24px;
     padding: 2px 5px;
     font-size: 13px;
+    cursor: text !important;
 }
-
-/* Styles for Rozwiązywanie grupy addon */
-.baddon_set_button.RG {
+.baddonz-input-plus .baddonz-button {
+    height: 24px;
+    width: 24px;
+    padding: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 1;
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
 }
-
-#rg-keybind-input {
-    border: 1px solid #777;
-    border-radius: 3px;
-    padding: 4px 6px;
-    box-shadow: none;
+.baddonz-alert-segment {
     text-align: center;
-    font-size: 13px;
-    height: auto;
-    line-height: normal;
-    box-sizing: border-box;
-    transition: none;
+    max-width: 230px;
+    margin: 2px;
 }
-
-#rg-keybind-input.active-keybind-mode {
-    /* ZIELONA RAMKA - Input "Skrót Resetu" (w dodatku RG) */
-    caret-color: transparent !important;
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
-    border-color: #96f096;
-    box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680;
+.baddonz-alert-segment:last-child {
+    margin-bottom: 0;
 }
-
-#rg-wnd .baddonz-window-body {
-    gap: 5px;
+.baddonz-alert-segment:first-child {
+    margin-top: 0;
 }
-
-#rg-wnd hr {
-    display: none;
+.baddonz-alert-buttons {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    display: flex;
 }
-.baddonz-info-icon {
-    width: 17px;
-    height: 17px;
-    background: url(../img/gui/buttony.png?v=1753438686037) no-repeat -497px -199px
+.baddonz-alert-buttons.connected {
+    gap: 0;
 }
-.baddonz-info-icon:hover {
-filter: brightness(1.3);
+.baddonz-alert-buttons .baddonz-button {
+    text-wrap: nowrap;
+    flex: 1;
 }
-.relogger-window {
-min-width: 220px;
+.baddonz-top .left-attached,
+.baddonz-top .baddonz-alert-buttons.connected .baddonz-button:not(:first-child),
+.baddonz-alert-buttons.connected .baddonz-top .baddonz-button:not(:first-child) {
+    border-left-width: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.baddonz-top .right-attached,
+.baddonz-top .baddonz-alert-buttons.connected .baddonz-button:not(:last-child),
+.baddonz-alert-buttons.connected .baddonz-top .baddonz-button:not(:last-child) {
+    border-right-width: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.baddonz-top .top-attached {
+    border-top-width: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+.baddonz-top .bottom-attached {
+    border-bottom-width: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.baddonz-top .small {
+    height: 14px;
+}
+.baddonz-top .adjacent-button {
+    height: 22px;
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+.baddonz-top .left-border {
+    border-left-width: 0;
+}
+.baddonz-top .bottom-border {
+    border-bottom-width: 1px;
+}
+.baddonz-top .disabled {
+    color: #d3d3d3;
+    background: #3c3c3c66;
+}
+.baddonz-show-eq {
+    flex-direction: column;
+    gap: 3px;
+    display: flex;
+}
+.baddonz-show-eq .baddonz-flex {
+    gap: 3px;
 }
 .baddonz-dock-wrapper {
     position: absolute;
@@ -1105,16 +728,6 @@ min-width: 220px;
     transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .baddonz-dock-switch.active .fa {
-    transform: rotate(-90deg);
-}
-.baddonz-dock-wrapper.horizontal .baddonz-dock-switch .fa {
-    transform: none;
-}
-.baddonz-dock-wrapper.horizontal .baddonz-dock-switch.active .fa {
-    transform: rotate(-90deg);
-}
-.baddonz-dock-wrapper.horizontal.bottom-left .baddonz-dock-switch.active .fa,
-.baddonz-dock-wrapper.horizontal.top-left .baddonz-dock-switch.active .fa {
     transform: rotate(-90deg);
 }
 .baddonz-dock-switch:hover {
@@ -1179,7 +792,84 @@ min-width: 220px;
     background: #5a5a5a99;
     border-color: #808080;
 }
- .baddonz-slider-wrapper {
+.baddonz-changelog-card {
+    padding: 12px 14px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.06));
+    border-color: #666;
+    max-width: 100%;
+}
+.baddonz-changelog-title {
+    padding-left: 4px;
+    font-size: 13px;
+    color: beige;
+}
+.baddonz-changelog-content {
+    padding-left: 4px;
+    color: #ccc;
+}
+.baddonz-changelog-card h1 {
+    margin: 0 0 8px 0;
+    padding-left: 6px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #fff;
+}
+.baddonz-changelog-card h2 {
+    margin: 8px 0 6px 0;
+    padding-left: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #dcdcdc;
+}
+.baddonz-changelog-card h3 {
+    margin: 6px 0 4px 0;
+    padding-left: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #cfcfcf;
+}
+.baddonz-changelog-card h4 {
+    margin: 3px 0 3px 0;
+    padding-left: 20px;
+    font-size: 10px;
+    font-weight: 400;
+    color: #bfbfbf;
+}
+.baddonz-changelog-card ul {
+    padding-left: 50px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+.baddonz-changelog-card li {
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+.baddonz-card.addons-card {
+}
+.baddonz-state-button {
+    width: 9px;
+    height: 9px;
+    background: radial-gradient(ellipse at center, rgb(255, 0, 0), #101010);
+    border-radius: 50%;
+    box-shadow: 0 0 3px 1px rgba(255, 0, 0, 0.75);
+    display: inline-block;
+    transition:
+        box-shadow 180ms ease-in-out,
+        background 180ms ease-in-out,
+        transform 120ms ease-in-out;
+    padding: 1px;
+    vertical-align: -2px;
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
+}
+.baddonz-state-button:hover {
+    box-shadow: 0 0 4px 2px rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
+}
+.baddonz-state-button--active {
+    background: radial-gradient(ellipse at center, rgb(0, 255, 0), #101010);
+    box-shadow: 0 0 3px 1px rgba(0, 255, 0, 0.75);
+}
+.baddonz-slider-wrapper {
     position: relative;
     width: 100%;
     height: 4px;
@@ -1224,6 +914,211 @@ min-width: 220px;
     text-align: center;
     white-space: nowrap;
 }
+.baddonz-info-icon {
+    width: 17px;
+    height: 17px;
+    background: url(../img/gui/buttony.png?v=1753438686037) no-repeat -497px -199px
+}
+.baddonz-info-icon:hover {
+    filter: brightness(1.3);
+}
+.relogger-window {
+    min-width: 220px;
+}
+.baddonz-type-icon {
+    width: 18px;
+    height: 18px;
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    background: url("https://gordion.margonem.pl/img/gui/notyfikacje-sprite.png");
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
+}
+.baddonz-type-icon.cl-1 { background-position: -1px -100px; }
+.baddonz-type-icon.cl-2 { background-position: -41px -100px; }
+.baddonz-type-icon.cl-3 { background-position: -21px -100px; }
+.baddonz-type-icon.cl-4 { background-position: -61px -100px; }
+.baddonz-type-icon.cl-5 { background-position: -81px -100px; }
+.baddonz-type-icon.cl-6 { background-position: -101px -100px; }
+.baddonz-type-icon.cl-7 { background-position: -121px -100px; }
+.baddonz-type-icon.cl-8 { background-position: -141px -100px; }
+.baddonz-type-icon.cl-9 { background-position: -161px -100px; }
+.baddonz-type-icon.cl-10 { background-position: -181px -100px; }
+.baddonz-type-icon.cl-11 { background-position: -201px -100px; }
+.baddonz-type-icon.cl-12 { background-position: -221px -100px; }
+.baddonz-type-icon.cl-13 { background-position: -241px -100px; }
+.baddonz-type-icon.cl-14 { background-position: -261px -100px; }
+.baddonz-type-icon.cl-29 { background-position: -401px -100px; }
+.baddon_set_button.ZAP {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+#zap-wnd {
+    min-width: 191px;
+}
+#zap-wnd .baddonz-window-body {
+    gap: 5px;
+}
+#zap-main-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    justify-content: flex-start;
+}
+#zap-keybind-input.compact {
+    width: 100px;
+    flex-shrink: 0;
+    text-align: center;
+    padding: 1px 0px;
+    font-size: 11px;
+    height: 20px;
+    line-height: 18px;
+    margin-left: 5px;
+}
+#zap-wnd #zap-specific-nicks-list::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+#zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-track {
+    background: #1414148f;
+    border-radius: 3px;
+}
+#zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-thumb {
+    background: #505050;
+    border-radius: 3px;
+}
+#zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-thumb:hover {
+    background: #808080;
+}
+#zap-wnd .zap-remove-nick-x {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+#zap-wnd input.zap-nick-display {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+#zap-specific-nicks-list {
+    max-height: 86px;
+    overflow-y: auto;
+    padding-right: 2px;
+    width: 100%;
+}
+#zap-specific-nicks-list-section {
+    margin-top: 2px !important;
+    width: 100%;
+}
+#zap-level-range-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+    margin-top: -3px;
+    margin-left: 0;
+    width: 100%;
+}
+#zap-level-range-section .baddonz-input.level-input {
+    flex-grow: 1;
+    height: 20px;
+    text-align: center;
+    padding: 1px 0px;
+    font-size: 11px;
+    line-height: 18px;
+}
+#zap-level-range-section .separator {
+    color: #fff;
+    font-size: 16px;
+    line-height: 1;
+    margin: 0 2px;
+}
+#zap-accept-options-section {
+    gap: 3px;
+}
+.zap-accept-checkbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.zap-accept-checkbox-grid .baddonz-label-wrapper {
+    width: auto;
+    justify-content: flex-start;
+}
+#ap-wnd {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+#ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+#ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-track {
+    background: #1414148f;
+    border-radius: 3px;
+}
+#ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-thumb {
+    background: #505050;
+    border-radius: 3px;
+}
+#ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-thumb:hover {
+    background: #808080;
+}
+#ap-wnd .baddonz-window-controls > .baddonz-icon,
+#ap-wnd .baddonz-checkbox,
+#ap-wnd .ap-remove-nick-x,
+#ap-wnd input.ap-nick-display {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+.ap-scroll-container {
+    max-height: 155px;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+.ap-remove-nick-x {
+    position: absolute;
+    right: 8px;
+    cursor: pointer;
+    color: #888;
+    font-weight: normal;
+    font-size: 12px;
+    line-height: 1;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    text-align: center;
+}
+.ap-nick-display {
+    flex-grow: 1;
+    padding-right: 20px;
+    height: 24px;
+    padding: 2px 5px;
+    font-size: 13px;
+}
+.baddon_set_button.RG {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+#rg-wnd .baddonz-window-body {
+    gap: 5px;
+}
+#rg-wnd hr {
+    display: none;
+}
+#rg-keybind-input {
+    border: 1px solid #777;
+    border-radius: 3px;
+    padding: 4px 6px;
+    box-shadow: none;
+    text-align: center;
+    font-size: 13px;
+    height: auto;
+    line-height: normal;
+    box-sizing: border-box;
+    transition: none;
+}
+#rg-keybind-input.active-keybind-mode {
+    caret-color: transparent !important;
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+    border-color: #96f096;
+    box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680;
+}
 .item-searcher-dimmed-item {
     opacity: 0.15;
 }
@@ -1260,192 +1155,7 @@ min-width: 220px;
     align-items: center;
     gap: 4px;
 }
-.baddonz-state-button {
-    width: 9px;
-    height: 9px;
-    background: radial-gradient(ellipse at center, rgb(255, 0, 0), #101010);
-    border-radius: 50%;
-    box-shadow: 0 0 3px 1px rgba(255, 0, 0, 0.75);
-    display: inline-block;
-    transition:
-        box-shadow 180ms ease-in-out,
-        background 180ms ease-in-out,
-        transform 120ms ease-in-out;
-    padding: 1px;
-    vertical-align: -2px;
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
-}
-
-.baddonz-state-button:hover {
-    box-shadow: 0 0 4px 2px rgba(255, 255, 255, 0.25);
-    transform: scale(1.05);
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
-}
-
-.baddonz-state-button--active {
-    background: radial-gradient(ellipse at center, rgb(0, 255, 0), #101010);
-    box-shadow: 0 0 3px 1px rgba(0, 255, 0, 0.75);
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
-}
-.baddonz-type-icon {
-    width: 18px;
-    height: 18px;
-    position: relative;
-    margin-left: auto;
-    margin-right: auto;
-    background: url("https://gordion.margonem.pl/img/gui/notyfikacje-sprite.png");
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
-}
-
-.baddonz-type-icon.cl-1 {
-    background-position: -1px -100px;
-}
-
-.baddonz-type-icon.cl-2 {
-    background-position: -41px -100px;
-}
-
-.baddonz-type-icon.cl-3 {
-    background-position: -21px -100px;
-}
-
-.baddonz-type-icon.cl-4 {
-    background-position: -61px -100px;
-}
-
-.baddonz-type-icon.cl-5 {
-    background-position: -81px -100px;
-}
-
-.baddonz-type-icon.cl-6 {
-    background-position: -101px -100px;
-}
-
-.baddonz-type-icon.cl-7 {
-    background-position: -121px -100px;
-}
-
-.baddonz-type-icon.cl-8 {
-    background-position: -141px -100px;
-}
-
-.baddonz-type-icon.cl-9 {
-    background-position: -161px -100px;
-}
-
-.baddonz-type-icon.cl-10 {
-    background-position: -181px -100px;
-}
-
-.baddonz-type-icon.cl-11 {
-    background-position: -201px -100px;
-}
-
-.baddonz-type-icon.cl-12 {
-    background-position: -221px -100px;
-}
-
-.baddonz-type-icon.cl-13 {
-    background-position: -241px -100px;
-}
-
-.baddonz-type-icon.cl-14 {
-    background-position: -261px -100px;
-}
-
-.baddonz-type-icon.cl-29 {
-    background-position: -401px -100px;
-}
-/* ==================================================== */
-/* --- SEKCJA CHANGELOGS (NAPRAWIONE WCIĘCIA) --- */
-/* (Wymaga klasy baddonz-changelog-content na kontenerze logów) */
-/* ==================================================== */
-
-/* GŁÓWNY KONTENER DLA CHANGELOGÓW */
-.baddonz-changelog-content {
-    /* Upewnienie się, że tło jest przezroczyste lub pasuje do reszty */
-    padding: 0 10px 10px 10px; /* Lekkie wcięcie wewnętrzne */
-    background: none;
-    color: #ccc;
-}
-
-/* KARTA/BLOK POJEDYNCZEJ WERSJI (STYL DLA ELEMENTÓW WEWNĄTRZ) */
-/* Dodajemy górny margines dla separacji kolejnych wpisów logów */
-.baddonz-changelog-content h3, 
-.baddonz-changelog-content div {
-    /* Stosujemy ten sam styl do h3 (tytuł wersji) i div (zawartość) */
-    background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.08));
-    border: 1px solid #444;
-    border-radius: 4px;
-    margin: 15px 0 0 0; /* Separacja od poprzedniego wpisu */
-    padding: 8px 12px;
-}
-.baddonz-changelog-content h3 {
-    padding: 10px 12px;
-    margin-top: 20px; /* Większa separacja dla nowego bloku wersji */
-}
-
-
-/* STYLIZACJA TYTUŁU WERSJI (np. Wersja 1.06) */
-.baddonz-changelog-version {
-    font-size: 14px;
-    font-weight: bold;
-    color: #FEE7C8; /* Jasny, widoczny kolor */
-    border-bottom: 1px solid #8888;
-    margin-bottom: 0;
-    padding-bottom: 5px;
-    text-shadow: 1px 1px 2px #000;
-}
-
-/* GŁÓWNY KONTENER TREŚCI ZMIAN */
-.baddonz-changelog-changes {
-    /* Poprawiamy wygląd list i nagłówków wewnątrz */
-    border-top: none; /* Łączymy z h3 */
-    margin-top: -1px; /* Aby połączyło się z h3 */
-    padding-top: 10px;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-}
-
-/* Style dla wewnętrznych Nagłówków (H3/H4 z treści zmian, jak "Poprawiono", "Dodano") */
-/* W skrypcie używasz H3 wewnątrz changelogs (np. <h3>Poprawiono:</h3>) */
-.baddonz-changelog-changes h3 {
-    margin: 8px 0 4px 0;
-    padding: 0; /* Usuwamy padding karty z wewnątrz */
-    font-size: 13px;
-    font-weight: 700;
-    color: #87CEEB; /* Jasnoniebieski dla sekcji (np. Zmiany:, Dodano:) */
-    background: none;
-    border: none;
-    border-radius: 0;
-    text-transform: uppercase;
-    
-}
-/* Style dla paragrafów wewnątrz (np. <i>Poprawiłem pare dodatków</i>) */
-.baddonz-changelog-changes p {
-    margin: 5px 0;
-    font-style: italic;
-    padding-left: 10px;
-}
-
-/* LISTY (UL) */
-.baddonz-changelog-changes ul {
-    /* Poprawiamy wcięcie listy */
-    padding-left: 20px; 
-    margin: 4px 0 10px 0;
-    list-style: disc; /* Domyślne kropki */
-}
-
-/* ELEMENTY LISTY (LI) */
-.baddonz-changelog-changes li {
-    margin-bottom: 3px;
-    font-size: 12px;
-    color: #dcdcdc; /* Jaśniejszy tekst dla elementu listy */
-    line-height: 1.4;
-}
-
-/* Wyróżnienie tekstu pogrubionego w treści (np. <b><i>...) */
-.baddonz-changelog-changes b {
-    color: #ffffff;
-    font-weight: bold;
+@media (max-width: 420px) {
+    .baddonz-manager { width: 320px; height: 420px; }
+    .baddonz-changelog-card { padding: 10px; }
 }
