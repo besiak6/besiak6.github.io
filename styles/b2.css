@@ -792,27 +792,24 @@
     background: #5a5a5a99;
     border-color: #808080;
 }
-
-/* POPRAWKA: Usunięcie miejsca po lewej stronie tytułu logu zmian */
 .baddonz-changelog-card .baddonz-card-title {
     padding-left: 0;
     margin-left: 0;
     justify-content: flex-start;
 }
-
 .baddonz-changelog-card {
-    padding: 12px 14px;
+    padding: 12px 4px;
     background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.06));
     border-color: #666;
     max-width: 100%;
 }
 .baddonz-changelog-title {
-    padding-left: 4px;
+    padding-left: 2px;
     font-size: 13px;
     color: beige;
 }
 .baddonz-changelog-content {
-    padding-left: 4px;
+    padding-left: 0;
     color: #ccc;
 }
 .baddonz-changelog-card h1 {
@@ -844,7 +841,7 @@
     color: #bfbfbf;
 }
 .baddonz-changelog-card ul {
-    padding-left: 50px;
+    padding-left: 30px;
     margin-top: 4px;
     margin-bottom: 8px;
 }
