@@ -1,0 +1,1422 @@
+.baddonz-manager {
+    width: 380px;
+    height: 450px;
+}
+
+.baddonz-manager .baddonz-tab-switcher {
+    width: 128px;
+}
+
+.baddonz-manager .baddonz-tab {
+    width: 512px;
+}
+
+/* KURSOR 5N DLA CAŁEGO MENEDŻERA */
+.baddonz-jsx-root {
+    line-height: 1;
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
+}
+
+/* KURSOR 1N DLA PÓL TEKSTOWYCH I OBSZARÓW DO PISANIA */
+.baddonz-jsx-root .baddonz-textarea,
+.baddonz-jsx-root .baddonz-input:not(.keybind):not(.color-selector) {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, text !important;
+}
+
+/* SCROLLBARY */
+.baddonz-jsx-root ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.baddonz-jsx-root ::-webkit-scrollbar-track {
+    background: #1414148f;
+    border-radius: 3px;
+}
+
+.baddonz-jsx-root ::-webkit-scrollbar-thumb {
+    background: #505050;
+    border-radius: 3px;
+}
+
+.baddonz-jsx-root ::-webkit-scrollbar-thumb:hover {
+    background: #808080;
+}
+
+/* FLEX */
+.baddonz-flex {
+    flex: 1;
+    justify-content: center;
+    max-width: 100%;
+    max-height: 100%;
+    display: flex;
+}
+
+.baddonz-flex.column {
+    flex-direction: column;
+}
+
+.baddonz-flex.inline {
+    display: inline-flex;
+}
+
+.baddonz-flex.around {
+    justify-content: space-around;
+}
+
+.baddonz-flex.between {
+    justify-content: space-between;
+}
+
+.baddonz-flex.centered {
+    align-items: center;
+}
+
+.baddonz-flex.end {
+    justify-content: flex-end;
+}
+
+/* OKNO GŁÓWNE */
+.baddonz-window {
+    pointer-events: all;
+    text-shadow: 1px 1px 1px #000;
+    color: #fff;
+    background: #0009;
+    border-radius: 7px;
+    flex-direction: column;
+    min-width: 191px;
+    min-height: 22px;
+    font-family: sans-serif;
+    display: flex;
+    position: absolute;
+    box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66;
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
+    z-index: 99;
+}
+
+.baddonz-window.anon {
+    min-width: unset;
+}
+
+.baddonz-window.anon .baddonz-window-controls {
+    width: 26px;
+}
+
+.baddonz-window.top {
+    z-index: 1;
+}
+
+.baddonz-window.blur {
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+}
+
+.baddonz-window.opacity-0 {
+    background: 0 0;
+}
+
+.baddonz-window.opacity-1 {
+    background: #0000004d;
+}
+
+.baddonz-window.opacity-2 {
+    background: #0009;
+}
+
+.baddonz-window.opacity-3 {
+    background: #000c;
+}
+
+.baddonz-window.opacity-4 {
+    background: #000;
+}
+
+.baddonz-window.resizable {
+    resize: both;
+    overflow: hidden;
+}
+
+.baddonz-window.resizable-x {
+    resize: horizontal;
+    overflow-x: hidden;
+}
+
+.baddonz-window.resizable-y {
+    resize: vertical;
+    overflow-y: hidden;
+}
+
+.baddonz-window.collapsed {
+    width: 90px !important;
+    height: 25px !important;
+    resize: none !important;
+    overflow: hidden !important;
+    min-width: 90px !important;
+    min-height: 25px !important;
+}
+
+.baddonz-window.collapsed .baddonz-window-body {
+    display: none !important;
+}
+
+.baddonz-window-header {
+    white-space: nowrap;
+    box-sizing: border-box;
+    height: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.baddonz-window.collapsed .baddonz-window-header {
+    width: 100% !important;
+}
+
+.baddonz-window-controls {
+    flex-direction: row;
+    align-items: center;
+    column-gap: 3px;
+    width: auto;
+    padding: 0 5px;
+    display: flex;
+}
+
+.baddonz-window-controls.right {
+    justify-content: flex-end;
+}
+
+.baddonz-window-controls.left {
+    justify-content: flex-start;
+}
+
+.baddonz-card-title span,
+.baddonz-card p {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, auto !important;
+}
+
+.baddonz-window.collapsed .baddonz-window-controls {
+    width: auto !important;
+    min-width: unset !important;
+    justify-content: center !important;
+    gap: 0;
+    padding: 0 4px !important;
+}
+
+.baddonz-window-title {
+    text-align: center;
+    color: beige;
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, move !important;
+    flex: 3;
+    font-size: 11px;
+    line-height: 25px;
+    flex-grow: 1;
+    padding: 0 5px;
+}
+
+.baddonz-window.collapsed .baddonz-window-title {
+    font-size: 9px;
+}
+
+.baddonz-window-body {
+    color: #fff;
+    box-sizing: border-box;
+    flex-direction: column;
+    flex: 1;
+    height: calc(100% - 25px);
+    font-size: 12px;
+    display: flex;
+    padding: 0 10px 10px 10px;
+}
+
+.baddonz-opacity-button {
+    background: url(https://gordion.margonem.pl/img/gui/buttony.png) -725px -131px;
+    width: 13px;
+    height: 13px;
+    margin-right: 0px;
+}
+
+.baddonz-opacity-button:hover {
+    filter: brightness(1.3);
+}
+
+.baddonz-close-button {
+    background: url(https://gordion.margonem.pl/img/gui/buttony.png) -624px -117px;
+    width: 12px;
+    height: 12px;
+    margin-left: 0px;
+}
+
+.baddonz-close-button:hover {
+    background-position: -726px -117px;
+}
+
+.baddonz-textarea {
+    color: #fff;
+    resize: none;
+    background: #0003;
+    border: 1px solid gray;
+    border-radius: 5px;
+    outline: 0;
+    height: 40px;
+    padding: 2px 3px;
+    font-size: 12px;
+    line-height: 1.5em;
+    box-shadow: inset 0 0 6px 1px #000000bf;
+}
+
+.baddonz-box {
+    box-sizing: border-box;
+    background: #0003;
+    border: 1px solid gray;
+    flex-grow: 1;
+    padding: 0;
+    overflow: unset;
+    box-shadow: inset 0 0 6px 1px #000000bf;
+    display: flex;
+    flex-direction: column;
+}
+
+.baddonz-tab-content-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: none;
+    flex: 1;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 10px 10px 20px 10px;
+}
+
+.baddonz-tab-content-container.settings-list {
+    padding: 10px 10px 0 10px;
+}
+
+.baddonz-top .left-attached {
+    border-left-width: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.baddonz-top .right-attached {
+    border-right-width: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.baddonz-top .left-border {
+    border-left-width: 0;
+}
+
+.baddonz-input.color-text {
+    text-align: center;
+    border-right: none;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    width: 56px;
+    font-family: monospace;
+    font-size: 11px;
+}
+
+.baddonz-input.color {
+    box-sizing: border-box;
+    visibility: hidden;
+    border-width: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+.baddonz-input.color-selector {
+    box-sizing: border-box;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    width: 50px;
+}
+
+.baddonz-input.keybind {
+    text-align: center;
+    caret-color: #0000;
+    transition: none;
+    max-width: 140px;
+}
+
+/* INPUT ogólny */
+.baddonz-input {
+    box-sizing: border-box;
+    border: 1px solid #3b3b3b;
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #fff;
+    padding: 2px 4px;
+    outline: none;
+    font-family: 'Arial', sans-serif;
+    font-size: 13px;
+    border-radius: 3px;
+    transition: none;
+    box-shadow: inset 0 0 6px 1px #000000bf;
+}
+
+/* Focus/Aktywny dla zwykłych inputów */
+.baddonz-input:focus,
+.baddonz-input.active {
+    border-color: #3b3b3b;
+    box-shadow: inset 0 0 6px 1px #000000bf;
+}
+
+/* Focus/Aktywny dla keybindów (z zieloną ramką) */
+.baddonz-input.keybind:focus,
+.baddonz-input.active-keybind-mode {
+    border-color: #96f096;
+    box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680;
+}
+
+/* ---------------------------------------------------- */
+/* --- SEKCJA SELECT - NAPRAWIONE Z WŁASNYMI STYLAMI --- */
+/* ---------------------------------------------------- */
+
+.baddonz-select {
+    color: #fff;
+    box-sizing: border-box;
+    background: #0003; /* Półprzezroczyste czarne tło (pole widoczne) */
+    border: 1px solid gray; /* Szara ramka */
+    border-radius: 5px; /* Zaokrąglone rogi */
+    outline: 0;
+    min-width: 0;
+    padding: 2px 3px;
+    line-height: 1.5em;
+    box-shadow: inset 0 0 6px 1px #000000bf; /* Wewnętrzny cień */
+
+    /* USUNIĘTO color-scheme: dark; */
+    -webkit-appearance: menulist; /* Zachowujemy natywny wygląd strzałki */
+    -moz-appearance: menulist;
+    appearance: menulist;
+}
+
+/* USUNIĘTO STYLOWANIE DLA .baddonz-select option, aby przeglądarka użyła domyślnych, jasnych stylów dla rozwijanej listy. */
+/* Opcje w rozwijanym oknie są teraz kontrolowane przez ustawienia systemowe/przeglądarki, co powinno dać efekt 'jasnego okna wyboru'. */
+
+/* ---------------------------------------------------- */
+/* ---------------------------------------------------- */
+
+.baddonz-input[type="number"] {
+    text-align: right;
+    appearance: textfield;
+    width: 50px;
+    min-width: 30px;
+}
+
+.baddonz-input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.baddonz-top .small {
+    height: 14px;
+}
+
+.baddonz-top .adjacent-button {
+    height: 22px;
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+
+.baddonz-top .bottom-attached {
+    border-bottom-width: 0;
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.baddonz-top .left-attached,
+.baddonz-top .baddonz-alert-buttons.connected .baddonz-button:not(:first-child),
+.baddonz-alert-buttons.connected .baddonz-top .baddonz-button:not(:first-child) {
+    border-left-width: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+.baddonz-top .right-attached,
+.baddonz-top .baddonz-alert-buttons.connected .baddonz-button:not(:last-child),
+.baddonz-alert-buttons.connected .baddonz-top .baddonz-button:not(:last-child) {
+    border-right-width: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.baddonz-top .top-attached {
+    border-top-width: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.baddonz-top .bottom-border {
+    border-bottom-width: 1px;
+}
+
+.baddonz-top .disabled {
+    color: #d3d3d3;
+    background: #3c3c3c66;
+}
+
+.baddonz-alert-segment {
+    text-align: center;
+    max-width: 230px;
+    margin: 2px;
+}
+
+.baddonz-alert-segment:last-child {
+    margin-bottom: 0;
+}
+
+.baddonz-alert-segment:first-child {
+    margin-top: 0;
+}
+
+.baddonz-alert-buttons {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
+    display: flex;
+}
+
+.baddonz-alert-buttons.connected {
+    gap: 0;
+}
+
+.baddonz-alert-buttons .baddonz-button {
+    text-wrap: nowrap;
+    flex: 1;
+}
+
+.baddonz-button {
+    background: #3c3c3c99;
+    border: 1px solid gray;
+    border-radius: 5px;
+    margin-top: 3px;
+    margin-bottom: 3px;
+    padding: 3px 16px;
+    font-size: 12px;
+    transition: background .15s, border-color .15s;
+    box-shadow: inset 0 0 6px 1px #000000bf;
+    color: #fff;
+}
+
+.baddonz-button:hover {
+    background: #5a5a5a99;
+}
+
+.baddonz-button.active {
+    background: #46464666;
+    border-color: #96f096;
+    box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680;
+}
+
+.baddonz-button.no-margin {
+    margin: 0;
+}
+
+.baddonz-button.icon {
+    width: 32px;
+    padding: 0;
+    font-family: monospace;
+}
+
+.baddonz-show-eq {
+    flex-direction: column;
+    gap: 3px;
+    display: flex;
+}
+
+.baddonz-show-eq .baddonz-flex {
+    gap: 3px;
+}
+
+.baddonz-tab-switcher {
+    box-sizing: border-box;
+    background: #0003;
+    border: 1px solid gray;
+    min-width: 128px;
+    margin-right: 6px;
+    overflow-y: auto;
+    box-shadow: inset 0 0 6px 1px #000000bf;
+}
+
+.baddonz-tab {
+    box-sizing: border-box;
+    max-width: calc(100% - 134px);
+    display: flex;
+}
+
+.baddonz-flex .baddonz-tab {
+    flex: 1;
+}
+
+.baddonz-tab-selector {
+    background: linear-gradient(90deg, #4646464d 40%, #46464600);
+    padding: 6px;
+    font-size: 13px;
+    transition: background .1s, padding-left .1s;
+}
+
+.baddonz-tab-selector:hover {
+    background: linear-gradient(90deg, #46464659 50%, #46464600);
+    padding-left: 10px;
+}
+
+.baddonz-tab-selector:not(:last-child) {
+    margin-bottom: 1px;
+}
+
+.baddonz-tab-selector.active {
+    background: linear-gradient(90deg, #46464666 50%, #46464600);
+    padding-left: 10px;
+    font-weight: 700;
+}
+
+.baddonz-label-wrapper {
+    justify-content: space-between;
+    align-items: center;
+    display: flex;
+}
+
+.baddonz-label-wrapper .baddonz-label,
+.baddonz-label-wrapper .baddonz-labeled {
+    padding: 3px;
+}
+
+.baddonz-label-wrapper.inline {
+    display: inline-flex;
+}
+
+.baddonz-label-wrapper.reverse {
+    justify-content: unset;
+}
+
+.baddonz-checkbox {
+    box-sizing: border-box;
+    background-color: #54545479;
+    border: 1px solid #545454;
+    width: 16px;
+    min-width: 16px;
+    height: 16px;
+    min-height: 16px;
+    box-shadow: inset 0 2px 5px #00000080;
+}
+
+.baddonz-checkbox:after {
+    content: "";
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230dff00' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+    width: 100%;
+    height: 100%;
+    transition: all .2s;
+    display: inline-block;
+    transform: scale(0);
+}
+
+.baddonz-checkbox.active:after {
+    transform: scale(1);
+}
+
+.baddonz-settings-button {
+    background: url(https://gordion.margonem.pl/img/gui/buttony.png) -607px -117px;
+    width: 13px;
+    height: 13px;
+}
+
+.baddonz-settings-button:hover {
+    background-position: -659px -117px;
+}
+
+.baddonz-text {
+    color: #fff;
+    text-shadow: 1px 1px 1px #000;
+    font-family: sans-serif;
+    font-size: 12px;
+    padding: 3px;
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, auto !important;
+}
+
+.baddonz-input-plus {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    width: 100%;
+}
+
+.baddonz-input-plus .baddonz-input {
+    flex-grow: 1;
+    border-top-right-radius: 3px !important;
+    border-bottom-right-radius: 3px !important;
+    height: 24px;
+    padding: 2px 5px;
+    font-size: 13px;
+    cursor: text !important;
+}
+
+.baddonz-input-plus .baddonz-button {
+    height: 24px;
+    width: 24px;
+    padding: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 1;
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+
+.baddonz-collapsed {
+    width: 16px;
+    height: 14px;
+    background: url("https://gordion.margonem.pl/img/gui/buttony.png") -556px -399px;
+}
+
+.baddonz-collapsed:hover {
+    filter: brightness(1.2);
+}
+
+.baddonz-enable-wnd {
+    background: url("https://gordion.margonem.pl/img/gui/buttony.png") -465px -399px;
+    width: 16px;
+    height: 16px;
+}
+
+.baddonz-enable-wnd:hover {
+    filter: brightness(1.2);
+}
+
+.baddonz-tab {
+    box-sizing: border-box;
+    color: #fff;
+    text-shadow: 1px 1px 1px #000;
+    background: #3c3c3c99;
+    border: 1px solid gray;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 13px;
+    text-align: center;
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+    transition: background .15s, border-color .15s, transform .1s;
+    box-shadow: inset 0 0 6px 1px #000000bf;
+    flex-grow: 1;
+    white-space: nowrap;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.baddonz-tab:hover {
+    background: #5a5a5a99;
+    border-color: #808080;
+    transform: translateY(-1px);
+}
+
+.baddonz-tab.active {
+    /* ZIELONA RAMKA dla aktywnej zakładki */
+    background: linear-gradient(90deg, #46464666 50%, #46464600);
+    border-color: #96f096;
+    box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680;
+    transform: translateY(0);
+    pointer-events: none;
+}
+
+.baddonz-tabs-container {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.baddonz-card {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+    box-sizing: border-box;
+    background: #0003;
+    border: 1px solid gray;
+    width: auto;
+    max-width: 350px;
+    height: auto;
+    margin-bottom: 5px;
+    padding: 7px 12px;
+    transition: background .15s;
+    box-shadow: inset 0 0 6px 1px #000000bf;
+    display: flex;
+    flex-direction: column;
+}
+
+.baddonz-card * {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+.baddonz-card p, .baddonz-card-title span {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, auto !important;
+}
+
+.baddonz-card:hover {
+    background: #8c8c8c33;
+}
+
+.baddonz-card-title {
+    justify-content: flex-start;
+    align-items: center;
+    margin-bottom: 5px;
+    font-weight: 700;
+    display: flex;
+    width: 100%;
+}
+
+.baddonz-card.active-addon {
+    /* ZIELONA RAMKA dla aktywnej karty dodatku */
+    background: #4a4a4a99;
+    border-color: #96f096;
+    box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680;
+}
+
+.baddonz-card-title span {
+    margin-left: 10px;
+}
+
+.baddonz-card-title .baddonz-checkbox {
+    margin-right: 5px;
+}
+
+.baddonz-enable-wnd {
+    margin-left: auto;
+}
+
+.baddonz-card p {
+    margin-top: 5px;
+    margin-bottom: 0;
+    font-size: 11px;
+    color: #ccc;
+}
+
+.baddonz-setting-row {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 10px;
+    background: none;
+    margin: 0;
+    padding: 0;
+    margin-bottom: 5px;
+    line-height: normal;
+}
+
+.baddonz-setting-row .baddonz-label {
+    margin: 0;
+    padding: 0;
+    line-height: normal;
+}
+
+#baddonz-toggle-hotkey-input {
+    border-radius: 3px;
+    transition: none;
+}
+
+#baddonz-toggle-hotkey-input.active-keybind-mode {
+    /* ZIELONA RAMKA - Input "Otwieraj Managera" */
+    border-color: #96f096 !important;
+    box-shadow: inset 0 0 6px 1px rgba(0, 0, 0, 0.75), 0 0 8px 1px rgba(150, 240, 150, 0.5) !important;
+    caret-color: transparent !important;
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+
+.baddonz-setting-row.hotkey-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 5px;
+}
+
+.baddonz-setting-row.hotkey-row .baddonz-label {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.baddonz-setting-row.hotkey-row #baddonz-toggle-hotkey-input {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+/* Specific styles for Szybka Grupa */
+.baddon_set_button.ZAP {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+#zap-wnd {
+    min-width: 191px;
+}
+#zap-wnd .baddonz-window-body {
+    gap: 5px;
+}
+
+#zap-main-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    justify-content: flex-start;
+}
+
+#zap-keybind-input.compact {
+    width: 100px;
+    flex-shrink: 0;
+    text-align: center;
+    padding: 1px 0px;
+    font-size: 11px;
+    height: 20px;
+    line-height: 18px;
+    margin-left: 5px;
+}
+
+#zap-wnd #zap-specific-nicks-list::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+#zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-track {
+    background: #1414148f;
+    border-radius: 3px;
+}
+#zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-thumb {
+    background: #505050;
+    border-radius: 3px;
+}
+#zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-thumb:hover {
+    background: #808080;
+}
+#zap-wnd .zap-remove-nick-x {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+#zap-wnd input.zap-nick-display {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+#zap-specific-nicks-list {
+    max-height: 86px;
+    overflow-y: auto;
+    padding-right: 2px;
+    width: 100%;
+}
+
+#zap-specific-nicks-list-section {
+    margin-top: 2px !important;
+    width: 100%;
+}
+
+#zap-level-range-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 5px;
+    margin-top: -3px;
+    margin-left: 0;
+    width: 100%;
+}
+#zap-level-range-section .baddonz-input.level-input {
+    flex-grow: 1;
+    height: 20px;
+    text-align: center;
+    padding: 1px 0px;
+    font-size: 11px;
+    line-height: 18px;
+}
+#zap-level-range-section .separator {
+    color: #fff;
+    font-size: 16px;
+    line-height: 1;
+    margin: 0 2px;
+}
+
+#zap-accept-options-section {
+    gap: 3px;
+}
+
+.zap-accept-checkbox-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.zap-accept-checkbox-grid .baddonz-label-wrapper {
+    width: auto;
+    justify-content: flex-start;
+}
+
+/* Styles for Auto Przywo addon */
+#ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+#ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-track {
+    background: #1414148f;
+    border-radius: 3px;
+}
+
+#ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-thumb {
+    background: #505050;
+    border-radius: 3px;
+}
+
+#ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-thumb:hover {
+    background: #808080;
+}
+
+#ap-wnd {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+
+#ap-wnd .baddonz-window-controls > .baddonz-icon,
+#ap-wnd .baddonz-checkbox,
+#ap-wnd .ap-remove-nick-x,
+#ap-wnd input.ap-nick-display {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+
+.ap-scroll-container {
+    max-height: 155px;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.ap-remove-nick-x {
+    position: absolute;
+    right: 8px;
+    cursor: pointer;
+    color: #888;
+    font-weight: normal;
+    font-size: 12px;
+    line-height: 1;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    text-align: center;
+}
+
+.ap-nick-display {
+    flex-grow: 1;
+    padding-right: 20px;
+    height: 24px;
+    padding: 2px 5px;
+    font-size: 13px;
+}
+
+/* Styles for Rozwiązywanie grupy addon */
+.baddon_set_button.RG {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+
+#rg-keybind-input {
+    border: 1px solid #777;
+    border-radius: 3px;
+    padding: 4px 6px;
+    box-shadow: none;
+    text-align: center;
+    font-size: 13px;
+    height: auto;
+    line-height: normal;
+    box-sizing: border-box;
+    transition: none;
+}
+
+#rg-keybind-input.active-keybind-mode {
+    /* ZIELONA RAMKA - Input "Skrót Resetu" (w dodatku RG) */
+    caret-color: transparent !important;
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+    border-color: #96f096;
+    box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680;
+}
+
+#rg-wnd .baddonz-window-body {
+    gap: 5px;
+}
+
+#rg-wnd hr {
+    display: none;
+}
+.baddonz-info-icon {
+    width: 17px;
+    height: 17px;
+    background: url(../img/gui/buttony.png?v=1753438686037) no-repeat -497px -199px
+}
+.baddonz-info-icon:hover {
+filter: brightness(1.3);
+}
+.relogger-window {
+min-width: 220px;
+}
+.baddonz-dock-wrapper {
+    position: absolute;
+    display: flex;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 9999;
+}
+.baddonz-dock-wrapper.bottom-right {
+    right: 0;
+    bottom: 0;
+}
+.baddonz-dock-wrapper.top-right {
+    right: 0;
+    top: 0;
+}
+.baddonz-dock-wrapper.bottom-left {
+    left: 0;
+    bottom: 0;
+}
+.baddonz-dock-wrapper.top-left {
+    left: 0;
+    top: 0;
+}
+.baddonz-dock-wrapper.vertical {
+    flex-direction: column-reverse;
+}
+.baddonz-dock-wrapper.vertical.top-right, .baddonz-dock-wrapper.vertical.top-left {
+    flex-direction: column;
+}
+.baddonz-dock-wrapper.horizontal {
+    flex-direction: row-reverse;
+}
+.baddonz-dock-wrapper.horizontal.top-left, .baddonz-dock-wrapper.horizontal.bottom-left {
+    flex-direction: row;
+}
+.baddonz-dock-switch {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    cursor: url(https://gordion.margonem.pl/img/gui/cursor/5n.png?v=1730794617277) 5 -5, auto;
+    border: 1px solid #777;
+    box-sizing: border-box;
+    background: #0009;
+    width: 26px;
+    height: 26px;
+    pointer-events: initial;
+    color: white;
+    font-size: 14px;
+    text-align: center;
+}
+.baddonz-dock-switch .fa {
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.baddonz-dock-switch.active .fa {
+    transform: rotate(-90deg);
+}
+.baddonz-dock-wrapper.horizontal .baddonz-dock-switch .fa {
+    transform: none;
+}
+.baddonz-dock-wrapper.horizontal .baddonz-dock-switch.active .fa {
+    transform: rotate(-90deg);
+}
+.baddonz-dock-wrapper.horizontal.bottom-left .baddonz-dock-switch.active .fa,
+.baddonz-dock-wrapper.horizontal.top-left .baddonz-dock-switch.active .fa {
+    transform: rotate(-90deg);
+}
+.baddonz-dock-switch:hover {
+    background: #5a5a5a99;
+    border-color: #808080;
+}
+.baddonz-dock-switch.active {
+    border-color: #96f096;
+}
+.baddonz-dock {
+    display: flex;
+    background: transparent;
+    pointer-events: initial;
+    color: #d4d4d4;
+    overflow: hidden;
+    max-height: 500px;
+    max-width: 26px;
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.baddonz-dock.collapsed.vertical {
+    max-height: 0;
+    overflow: hidden;
+}
+.baddonz-dock.collapsed.horizontal {
+    max-width: 0;
+    overflow: hidden;
+}
+.baddonz-dock.vertical {
+    flex-direction: column-reverse;
+}
+.baddonz-dock-wrapper.top-right .baddonz-dock.vertical, .baddonz-dock-wrapper.top-left .baddonz-dock.vertical {
+    flex-direction: column;
+}
+.baddonz-dock.horizontal {
+    flex-direction: row-reverse;
+    max-width: 500px;
+    max-height: 26px;
+    transition: max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.baddonz-dock-wrapper.top-left .baddonz-dock.horizontal, .baddonz-dock-wrapper.bottom-left .baddonz-dock.horizontal {
+    flex-direction: row;
+}
+.baddonz-dock-addon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    cursor: url(https://gordion.margonem.pl/img/gui/cursor/5n.png?v=1730794617277) 5 -5, auto;
+    border: 1px solid #777;
+    box-sizing: border-box;
+    background: #0009;
+    width: 26px;
+    height: 26px;
+    color: white;
+    display: none;
+}
+.baddonz-dock-addon.active {
+    border-color: #96f096;
+    color: #96f096;
+}
+.baddonz-dock-addon:hover {
+    background: #5a5a5a99;
+    border-color: #808080;
+}
+ .baddonz-slider-wrapper {
+    position: relative;
+    width: 100%;
+    height: 4px;
+    background: #404040;
+    border-radius: 2px;
+}
+.baddonz-slider-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(to right, #7CFC00, #32CD32);
+    border-radius: 2px;
+}
+.baddonz-slider-thumb {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #7e7474;
+    border: 1px solid #303030;
+    box-shadow: 0 0 3px #000;
+    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.baddonz-slider-thumb:hover {
+    background: #7CFC00;
+    border-color: #32CD32;
+    box-shadow: 0 0 5px #32CD32;
+}
+.baddonz-slider-value-display {
+    position: absolute;
+    top: -15px;
+    transform: translateX(-50%);
+    pointer-events: none;
+    font-size: 10px;
+    color: #FFFFFF;
+    text-shadow: 0 0 2px #000;
+    min-width: 30px;
+    text-align: center;
+    white-space: nowrap;
+}
+.item-searcher-dimmed-item {
+    opacity: 0.15;
+}
+.item-searcher-bag-counter {
+    position: absolute;
+    top: 1px;
+    right: 2px;
+    color: #ff0000;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 10001;
+    text-shadow: 1px 1px 1px #000;
+}
+.item-searcher-window-title {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.item-searcher-baddonz-window {
+    cursor: url(https://gordion.margonem.pl/img/gui/cursor/1n.png?v=1730794617277) 5 -5, auto;
+}
+.item-searcher-baddonz-window-controls > .baddonz-icon,
+.item-searcher-baddonz-input,
+.item-searcher-baddonz-label-wrapper,
+.item-searcher-clear-input-button {
+    cursor: url(https://gordion.margonem.pl/img/gui/cursor/5n.png?v=1730794617277) 5 -5, auto;
+}
+.item-searcher-baddonz-input:focus {
+    outline: none;
+    border-color: transparent;
+}
+.item-searcher-baddonz-label-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.baddonz-state-button {
+    width: 9px;
+    height: 9px;
+    background: radial-gradient(ellipse at center, rgb(255, 0, 0), #101010);
+    border-radius: 50%;
+    box-shadow: 0 0 3px 1px rgba(255, 0, 0, 0.75);
+    display: inline-block;
+    transition:
+        box-shadow 180ms ease-in-out,
+        background 180ms ease-in-out,
+        transform 120ms ease-in-out;
+    padding: 1px;
+    vertical-align: -2px;
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
+}
+
+.baddonz-state-button:hover {
+    box-shadow: 0 0 4px 2px rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
+}
+
+.baddonz-state-button--active {
+    background: radial-gradient(ellipse at center, rgb(0, 255, 0), #101010);
+    box-shadow: 0 0 3px 1px rgba(0, 255, 0, 0.75);
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
+}
+.baddonz-type-icon {
+    width: 18px;
+    height: 18px;
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    background: url("https://gordion.margonem.pl/img/gui/notyfikacje-sprite.png");
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
+}
+
+.baddonz-type-icon.cl-1 {
+    background-position: -1px -100px;
+}
+
+.baddonz-type-icon.cl-2 {
+    background-position: -41px -100px;
+}
+
+.baddonz-type-icon.cl-3 {
+    background-position: -21px -100px;
+}
+
+.baddonz-type-icon.cl-4 {
+    background-position: -61px -100px;
+}
+
+.baddonz-type-icon.cl-5 {
+    background-position: -81px -100px;
+}
+
+.baddonz-type-icon.cl-6 {
+    background-position: -101px -100px;
+}
+
+.baddonz-type-icon.cl-7 {
+    background-position: -121px -100px;
+}
+
+.baddonz-type-icon.cl-8 {
+    background-position: -141px -100px;
+}
+
+.baddonz-type-icon.cl-9 {
+    background-position: -161px -100px;
+}
+
+.baddonz-type-icon.cl-10 {
+    background-position: -181px -100px;
+}
+
+.baddonz-type-icon.cl-11 {
+    background-position: -201px -100px;
+}
+
+.baddonz-type-icon.cl-12 {
+    background-position: -221px -100px;
+}
+
+.baddonz-type-icon.cl-13 {
+    background-position: -241px -100px;
+}
+
+.baddonz-type-icon.cl-14 {
+    background-position: -261px -100px;
+}
+
+.baddonz-type-icon.cl-29 {
+    background-position: -401px -100px;
+}
+.baddonz-changelog-card {
+    padding: 12px 14px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.06));
+    border-color: #666;
+    max-width: 100%;
+}
+
+.baddonz-changelog-title {
+    padding-left: 4px;
+    font-size: 13px;
+    color: beige;
+}
+
+.baddonz-changelog-content {
+    padding-left: 4px;
+    color: #ccc;
+}
+
+/* H1 - version header (closest to left edge) */
+.baddonz-changelog-card h1 {
+    margin: 0 0 8px 0;
+    padding-left: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: #fff;
+}
+
+/* H2 - sections */
+.baddonz-changelog-card h2 {
+    margin: 8px 0 6px 0;
+    padding-left: 15px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #dcdcdc;
+}
+
+/* H3 - subitems (if used) */
+.baddonz-changelog-card h3 {
+    margin: 6px 0 4px 0;
+    padding-left: 25px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #cfcfcf;
+}
+
+/* H4 - descriptions / bullet points */
+.baddonz-changelog-card h4 {
+    margin: 3px 0 3px 0;
+    padding-left: 35px;
+    font-size: 12px;
+    font-weight: 400;
+    color: #bfbfbf;
+}
+
+/* Make sure lists inside changelogs look neat */
+.baddonz-changelog-card ul {
+    padding-left: 50px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+.baddonz-changelog-card li {
+    margin-bottom: 4px;
+    font-size: 12px;
+}
