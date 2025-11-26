@@ -76,7 +76,6 @@
     justify-content: flex-end;
 }
 
-/* OKNO GŁÓWNE */
 .baddonz-window {
     pointer-events: all;
     text-shadow: 1px 1px 1px #000;
@@ -91,7 +90,7 @@
     position: absolute;
     box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66;
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
-    z-index: 99;
+    z-index: 69;
 }
 
 .baddonz-window.anon {
@@ -1234,7 +1233,7 @@ min-width: 220px;
     color: #ff0000;
     font-size: 14px;
     font-weight: bold;
-    z-index: 10001;
+    z-index: 9999;
     text-shadow: 1px 1px 1px #000;
 }
 .item-searcher-window-title {
