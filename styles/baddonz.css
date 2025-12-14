@@ -90,7 +90,7 @@
     position: absolute;
     box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66;
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
-    z-index: 69;
+    z-index: 49;
 }
 
 .baddonz-window.anon {
