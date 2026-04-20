@@ -1,9 +1,10 @@
-(function() {    
+(function() {
     'use strict';
 
     const ADDON_ID = "AP";
-    let currentSettings = { enabled: true, windowOpacity: 2, windowVisible: true, blockedNicks: [] };
+    const PREF = ADDON_ID.toLowerCase(); // Prefix do ID html, np. "ap"
     
+    let currentSettings = { enabled: true, windowOpacity: 2, windowVisible: true, blockedNicks: [] };
     let uiWindowElement = null;
     let originalAlert = null;
 
@@ -46,61 +47,61 @@
     }
 
     function buildUI() {
+        // Wszystkie ID korzystają ze zmiennej ${PREF}, czyli np. id="ap-checkbox"
         const bodyHtml = `
             <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
-                <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ap-checkbox"></div>
+                <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="${PREF}-checkbox"></div>
                 <div class="baddonz-text" style="padding: 0;">Auto Przywo</div>
             </div>
 
-            <div id="ap-blocked-nicks-section" class="baddonz-flex column" style="gap: 5px; margin-top: 5px; display: ${currentSettings.enabled ? 'flex' : 'none'};">
+            <div id="${PREF}-blocked-nicks-section" class="baddonz-flex column" style="gap: 5px; margin-top: 5px; display: ${currentSettings.enabled ? 'flex' : 'none'};">
                 <hr style="width: 100%; border-color: #303030; margin: 0;">
                 <div class="baddonz-text" style="padding: 0;">Nie akceptuj od:</div>
                 <div class="baddonz-input-plus">
-                    <input type="text" class="baddonz-input" id="ap-blocked-nick-input" placeholder="Wpisz nick" maxlength="20">
-                    <button class="baddonz-button" id="ap-add-nick-btn">+</button>
+                    <input type="text" class="baddonz-input" id="${PREF}-blocked-nick-input" placeholder="Wpisz nick" maxlength="20">
+                    <button class="baddonz-button" id="${PREF}-add-nick-btn">+</button>
                 </div>
-                <div class="baddonz-scroll" id="ap-blocked-nicks-list" style="overflow-y: auto; max-height: 120px;"></div>
+                <div class="baddonz-scroll" id="${PREF}-blocked-nicks-list" style="overflow-y: auto; max-height: 120px;"></div>
             </div>
         `;
 
-        // Generujemy okno przez API (Zmieniłem szerokość na 210px jako przykład)
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '210px' });
 
-        const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
-        const apBlockedNickInput = uiWindowElement.querySelector("#ap-blocked-nick-input");
-        const apAddNickBtn = uiWindowElement.querySelector("#ap-add-nick-btn");
-        const apBlockedNicksList = uiWindowElement.querySelector("#ap-blocked-nicks-list");
-        const section = uiWindowElement.querySelector("#ap-blocked-nicks-section");
+        const checkboxEl = uiWindowElement.querySelector(`#${PREF}-checkbox`);
+        const blockedNickInput = uiWindowElement.querySelector(`#${PREF}-blocked-nick-input`);
+        const addNickBtn = uiWindowElement.querySelector(`#${PREF}-add-nick-btn`);
+        const blockedNicksList = uiWindowElement.querySelector(`#${PREF}-blocked-nicks-list`);
+        const sectionEl = uiWindowElement.querySelector(`#${PREF}-blocked-nicks-section`);
 
         const renderBlockedNicks = () => {
-            apBlockedNicksList.innerHTML = '';
+            blockedNicksList.innerHTML = '';
             currentSettings.blockedNicks.forEach((nick, index) => {
                 const el = document.createElement('div');
                 el.style.cssText = `position: relative; width: 100%; display: flex; align-items: center; margin-bottom: 3px; padding-top: 2px;`;
                 el.innerHTML = `<input type="text" class="baddonz-input ap-nick-display" value="${nick}" readonly data-index="${index}" maxlength="20"><span class="ap-remove-nick-x" data-index="${index}">&times;</span>`;
-                apBlockedNicksList.appendChild(el);
+                blockedNicksList.appendChild(el);
             });
-            apBlockedNicksList.style.paddingRight = (apBlockedNicksList.scrollHeight > apBlockedNicksList.clientHeight) ? '6px' : '0';
+            blockedNicksList.style.paddingRight = (blockedNicksList.scrollHeight > blockedNicksList.clientHeight) ? '6px' : '0';
         };
 
-        apCheckbox.addEventListener('click', () => {
-            apCheckbox.classList.toggle('active');
-            currentSettings.enabled = apCheckbox.classList.contains('active');
-            section.style.display = currentSettings.enabled ? 'flex' : 'none';
+        checkboxEl.addEventListener('click', () => {
+            checkboxEl.classList.toggle('active');
+            currentSettings.enabled = checkboxEl.classList.contains('active');
+            sectionEl.style.display = currentSettings.enabled ? 'flex' : 'none';
             saveSettings();
         });
 
-        apAddNickBtn.addEventListener('click', () => {
-            const nick = apBlockedNickInput.value.trim();
+        addNickBtn.addEventListener('click', () => {
+            const nick = blockedNickInput.value.trim();
             if (nick && !currentSettings.blockedNicks.some(n => n.toLowerCase() === nick.toLowerCase())) {
                 currentSettings.blockedNicks.push(nick);
-                apBlockedNickInput.value = '';
+                blockedNickInput.value = '';
                 saveSettings(); renderBlockedNicks();
-                apBlockedNicksList.scrollTop = apBlockedNicksList.scrollHeight;
+                blockedNicksList.scrollTop = blockedNicksList.scrollHeight;
             }
         });
 
-        apBlockedNicksList.addEventListener('click', (e) => {
+        blockedNicksList.addEventListener('click', (e) => {
             if (e.target.classList.contains('ap-remove-nick-x')) {
                 currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
                 saveSettings(); renderBlockedNicks();
@@ -108,13 +109,15 @@
         });
 
         if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
-            $(apCheckbox).tip('Automatyczna akceptacja przywołania');
-            $(apAddNickBtn).tip('Dodaj nick do czarnej listy');
+            $(checkboxEl).tip('Automatyczna akceptacja przywołania');
+            $(addNickBtn).tip('Dodaj nick do czarnej listy');
         }
 
         renderBlockedNicks();
     }
 
+    // --- CYKL ŻYCIA I WSPÓŁPRACA Z BADDONZ ---
+    
     function addonInit() {
         loadSettings();
         enableLogic();
@@ -129,11 +132,26 @@
         }
     }
 
+    // Funkcja wywoływana, gdy ktoś kliknie Lewym Przyciskiem (LPM) na ikonkę w docku
+    function addonToggle(isEnabled) {
+        currentSettings.enabled = isEnabled;
+        if (uiWindowElement) {
+            const cb = uiWindowElement.querySelector(`#${PREF}-checkbox`);
+            const sec = uiWindowElement.querySelector(`#${PREF}-blocked-nicks-section`);
+            if (cb) cb.classList.toggle('active', isEnabled);
+            if (sec) sec.style.display = isEnabled ? 'flex' : 'none';
+        }
+    }
+
     const checkApi = () => {
         if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon) {
             setTimeout(checkApi, 500); return;
         }
-        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop });
+        window.BaddonzAPI.registerAddon(ADDON_ID, { 
+            init: addonInit, 
+            stop: addonStop,
+            onToggle: addonToggle // Rejestrujemy funkcję do obsługi kliknięcia w docku
+        });
     };
     checkApi();
 
