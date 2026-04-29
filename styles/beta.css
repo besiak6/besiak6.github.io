@@ -1,235 +1,204 @@
-/* ================================================= */
-/* BADDONZ UI FRAMEWORK - GŁÓWNE STYLE               */
-/* ================================================= */
+// ==UserScript==
+// @name          Auto Przywo
+// @version       05.08.2025
+// @author        besiak
+// @match         https://*.margonem.pl/*
+// @grant         none
+// ==/UserScript==
 
-/* ================================================= */
-/* 1. KURSORY (GLOBALNE)                             */
-/* ================================================= */
-.baddonz-jsx-root, .baddonz-window, .baddonz-dock, .baddonz-window-body, .baddonz-dock-wrapper {
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, auto !important;
-}
+(function() {
+    'use strict';
 
-.baddonz-input:not(.keybind):not(.color-selector), .baddonz-textarea, .baddonz-text, .baddonz-card-title span, .baddonz-card p {
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, text !important;
-}
+    const ADDON_ID = "AP";
+    let currentSettings = { enabled: true, windowOpacity: 2, windowVisible: true, blockedNicks: [] };
+    
+    let uiWindowElement = null;
+    let originalAlert = null;
 
-.baddonz-window-header, .baddonz-window-title, .baddonz-button, .baddonz-tab, .baddonz-checkbox, .baddonz-icon, .baddonz-card, .baddonz-dock-switch, .baddonz-dock-addon, .baddonz-input.keybind, .baddonz-state-button, .baddonz-type-icon, .baddon_set_button {
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
-}
+    function loadSettings() {
+        if (window.BaddonzAPI) currentSettings = { ...currentSettings, ...window.BaddonzAPI.getAddonSettings(ADDON_ID) };
+    }
+    
+    function saveSettings() {
+        if (window.BaddonzAPI) window.BaddonzAPI.saveAddonSettings(ADDON_ID, currentSettings);
+    }
 
-/* ================================================= */
-/* 2. GŁÓWNY MENEDŻER I SCROLLBARY                   */
-/* ================================================= */
-.baddonz-manager { width: 380px; height: 450px; }
-.baddonz-manager .baddonz-tab-switcher { width: 128px; }
-.baddonz-manager .baddonz-tab { width: 512px; }
-.baddonz-jsx-root { line-height: 1; }
+    function enableLogic() {
+        if (typeof mAlert !== 'undefined' && !originalAlert) {
+            originalAlert = mAlert;
+            mAlert = function () {
+                if (currentSettings.enabled && arguments[0] !== undefined && typeof arguments[0] === 'string') {
+                    const message = arguments[0];
+                    if (message.includes("przyzywa do siebie swoją drużynę")) {
+                        const nickMatch = message.match(/Gracz (.+?) przyzywa/);
+                        if (nickMatch && nickMatch[1]) {
+                            const summonedNick = nickMatch[1].trim();
+                            const isBlocked = currentSettings.blockedNicks.some(bn => bn.toLowerCase() === summonedNick.toLowerCase());
+                            if (isBlocked) return originalAlert.apply(this, arguments);
+                        }
 
-.baddonz-jsx-root ::-webkit-scrollbar, .baddonz-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-.baddonz-jsx-root ::-webkit-scrollbar-track, .baddonz-scroll::-webkit-scrollbar-track { background: #1414148f; border-radius: 3px; }
-.baddonz-jsx-root ::-webkit-scrollbar-thumb, .baddonz-scroll::-webkit-scrollbar-thumb { background: #505050; border-radius: 3px; }
-.baddonz-jsx-root ::-webkit-scrollbar-thumb:hover, .baddonz-scroll::-webkit-scrollbar-thumb:hover { background: #808080; }
+                        _g("party&a=acceptsummon&answer=1");
+                        if (typeof closeModal === "function") closeModal();
+                        return;
+                    }
+                }
+                return originalAlert.apply(this, arguments);
+            };
+        }
+    }
 
-.baddonz-flex { flex: 1; justify-content: center; max-width: 100%; max-height: 100%; display: flex; }
-.baddonz-flex.column { flex-direction: column; }
-.baddonz-flex.inline { display: inline-flex; }
-.baddonz-flex.around { justify-content: space-around; }
-.baddonz-flex.between { justify-content: space-between; }
-.baddonz-flex.centered { align-items: center; }
-.baddonz-flex.end { justify-content: flex-end; }
+    function disableLogic() {
+        if (originalAlert) {
+            mAlert = originalAlert;
+            originalAlert = null;
+        }
+    }
 
-/* ================================================= */
-/* 3. STRUKTURA OKIEN                                */
-/* ================================================= */
-.baddonz-window {
-    pointer-events: all; text-shadow: 1px 1px 1px #000; color: #fff; background: #0009;
-    border-radius: 7px; flex-direction: column; min-width: 191px; min-height: 22px;
-    font-family: sans-serif; display: flex; position: absolute; box-sizing: border-box;
-    box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66; z-index: 29;
-}
-.baddonz-window.blur { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
-.baddonz-window.opacity-0 { background: 0 0; }
-.baddonz-window.opacity-1 { background: #0000004d; }
-.baddonz-window.opacity-2 { background: #0009; }
-.baddonz-window.opacity-3 { background: #000c; }
-.baddonz-window.opacity-4 { background: #000; }
-.baddonz-window.collapsed { width: 90px !important; height: 25px !important; resize: none !important; overflow: hidden !important; min-width: 90px !important; min-height: 25px !important; }
-.baddonz-window.collapsed .baddonz-window-body { display: none !important; }
+    function buildUI() {
+        const bodyHtml = `
+            <div class="baddonz-label-wrapper" style="justify-content: flex-start;">
+                <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ap-checkbox"></div>
+                <div class="baddonz-text" style="padding: 0;">Auto Przywo</div>
+            </div>
 
-.baddonz-window-header { white-space: nowrap; box-sizing: border-box; height: 25px; display: flex; justify-content: space-between; align-items: center; }
-.baddonz-window.collapsed .baddonz-window-header { width: 100% !important; }
-.baddonz-window-controls { flex-direction: row; align-items: center; column-gap: 3px; width: auto; padding: 0 5px; display: flex; }
-.baddonz-window-controls.right { justify-content: flex-end; }
-.baddonz-window-controls.left { justify-content: flex-start; }
-.baddonz-window.collapsed .baddonz-window-controls { width: auto !important; min-width: unset !important; justify-content: center !important; gap: 0; padding: 0 4px !important; }
+            <div id="ap-blocked-nicks-section" class="baddonz-flex column" style="gap: 5px; margin-top: 5px; display: ${currentSettings.enabled ? 'flex' : 'none'};">
+                <hr style="width: 100%; border-color: #303030; margin: 0;">
+                <div class="baddonz-text" style="padding: 0;">Nie akceptuj od:</div>
+                
+                <div class="baddonz-input-addbutton">
+                    <input type="text" class="baddonz-input" id="ap-blocked-nick-input" placeholder="Wpisz nick" maxlength="20">
+                    <button class="baddonz-button" id="ap-add-nick-btn">+</button>
+                </div>
+                
+                <div class="baddonz-scroll" id="ap-blocked-nicks-list" style="overflow-y: auto; max-height: 120px; width: 100%; box-sizing: border-box;"></div>
+            </div>
+        `;
 
-.baddonz-window-title { text-align: center; color: beige; flex: 3; font-size: 11px; line-height: 25px; flex-grow: 1; padding: 0 5px; }
-.baddonz-window.collapsed .baddonz-window-title { font-size: 9px; }
-.baddonz-window-body { color: #fff; box-sizing: border-box; flex-direction: column; flex: 1; height: calc(100% - 25px); font-size: 12px; display: flex; padding: 0 10px 10px 10px; width: 100%; }
+        // Ustawiamy szerokość na 200px - Flexbox z Baddonz Stylu zrobi resztę
+        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '200px' });
 
-.baddonz-opacity-button { background: url(https://gordion.margonem.pl/img/gui/buttony.png) -725px -131px; width: 13px; height: 13px; margin-right: 0px; }
-.baddonz-opacity-button:hover { filter: brightness(1.3); }
-.baddonz-close-button { background: url(https://gordion.margonem.pl/img/gui/buttony.png) -624px -117px; width: 12px; height: 12px; margin-left: 0px; }
-.baddonz-close-button:hover { background-position: -726px -117px; }
-.baddonz-collapsed { width: 16px; height: 14px; background: url("https://gordion.margonem.pl/img/gui/buttony.png") -556px -399px; }
-.baddonz-collapsed:hover { filter: brightness(1.2); }
-.baddonz-enable-wnd { background: url("https://gordion.margonem.pl/img/gui/buttony.png") -465px -399px; width: 16px; height: 16px; }
-.baddonz-enable-wnd:hover { filter: brightness(1.2); }
-.baddonz-settings-button { background: url(https://gordion.margonem.pl/img/gui/buttony.png) -607px -117px; width: 13px; height: 13px; }
-.baddonz-settings-button:hover { background-position: -659px -117px; }
+        const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
+        const apBlockedNickInput = uiWindowElement.querySelector("#ap-blocked-nick-input");
+        const apAddNickBtn = uiWindowElement.querySelector("#ap-add-nick-btn");
+        const apBlockedNicksList = uiWindowElement.querySelector("#ap-blocked-nicks-list");
+        const section = uiWindowElement.querySelector("#ap-blocked-nicks-section");
 
-/* ================================================= */
-/* 4. ELEMENTY FORMULARZY I UI                       */
-/* ================================================= */
-.baddonz-box { box-sizing: border-box; background: #0003; border: 1px solid gray; flex-grow: 1; padding: 0; box-shadow: inset 0 0 6px 1px #000000bf; display: flex; flex-direction: column; }
-.baddonz-text { color: #fff; text-shadow: 1px 1px 1px #000; font-family: sans-serif; font-size: 12px; padding: 3px; }
-.baddonz-label-wrapper { display: flex; align-items: center; gap: 5px; }
-.baddonz-setting-row { display: flex; flex-direction: row; width: 100%; justify-content: flex-start; align-items: center; gap: 10px; background: none; margin: 0; padding: 0; margin-bottom: 5px; line-height: normal; }
+        const renderBlockedNicks = () => {
+            apBlockedNicksList.innerHTML = '';
+            currentSettings.blockedNicks.forEach((nick, index) => {
+                const el = document.createElement('div');
+                el.className = 'baddonz-list-item'; // UNIWERSALNY MODUŁ: Wiersz Listy z krzyżykiem "X"
+                
+                el.innerHTML = `
+                    <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
+                    <div class="baddonz-icon baddonz-close-button" data-index="${index}" title="Usuń z listy"></div>
+                `;
+                apBlockedNicksList.appendChild(el);
+            });
+        };
 
-.baddonz-checkbox { box-sizing: border-box; background-color: #54545479; border: 1px solid #545454; width: 16px; min-width: 16px; height: 16px; min-height: 16px; box-shadow: inset 0 2px 5px #00000080; }
-.baddonz-checkbox:after { content: ""; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230dff00' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e"); width: 100%; height: 100%; transition: all .2s; display: inline-block; transform: scale(0); }
-.baddonz-checkbox.active:after { transform: scale(1); }
+        apCheckbox.addEventListener('click', () => {
+            apCheckbox.classList.toggle('active');
+            currentSettings.enabled = apCheckbox.classList.contains('active');
+            section.style.display = currentSettings.enabled ? 'flex' : 'none';
+            saveSettings();
+        });
 
-.baddonz-button { background: #3c3c3c99; border: 1px solid gray; border-radius: 5px; margin-top: 3px; margin-bottom: 3px; padding: 3px 16px; font-size: 12px; transition: background .15s, border-color .15s; box-shadow: inset 0 0 6px 1px #000000bf; color: #fff; text-wrap: nowrap; flex: 1; text-align: center; }
-.baddonz-button:hover { background: #5a5a5a99; }
-.baddonz-button.active { background: #46464666; border-color: #96f096; box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680; }
+        apAddNickBtn.addEventListener('click', () => {
+            const nick = apBlockedNickInput.value.trim();
+            if (nick && !currentSettings.blockedNicks.some(n => n.toLowerCase() === nick.toLowerCase())) {
+                currentSettings.blockedNicks.push(nick);
+                apBlockedNickInput.value = '';
+                saveSettings(); renderBlockedNicks();
+                apBlockedNicksList.scrollTop = apBlockedNicksList.scrollHeight;
+            }
+        });
 
-.baddonz-select { color: #fff; box-sizing: border-box; background: #0003; border: 1px solid gray; border-radius: 5px; outline: 0; min-width: 0; padding: 2px 3px; line-height: 1.5em; box-shadow: inset 0 0 6px 1px #000000bf; -webkit-appearance: menulist; appearance: menulist; }
+        apBlockedNicksList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('baddonz-close-button')) {
+                currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
+                saveSettings(); renderBlockedNicks();
+            }
+        });
 
-.baddonz-card { box-sizing: border-box; background: #0003; border: 1px solid gray; width: 100%; height: auto; margin-bottom: 5px; padding: 7px 12px; transition: background .15s; box-shadow: inset 0 0 6px 1px #000000bf; display: flex; flex-direction: column; }
-.baddonz-card:hover { background: #8c8c8c33; }
-.baddonz-card-title { justify-content: flex-start; align-items: center; margin-bottom: 5px; font-weight: 700; display: flex; width: 100%; }
-.baddonz-card.active-addon { background: #4a4a4a99; border-color: #96f096; box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680; }
-.baddonz-card-title span { margin-left: 10px; }
-.baddonz-card-title .baddonz-checkbox { margin-right: 5px; }
-.baddonz-card p { margin-top: 5px; margin-bottom: 0; font-size: 11px; color: #ccc; }
+        apBlockedNicksList.addEventListener('click', (e) => {
+            if (e.target.tagName === 'INPUT' && e.target.classList.contains('baddonz-input')) {
+                const indexToEdit = parseInt(e.target.dataset.index);
+                const originalNick = currentSettings.blockedNicks[indexToEdit];
+                
+                e.target.readOnly = false;
+                e.target.focus();
+                e.target.setSelectionRange(e.target.value.length, e.target.value.length);
 
-/* ================================================= */
-/* 5. GŁÓWNE INPUTY                                  */
-/* ================================================= */
-.baddonz-input {
-    box-sizing: border-box; 
-    border: 1px solid #777; /* Domyślna szara ramka */
-    background-color: rgba(0, 0, 0, 0.05);
-    color: #fff; padding: 2px 4px; outline: none; font-family: 'Arial', sans-serif;
-    font-size: 13px; border-radius: 3px; box-shadow: inset 0 0 6px 1px #000000bf;
-}
+                const handleBlur = () => {
+                    e.target.readOnly = true;
+                    const newNick = e.target.value.trim();
+                    if (newNick && newNick.toLowerCase() !== originalNick.toLowerCase()) {
+                        const isDuplicate = currentSettings.blockedNicks.some((n, i) => i !== indexToEdit && n.toLowerCase() === newNick.toLowerCase());
+                        if (!isDuplicate) currentSettings.blockedNicks[indexToEdit] = newNick;
+                        else e.target.value = originalNick;
+                    } else if (!newNick) {
+                        currentSettings.blockedNicks.splice(indexToEdit, 1);
+                    } else {
+                        e.target.value = originalNick;
+                    }
+                    saveSettings(); renderBlockedNicks();
+                    e.target.removeEventListener('blur', handleBlur);
+                    e.target.removeEventListener('keydown', handleKeyDown);
+                };
 
-.baddonz-input.keybind { text-align: center; caret-color: #0000; transition: none; max-width: 140px; }
-.baddonz-input.keybind:focus, .baddonz-input.active-keybind-mode { border-color: #96f096 !important; caret-color: transparent !important; box-shadow: inset 0 0 6px 1px rgba(0, 0, 0, 0.75), 0 0 8px 1px rgba(150, 240, 150, 0.5) !important; }
+                const handleKeyDown = (ev) => { if (ev.key === 'Enter') e.target.blur(); };
+                e.target.addEventListener('blur', handleBlur);
+                e.target.addEventListener('keydown', handleKeyDown);
+            }
+        });
 
-/* Kompaktowe małe pola (np. na numery) */
-.baddonz-input.compact { width: 100px; flex-shrink: 0; text-align: center; padding: 1px 0px; font-size: 11px; height: 20px; line-height: 18px; margin-left: 5px; }
+        if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
+            $(apCheckbox).tip('Automatyczna akceptacja przywołania');
+            $(apAddNickBtn).tip('Dodaj nick do czarnej listy');
+        }
 
-/* ================================================= */
-/* 6. ZAAWANSOWANE KONTENERY (Klocki Lego Baddonza)  */
-/* ================================================= */
+        renderBlockedNicks();
+    }
 
-/* WERSJA ADDBUTTON: Idealnie sklejony Input (dopasowujący się) + Przycisk */
-.baddonz-input-addbutton { 
-    display: flex; 
-    align-items: center; 
-    width: 100%; 
-    box-sizing: border-box;
-}
-.baddonz-input-addbutton .baddonz-input { 
-    flex: 1 1 auto; /* Wypełnia całą dostępną przestrzeń */
-    min-width: 0; /* ZABEZPIECZENIE: Pozwala inputowi się skurczyć, żeby nie wywalał przycisku */
-    border-top-right-radius: 0 !important; 
-    border-bottom-right-radius: 0 !important; 
-    height: 24px; 
-    padding: 2px 5px; 
-    font-size: 13px; 
-}
-.baddonz-input-addbutton .baddonz-button { 
-    flex: 0 0 24px; /* Twarde ustawienie szerokości przycisku na 24px */
-    width: 24px; 
-    height: 24px; 
-    padding: 0; 
-    margin: 0; 
-    border-top-left-radius: 0; 
-    border-bottom-left-radius: 0; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    font-size: 16px; 
-    line-height: 1; 
-}
+    function addonInit() {
+        loadSettings();
+        enableLogic();
+        if (!uiWindowElement) buildUI();
+    }
 
-/* WERSJA LISTY Z IKONKĄ "X" W ŚRODKU */
-.baddonz-list-item { 
-    position: relative; 
-    width: 100%; 
-    box-sizing: border-box;
-    margin-bottom: 3px; 
-}
-.baddonz-list-item .baddonz-input { 
-    width: 100%; /* Input zajmuje 100% szerokości elementu listy */
-    padding-right: 22px; /* Zostawia pustą przestrzeń po prawej stronie na ikonkę X */
-    box-sizing: border-box;
-    height: 24px; 
-    padding-top: 2px; 
-    padding-bottom: 2px; 
-    font-size: 13px; 
-}
-.baddonz-list-item .baddonz-close-button { 
-    position: absolute; 
-    right: 4px; /* Wskakuje w wyznaczone przez padding-right miejsce */
-    top: 50%; 
-    transform: translateY(-50%); 
-    margin: 0; 
-}
+    function addonStop() {
+        disableLogic(); 
+        if (uiWindowElement) {
+            uiWindowElement.remove(); 
+            uiWindowElement = null;
+        }
+    }
 
-/* Uniwersalna siatka 2-kolumnowa */
-.baddonz-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; width: 100%; box-sizing: border-box; }
-.baddonz-grid-2col .baddonz-label-wrapper { width: auto; justify-content: flex-start; }
+    function onStateToggle(isEnabled) {
+        currentSettings.enabled = isEnabled;
+        if (uiWindowElement) {
+            const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
+            const section = uiWindowElement.querySelector("#ap-blocked-nicks-section");
+            if (apCheckbox) {
+                if (isEnabled) apCheckbox.classList.add('active');
+                else apCheckbox.classList.remove('active');
+            }
+            if (section) section.style.display = isEnabled ? 'flex' : 'none';
+        }
+    }
 
-/* ================================================= */
-/* 7. DOCK BADDONZA                                  */
-/* ================================================= */
-.baddonz-dock-wrapper { position: absolute; display: flex; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 9999; }
-.baddonz-dock-wrapper.bottom-right { right: 0; bottom: 0; }
-.baddonz-dock-wrapper.top-right { right: 0; top: 0; }
-.baddonz-dock-wrapper.bottom-left { left: 0; bottom: 0; }
-.baddonz-dock-wrapper.top-left { left: 0; top: 0; }
-.baddonz-dock-wrapper.vertical { flex-direction: column-reverse; }
-.baddonz-dock-wrapper.vertical.top-right, .baddonz-dock-wrapper.vertical.top-left { flex-direction: column; }
-.baddonz-dock-wrapper.horizontal { flex-direction: row-reverse; }
-.baddonz-dock-wrapper.horizontal.top-left, .baddonz-dock-wrapper.horizontal.bottom-left { flex-direction: row; }
+    const checkApi = () => {
+        if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon) {
+            setTimeout(checkApi, 500); return;
+        }
+        window.BaddonzAPI.registerAddon(ADDON_ID, { 
+            init: addonInit, 
+            stop: addonStop,
+            onStateToggle: onStateToggle
+        });
+    };
+    
+    checkApi();
 
-.baddonz-dock-switch { display: flex; justify-content: center; align-items: center; transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; border: 1px solid #777; box-sizing: border-box; background: #0009; width: 26px; height: 26px; color: white; font-size: 14px; text-align: center; }
-.baddonz-dock-switch .fa { transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-.baddonz-dock-switch.active .fa { transform: rotate(-90deg); }
-.baddonz-dock-wrapper.horizontal .baddonz-dock-switch .fa { transform: none; }
-.baddonz-dock-wrapper.horizontal .baddonz-dock-switch.active .fa { transform: rotate(-90deg); }
-.baddonz-dock-wrapper.horizontal.bottom-left .baddonz-dock-switch.active .fa, .baddonz-dock-wrapper.horizontal.top-left .baddonz-dock-switch.active .fa { transform: rotate(-90deg); }
-.baddonz-dock-switch:hover { background: #5a5a5a99; border-color: #808080; }
-.baddonz-dock-switch.active { border-color: #96f096; }
-
-.baddonz-dock { display: flex; background: transparent; color: #d4d4d4; overflow: hidden; max-height: 500px; max-width: 26px; transition: max-height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), max-width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, padding 0.3s ease !important; }
-.baddonz-dock.collapsed.vertical, .baddonz-dock-wrapper.vertical .baddonz-dock.collapsed { max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; opacity: 0 !important; border: none !important; }
-.baddonz-dock.collapsed.horizontal, .baddonz-dock-wrapper.horizontal .baddonz-dock.collapsed { max-width: 0 !important; padding-left: 0 !important; padding-right: 0 !important; opacity: 0 !important; border: none !important; }
-.baddonz-dock.vertical { flex-direction: column-reverse; }
-.baddonz-dock-wrapper.top-right .baddonz-dock.vertical, .baddonz-dock-wrapper.top-left .baddonz-dock.vertical { flex-direction: column; }
-.baddonz-dock.horizontal { flex-direction: row-reverse; max-width: 500px; max-height: 26px; transition: max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-.baddonz-dock-wrapper.top-left .baddonz-dock.horizontal, .baddonz-dock-wrapper.bottom-left .baddonz-dock.horizontal { flex-direction: row; }
-
-.baddonz-dock-addon { display: flex; justify-content: center; align-items: center; transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out; border: 1px solid #777; box-sizing: border-box; background: #0009; width: 26px; height: 26px; color: white; display: none; }
-.baddonz-dock-addon.active { border-color: #96f096; color: #96f096; }
-.baddonz-dock-addon:hover { background: #5a5a5a99; border-color: #808080; }
-
-/* ================================================= */
-/* 8. POZOSTAŁE ZAAWANSOWANE (Suwaki i Notyfikacje)  */
-/* ================================================= */
-.baddonz-slider-wrapper { position: relative; width: 100%; height: 4px; background: #404040; border-radius: 2px; }
-.baddonz-slider-fill { position: absolute; top: 0; left: 0; height: 100%; width: 0; background: linear-gradient(to right, #7CFC00, #32CD32); border-radius: 2px; }
-.baddonz-slider-thumb { position: absolute; top: 50%; transform: translateY(-50%); width: 10px; height: 10px; border-radius: 50%; background: #7e7474; border: 1px solid #303030; box-shadow: 0 0 3px #000; transition: background 0.2s, border-color 0.2s, box-shadow 0.2s; }
-.baddonz-slider-thumb:hover { background: #7CFC00; border-color: #32CD32; box-shadow: 0 0 5px #32CD32; }
-
-.baddonz-type-icon { width: 18px; height: 18px; position: relative; margin-left: auto; margin-right: auto; background: url("https://gordion.margonem.pl/img/gui/notyfikacje-sprite.png"); }
-.baddonz-type-icon.cl-1 { background-position: -1px -100px; }
-.baddonz-type-icon.cl-2 { background-position: -41px -100px; }
-.baddonz-type-icon.cl-3 { background-position: -21px -100px; }
-.baddonz-type-icon.cl-4 { background-position: -61px -100px; }
-.baddonz-type-icon.cl-5 { background-position: -81px -100px; }
-.baddonz-type-icon.cl-6 { background-position: -101px -100px; }
+})();
