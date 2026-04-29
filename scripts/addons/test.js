@@ -55,7 +55,6 @@
     }
 
     function buildUI() {
-        // Wszystko zbudowane na 100% uniwersalnych elastycznych klasach Baddonza (UI Framework)
         const bodyHtml = `
             <div class="baddonz-label-wrapper" style="justify-content: flex-start;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ap-checkbox"></div>
@@ -71,12 +70,12 @@
                     <button class="baddonz-button" id="ap-add-nick-btn">+</button>
                 </div>
                 
-                <div class="baddonz-scroll" id="ap-blocked-nicks-list" style="overflow-y: auto; overflow-x: hidden; max-height: 120px; width: 100%; box-sizing: border-box;"></div>
+                <div class="baddonz-scroll" id="ap-blocked-nicks-list" style="overflow-y: auto; max-height: 120px; width: 100%; box-sizing: border-box;"></div>
             </div>
         `;
 
-        // Szerokość 195px gwarantuje kompaktowy, ładny wygląd, a Flexbox chroni przed wylaniem się elementów
-        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '195px' });
+        // Ustawiamy szerokość na 200px - Flexbox z Baddonz Stylu zrobi resztę
+        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '200px' });
 
         const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
         const apBlockedNickInput = uiWindowElement.querySelector("#ap-blocked-nick-input");
@@ -88,9 +87,8 @@
             apBlockedNicksList.innerHTML = '';
             currentSettings.blockedNicks.forEach((nick, index) => {
                 const el = document.createElement('div');
-                el.className = 'baddonz-list-item'; // <--- Zunifikowany, elastyczny wiersz listy
+                el.className = 'baddonz-list-item'; // UNIWERSALNY MODUŁ: Wiersz Listy z krzyżykiem "X"
                 
-                // Input elastyczny na 100% dostepnego miejsca, a krzyżyk zamknięcia ląduje po prawej
                 el.innerHTML = `
                     <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
                     <div class="baddonz-icon baddonz-close-button" data-index="${index}" title="Usuń z listy"></div>
@@ -117,14 +115,12 @@
         });
 
         apBlockedNicksList.addEventListener('click', (e) => {
-            // Nasłuchuje na globalny .baddonz-close-button wewnątrz listy
             if (e.target.classList.contains('baddonz-close-button')) {
                 currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
                 saveSettings(); renderBlockedNicks();
             }
         });
 
-        // Edycja elementu po kliknięciu w input w liście
         apBlockedNicksList.addEventListener('click', (e) => {
             if (e.target.tagName === 'INPUT' && e.target.classList.contains('baddonz-input')) {
                 const indexToEdit = parseInt(e.target.dataset.index);
