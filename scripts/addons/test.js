@@ -67,7 +67,7 @@
                 <div class="baddonz-text" style="padding: 0;">Nie akceptuj od:</div>
                 
                 <div class="baddonz-input-addbutton" style="display: flex; align-items: center; width: 100%;">
-                    <input type="text" class="baddonz-input" id="ap-blocked-nick-input" placeholder="Wpisz nick" maxlength="20" style="flex-grow: 1; width: auto; height: 24px; border-top-right-radius: 0; border-bottom-right-radius: 0;">
+                    <input type="text" class="baddonz-input" id="ap-blocked-nick-input" placeholder="Wpisz nick" maxlength="20" style="flex-grow: 1; width: 160px; height: 24px; border-top-right-radius: 0; border-bottom-right-radius: 0;">
                     <button class="baddonz-button" id="ap-add-nick-btn" style="flex-shrink: 0; width: 24px; height: 24px; padding: 0; margin: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; display: flex; justify-content: center; align-items: center;">+</button>
                 </div>
                 
