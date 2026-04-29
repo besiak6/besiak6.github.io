@@ -55,7 +55,6 @@
     }
 
     function buildUI() {
-        // Idealnie dostosowany HTML oparty na globalnych klockach "Lego"
         const bodyHtml = `
             <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ap-checkbox"></div>
@@ -65,12 +64,10 @@
             <div id="ap-blocked-nicks-section" class="baddonz-flex column" style="gap: 5px; margin-top: 5px; display: ${currentSettings.enabled ? 'flex' : 'none'};">
                 <hr style="width: 100%; border-color: #303030; margin: 0;">
                 <div class="baddonz-text" style="padding: 0;">Nie akceptuj od:</div>
-                
                 <div class="baddonz-input-plus">
                     <input type="text" class="baddonz-input" id="ap-blocked-nick-input" placeholder="Wpisz nick" maxlength="20">
-                    <div class="baddonz-button" id="ap-add-nick-btn">+</div>
+                    <button class="baddonz-button" id="ap-add-nick-btn">+</button>
                 </div>
-                
                 <div class="baddonz-scroll" id="ap-blocked-nicks-list" style="overflow-y: auto; max-height: 120px;"></div>
             </div>
         `;
@@ -86,12 +83,12 @@
         const renderBlockedNicks = () => {
             apBlockedNicksList.innerHTML = '';
             currentSettings.blockedNicks.forEach((nick, index) => {
+                // Wykorzystanie nowych uniwersalnych klas lego .baddonz-list-item oraz .baddonz-remove-x
                 const el = document.createElement('div');
-                // Korzystamy z globalnych klas list-item
                 el.className = 'baddonz-list-item';
                 el.innerHTML = `
                     <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
-                    <span class="baddonz-remove-x" data-index="${index}">&times;</span>
+                    <span class="baddonz-remove-x ap-remove-nick-x" data-index="${index}">&times;</span>
                 `;
                 apBlockedNicksList.appendChild(el);
             });
@@ -115,8 +112,16 @@
             }
         });
 
+        // Nasłuchiwanie na enter przy inpucie
+        apBlockedNickInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                apAddNickBtn.click();
+            }
+        });
+
         apBlockedNicksList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('baddonz-remove-x')) {
+            if (e.target.classList.contains('ap-remove-nick-x')) {
                 currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
                 saveSettings(); renderBlockedNicks();
             }
@@ -146,18 +151,14 @@
 
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
-        
         if (uiWindowElement) {
             const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
             const section = uiWindowElement.querySelector("#ap-blocked-nicks-section");
-            
             if (apCheckbox) {
                 if (isEnabled) apCheckbox.classList.add('active');
                 else apCheckbox.classList.remove('active');
             }
-            if (section) {
-                section.style.display = isEnabled ? 'flex' : 'none';
-            }
+            if (section) section.style.display = isEnabled ? 'flex' : 'none';
         }
     }
 
