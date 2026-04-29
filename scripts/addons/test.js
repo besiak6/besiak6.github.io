@@ -55,8 +55,9 @@
     }
 
     function buildUI() {
+        // UI w 100% wykorzystujące uniwersalne klasy "baddonz-input-addbutton" oraz "baddonz-scroll"
         const bodyHtml = `
-            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+            <div class="baddonz-label-wrapper" style="justify-content: flex-start;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ap-checkbox"></div>
                 <div class="baddonz-text" style="padding: 0;">Auto Przywo</div>
             </div>
@@ -64,10 +65,12 @@
             <div id="ap-blocked-nicks-section" class="baddonz-flex column" style="gap: 5px; margin-top: 5px; display: ${currentSettings.enabled ? 'flex' : 'none'};">
                 <hr style="width: 100%; border-color: #303030; margin: 0;">
                 <div class="baddonz-text" style="padding: 0;">Nie akceptuj od:</div>
-                <div class="baddonz-input-plus">
+                
+                <div class="baddonz-input-addbutton">
                     <input type="text" class="baddonz-input" id="ap-blocked-nick-input" placeholder="Wpisz nick" maxlength="20">
                     <button class="baddonz-button" id="ap-add-nick-btn">+</button>
                 </div>
+                
                 <div class="baddonz-scroll" id="ap-blocked-nicks-list" style="overflow-y: auto; max-height: 120px;"></div>
             </div>
         `;
@@ -84,11 +87,14 @@
             apBlockedNicksList.innerHTML = '';
             currentSettings.blockedNicks.forEach((nick, index) => {
                 const el = document.createElement('div');
-                el.style.cssText = `position: relative; width: 100%; display: flex; align-items: center; margin-bottom: 3px; padding-top: 2px;`;
-                el.innerHTML = `<input type="text" class="baddonz-input ap-nick-display" value="${nick}" readonly data-index="${index}" maxlength="20"><span class="ap-remove-nick-x" data-index="${index}">&times;</span>`;
+                // Używamy uniwersalnej struktury listy z reużytym `baddonz-close-button`
+                el.className = 'baddonz-list-item';
+                el.innerHTML = `
+                    <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
+                    <div class="baddonz-icon baddonz-close-button ap-remove-nick-x" data-index="${index}"></div>
+                `;
                 apBlockedNicksList.appendChild(el);
             });
-            apBlockedNicksList.style.paddingRight = (apBlockedNicksList.scrollHeight > apBlockedNicksList.clientHeight) ? '6px' : '0';
         };
 
         apCheckbox.addEventListener('click', () => {
@@ -103,15 +109,18 @@
             if (nick && !currentSettings.blockedNicks.some(n => n.toLowerCase() === nick.toLowerCase())) {
                 currentSettings.blockedNicks.push(nick);
                 apBlockedNickInput.value = '';
-                saveSettings(); renderBlockedNicks();
+                saveSettings(); 
+                renderBlockedNicks();
                 apBlockedNicksList.scrollTop = apBlockedNicksList.scrollHeight;
             }
         });
 
+        // Nasłuchiwanie na przyciski usuwania
         apBlockedNicksList.addEventListener('click', (e) => {
             if (e.target.classList.contains('ap-remove-nick-x')) {
                 currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
-                saveSettings(); renderBlockedNicks();
+                saveSettings(); 
+                renderBlockedNicks();
             }
         });
 
@@ -123,7 +132,6 @@
         renderBlockedNicks();
     }
 
-    // --- CYKL ŻYCIA I ZDARZENIA (API 2.0) ---
     function addonInit() {
         loadSettings();
         enableLogic();
@@ -138,11 +146,8 @@
         }
     }
 
-    // Ta funkcja jest odpalana gdy ktoś kliknie Prawym Przyciskiem myszy na ikonkę w docku
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
-        
-        // Jeśli okienko jest otwarte, od razu odświeżamy checkboxa
         if (uiWindowElement) {
             const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
             const section = uiWindowElement.querySelector("#ap-blocked-nicks-section");
@@ -151,9 +156,7 @@
                 if (isEnabled) apCheckbox.classList.add('active');
                 else apCheckbox.classList.remove('active');
             }
-            if (section) {
-                section.style.display = isEnabled ? 'flex' : 'none';
-            }
+            if (section) section.style.display = isEnabled ? 'flex' : 'none';
         }
     }
 
@@ -164,7 +167,7 @@
         window.BaddonzAPI.registerAddon(ADDON_ID, { 
             init: addonInit, 
             stop: addonStop,
-            onStateToggle: onStateToggle // <--- Reaguje na kliknięcia z Docka
+            onStateToggle: onStateToggle
         });
     };
     
