@@ -55,6 +55,7 @@
     }
 
     function buildUI() {
+        // Idealnie dostosowany HTML oparty na globalnych klockach "Lego"
         const bodyHtml = `
             <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ap-checkbox"></div>
@@ -64,10 +65,12 @@
             <div id="ap-blocked-nicks-section" class="baddonz-flex column" style="gap: 5px; margin-top: 5px; display: ${currentSettings.enabled ? 'flex' : 'none'};">
                 <hr style="width: 100%; border-color: #303030; margin: 0;">
                 <div class="baddonz-text" style="padding: 0;">Nie akceptuj od:</div>
+                
                 <div class="baddonz-input-plus">
                     <input type="text" class="baddonz-input" id="ap-blocked-nick-input" placeholder="Wpisz nick" maxlength="20">
-                    <button class="baddonz-button" id="ap-add-nick-btn">+</button>
+                    <div class="baddonz-button" id="ap-add-nick-btn">+</div>
                 </div>
+                
                 <div class="baddonz-scroll" id="ap-blocked-nicks-list" style="overflow-y: auto; max-height: 120px;"></div>
             </div>
         `;
@@ -84,8 +87,12 @@
             apBlockedNicksList.innerHTML = '';
             currentSettings.blockedNicks.forEach((nick, index) => {
                 const el = document.createElement('div');
-                el.style.cssText = `position: relative; width: 100%; display: flex; align-items: center; margin-bottom: 3px; padding-top: 2px;`;
-                el.innerHTML = `<input type="text" class="baddonz-input ap-nick-display" value="${nick}" readonly data-index="${index}" maxlength="20"><span class="ap-remove-nick-x" data-index="${index}">&times;</span>`;
+                // Korzystamy z globalnych klas list-item
+                el.className = 'baddonz-list-item';
+                el.innerHTML = `
+                    <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
+                    <span class="baddonz-remove-x" data-index="${index}">&times;</span>
+                `;
                 apBlockedNicksList.appendChild(el);
             });
             apBlockedNicksList.style.paddingRight = (apBlockedNicksList.scrollHeight > apBlockedNicksList.clientHeight) ? '6px' : '0';
@@ -109,7 +116,7 @@
         });
 
         apBlockedNicksList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('ap-remove-nick-x')) {
+            if (e.target.classList.contains('baddonz-remove-x')) {
                 currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
                 saveSettings(); renderBlockedNicks();
             }
@@ -123,7 +130,6 @@
         renderBlockedNicks();
     }
 
-    // --- CYKL ŻYCIA I ZDARZENIA (API 2.0) ---
     function addonInit() {
         loadSettings();
         enableLogic();
@@ -138,11 +144,9 @@
         }
     }
 
-    // Ta funkcja jest odpalana gdy ktoś kliknie Prawym Przyciskiem myszy na ikonkę w docku
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
         
-        // Jeśli okienko jest otwarte, od razu odświeżamy checkboxa
         if (uiWindowElement) {
             const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
             const section = uiWindowElement.querySelector("#ap-blocked-nicks-section");
@@ -164,7 +168,7 @@
         window.BaddonzAPI.registerAddon(ADDON_ID, { 
             init: addonInit, 
             stop: addonStop,
-            onStateToggle: onStateToggle // <--- Reaguje na kliknięcia z Docka
+            onStateToggle: onStateToggle
         });
     };
     
