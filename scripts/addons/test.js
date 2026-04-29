@@ -1,3 +1,11 @@
+// ==UserScript==
+// @name          Auto Przywo
+// @version       05.08.2025
+// @author        besiak
+// @match         https://*.margonem.pl/*
+// @grant         none
+// ==/UserScript==
+
 (function() {
     'use strict';
 
@@ -47,6 +55,7 @@
     }
 
     function buildUI() {
+        // Używamy starych klas z Twojego CSS (.baddonz-input-plus, .ap-scroll-container, itp.)
         const bodyHtml = `
             <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ap-checkbox"></div>
@@ -60,7 +69,7 @@
                     <input type="text" class="baddonz-input" id="ap-blocked-nick-input" placeholder="Wpisz nick" maxlength="20">
                     <button class="baddonz-button" id="ap-add-nick-btn">+</button>
                 </div>
-                <div class="baddonz-scroll" id="ap-blocked-nicks-list" style="max-height: 120px;"></div>
+                <div class="ap-scroll-container" id="ap-blocked-nicks-list"></div>
             </div>
         `;
 
@@ -72,17 +81,20 @@
         const apBlockedNicksList = uiWindowElement.querySelector("#ap-blocked-nicks-list");
         const section = uiWindowElement.querySelector("#ap-blocked-nicks-section");
 
+        const updateScrollbarPadding = () => {
+            const isScrollbarVisible = apBlockedNicksList.scrollHeight > apBlockedNicksList.clientHeight;
+            apBlockedNicksList.style.paddingRight = isScrollbarVisible ? '6px' : '0';
+        };
+
         const renderBlockedNicks = () => {
             apBlockedNicksList.innerHTML = '';
             currentSettings.blockedNicks.forEach((nick, index) => {
                 const el = document.createElement('div');
-                // Korzystamy z nowych klas układu list z poprawionego CSS
-                el.className = 'baddonz-list-item';
-                el.innerHTML = `<input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20"><span class="baddonz-remove-x" data-index="${index}">&times;</span>`;
+                el.style.cssText = `position: relative; width: 100%; display: flex; align-items: center; margin-bottom: 3px; padding-top: 2px;`;
+                el.innerHTML = `<input type="text" class="baddonz-input ap-nick-display" value="${nick}" readonly data-index="${index}" maxlength="20"><span class="ap-remove-nick-x" data-index="${index}">&times;</span>`;
                 apBlockedNicksList.appendChild(el);
             });
-            // Odsunięcie od paska przewijania
-            apBlockedNicksList.style.paddingRight = (apBlockedNicksList.scrollHeight > apBlockedNicksList.clientHeight) ? '6px' : '0';
+            updateScrollbarPadding();
         };
 
         apCheckbox.addEventListener('click', () => {
@@ -102,8 +114,14 @@
             }
         });
 
+        // Przywrócono ręczne nasłuchiwanie scrolla (tak jak miałeś w oryginale)
+        apBlockedNicksList.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            apBlockedNicksList.scrollTop += e.deltaY;
+        }, { passive: false });
+
         apBlockedNicksList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('baddonz-remove-x')) {
+            if (e.target.classList.contains('ap-remove-nick-x')) {
                 currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
                 saveSettings(); renderBlockedNicks();
             }
@@ -117,7 +135,6 @@
         renderBlockedNicks();
     }
 
-    // --- CYKL ŻYCIA ---
     function addonInit() {
         loadSettings();
         enableLogic();
@@ -132,7 +149,6 @@
         }
     }
 
-    // Odpala się gdy klikniesz PPM na docku
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
         
@@ -144,7 +160,9 @@
                 if (isEnabled) apCheckbox.classList.add('active');
                 else apCheckbox.classList.remove('active');
             }
-            if (section) section.style.display = isEnabled ? 'flex' : 'none';
+            if (section) {
+                section.style.display = isEnabled ? 'flex' : 'none';
+            }
         }
     }
 
