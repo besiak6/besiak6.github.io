@@ -74,7 +74,6 @@
             </div>
         `;
 
-        // ZMIANA: Zmniejszono szerokość na zgrabne 195px
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '195px' });
 
         const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
@@ -89,9 +88,10 @@
                 const el = document.createElement('div');
                 el.className = 'baddonz-list-item'; 
                 
+                // Czysta klasa baddonz-close-button zdefiniowana przez CSS
                 el.innerHTML = `
                     <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
-                    <div class="baddonz-icon baddonz-close-button" data-index="${index}" title="Usuń z listy"></div>
+                    <div class="baddonz-close-button" data-index="${index}" title="Usuń z listy"></div>
                 `;
                 apBlockedNicksList.appendChild(el);
             });
