@@ -70,12 +70,12 @@
                     <button class="baddonz-button" id="ap-add-nick-btn">+</button>
                 </div>
                 
-                <div class="baddonz-scroll" id="ap-blocked-nicks-list" style="overflow-y: auto; max-height: 120px;"></div>
+                <div class="baddonz-scroll" id="ap-blocked-nicks-list" style="overflow-y: auto; max-height: 120px; width: 100%; box-sizing: border-box;"></div>
             </div>
         `;
 
-        // Zwiększamy okno do 225px, aby pomieścić szerszy przycisk "+" bez ścisku
-        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '225px' });
+        // ZMIANA: Zmniejszono szerokość na zgrabne 195px
+        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '195px' });
 
         const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
         const apBlockedNickInput = uiWindowElement.querySelector("#ap-blocked-nick-input");
