@@ -55,6 +55,7 @@
     }
 
     function buildUI() {
+        // Wszystko zbudowane na uniwersalnych klasach z głównego pliku CSS
         const bodyHtml = `
             <div class="baddonz-label-wrapper" style="justify-content: flex-start;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ap-checkbox"></div>
@@ -74,7 +75,6 @@
             </div>
         `;
 
-        // Szerokość dopasowana do 195px
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '195px' });
 
         const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
@@ -87,11 +87,12 @@
             apBlockedNicksList.innerHTML = '';
             currentSettings.blockedNicks.forEach((nick, index) => {
                 const el = document.createElement('div');
-                el.className = 'baddonz-list-item'; 
+                el.className = 'baddonz-list-item'; // Zunifikowany wiersz listy
                 
+                // Używamy uniwersalnych klas Baddonza dla inputa i usuwania
                 el.innerHTML = `
-                    <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
-                    <div class="baddonz-icon baddonz-close-button" data-index="${index}" title="Usuń z listy"></div>
+                    <input type="text" class="baddonz-input baddonz-list-item-input" value="${nick}" readonly data-index="${index}" maxlength="20">
+                    <span class="baddonz-remove-x" data-index="${index}">✖</span>
                 `;
                 apBlockedNicksList.appendChild(el);
             });
@@ -115,7 +116,7 @@
         });
 
         apBlockedNicksList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('baddonz-close-button')) {
+            if (e.target.classList.contains('baddonz-remove-x')) {
                 currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
                 saveSettings(); renderBlockedNicks();
             }
