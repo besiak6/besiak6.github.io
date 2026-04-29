@@ -55,7 +55,7 @@
     }
 
     function buildUI() {
-        // Wszystkie wymiary i layout są teraz definiowane "w locie" w stylach (style="...")
+        // Wszystko zbudowane na 100% uniwersalnych elastycznych klasach Baddonza (UI Framework)
         const bodyHtml = `
             <div class="baddonz-label-wrapper" style="justify-content: flex-start;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ap-checkbox"></div>
@@ -66,16 +66,16 @@
                 <hr style="width: 100%; border-color: #303030; margin: 0;">
                 <div class="baddonz-text" style="padding: 0;">Nie akceptuj od:</div>
                 
-                <div class="baddonz-input-addbutton" style="display: flex; align-items: center; width: 100%;">
-                    <input type="text" class="baddonz-input" id="ap-blocked-nick-input" placeholder="Wpisz nick" maxlength="20" style="flex-grow: 1; width: 160px; height: 24px; border-top-right-radius: 0; border-bottom-right-radius: 0;">
-                    <button class="baddonz-button" id="ap-add-nick-btn" style="flex-shrink: 0; width: 24px; height: 24px; padding: 0; margin: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; display: flex; justify-content: center; align-items: center;">+</button>
+                <div class="baddonz-input-addbutton">
+                    <input type="text" class="baddonz-input" id="ap-blocked-nick-input" placeholder="Wpisz nick" maxlength="20">
+                    <button class="baddonz-button" id="ap-add-nick-btn">+</button>
                 </div>
                 
-                <div class="baddonz-scroll" id="ap-blocked-nicks-list" style="overflow-y: auto; max-height: 120px; width: 100%; box-sizing: border-box; margin-top: 2px;"></div>
+                <div class="baddonz-scroll" id="ap-blocked-nicks-list" style="overflow-y: auto; overflow-x: hidden; max-height: 120px; width: 100%; box-sizing: border-box;"></div>
             </div>
         `;
 
-        // Zgrabna szerokość okienka (195px)
+        // Szerokość 195px gwarantuje kompaktowy, ładny wygląd, a Flexbox chroni przed wylaniem się elementów
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '195px' });
 
         const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
@@ -88,18 +88,15 @@
             apBlockedNicksList.innerHTML = '';
             currentSettings.blockedNicks.forEach((nick, index) => {
                 const el = document.createElement('div');
-                // Definicja ułożenia elementów na liście (rodzic relative, żeby X był na position absolute)
-                el.style.cssText = `position: relative; width: 100%; display: flex; align-items: center; margin-bottom: 3px;`; 
+                el.className = 'baddonz-list-item'; // <--- Zunifikowany, elastyczny wiersz listy
                 
-                // padding-right: 22px jest kluczowe - odpycha tekst, żeby nie schował się pod guzikiem 'X'
+                // Input elastyczny na 100% dostepnego miejsca, a krzyżyk zamknięcia ląduje po prawej
                 el.innerHTML = `
-                    <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20" style="flex-grow: 1; height: 24px; padding: 2px 22px 2px 5px; width: 100%; box-sizing: border-box;">
-                    <div class="baddonz-icon baddonz-close-button" data-index="${index}" title="Usuń z listy" style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); margin: 0; width: 12px; height: 12px; z-index: 2;"></div>
+                    <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
+                    <div class="baddonz-icon baddonz-close-button" data-index="${index}" title="Usuń z listy"></div>
                 `;
                 apBlockedNicksList.appendChild(el);
             });
-            // Dodajemy margines dla scrollbara, jeśli lista jest za długa
-            apBlockedNicksList.style.paddingRight = (apBlockedNicksList.scrollHeight > apBlockedNicksList.clientHeight) ? '6px' : '0';
         };
 
         apCheckbox.addEventListener('click', () => {
@@ -120,12 +117,14 @@
         });
 
         apBlockedNicksList.addEventListener('click', (e) => {
+            // Nasłuchuje na globalny .baddonz-close-button wewnątrz listy
             if (e.target.classList.contains('baddonz-close-button')) {
                 currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
                 saveSettings(); renderBlockedNicks();
             }
         });
 
+        // Edycja elementu po kliknięciu w input w liście
         apBlockedNicksList.addEventListener('click', (e) => {
             if (e.target.tagName === 'INPUT' && e.target.classList.contains('baddonz-input')) {
                 const indexToEdit = parseInt(e.target.dataset.index);
