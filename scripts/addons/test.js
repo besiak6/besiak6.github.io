@@ -18,7 +18,6 @@
     function loadSettings() {
         if (window.BaddonzAPI) currentSettings = { ...currentSettings, ...window.BaddonzAPI.getAddonSettings(ADDON_ID) };
     }
-    
     function saveSettings() {
         if (window.BaddonzAPI) window.BaddonzAPI.saveAddonSettings(ADDON_ID, currentSettings);
     }
@@ -72,7 +71,7 @@
             </div>
         `;
 
-        // Szerokość ustalana z wewnątrz Baddonza!
+        // Generujemy okno przez API (Zmieniłem szerokość na 210px jako przykład)
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '210px' });
 
         const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
@@ -142,24 +141,7 @@
         if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon) {
             setTimeout(checkApi, 500); return;
         }
-        
-        // Przekazujemy logikę przełączania (żeby PPM w docku mogło działać)
-        window.BaddonzAPI.registerAddon(ADDON_ID, { 
-            init: addonInit, 
-            stop: addonStop,
-            toggleEnable: function() {
-                currentSettings.enabled = !currentSettings.enabled;
-                saveSettings();
-                
-                // Jeśli UI istnieje, zaktualizuj też widoki
-                if (uiWindowElement) {
-                    const cb = uiWindowElement.querySelector("#ap-checkbox");
-                    if (cb) cb.classList.toggle('active', currentSettings.enabled);
-                    const section = uiWindowElement.querySelector("#ap-blocked-nicks-section");
-                    if (section) section.style.display = currentSettings.enabled ? 'flex' : 'none';
-                }
-            }
-        });
+        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop });
     };
     checkApi();
 
