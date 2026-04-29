@@ -74,19 +74,14 @@
             </div>
         `;
 
-        // Optymalna szerokość!
-        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '200px' });
+        // Szerokość dopasowana do 195px
+        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '195px' });
 
         const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
         const apBlockedNickInput = uiWindowElement.querySelector("#ap-blocked-nick-input");
         const apAddNickBtn = uiWindowElement.querySelector("#ap-add-nick-btn");
         const apBlockedNicksList = uiWindowElement.querySelector("#ap-blocked-nicks-list");
         const section = uiWindowElement.querySelector("#ap-blocked-nicks-section");
-
-        // Gwarantuje idealne działanie kółka wewnątrz obszaru listy!
-        if (window.BaddonzAPI.attachScroll) {
-            window.BaddonzAPI.attachScroll(apBlockedNicksList);
-        }
 
         const renderBlockedNicks = () => {
             apBlockedNicksList.innerHTML = '';
@@ -96,7 +91,7 @@
                 
                 el.innerHTML = `
                     <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
-                    <div class="baddonz-close-button" data-index="${index}" title="Usuń z listy" style="cursor: pointer; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); margin: 0;"></div>
+                    <div class="baddonz-icon baddonz-close-button" data-index="${index}" title="Usuń z listy"></div>
                 `;
                 apBlockedNicksList.appendChild(el);
             });
