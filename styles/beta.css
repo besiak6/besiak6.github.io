@@ -3,15 +3,14 @@
 /* ================================================= */
 
 /* ================================================= */
-/* 1. GLOBALNE KURSORY                               */
+/* 1. KURSORY (GLOBALNE)                             */
 /* ================================================= */
 
 .baddonz-jsx-root,
 .baddonz-window,
 .baddonz-dock,
 .baddonz-window-body,
-.baddonz-dock-wrapper,
-.item-searcher-baddonz-window {
+.baddonz-dock-wrapper {
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, auto !important;
 }
 
@@ -32,7 +31,6 @@
 .baddonz-card,
 .baddonz-dock-switch,
 .baddonz-dock-addon,
-.baddonz-remove-x,
 .baddonz-input.keybind,
 .baddonz-state-button,
 .baddonz-type-icon,
@@ -49,7 +47,6 @@
 .baddonz-manager .baddonz-tab { width: 512px; }
 .baddonz-jsx-root { line-height: 1; }
 
-/* GLOBALNY SCROLLBAR ORAZ KLASA UNIWERSALNA .baddonz-scroll */
 .baddonz-jsx-root ::-webkit-scrollbar,
 .baddonz-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
 .baddonz-jsx-root ::-webkit-scrollbar-track,
@@ -126,17 +123,17 @@
 .baddonz-input.color-selector { box-sizing: border-box; border-top-left-radius: 0; border-bottom-left-radius: 0; width: 50px; }
 
 /* ================================================= */
-/* 3. INPUTY I PRZYCISKI UNIWERSALNE                 */
+/* 3. BAZOWE INPUTY                                  */
 /* ================================================= */
 
 .baddonz-input {
     box-sizing: border-box; 
-    border: 1px solid #777; /* Domyślnie szara ramka */
+    border: 1px solid #777; /* Stała, szara ramka */
     background-color: rgba(0, 0, 0, 0.05);
     color: #fff; padding: 2px 4px; outline: none; font-family: 'Arial', sans-serif;
     font-size: 13px; border-radius: 3px; transition: none; box-shadow: inset 0 0 6px 1px #000000bf;
 }
-/* Usunięto regułę :focus dla zwykłych inputów - teraz wyglądają zawsze tak samo! */
+/* Focus (kliknięcie) niczego nie zmienia, z wyjątkiem .keybind */
 
 .baddonz-input.keybind { text-align: center; caret-color: #0000; transition: none; max-width: 140px; }
 .baddonz-input.keybind:focus,
@@ -164,49 +161,17 @@
 .baddonz-alert-buttons.connected { gap: 0; }
 .baddonz-alert-buttons .baddonz-button { text-wrap: nowrap; flex: 1; }
 
-.baddonz-button { background: #3c3c3c99; border: 1px solid gray; border-radius: 5px; margin-top: 3px; margin-bottom: 3px; padding: 3px 16px; font-size: 12px; transition: background .15s, border-color .15s; box-shadow: inset 0 0 6px 1px #000000bf; color: #fff; }
+.baddonz-button { background: #3c3c3c99; border: 1px solid gray; border-radius: 5px; margin-top: 3px; margin-bottom: 3px; padding: 3px 16px; font-size: 12px; transition: background .15s, border-color .15s; box-shadow: inset 0 0 6px 1px #000000bf; color: #fff; text-wrap: nowrap; flex: 1; text-align: center;}
 .baddonz-button:hover { background: #5a5a5a99; }
 .baddonz-button.active { background: #46464666; border-color: #96f096; box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680; }
 .baddonz-button.no-margin { margin: 0; }
 .baddonz-button.icon { width: 32px; padding: 0; font-family: monospace; }
 
-.baddonz-show-eq { flex-direction: column; gap: 3px; display: flex; }
-.baddonz-show-eq .baddonz-flex { gap: 3px; }
-
-.baddonz-tab-switcher { box-sizing: border-box; background: #0003; border: 1px solid gray; min-width: 128px; margin-right: 6px; overflow-y: auto; box-shadow: inset 0 0 6px 1px #000000bf; }
-.baddonz-tab { box-sizing: border-box; max-width: calc(100% - 134px); display: flex; color: #fff; text-shadow: 1px 1px 1px #000; background: #3c3c3c99; border: 1px solid gray; border-radius: 5px; padding: 5px 10px; font-size: 13px; text-align: center; transition: background .15s, border-color .15s, transform .1s; box-shadow: inset 0 0 6px 1px #000000bf; flex-grow: 1; white-space: nowrap; justify-content: center; align-items: center; }
-.baddonz-flex .baddonz-tab { flex: 1; }
+.baddonz-tabs-container { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
+.baddonz-tab { box-sizing: border-box; color: #fff; text-shadow: 1px 1px 1px #000; background: #3c3c3c99; border: 1px solid gray; border-radius: 5px; padding: 5px 10px; font-size: 13px; text-align: center; transition: background .15s, border-color .15s, transform .1s; box-shadow: inset 0 0 6px 1px #000000bf; flex-grow: 1; white-space: nowrap; display: flex; justify-content: center; align-items: center; }
 .baddonz-tab:hover { background: #5a5a5a99; border-color: #808080; transform: translateY(-1px); }
 .baddonz-tab.active { background: linear-gradient(90deg, #46464666 50%, #46464600); border-color: #96f096; box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680; transform: translateY(0); pointer-events: none; }
 
-.baddonz-tab-selector { background: linear-gradient(90deg, #4646464d 40%, #46464600); padding: 6px; font-size: 13px; transition: background .1s, padding-left .1s; }
-.baddonz-tab-selector:hover { background: linear-gradient(90deg, #46464659 50%, #46464600); padding-left: 10px; }
-.baddonz-tab-selector:not(:last-child) { margin-bottom: 1px; }
-.baddonz-tab-selector.active { background: linear-gradient(90deg, #46464666 50%, #46464600); padding-left: 10px; font-weight: 700; }
-
-.baddonz-label-wrapper { justify-content: space-between; align-items: center; display: flex; }
-.baddonz-label-wrapper .baddonz-label, .baddonz-label-wrapper .baddonz-labeled { padding: 3px; }
-.baddonz-label-wrapper.inline { display: inline-flex; }
-.baddonz-label-wrapper.reverse { justify-content: unset; }
-
-.baddonz-checkbox { box-sizing: border-box; background-color: #54545479; border: 1px solid #545454; width: 16px; min-width: 16px; height: 16px; min-height: 16px; box-shadow: inset 0 2px 5px #00000080; }
-.baddonz-checkbox:after { content: ""; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230dff00' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e"); width: 100%; height: 100%; transition: all .2s; display: inline-block; transform: scale(0); }
-.baddonz-checkbox.active:after { transform: scale(1); }
-
-.baddonz-text { color: #fff; text-shadow: 1px 1px 1px #000; font-family: sans-serif; font-size: 12px; padding: 3px; }
-
-/* WERSJA PLUS (INPUT połączony z przyciskiem, np. dodawanie do czarnej listy) */
-.baddonz-input-addbutton { display: flex; align-items: center; gap: 0; width: 100%; }
-.baddonz-input-addbutton .baddonz-input { flex-grow: 1; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; height: 24px; padding: 2px 5px; font-size: 13px; }
-.baddonz-input-addbutton .baddonz-button { 
-    height: 24px; width: 24px; padding: 0; margin: 0; 
-    border-top-left-radius: 0; border-bottom-left-radius: 0; 
-    display: flex; justify-content: center; align-items: center; 
-    color: white; font-weight: normal; font-size: 16px; line-height: 1;
-    flex-shrink: 0; /* ZABEZPIECZENIE: Przycisk nigdy się nie zmniejszy! */
-}
-
-.baddonz-tabs-container { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
 .baddonz-card { box-sizing: border-box; background: #0003; border: 1px solid gray; width: auto; max-width: 350px; height: auto; margin-bottom: 5px; padding: 7px 12px; transition: background .15s; box-shadow: inset 0 0 6px 1px #000000bf; display: flex; flex-direction: column; }
 .baddonz-card:hover { background: #8c8c8c33; }
 .baddonz-card-title { justify-content: flex-start; align-items: center; margin-bottom: 5px; font-weight: 700; display: flex; width: 100%; }
@@ -217,15 +182,44 @@
 
 .baddonz-setting-row { display: flex; flex-direction: row; width: 100%; justify-content: flex-start; align-items: center; gap: 10px; background: none; margin: 0; padding: 0; margin-bottom: 5px; line-height: normal; }
 .baddonz-setting-row .baddonz-label { margin: 0; padding: 0; line-height: normal; }
+.baddonz-label-wrapper { display: flex; align-items: center; gap: 5px; }
+
+.baddonz-checkbox { box-sizing: border-box; background-color: #54545479; border: 1px solid #545454; width: 16px; min-width: 16px; height: 16px; min-height: 16px; box-shadow: inset 0 2px 5px #00000080; }
+.baddonz-checkbox:after { content: ""; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230dff00' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e"); width: 100%; height: 100%; transition: all .2s; display: inline-block; transform: scale(0); }
+.baddonz-checkbox.active:after { transform: scale(1); }
+
+.baddonz-text { color: #fff; text-shadow: 1px 1px 1px #000; font-family: sans-serif; font-size: 12px; padding: 3px; }
 
 /* ================================================= */
-/* 4. ELEMENTY LIST I UNIWERSALNE SIATKI             */
+/* 4. ELEMENTY ZŁOŻONE (Input z plusem, Listy)       */
 /* ================================================= */
 
-.baddonz-list-container { max-height: 86px; overflow-y: auto; padding-right: 2px; width: 100%; box-sizing: border-box; }
-.baddonz-list-item-input { flex-grow: 1; padding-right: 20px; height: 24px; padding: 2px 5px; font-size: 13px; }
-.baddonz-remove-x { position: absolute; right: 8px; color: #888; font-weight: normal; font-size: 12px; line-height: 1; top: 50%; transform: translateY(-50%); width: 10px; text-align: center; }
-.baddonz-remove-x:hover { color: #ff5555; }
+/* WERSJA ADDBUTTON (INPUT połączony z przyciskiem, np. dodawanie do czarnej listy) */
+.baddonz-input-addbutton { display: flex; align-items: center; gap: 0; width: 100%; }
+.baddonz-input-addbutton .baddonz-input { 
+    flex-grow: 1; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; 
+    height: 24px; padding: 2px 5px; font-size: 13px; 
+}
+.baddonz-input-addbutton .baddonz-button { 
+    height: 24px; width: 24px; padding: 0; margin: 0; 
+    border-top-left-radius: 0; border-bottom-left-radius: 0; 
+    display: flex; justify-content: center; align-items: center; 
+    color: white; font-weight: normal; font-size: 16px; line-height: 1;
+    flex-shrink: 0; /* To sprawia, że przycisk "+" się nie gniecie! */
+}
+
+/* WERSJA LISTY (Input z ikonką "Zamknij" jako usunięcie) */
+.baddonz-list-item { 
+    position: relative; width: 100%; display: flex; align-items: center; margin-bottom: 3px; 
+}
+.baddonz-list-item .baddonz-input { 
+    width: 100%; height: 22px; padding: 2px 20px 2px 5px; font-size: 12px; color: #ddd; 
+}
+.baddonz-list-item .baddonz-close-button { 
+    position: absolute; right: 5px; top: 50%; transform: translateY(-50%); 
+    margin: 0; z-index: 5; /* Z-index naprawia "uciekanie" pod tło inputu! */
+}
+
 .baddonz-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; width: 100%; box-sizing: border-box; }
 .baddonz-grid-2col .baddonz-label-wrapper { width: auto; justify-content: flex-start; }
 
@@ -235,7 +229,6 @@
 
 .baddonz-info-icon { width: 17px; height: 17px; background: url(../img/gui/buttony.png?v=1753438686037) no-repeat -497px -199px }
 .baddonz-info-icon:hover { filter: brightness(1.3); }
-.relogger-window { min-width: 220px; }
 
 /* ================================================= */
 /* 6. DOCK BADDONZA                                  */
@@ -282,16 +275,7 @@
 .baddonz-slider-value-display { position: absolute; top: -15px; transform: translateX(-50%); pointer-events: none; font-size: 10px; color: #FFFFFF; text-shadow: 0 0 2px #000; min-width: 30px; text-align: center; white-space: nowrap; }
 
 /* ================================================= */
-/* 8. ITEM SEARCHER (Wyszukiwarka Itemów)            */
-/* ================================================= */
-.item-searcher-dimmed-item { opacity: 0.15; }
-.item-searcher-bag-counter { position: absolute; top: 1px; right: 2px; color: #ff0000; font-size: 14px; font-weight: bold; z-index: 9999; text-shadow: 1px 1px 1px #000; }
-.item-searcher-window-title { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
-.item-searcher-baddonz-input:focus { outline: none; border-color: transparent; }
-.item-searcher-baddonz-label-wrapper { display: flex; align-items: center; gap: 4px; }
-
-/* ================================================= */
-/* 9. NOTYFIKACJE I IKONY STANU                      */
+/* 8. NOTYFIKACJE I IKONY STANU                      */
 /* ================================================= */
 .baddonz-state-button { width: 9px; height: 9px; background: radial-gradient(ellipse at center, rgb(255, 0, 0), #101010); border-radius: 50%; box-shadow: 0 0 3px 1px rgba(255, 0, 0, 0.75); display: inline-block; transition: box-shadow 180ms ease-in-out, background 180ms ease-in-out, transform 120ms ease-in-out; padding: 1px; vertical-align: -2px; }
 .baddonz-state-button:hover { box-shadow: 0 0 4px 2px rgba(255, 255, 255, 0.25); transform: scale(1.05); }
