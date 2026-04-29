@@ -1,11 +1,3 @@
-// ==UserScript==
-// @name          Auto Przywo
-// @version       05.08.2025
-// @author        besiak
-// @match         https://*.margonem.pl/*
-// @grant         none
-// ==/UserScript==
-
 (function() {
     'use strict';
 
