@@ -18,7 +18,6 @@
     function loadSettings() {
         if (window.BaddonzAPI) currentSettings = { ...currentSettings, ...window.BaddonzAPI.getAddonSettings(ADDON_ID) };
     }
-    
     function saveSettings() {
         if (window.BaddonzAPI) window.BaddonzAPI.saveAddonSettings(ADDON_ID, currentSettings);
     }
@@ -55,9 +54,11 @@
     }
 
     function buildUI() {
-        // UI w 100% wykorzystujące uniwersalne klasy "baddonz-input-addbutton" oraz "baddonz-scroll"
+        // Używamy TYLKO uniwersalnych klocków z baddonz CSS:
+        // .baddonz-input-addbutton - input z plusikiem
+        // .baddonz-scroll - scrollbar Menedżera
         const bodyHtml = `
-            <div class="baddonz-label-wrapper" style="justify-content: flex-start;">
+            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ap-checkbox"></div>
                 <div class="baddonz-text" style="padding: 0;">Auto Przywo</div>
             </div>
@@ -87,14 +88,15 @@
             apBlockedNicksList.innerHTML = '';
             currentSettings.blockedNicks.forEach((nick, index) => {
                 const el = document.createElement('div');
-                // Używamy uniwersalnej struktury listy z reużytym `baddonz-close-button`
+                // Korzystamy z uniwersalnej klasy .baddonz-list-item i systemowego X .baddonz-close-button
                 el.className = 'baddonz-list-item';
                 el.innerHTML = `
                     <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
-                    <div class="baddonz-icon baddonz-close-button ap-remove-nick-x" data-index="${index}"></div>
+                    <div class="baddonz-icon baddonz-close-button remove-nick-btn" data-index="${index}" title="Usuń z listy"></div>
                 `;
                 apBlockedNicksList.appendChild(el);
             });
+            apBlockedNicksList.style.paddingRight = (apBlockedNicksList.scrollHeight > apBlockedNicksList.clientHeight) ? '6px' : '0';
         };
 
         apCheckbox.addEventListener('click', () => {
@@ -109,18 +111,16 @@
             if (nick && !currentSettings.blockedNicks.some(n => n.toLowerCase() === nick.toLowerCase())) {
                 currentSettings.blockedNicks.push(nick);
                 apBlockedNickInput.value = '';
-                saveSettings(); 
-                renderBlockedNicks();
+                saveSettings(); renderBlockedNicks();
                 apBlockedNicksList.scrollTop = apBlockedNicksList.scrollHeight;
             }
         });
 
-        // Nasłuchiwanie na przyciski usuwania
         apBlockedNicksList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('ap-remove-nick-x')) {
+            // Nasłuchiwanie na kliknięcie w uniwersalny przycisk zamykania
+            if (e.target.classList.contains('remove-nick-btn')) {
                 currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
-                saveSettings(); 
-                renderBlockedNicks();
+                saveSettings(); renderBlockedNicks();
             }
         });
 
@@ -151,7 +151,6 @@
         if (uiWindowElement) {
             const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
             const section = uiWindowElement.querySelector("#ap-blocked-nicks-section");
-            
             if (apCheckbox) {
                 if (isEnabled) apCheckbox.classList.add('active');
                 else apCheckbox.classList.remove('active');
