@@ -1,3 +1,11 @@
+// ==UserScript==
+// @name          Auto Przywo
+// @version       05.08.2025
+// @author        besiak
+// @match         https://*.margonem.pl/*
+// @grant         none
+// ==/UserScript==
+
 (function() {
     'use strict';
 
@@ -10,6 +18,7 @@
     function loadSettings() {
         if (window.BaddonzAPI) currentSettings = { ...currentSettings, ...window.BaddonzAPI.getAddonSettings(ADDON_ID) };
     }
+    
     function saveSettings() {
         if (window.BaddonzAPI) window.BaddonzAPI.saveAddonSettings(ADDON_ID, currentSettings);
     }
@@ -63,7 +72,7 @@
             </div>
         `;
 
-        // Tworzymy okno z określoną szerokością. Menedżer zajmuje się zamykaniem (X - lewo) i przezroczystością (prawo)
+        // Szerokość ustalana z wewnątrz Baddonza!
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '210px' });
 
         const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
@@ -88,7 +97,6 @@
             currentSettings.enabled = apCheckbox.classList.contains('active');
             section.style.display = currentSettings.enabled ? 'flex' : 'none';
             saveSettings();
-            window.BaddonzAPI.refreshDock(); // <-- powiadom Menedżera żeby odświeżył "szarość" docka
         });
 
         apAddNickBtn.addEventListener('click', () => {
@@ -135,19 +143,20 @@
             setTimeout(checkApi, 500); return;
         }
         
+        // Przekazujemy logikę przełączania (żeby PPM w docku mogło działać)
         window.BaddonzAPI.registerAddon(ADDON_ID, { 
             init: addonInit, 
             stop: addonStop,
-            toggle: () => {
-                // To wywoła się gdy użytkownik kliknie PPM na Docku!
-                const cb = document.getElementById("ap-checkbox");
-                if(cb) {
-                    cb.click(); // Symuluje fizyczne kliknięcie w ukryte okienko - to automatycznie załatwia cały stan i zapis
-                } else {
-                    // Czysta zmiana stanu w pamięci, jeśli okienko nie zostało jeszcze wygenerowane 
-                    currentSettings.enabled = !currentSettings.enabled;
-                    saveSettings();
-                    window.BaddonzAPI.refreshDock();
+            toggleEnable: function() {
+                currentSettings.enabled = !currentSettings.enabled;
+                saveSettings();
+                
+                // Jeśli UI istnieje, zaktualizuj też widoki
+                if (uiWindowElement) {
+                    const cb = uiWindowElement.querySelector("#ap-checkbox");
+                    if (cb) cb.classList.toggle('active', currentSettings.enabled);
+                    const section = uiWindowElement.querySelector("#ap-blocked-nicks-section");
+                    if (section) section.style.display = currentSettings.enabled ? 'flex' : 'none';
                 }
             }
         });
