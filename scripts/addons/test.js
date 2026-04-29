@@ -18,6 +18,7 @@
     function loadSettings() {
         if (window.BaddonzAPI) currentSettings = { ...currentSettings, ...window.BaddonzAPI.getAddonSettings(ADDON_ID) };
     }
+    
     function saveSettings() {
         if (window.BaddonzAPI) window.BaddonzAPI.saveAddonSettings(ADDON_ID, currentSettings);
     }
@@ -54,11 +55,9 @@
     }
 
     function buildUI() {
-        // Używamy TYLKO uniwersalnych klocków z baddonz CSS:
-        // .baddonz-input-addbutton - input z plusikiem
-        // .baddonz-scroll - scrollbar Menedżera
+        // Wszystko zbudowane na 100% uniwersalnych klasach Baddonza (UI Framework)
         const bodyHtml = `
-            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+            <div class="baddonz-label-wrapper" style="justify-content: flex-start;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ap-checkbox"></div>
                 <div class="baddonz-text" style="padding: 0;">Auto Przywo</div>
             </div>
@@ -88,15 +87,15 @@
             apBlockedNicksList.innerHTML = '';
             currentSettings.blockedNicks.forEach((nick, index) => {
                 const el = document.createElement('div');
-                // Korzystamy z uniwersalnej klasy .baddonz-list-item i systemowego X .baddonz-close-button
-                el.className = 'baddonz-list-item';
+                el.className = 'baddonz-list-item'; // <--- NOWOŚĆ: Zunifikowany wiersz listy
+                
+                // Używamy .baddonz-close-button jako "X" do usuwania elementu
                 el.innerHTML = `
                     <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
-                    <div class="baddonz-icon baddonz-close-button remove-nick-btn" data-index="${index}" title="Usuń z listy"></div>
+                    <div class="baddonz-icon baddonz-close-button" data-index="${index}" title="Usuń z listy"></div>
                 `;
                 apBlockedNicksList.appendChild(el);
             });
-            apBlockedNicksList.style.paddingRight = (apBlockedNicksList.scrollHeight > apBlockedNicksList.clientHeight) ? '6px' : '0';
         };
 
         apCheckbox.addEventListener('click', () => {
@@ -117,10 +116,43 @@
         });
 
         apBlockedNicksList.addEventListener('click', (e) => {
-            // Nasłuchiwanie na kliknięcie w uniwersalny przycisk zamykania
-            if (e.target.classList.contains('remove-nick-btn')) {
+            // Nasłuchuje na globalny .baddonz-close-button wewnątrz listy
+            if (e.target.classList.contains('baddonz-close-button')) {
                 currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
                 saveSettings(); renderBlockedNicks();
+            }
+        });
+
+        // Edycja elementu po kliknięciu w input w liście
+        apBlockedNicksList.addEventListener('click', (e) => {
+            if (e.target.tagName === 'INPUT' && e.target.classList.contains('baddonz-input')) {
+                const indexToEdit = parseInt(e.target.dataset.index);
+                const originalNick = currentSettings.blockedNicks[indexToEdit];
+                
+                e.target.readOnly = false;
+                e.target.focus();
+                e.target.setSelectionRange(e.target.value.length, e.target.value.length);
+
+                const handleBlur = () => {
+                    e.target.readOnly = true;
+                    const newNick = e.target.value.trim();
+                    if (newNick && newNick.toLowerCase() !== originalNick.toLowerCase()) {
+                        const isDuplicate = currentSettings.blockedNicks.some((n, i) => i !== indexToEdit && n.toLowerCase() === newNick.toLowerCase());
+                        if (!isDuplicate) currentSettings.blockedNicks[indexToEdit] = newNick;
+                        else e.target.value = originalNick;
+                    } else if (!newNick) {
+                        currentSettings.blockedNicks.splice(indexToEdit, 1);
+                    } else {
+                        e.target.value = originalNick;
+                    }
+                    saveSettings(); renderBlockedNicks();
+                    e.target.removeEventListener('blur', handleBlur);
+                    e.target.removeEventListener('keydown', handleKeyDown);
+                };
+
+                const handleKeyDown = (ev) => { if (ev.key === 'Enter') e.target.blur(); };
+                e.target.addEventListener('blur', handleBlur);
+                e.target.addEventListener('keydown', handleKeyDown);
             }
         });
 
