@@ -55,7 +55,6 @@
     }
 
     function buildUI() {
-        // Wszystko zbudowane na 100% uniwersalnych klasach Baddonza (UI Framework)
         const bodyHtml = `
             <div class="baddonz-label-wrapper" style="justify-content: flex-start;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ap-checkbox"></div>
@@ -75,7 +74,8 @@
             </div>
         `;
 
-        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '210px' });
+        // Zwiększamy okno do 225px, aby pomieścić szerszy przycisk "+" bez ścisku
+        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '225px' });
 
         const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
         const apBlockedNickInput = uiWindowElement.querySelector("#ap-blocked-nick-input");
@@ -87,9 +87,8 @@
             apBlockedNicksList.innerHTML = '';
             currentSettings.blockedNicks.forEach((nick, index) => {
                 const el = document.createElement('div');
-                el.className = 'baddonz-list-item'; // <--- NOWOŚĆ: Zunifikowany wiersz listy
+                el.className = 'baddonz-list-item'; 
                 
-                // Używamy .baddonz-close-button jako "X" do usuwania elementu
                 el.innerHTML = `
                     <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
                     <div class="baddonz-icon baddonz-close-button" data-index="${index}" title="Usuń z listy"></div>
@@ -116,14 +115,12 @@
         });
 
         apBlockedNicksList.addEventListener('click', (e) => {
-            // Nasłuchuje na globalny .baddonz-close-button wewnątrz listy
             if (e.target.classList.contains('baddonz-close-button')) {
                 currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
                 saveSettings(); renderBlockedNicks();
             }
         });
 
-        // Edycja elementu po kliknięciu w input w liście
         apBlockedNicksList.addEventListener('click', (e) => {
             if (e.target.tagName === 'INPUT' && e.target.classList.contains('baddonz-input')) {
                 const indexToEdit = parseInt(e.target.dataset.index);
