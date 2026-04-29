@@ -1,63 +1,34 @@
 /* ================================================= */
-/* BADDONZ UI FRAMEWORK - PEŁNY ZESTAW STYLI         */
+/* BADDONZ UI FRAMEWORK - GŁÓWNE STYLE               */
 /* ================================================= */
 
 /* ================================================= */
-/* 1. GLOBALNE KURSORY                               */
+/* 1. KURSORY (GLOBALNE)                             */
 /* ================================================= */
-
-.baddonz-jsx-root,
-.baddonz-window,
-.baddonz-dock,
-.baddonz-window-body,
-.baddonz-dock-wrapper,
-.item-searcher-baddonz-window {
+.baddonz-jsx-root, .baddonz-window, .baddonz-dock, .baddonz-window-body, .baddonz-dock-wrapper {
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, auto !important;
 }
 
-.baddonz-input:not(.keybind):not(.color-selector),
-.baddonz-textarea,
-.baddonz-text,
-.baddonz-card-title span,
-.baddonz-card p {
+.baddonz-input:not(.keybind):not(.color-selector), .baddonz-textarea, .baddonz-text, .baddonz-card-title span, .baddonz-card p {
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, text !important;
 }
 
-.baddonz-window-header,
-.baddonz-window-title,
-.baddonz-button,
-.baddonz-tab,
-.baddonz-checkbox,
-.baddonz-icon,
-.baddonz-card,
-.baddonz-dock-switch,
-.baddonz-dock-addon,
-.baddonz-remove-x,
-.baddonz-input.keybind,
-.baddonz-state-button,
-.baddonz-type-icon,
-.baddon_set_button {
+.baddonz-window-header, .baddonz-window-title, .baddonz-button, .baddonz-tab, .baddonz-checkbox, .baddonz-icon, .baddonz-card, .baddonz-dock-switch, .baddonz-dock-addon, .baddonz-input.keybind, .baddonz-state-button, .baddonz-type-icon, .baddon_set_button {
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
 }
 
 /* ================================================= */
-/* 2. GŁÓWNY MENEDŻER I ELEMENTY BAZOWE              */
+/* 2. GŁÓWNY MENEDŻER I SCROLLBARY                   */
 /* ================================================= */
-
 .baddonz-manager { width: 380px; height: 450px; }
 .baddonz-manager .baddonz-tab-switcher { width: 128px; }
 .baddonz-manager .baddonz-tab { width: 512px; }
 .baddonz-jsx-root { line-height: 1; }
 
-/* GLOBALNY SCROLLBAR ORAZ KLASA UNIWERSALNA .baddonz-scroll */
-.baddonz-jsx-root ::-webkit-scrollbar,
-.baddonz-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-.baddonz-jsx-root ::-webkit-scrollbar-track,
-.baddonz-scroll::-webkit-scrollbar-track { background: #1414148f; border-radius: 3px; }
-.baddonz-jsx-root ::-webkit-scrollbar-thumb,
-.baddonz-scroll::-webkit-scrollbar-thumb { background: #505050; border-radius: 3px; }
-.baddonz-jsx-root ::-webkit-scrollbar-thumb:hover,
-.baddonz-scroll::-webkit-scrollbar-thumb:hover { background: #808080; }
+.baddonz-jsx-root ::-webkit-scrollbar, .baddonz-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.baddonz-jsx-root ::-webkit-scrollbar-track, .baddonz-scroll::-webkit-scrollbar-track { background: #1414148f; border-radius: 3px; }
+.baddonz-jsx-root ::-webkit-scrollbar-thumb, .baddonz-scroll::-webkit-scrollbar-thumb { background: #505050; border-radius: 3px; }
+.baddonz-jsx-root ::-webkit-scrollbar-thumb:hover, .baddonz-scroll::-webkit-scrollbar-thumb:hover { background: #808080; }
 
 .baddonz-flex { flex: 1; justify-content: center; max-width: 100%; max-height: 100%; display: flex; }
 .baddonz-flex.column { flex-direction: column; }
@@ -67,25 +38,21 @@
 .baddonz-flex.centered { align-items: center; }
 .baddonz-flex.end { justify-content: flex-end; }
 
-/* STRUKTURA OKIEN */
+/* ================================================= */
+/* 3. STRUKTURA OKIEN                                */
+/* ================================================= */
 .baddonz-window {
     pointer-events: all; text-shadow: 1px 1px 1px #000; color: #fff; background: #0009;
-    border-radius: 7px; flex-direction: column; min-width: 150px; min-height: 22px;
-    font-family: sans-serif; display: flex; position: absolute;
+    border-radius: 7px; flex-direction: column; min-width: 191px; min-height: 22px;
+    font-family: sans-serif; display: flex; position: absolute; box-sizing: border-box;
     box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66; z-index: 29;
 }
-.baddonz-window.anon { min-width: unset; }
-.baddonz-window.anon .baddonz-window-controls { width: 26px; }
-.baddonz-window.top { z-index: 1; }
 .baddonz-window.blur { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 .baddonz-window.opacity-0 { background: 0 0; }
 .baddonz-window.opacity-1 { background: #0000004d; }
 .baddonz-window.opacity-2 { background: #0009; }
 .baddonz-window.opacity-3 { background: #000c; }
 .baddonz-window.opacity-4 { background: #000; }
-.baddonz-window.resizable { resize: both; overflow: hidden; }
-.baddonz-window.resizable-x { resize: horizontal; overflow-x: hidden; }
-.baddonz-window.resizable-y { resize: vertical; overflow-y: hidden; }
 .baddonz-window.collapsed { width: 90px !important; height: 25px !important; resize: none !important; overflow: hidden !important; min-width: 90px !important; min-height: 25px !important; }
 .baddonz-window.collapsed .baddonz-window-body { display: none !important; }
 
@@ -98,9 +65,8 @@
 
 .baddonz-window-title { text-align: center; color: beige; flex: 3; font-size: 11px; line-height: 25px; flex-grow: 1; padding: 0 5px; }
 .baddonz-window.collapsed .baddonz-window-title { font-size: 9px; }
-.baddonz-window-body { color: #fff; box-sizing: border-box; flex-direction: column; flex: 1; height: calc(100% - 25px); font-size: 12px; display: flex; padding: 0 10px 10px 10px; }
+.baddonz-window-body { color: #fff; box-sizing: border-box; flex-direction: column; flex: 1; height: calc(100% - 25px); font-size: 12px; display: flex; padding: 0 10px 10px 10px; width: 100%; }
 
-/* KONTROLKI OKIEN */
 .baddonz-opacity-button { background: url(https://gordion.margonem.pl/img/gui/buttony.png) -725px -131px; width: 13px; height: 13px; margin-right: 0px; }
 .baddonz-opacity-button:hover { filter: brightness(1.3); }
 .baddonz-close-button { background: url(https://gordion.margonem.pl/img/gui/buttony.png) -624px -117px; width: 12px; height: 12px; margin-left: 0px; }
@@ -112,138 +78,23 @@
 .baddonz-settings-button { background: url(https://gordion.margonem.pl/img/gui/buttony.png) -607px -117px; width: 13px; height: 13px; }
 .baddonz-settings-button:hover { background-position: -659px -117px; }
 
-.baddonz-textarea { color: #fff; resize: none; background: #0003; border: 1px solid gray; border-radius: 5px; outline: 0; height: 40px; padding: 2px 3px; font-size: 12px; line-height: 1.5em; box-shadow: inset 0 0 6px 1px #000000bf; }
-.baddonz-box { box-sizing: border-box; background: #0003; border: 1px solid gray; flex-grow: 1; padding: 0; overflow: unset; box-shadow: inset 0 0 6px 1px #000000bf; display: flex; flex-direction: column; }
-.baddonz-tab-content-container { display: flex; flex-direction: column; gap: 8px; background: none; flex: 1; overflow-y: auto; box-sizing: border-box; padding: 10px 10px 20px 10px; }
-.baddonz-tab-content-container.settings-list { padding: 10px 10px 0 10px; }
-
-.baddonz-top .left-attached { border-left-width: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; }
-.baddonz-top .right-attached { border-right-width: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; }
-.baddonz-top .left-border { border-left-width: 0; }
-
-.baddonz-input.color-text { text-align: center; border-right: none; border-top-right-radius: 0; border-bottom-right-radius: 0; width: 56px; font-family: monospace; font-size: 11px; }
-.baddonz-input.color { box-sizing: border-box; visibility: hidden; border-width: 0; width: 0; height: 0; margin: 0; padding: 0; }
-.baddonz-input.color-selector { box-sizing: border-box; border-top-left-radius: 0; border-bottom-left-radius: 0; width: 50px; }
-
 /* ================================================= */
-/* 3. INPUTY I PRZYCISKI UNIWERSALNE                 */
+/* 4. ELEMENTY FORMULARZY I UI                       */
 /* ================================================= */
-
-.baddonz-input {
-    box-sizing: border-box; 
-    border: 1px solid #777; 
-    background-color: rgba(0, 0, 0, 0.05);
-    color: #fff; padding: 2px 4px; outline: none; font-family: 'Arial', sans-serif;
-    font-size: 13px; border-radius: 3px; transition: none; box-shadow: inset 0 0 6px 1px #000000bf;
-}
-.baddonz-input:focus,
-.baddonz-input.active { border-color: #999; }
-
-.baddonz-input.keybind { text-align: center; caret-color: #0000; transition: none; max-width: 140px; }
-.baddonz-input.keybind:focus,
-.baddonz-input.active-keybind-mode { border-color: #96f096 !important; caret-color: transparent !important; box-shadow: inset 0 0 6px 1px rgba(0, 0, 0, 0.75), 0 0 8px 1px rgba(150, 240, 150, 0.5) !important; }
-
-.baddonz-input.compact { width: 100px; flex-shrink: 0; text-align: center; padding: 1px 0px; font-size: 11px; height: 20px; line-height: 18px; margin-left: 5px; }
-
-.baddonz-select { color: #fff; box-sizing: border-box; background: #0003; border: 1px solid gray; border-radius: 5px; outline: 0; min-width: 0; padding: 2px 3px; line-height: 1.5em; box-shadow: inset 0 0 6px 1px #000000bf; -webkit-appearance: menulist; -moz-appearance: menulist; appearance: menulist; }
-.baddonz-input[type="number"] { text-align: right; appearance: textfield; width: 50px; min-width: 30px; }
-.baddonz-input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
-.baddonz-top .small { height: 14px; }
-.baddonz-top .adjacent-button { height: 22px; margin-top: 3px; margin-bottom: 3px; }
-.baddonz-top .bottom-attached { border-bottom-width: 0; border-bottom-right-radius: 0; border-bottom-left-radius: 0; }
-.baddonz-top .left-attached, .baddonz-top .baddonz-alert-buttons.connected .baddonz-button:not(:first-child), .baddonz-alert-buttons.connected .baddonz-top .baddonz-button:not(:first-child) { border-left-width: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; }
-.baddonz-top .right-attached, .baddonz-top .baddonz-alert-buttons.connected .baddonz-button:not(:last-child), .baddonz-alert-buttons.connected .baddonz-top .baddonz-button:not(:last-child) { border-right-width: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; }
-.baddonz-top .top-attached { border-top-width: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
-.baddonz-top .bottom-border { border-bottom-width: 1px; }
-.baddonz-top .disabled { color: #d3d3d3; background: #3c3c3c66; }
-
-.baddonz-alert-segment { text-align: center; max-width: 230px; margin: 2px; }
-.baddonz-alert-segment:last-child { margin-bottom: 0; }
-.baddonz-alert-segment:first-child { margin-top: 0; }
-.baddonz-alert-buttons { flex-wrap: wrap; justify-content: center; gap: 4px; display: flex; }
-.baddonz-alert-buttons.connected { gap: 0; }
-.baddonz-alert-buttons .baddonz-button { text-wrap: nowrap; flex: 1; }
-
-.baddonz-button { background: #3c3c3c99; border: 1px solid gray; border-radius: 5px; margin-top: 3px; margin-bottom: 3px; padding: 3px 16px; font-size: 12px; transition: background .15s, border-color .15s; box-shadow: inset 0 0 6px 1px #000000bf; color: #fff; }
-.baddonz-button:hover { background: #5a5a5a99; }
-.baddonz-button.active { background: #46464666; border-color: #96f096; box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680; }
-.baddonz-button.no-margin { margin: 0; }
-.baddonz-button.icon { width: 32px; padding: 0; font-family: monospace; }
-
-.baddonz-show-eq { flex-direction: column; gap: 3px; display: flex; }
-.baddonz-show-eq .baddonz-flex { gap: 3px; }
-
-.baddonz-tab-switcher { box-sizing: border-box; background: #0003; border: 1px solid gray; min-width: 128px; margin-right: 6px; overflow-y: auto; box-shadow: inset 0 0 6px 1px #000000bf; }
-.baddonz-tab { box-sizing: border-box; display: flex; color: #fff; text-shadow: 1px 1px 1px #000; background: #3c3c3c99; border: 1px solid gray; border-radius: 5px; padding: 5px 10px; font-size: 13px; text-align: center; transition: background .15s, border-color .15s, transform .1s; box-shadow: inset 0 0 6px 1px #000000bf; flex-grow: 1; white-space: nowrap; justify-content: center; align-items: center; }
-.baddonz-flex .baddonz-tab { flex: 1; }
-.baddonz-tab:hover { background: #5a5a5a99; border-color: #808080; transform: translateY(-1px); }
-.baddonz-tab.active { background: linear-gradient(90deg, #46464666 50%, #46464600); border-color: #96f096; box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680; transform: translateY(0); pointer-events: none; }
-
-.baddonz-tab-selector { background: linear-gradient(90deg, #4646464d 40%, #46464600); padding: 6px; font-size: 13px; transition: background .1s, padding-left .1s; }
-.baddonz-tab-selector:hover { background: linear-gradient(90deg, #46464659 50%, #46464600); padding-left: 10px; }
-.baddonz-tab-selector:not(:last-child) { margin-bottom: 1px; }
-.baddonz-tab-selector.active { background: linear-gradient(90deg, #46464666 50%, #46464600); padding-left: 10px; font-weight: 700; }
-
-.baddonz-label-wrapper { justify-content: space-between; align-items: center; display: flex; }
-.baddonz-label-wrapper .baddonz-label, .baddonz-label-wrapper .baddonz-labeled { padding: 3px; }
-.baddonz-label-wrapper.inline { display: inline-flex; }
-.baddonz-label-wrapper.reverse { justify-content: unset; }
+.baddonz-box { box-sizing: border-box; background: #0003; border: 1px solid gray; flex-grow: 1; padding: 0; box-shadow: inset 0 0 6px 1px #000000bf; display: flex; flex-direction: column; }
+.baddonz-text { color: #fff; text-shadow: 1px 1px 1px #000; font-family: sans-serif; font-size: 12px; padding: 3px; }
+.baddonz-label-wrapper { display: flex; align-items: center; gap: 5px; }
+.baddonz-setting-row { display: flex; flex-direction: row; width: 100%; justify-content: flex-start; align-items: center; gap: 10px; background: none; margin: 0; padding: 0; margin-bottom: 5px; line-height: normal; }
 
 .baddonz-checkbox { box-sizing: border-box; background-color: #54545479; border: 1px solid #545454; width: 16px; min-width: 16px; height: 16px; min-height: 16px; box-shadow: inset 0 2px 5px #00000080; }
 .baddonz-checkbox:after { content: ""; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230dff00' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e"); width: 100%; height: 100%; transition: all .2s; display: inline-block; transform: scale(0); }
 .baddonz-checkbox.active:after { transform: scale(1); }
 
-.baddonz-text { color: #fff; text-shadow: 1px 1px 1px #000; font-family: sans-serif; font-size: 12px; padding: 3px; }
+.baddonz-button { background: #3c3c3c99; border: 1px solid gray; border-radius: 5px; margin-top: 3px; margin-bottom: 3px; padding: 3px 16px; font-size: 12px; transition: background .15s, border-color .15s; box-shadow: inset 0 0 6px 1px #000000bf; color: #fff; text-wrap: nowrap; flex: 1; text-align: center; }
+.baddonz-button:hover { background: #5a5a5a99; }
+.baddonz-button.active { background: #46464666; border-color: #96f096; box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680; }
 
-/* ------------------------------------------------- */
-/* NOWE ELASTYCZNE FORMULARZE (ZERO SZTYWNYCH WIDTH) */
-/* ------------------------------------------------- */
-
-/* WERSJA PLUS (INPUT połączony z przyciskiem do dodawania) */
-.baddonz-input-addbutton { 
-    display: flex; align-items: stretch; width: 100%; box-sizing: border-box; 
-}
-.baddonz-input-addbutton .baddonz-input { 
-    flex: 1; /* Input zajmuje całą wolną przestrzeń */
-    min-width: 0; /* ZABEZPIECZENIE przed wychodzeniem poza ramki */
-    border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; 
-    height: 24px; padding: 2px 5px; font-size: 13px; 
-}
-.baddonz-input-addbutton .baddonz-button { 
-    flex-shrink: 0; /* ZABEZPIECZENIE przed ściskaniem przycisku */
-    width: 24px; height: 24px; padding: 0; margin: 0; 
-    border-top-left-radius: 0; border-bottom-left-radius: 0; 
-    display: flex; justify-content: center; align-items: center; 
-    font-size: 16px; line-height: 1;
-}
-
-/* ================================================= */
-/* 4. ELEMENTY LIST I UNIWERSALNE SIATKI             */
-/* ================================================= */
-
-/* Kontener listowy */
-.baddonz-list-container { max-height: 86px; overflow-y: auto; padding-right: 2px; width: 100%; box-sizing: border-box; }
-
-/* Elastyczny wiersz listy */
-.baddonz-list-item { 
-    display: flex; align-items: center; width: 100%; gap: 5px; 
-    margin-bottom: 4px; box-sizing: border-box; 
-}
-.baddonz-list-item .baddonz-input { 
-    flex: 1; /* Elastyczność! */
-    min-width: 0; /* Zapobiega wyciekom z okna! */
-    height: 24px; padding: 2px 5px; font-size: 13px; 
-}
-/* Krzyżyk wyciągnięty z flexboxem - nigdzie nie ucieknie */
-.baddonz-list-item .baddonz-close-button { 
-    flex-shrink: 0; margin: 0; 
-    position: static; transform: none; 
-}
-
-/* Uniwersalny podział opcji na dwie kolumny */
-.baddonz-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; width: 100%; box-sizing: border-box; }
-.baddonz-grid-2col .baddonz-label-wrapper { width: auto; justify-content: flex-start; }
+.baddonz-select { color: #fff; box-sizing: border-box; background: #0003; border: 1px solid gray; border-radius: 5px; outline: 0; min-width: 0; padding: 2px 3px; line-height: 1.5em; box-shadow: inset 0 0 6px 1px #000000bf; -webkit-appearance: menulist; appearance: menulist; }
 
 .baddonz-card { box-sizing: border-box; background: #0003; border: 1px solid gray; width: 100%; height: auto; margin-bottom: 5px; padding: 7px 12px; transition: background .15s; box-shadow: inset 0 0 6px 1px #000000bf; display: flex; flex-direction: column; }
 .baddonz-card:hover { background: #8c8c8c33; }
@@ -253,22 +104,89 @@
 .baddonz-card-title .baddonz-checkbox { margin-right: 5px; }
 .baddonz-card p { margin-top: 5px; margin-bottom: 0; font-size: 11px; color: #ccc; }
 
-.baddonz-setting-row { display: flex; flex-direction: row; width: 100%; justify-content: flex-start; align-items: center; gap: 10px; background: none; margin: 0; padding: 0; margin-bottom: 5px; line-height: normal; }
-.baddonz-setting-row .baddonz-label { margin: 0; padding: 0; line-height: normal; }
+/* ================================================= */
+/* 5. GŁÓWNE INPUTY                                  */
+/* ================================================= */
+.baddonz-input {
+    box-sizing: border-box; 
+    border: 1px solid #777; /* Domyślna szara ramka */
+    background-color: rgba(0, 0, 0, 0.05);
+    color: #fff; padding: 2px 4px; outline: none; font-family: 'Arial', sans-serif;
+    font-size: 13px; border-radius: 3px; box-shadow: inset 0 0 6px 1px #000000bf;
+}
 
+.baddonz-input.keybind { text-align: center; caret-color: #0000; transition: none; max-width: 140px; }
+.baddonz-input.keybind:focus, .baddonz-input.active-keybind-mode { border-color: #96f096 !important; caret-color: transparent !important; box-shadow: inset 0 0 6px 1px rgba(0, 0, 0, 0.75), 0 0 8px 1px rgba(150, 240, 150, 0.5) !important; }
+
+/* Kompaktowe małe pola (np. na numery) */
+.baddonz-input.compact { width: 100px; flex-shrink: 0; text-align: center; padding: 1px 0px; font-size: 11px; height: 20px; line-height: 18px; margin-left: 5px; }
 
 /* ================================================= */
-/* 5. POZOSTAŁE ZAAWANSOWANE ELEMENTY BADDONZA       */
+/* 6. ZAAWANSOWANE KONTENERY (Klocki Lego Baddonza)  */
 /* ================================================= */
 
-.baddonz-info-icon { width: 17px; height: 17px; background: url(../img/gui/buttony.png?v=1753438686037) no-repeat -497px -199px }
-.baddonz-info-icon:hover { filter: brightness(1.3); }
-.relogger-window { min-width: 220px; }
+/* WERSJA ADDBUTTON: Idealnie sklejony Input (dopasowujący się) + Przycisk */
+.baddonz-input-addbutton { 
+    display: flex; 
+    align-items: center; 
+    width: 100%; 
+    box-sizing: border-box;
+}
+.baddonz-input-addbutton .baddonz-input { 
+    flex: 1 1 auto; /* Wypełnia całą dostępną przestrzeń */
+    min-width: 0; /* ZABEZPIECZENIE: Pozwala inputowi się skurczyć, żeby nie wywalał przycisku */
+    border-top-right-radius: 0 !important; 
+    border-bottom-right-radius: 0 !important; 
+    height: 24px; 
+    padding: 2px 5px; 
+    font-size: 13px; 
+}
+.baddonz-input-addbutton .baddonz-button { 
+    flex: 0 0 24px; /* Twarde ustawienie szerokości przycisku na 24px */
+    width: 24px; 
+    height: 24px; 
+    padding: 0; 
+    margin: 0; 
+    border-top-left-radius: 0; 
+    border-bottom-left-radius: 0; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    font-size: 16px; 
+    line-height: 1; 
+}
+
+/* WERSJA LISTY Z IKONKĄ "X" W ŚRODKU */
+.baddonz-list-item { 
+    position: relative; 
+    width: 100%; 
+    box-sizing: border-box;
+    margin-bottom: 3px; 
+}
+.baddonz-list-item .baddonz-input { 
+    width: 100%; /* Input zajmuje 100% szerokości elementu listy */
+    padding-right: 22px; /* Zostawia pustą przestrzeń po prawej stronie na ikonkę X */
+    box-sizing: border-box;
+    height: 24px; 
+    padding-top: 2px; 
+    padding-bottom: 2px; 
+    font-size: 13px; 
+}
+.baddonz-list-item .baddonz-close-button { 
+    position: absolute; 
+    right: 4px; /* Wskakuje w wyznaczone przez padding-right miejsce */
+    top: 50%; 
+    transform: translateY(-50%); 
+    margin: 0; 
+}
+
+/* Uniwersalna siatka 2-kolumnowa */
+.baddonz-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; width: 100%; box-sizing: border-box; }
+.baddonz-grid-2col .baddonz-label-wrapper { width: auto; justify-content: flex-start; }
 
 /* ================================================= */
-/* 6. DOCK BADDONZA                                  */
+/* 7. DOCK BADDONZA                                  */
 /* ================================================= */
-
 .baddonz-dock-wrapper { position: absolute; display: flex; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 9999; }
 .baddonz-dock-wrapper.bottom-right { right: 0; bottom: 0; }
 .baddonz-dock-wrapper.top-right { right: 0; top: 0; }
@@ -279,17 +197,16 @@
 .baddonz-dock-wrapper.horizontal { flex-direction: row-reverse; }
 .baddonz-dock-wrapper.horizontal.top-left, .baddonz-dock-wrapper.horizontal.bottom-left { flex-direction: row; }
 
-.baddonz-dock-switch { display: flex; justify-content: center; align-items: center; transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; border: 1px solid #777; box-sizing: border-box; background: #0009; width: 26px; height: 26px; pointer-events: initial; color: white; font-size: 14px; text-align: center; }
+.baddonz-dock-switch { display: flex; justify-content: center; align-items: center; transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; border: 1px solid #777; box-sizing: border-box; background: #0009; width: 26px; height: 26px; color: white; font-size: 14px; text-align: center; }
 .baddonz-dock-switch .fa { transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
 .baddonz-dock-switch.active .fa { transform: rotate(-90deg); }
 .baddonz-dock-wrapper.horizontal .baddonz-dock-switch .fa { transform: none; }
 .baddonz-dock-wrapper.horizontal .baddonz-dock-switch.active .fa { transform: rotate(-90deg); }
-.baddonz-dock-wrapper.horizontal.bottom-left .baddonz-dock-switch.active .fa,
-.baddonz-dock-wrapper.horizontal.top-left .baddonz-dock-switch.active .fa { transform: rotate(-90deg); }
+.baddonz-dock-wrapper.horizontal.bottom-left .baddonz-dock-switch.active .fa, .baddonz-dock-wrapper.horizontal.top-left .baddonz-dock-switch.active .fa { transform: rotate(-90deg); }
 .baddonz-dock-switch:hover { background: #5a5a5a99; border-color: #808080; }
 .baddonz-dock-switch.active { border-color: #96f096; }
 
-.baddonz-dock { display: flex; background: transparent; pointer-events: initial; color: #d4d4d4; overflow: hidden; max-height: 500px; max-width: 26px; transition: max-height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), max-width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, padding 0.3s ease !important; }
+.baddonz-dock { display: flex; background: transparent; color: #d4d4d4; overflow: hidden; max-height: 500px; max-width: 26px; transition: max-height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), max-width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, padding 0.3s ease !important; }
 .baddonz-dock.collapsed.vertical, .baddonz-dock-wrapper.vertical .baddonz-dock.collapsed { max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; opacity: 0 !important; border: none !important; }
 .baddonz-dock.collapsed.horizontal, .baddonz-dock-wrapper.horizontal .baddonz-dock.collapsed { max-width: 0 !important; padding-left: 0 !important; padding-right: 0 !important; opacity: 0 !important; border: none !important; }
 .baddonz-dock.vertical { flex-direction: column-reverse; }
@@ -302,29 +219,12 @@
 .baddonz-dock-addon:hover { background: #5a5a5a99; border-color: #808080; }
 
 /* ================================================= */
-/* 7. SUWAK BADDONZ (Slider)                         */
+/* 8. POZOSTAŁE ZAAWANSOWANE (Suwaki i Notyfikacje)  */
 /* ================================================= */
 .baddonz-slider-wrapper { position: relative; width: 100%; height: 4px; background: #404040; border-radius: 2px; }
 .baddonz-slider-fill { position: absolute; top: 0; left: 0; height: 100%; width: 0; background: linear-gradient(to right, #7CFC00, #32CD32); border-radius: 2px; }
 .baddonz-slider-thumb { position: absolute; top: 50%; transform: translateY(-50%); width: 10px; height: 10px; border-radius: 50%; background: #7e7474; border: 1px solid #303030; box-shadow: 0 0 3px #000; transition: background 0.2s, border-color 0.2s, box-shadow 0.2s; }
 .baddonz-slider-thumb:hover { background: #7CFC00; border-color: #32CD32; box-shadow: 0 0 5px #32CD32; }
-.baddonz-slider-value-display { position: absolute; top: -15px; transform: translateX(-50%); pointer-events: none; font-size: 10px; color: #FFFFFF; text-shadow: 0 0 2px #000; min-width: 30px; text-align: center; white-space: nowrap; }
-
-/* ================================================= */
-/* 8. ITEM SEARCHER (Wyszukiwarka Itemów)            */
-/* ================================================= */
-.item-searcher-dimmed-item { opacity: 0.15; }
-.item-searcher-bag-counter { position: absolute; top: 1px; right: 2px; color: #ff0000; font-size: 14px; font-weight: bold; z-index: 9999; text-shadow: 1px 1px 1px #000; }
-.item-searcher-window-title { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
-.item-searcher-baddonz-input:focus { outline: none; border-color: transparent; }
-.item-searcher-baddonz-label-wrapper { display: flex; align-items: center; gap: 4px; }
-
-/* ================================================= */
-/* 9. NOTYFIKACJE I IKONY STANU                      */
-/* ================================================= */
-.baddonz-state-button { width: 9px; height: 9px; background: radial-gradient(ellipse at center, rgb(255, 0, 0), #101010); border-radius: 50%; box-shadow: 0 0 3px 1px rgba(255, 0, 0, 0.75); display: inline-block; transition: box-shadow 180ms ease-in-out, background 180ms ease-in-out, transform 120ms ease-in-out; padding: 1px; vertical-align: -2px; }
-.baddonz-state-button:hover { box-shadow: 0 0 4px 2px rgba(255, 255, 255, 0.25); transform: scale(1.05); }
-.baddonz-state-button--active { background: radial-gradient(ellipse at center, rgb(0, 255, 0), #101010); box-shadow: 0 0 3px 1px rgba(0, 255, 0, 0.75); }
 
 .baddonz-type-icon { width: 18px; height: 18px; position: relative; margin-left: auto; margin-right: auto; background: url("https://gordion.margonem.pl/img/gui/notyfikacje-sprite.png"); }
 .baddonz-type-icon.cl-1 { background-position: -1px -100px; }
@@ -333,12 +233,3 @@
 .baddonz-type-icon.cl-4 { background-position: -61px -100px; }
 .baddonz-type-icon.cl-5 { background-position: -81px -100px; }
 .baddonz-type-icon.cl-6 { background-position: -101px -100px; }
-.baddonz-type-icon.cl-7 { background-position: -121px -100px; }
-.baddonz-type-icon.cl-8 { background-position: -141px -100px; }
-.baddonz-type-icon.cl-9 { background-position: -161px -100px; }
-.baddonz-type-icon.cl-10 { background-position: -181px -100px; }
-.baddonz-type-icon.cl-11 { background-position: -201px -100px; }
-.baddonz-type-icon.cl-12 { background-position: -221px -100px; }
-.baddonz-type-icon.cl-13 { background-position: -241px -100px; }
-.baddonz-type-icon.cl-14 { background-position: -261px -100px; }
-.baddonz-type-icon.cl-29 { background-position: -401px -100px; }
