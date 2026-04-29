@@ -5,16 +5,32 @@
 /* ================================================= */
 /* 1. KURSORY (GLOBALNE)                             */
 /* ================================================= */
-.baddonz-window, .baddonz-dock, .baddonz-window-body {
+.baddonz-window,
+.baddonz-dock,
+.baddonz-window-body {
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, auto !important;
     line-height: 1;
 }
 
-.baddonz-input:not(.keybind), .baddonz-textarea, .baddonz-text, .baddonz-card-title span, .baddonz-card p {
+.baddonz-input:not(.keybind),
+.baddonz-textarea,
+.baddonz-text,
+.baddonz-card-title span,
+.baddonz-card p {
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, text !important;
 }
 
-.baddonz-window-header, .baddonz-button, .baddonz-tab, .baddonz-checkbox, .baddonz-icon, .baddonz-card, .baddonz-dock-switch, .baddonz-dock-addon, .baddonz-remove-x, .baddonz-input.keybind, .baddonz-type-icon {
+.baddonz-window-header,
+.baddonz-button,
+.baddonz-tab,
+.baddonz-checkbox,
+.baddonz-icon,
+.baddonz-card,
+.baddonz-dock-switch,
+.baddonz-dock-addon,
+.baddonz-remove-x,
+.baddonz-input.keybind,
+.baddonz-type-icon {
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
 }
 
@@ -25,10 +41,14 @@
 /* ================================================= */
 /* 2. SCROLLBARY (.baddonz-scroll)                   */
 /* ================================================= */
-.baddonz-window ::-webkit-scrollbar, .baddonz-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-.baddonz-window ::-webkit-scrollbar-track, .baddonz-scroll::-webkit-scrollbar-track { background: #1414148f; border-radius: 3px; }
-.baddonz-window ::-webkit-scrollbar-thumb, .baddonz-scroll::-webkit-scrollbar-thumb { background: #505050; border-radius: 3px; }
-.baddonz-window ::-webkit-scrollbar-thumb:hover, .baddonz-scroll::-webkit-scrollbar-thumb:hover { background: #808080; }
+.baddonz-window ::-webkit-scrollbar,
+.baddonz-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.baddonz-window ::-webkit-scrollbar-track,
+.baddonz-scroll::-webkit-scrollbar-track { background: #1414148f; border-radius: 3px; }
+.baddonz-window ::-webkit-scrollbar-thumb,
+.baddonz-scroll::-webkit-scrollbar-thumb { background: #505050; border-radius: 3px; }
+.baddonz-window ::-webkit-scrollbar-thumb:hover,
+.baddonz-scroll::-webkit-scrollbar-thumb:hover { background: #808080; }
 
 /* ================================================= */
 /* 3. FLEXBOX UTILS                                  */
@@ -44,7 +64,7 @@
     pointer-events: all; text-shadow: 1px 1px 1px #000; color: #fff; background: #0009;
     border-radius: 7px; flex-direction: column; min-width: 190px; font-family: sans-serif;
     display: flex; position: absolute; box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66; 
-    z-index: 9; /* BAZOWY INDEX! */
+    z-index: 9; /* BAZOWY INDEX ZMNIEJSZONY DO 9 ZGODNIE Z PROŚBĄ */
 }
 .baddonz-window.blur { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 .baddonz-window.opacity-0 { background: 0 0; }
@@ -99,8 +119,8 @@
 .baddonz-card p { margin-top: 5px; margin-bottom: 0; font-size: 11px; color: #ccc; }
 
 /* PRZYCISKI */
-.baddonz-button { background: #3c3c3c99; border: 1px solid #777; border-radius: 5px; margin-top: 3px; margin-bottom: 3px; padding: 3px 16px; font-size: 12px; transition: background .15s, border-color .15s; box-shadow: inset 0 0 6px 1px #000000bf; color: #fff; display: flex; justify-content: center; align-items: center; text-wrap: nowrap; }
-.baddonz-button:hover { background: #5a5a5a99; border-color: #aaa; }
+.baddonz-button { background: #3c3c3c99; border: 1px solid gray; border-radius: 5px; margin-top: 3px; margin-bottom: 3px; padding: 3px 16px; font-size: 12px; transition: background .15s, border-color .15s; box-shadow: inset 0 0 6px 1px #000000bf; color: #fff; display: flex; justify-content: center; align-items: center; text-wrap: nowrap; }
+.baddonz-button:hover { background: #5a5a5a99; }
 .baddonz-button.active { background: #46464666; border-color: #96f096; box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680; }
 
 /* CHECKBOX */
@@ -108,17 +128,11 @@
 .baddonz-checkbox:after { content: ""; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230dff00' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e"); width: 100%; height: 100%; transition: transform .2s; transform: scale(0); }
 .baddonz-checkbox.active:after { transform: scale(1); }
 
-/* Wiersze ustawień */
-.baddonz-setting-row { display: flex; flex-direction: row; width: 100%; justify-content: flex-start; align-items: center; gap: 10px; background: none; margin: 0 0 5px 0; padding: 0; }
-.baddonz-label-wrapper { display: flex; align-items: center; gap: 5px; }
-
-/* ================================================= */
-/* 5A. INPUTY - IDEALNIE NAPRAWIONE                  */
-/* ================================================= */
+/* INPUTY - ZAWSZE WIDOCZNA SZARA RAMKA */
 .baddonz-input { 
     box-sizing: border-box; 
-    border: 1px solid #555; /* Ramka ZAWSZE widoczna */
-    background-color: rgba(0, 0, 0, 0.4); 
+    border: 1px solid #5a5a5a; /* Stała, widoczna ramka */
+    background-color: rgba(0, 0, 0, 0.4); /* Ciemniejsze, estetyczne tło */
     color: #fff; 
     padding: 4px 6px; 
     outline: none; 
@@ -127,46 +141,50 @@
     border-radius: 3px; 
     box-shadow: inset 0 0 6px 1px #000000bf; 
 }
-.baddonz-input:focus, .baddonz-input:active { 
-    border-color: #888; /* Tylko delikatne rozjaśnienie dla normalnego inputa! */
+.baddonz-input:focus, .baddonz-input.active { 
+    border-color: #888; /* Jaśniejsza ramka przy aktywności */
+    box-shadow: inset 0 0 6px 1px #000000bf; 
 }
-.baddonz-input.keybind { 
-    text-align: center; 
-    caret-color: transparent; 
-}
-.baddonz-input.active-keybind-mode { 
-    /* ZIELONY EFEKT TYLKO DLA SKRÓTÓW */
+
+/* ZIELONA RAMKA TYLKO DLA SKRÓTÓW */
+.baddonz-input.keybind { text-align: center; caret-color: #0000; }
+.baddonz-input.keybind:focus, .baddonz-input.active-keybind-mode { 
     border-color: #96f096 !important; 
+    caret-color: transparent !important; 
     box-shadow: inset 0 0 6px 1px rgba(0, 0, 0, 0.75), 0 0 8px 1px rgba(150, 240, 150, 0.5) !important; 
 }
 
-/* WERSJA PLUS (INPUT połączony z przyciskiem, np. dodawanie do listy) */
+/* WERSJA PLUS (INPUT połączony z przyciskiem, zrobiona jako spójny element) */
 .baddonz-input-plus { 
     display: flex; 
-    align-items: stretch; /* Równa wysokość dla dzieci! */
+    align-items: center; 
     width: 100%; 
-    height: 24px;
 }
 .baddonz-input-plus .baddonz-input { 
     flex-grow: 1; 
     border-top-right-radius: 0; 
     border-bottom-right-radius: 0; 
-    border-right: none; /* Żeby się płynnie łączyło z guzikiem */
-    height: 100%;
+    border-right: none; /* Brak dublowania ramek na łączeniu */
+    height: 24px;
+    padding: 2px 5px;
 }
 .baddonz-input-plus .baddonz-button { 
     border-top-left-radius: 0; 
     border-bottom-left-radius: 0; 
     margin: 0; 
-    padding: 0 10px; 
-    height: 100%;
+    padding: 0; 
+    width: 24px; 
+    height: 24px; /* Identyczna wysokość co input */
+    font-weight: bold;
+    font-size: 16px;
 }
 
-/* ================================================= */
-/* 5B. INNE ELEMENTY W FORMULARZACH                  */
-/* ================================================= */
 /* SELECT (Rozwijana lista) */
-.baddonz-select { color: #fff; box-sizing: border-box; background: #0003; border: 1px solid #555; border-radius: 5px; outline: 0; padding: 2px 3px; box-shadow: inset 0 0 6px 1px #000000bf; -webkit-appearance: menulist; -moz-appearance: menulist; appearance: menulist; }
+.baddonz-select { color: #fff; box-sizing: border-box; background: #0003; border: 1px solid gray; border-radius: 5px; outline: 0; padding: 2px 3px; box-shadow: inset 0 0 6px 1px #000000bf; -webkit-appearance: menulist; -moz-appearance: menulist; appearance: menulist; }
+
+/* Wiersze ustawień */
+.baddonz-setting-row { display: flex; flex-direction: row; width: 100%; justify-content: flex-start; align-items: center; gap: 10px; background: none; margin: 0 0 5px 0; padding: 0; }
+.baddonz-label-wrapper { display: flex; align-items: center; gap: 5px; }
 
 /* ELEMENTY LIST (Z IKONKĄ X) */
 .baddonz-list-item { position: relative; width: 100%; display: flex; align-items: center; margin-bottom: 3px; }
