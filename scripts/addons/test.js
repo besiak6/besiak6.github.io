@@ -18,6 +18,7 @@
     function loadSettings() {
         if (window.BaddonzAPI) currentSettings = { ...currentSettings, ...window.BaddonzAPI.getAddonSettings(ADDON_ID) };
     }
+    
     function saveSettings() {
         if (window.BaddonzAPI) window.BaddonzAPI.saveAddonSettings(ADDON_ID, currentSettings);
     }
@@ -71,7 +72,6 @@
             </div>
         `;
 
-        // Generujemy okno przez API (Zmieniłem szerokość na 210px jako przykład)
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '210px' });
 
         const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
@@ -123,6 +123,7 @@
         renderBlockedNicks();
     }
 
+    // --- CYKL ŻYCIA I ZDARZENIA (API 2.0) ---
     function addonInit() {
         loadSettings();
         enableLogic();
@@ -137,12 +138,36 @@
         }
     }
 
+    // Ta funkcja jest odpalana gdy ktoś kliknie Prawym Przyciskiem myszy na ikonkę w docku
+    function onStateToggle(isEnabled) {
+        currentSettings.enabled = isEnabled;
+        
+        // Jeśli okienko jest otwarte, od razu odświeżamy checkboxa
+        if (uiWindowElement) {
+            const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
+            const section = uiWindowElement.querySelector("#ap-blocked-nicks-section");
+            
+            if (apCheckbox) {
+                if (isEnabled) apCheckbox.classList.add('active');
+                else apCheckbox.classList.remove('active');
+            }
+            if (section) {
+                section.style.display = isEnabled ? 'flex' : 'none';
+            }
+        }
+    }
+
     const checkApi = () => {
         if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon) {
             setTimeout(checkApi, 500); return;
         }
-        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop });
+        window.BaddonzAPI.registerAddon(ADDON_ID, { 
+            init: addonInit, 
+            stop: addonStop,
+            onStateToggle: onStateToggle // <--- Reaguje na kliknięcia z Docka
+        });
     };
+    
     checkApi();
 
 })();
