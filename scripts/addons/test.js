@@ -74,7 +74,8 @@
             </div>
         `;
 
-        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '195px' });
+        // Optymalna szerokość na 200px
+        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '200px' });
 
         const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
         const apBlockedNickInput = uiWindowElement.querySelector("#ap-blocked-nick-input");
@@ -88,10 +89,10 @@
                 const el = document.createElement('div');
                 el.className = 'baddonz-list-item'; 
                 
-                // Czysta klasa baddonz-close-button zdefiniowana przez CSS
+                // Użycie pancernej klasy .baddonz-list-item
                 el.innerHTML = `
                     <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
-                    <div class="baddonz-close-button" data-index="${index}" title="Usuń z listy"></div>
+                    <div class="baddonz-icon baddonz-close-button" data-index="${index}" title="Usuń z listy"></div>
                 `;
                 apBlockedNicksList.appendChild(el);
             });
