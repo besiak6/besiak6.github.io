@@ -1,46 +1,49 @@
 /* ================================================= */
-/* BADDONZ UI FRAMEWORK - CZYSTE STYLE UNIWERSALNE   */
+/* BADDONZ UI FRAMEWORK - ZOPTYMALIZOWANE STYLE      */
 /* ================================================= */
 
 /* ================================================= */
-/* 1. KURSORY (PROSTY SYSTEM 1n / 5n)                */
+/* 1. KURSORY - PROSTA FILOZOFIA                     */
 /* ================================================= */
 
-/* 1n: Domyślny kursor dla tła, okien i tekstów */
-.baddonz-jsx-root,
-.baddonz-window,
-.baddonz-dock,
-.baddonz-window-body,
-.item-searcher-baddonz-window,
-.baddonz-input:not(.keybind):not(.color-selector),
-.baddonz-textarea,
-.baddonz-text,
-.baddonz-card-title span,
-.baddonz-card p {
+/* 1n (Strzałka / Tekst) - Domyślny kursor dla tła, okien i inputów */
+.baddonz-jsx-root, 
+.baddonz-window, 
+.baddonz-window-body, 
+.baddonz-dock, 
+.baddonz-input, 
+.baddonz-textarea, 
+.baddonz-text {
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, auto !important;
 }
 
-/* 5n: Kursor rączki dla elementów klikalnych i przeciągalnych */
+/* 5n (Rączka) - Tylko elementy klikalne i przesuwane */
 .baddonz-window-header,
 .baddonz-window-title,
 .baddonz-button,
 .baddonz-tab,
 .baddonz-checkbox,
 .baddonz-icon,
+.baddonz-close-button,
+.baddonz-opacity-button,
+.baddonz-collapsed,
 .baddonz-card,
 .baddonz-dock-switch,
 .baddonz-dock-addon,
-.baddonz-input.keybind,
 .baddonz-state-button,
-.baddonz-type-icon,
-.baddon_set_button {
+.baddonz-type-icon {
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
 }
 
+/* ================================================= */
+/* 2. GŁÓWNY MENEDŻER I SCROLLBARY                   */
+/* ================================================= */
 
-/* ================================================= */
-/* 2. SCROLLBARY (GLOBALNE)                          */
-/* ================================================= */
+.baddonz-manager { width: 380px; height: 450px; }
+.baddonz-manager .baddonz-tab-switcher { width: 128px; }
+.baddonz-manager .baddonz-tab { width: 512px; }
+.baddonz-jsx-root { line-height: 1; }
+
 .baddonz-jsx-root ::-webkit-scrollbar,
 .baddonz-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
 .baddonz-jsx-root ::-webkit-scrollbar-track,
@@ -50,115 +53,67 @@
 .baddonz-jsx-root ::-webkit-scrollbar-thumb:hover,
 .baddonz-scroll::-webkit-scrollbar-thumb:hover { background: #808080; }
 
+.baddonz-flex { flex: 1; justify-content: center; max-width: 100%; max-height: 100%; display: flex; }
+.baddonz-flex.column { flex-direction: column; }
 
 /* ================================================= */
-/* 3. STRUKTURA OKIEN I FLEXBOX                      */
+/* 3. STRUKTURA OKIEN (.baddonz-window)              */
 /* ================================================= */
-.baddonz-flex { flex: 1; display: flex; max-width: 100%; max-height: 100%; }
-.baddonz-flex.column { flex-direction: column; }
-.baddonz-flex.centered { justify-content: center; align-items: center; }
 
 .baddonz-window {
     pointer-events: all; text-shadow: 1px 1px 1px #000; color: #fff; background: #0009;
-    border-radius: 7px; flex-direction: column; min-width: 191px; min-height: 22px; font-family: sans-serif;
-    display: flex; position: absolute; box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66; z-index: 29;
+    border-radius: 7px; flex-direction: column; min-width: 191px; min-height: 22px;
+    font-family: sans-serif; display: flex; position: absolute; z-index: 29;
+    box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66;
 }
+
 .baddonz-window.blur { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 .baddonz-window.opacity-0 { background: 0 0; }
 .baddonz-window.opacity-1 { background: #0000004d; }
 .baddonz-window.opacity-2 { background: #0009; }
 .baddonz-window.opacity-3 { background: #000c; }
 .baddonz-window.opacity-4 { background: #000; }
-.baddonz-window.collapsed { width: 90px !important; height: 25px !important; resize: none !important; overflow: hidden !important; min-width: 90px !important; min-height: 25px !important; }
+
+.baddonz-window.collapsed { width: 90px !important; height: 25px !important; min-width: 90px !important; min-height: 25px !important; overflow: hidden !important; }
 .baddonz-window.collapsed .baddonz-window-body { display: none !important; }
 
-/* NAGŁÓWEK OKNA */
+/* Nagłówek Okna */
 .baddonz-window-header { white-space: nowrap; box-sizing: border-box; height: 25px; display: flex; justify-content: space-between; align-items: center; }
 .baddonz-window.collapsed .baddonz-window-header { width: 100% !important; }
-.baddonz-window-controls { flex-direction: row; align-items: center; gap: 3px; padding: 0 5px; display: flex; }
-.baddonz-window-controls.left { justify-content: flex-start; }
+.baddonz-window-controls { flex-direction: row; align-items: center; column-gap: 3px; width: auto; padding: 0 5px; display: flex; }
 .baddonz-window-controls.right { justify-content: flex-end; }
+.baddonz-window-controls.left { justify-content: flex-start; }
 .baddonz-window-title { text-align: center; color: beige; flex: 3; font-size: 11px; line-height: 25px; flex-grow: 1; padding: 0 5px; }
-.baddonz-window.collapsed .baddonz-window-title { font-size: 9px; }
 
-/* CIAŁO OKNA */
+/* Ciało Okna */
 .baddonz-window-body { color: #fff; box-sizing: border-box; flex-direction: column; flex: 1; height: calc(100% - 25px); font-size: 12px; display: flex; padding: 0 10px 10px 10px; }
 
-/* KONTROLKI NAGŁÓWKA (IKONY) */
-.baddonz-opacity-button { background: url(https://gordion.margonem.pl/img/gui/buttony.png) -725px -131px; width: 13px; height: 13px; margin-right: 0px; }
-.baddonz-close-button { background: url(https://gordion.margonem.pl/img/gui/buttony.png) -624px -117px; width: 12px; height: 12px; margin-left: 0px; }
-.baddonz-collapsed { width: 16px; height: 14px; background: url("https://gordion.margonem.pl/img/gui/buttony.png") -556px -399px; }
-.baddonz-enable-wnd { background: url("https://gordion.margonem.pl/img/gui/buttony.png") -465px -399px; width: 16px; height: 16px; margin-left: auto; }
+/* Przyciski Nagłówka */
+.baddonz-opacity-button { background: url(https://gordion.margonem.pl/img/gui/buttony.png) -725px -131px; width: 13px; height: 13px; }
+.baddonz-close-button { background: url(https://gordion.margonem.pl/img/gui/buttony.png) -624px -117px; width: 12px; height: 12px; }
+.baddonz-collapsed { width: 16px; height: 14px; background: url(https://gordion.margonem.pl/img/gui/buttony.png) -556px -399px; }
 .baddonz-settings-button { background: url(https://gordion.margonem.pl/img/gui/buttony.png) -607px -117px; width: 13px; height: 13px; }
+.baddonz-enable-wnd { background: url(https://gordion.margonem.pl/img/gui/buttony.png) -465px -399px; width: 16px; height: 16px; margin-left: auto; }
+
 .baddonz-opacity-button:hover, .baddonz-collapsed:hover, .baddonz-enable-wnd:hover { filter: brightness(1.2); }
 .baddonz-close-button:hover { background-position: -726px -117px; }
 .baddonz-settings-button:hover { background-position: -659px -117px; }
 
-/* Inne ikonki Baddonza */
-.baddonz-info-icon { width: 17px; height: 17px; background: url(../img/gui/buttony.png?v=1753438686037) no-repeat -497px -199px; }
-.baddonz-info-icon:hover { filter: brightness(1.3); }
-
-
 /* ================================================= */
-/* 4. UNIWERSALNE ELEMENTY FORMULARZY I UI           */
+/* 4. ELEMENTY FORMULARZY I UI                       */
 /* ================================================= */
-.baddonz-box { box-sizing: border-box; background: #0003; border: 1px solid gray; flex-grow: 1; padding: 0; box-shadow: inset 0 0 6px 1px #000000bf; display: flex; flex-direction: column; }
+
+.baddonz-box { box-sizing: border-box; background: #0003; border: 1px solid gray; flex-grow: 1; box-shadow: inset 0 0 6px 1px #000000bf; display: flex; flex-direction: column; }
 .baddonz-text { color: #fff; text-shadow: 1px 1px 1px #000; font-family: sans-serif; font-size: 12px; padding: 3px; }
-.baddonz-textarea { color: #fff; resize: none; background: #0003; border: 1px solid gray; border-radius: 5px; outline: 0; height: 40px; padding: 2px 3px; font-size: 12px; line-height: 1.5em; box-shadow: inset 0 0 6px 1px #000000bf; }
+.baddonz-textarea { color: #fff; resize: none; background: #0003; border: 1px solid gray; border-radius: 5px; outline: 0; height: 40px; padding: 2px 3px; font-size: 12px; box-shadow: inset 0 0 6px 1px #000000bf; }
 
-/* PRZYCISKI */
-.baddonz-button { background: #3c3c3c99; border: 1px solid gray; border-radius: 5px; margin-top: 3px; margin-bottom: 3px; padding: 3px 16px; font-size: 12px; transition: background .15s, border-color .15s; box-shadow: inset 0 0 6px 1px #000000bf; color: #fff; display: flex; justify-content: center; align-items: center; text-wrap: nowrap; }
-.baddonz-button:hover { background: #5a5a5a99; }
-.baddonz-button.active { background: #46464666; border-color: #96f096; box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680; }
-
-/* CHECKBOX */
-.baddonz-checkbox { box-sizing: border-box; background-color: #54545479; border: 1px solid #545454; width: 16px; min-width: 16px; height: 16px; min-height: 16px; border-radius: 3px; box-shadow: inset 0 2px 5px #00000080; display: flex; justify-content: center; align-items: center; }
-.baddonz-checkbox:after { content: ""; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230dff00' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e"); width: 100%; height: 100%; transition: transform .2s; transform: scale(0); }
-.baddonz-checkbox.active:after { transform: scale(1); }
-
-/* INPUTY */
-.baddonz-input { box-sizing: border-box; border: 1px solid #3b3b3b; background-color: rgba(0, 0, 0, 0.05); color: #fff; padding: 4px 6px; outline: none; font-family: 'Arial', sans-serif; font-size: 13px; border-radius: 3px; box-shadow: inset 0 0 6px 1px #000000bf; transition: none; }
-.baddonz-input:focus, .baddonz-input.active { border-color: #777; box-shadow: inset 0 0 6px 1px #000000bf; }
-
-.baddonz-input.compact { width: 100px; flex-shrink: 0; text-align: center; padding: 1px 0px; font-size: 11px; height: 20px; line-height: 18px; margin-left: 5px; }
-.baddonz-input[type="number"] { text-align: right; appearance: textfield; width: 50px; min-width: 30px; }
-.baddonz-input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-
-.baddonz-input.keybind { text-align: center; caret-color: #0000; max-width: 140px; }
-.baddonz-input.keybind:focus, .baddonz-input.active-keybind-mode { border-color: #96f096 !important; caret-color: transparent !important; box-shadow: inset 0 0 6px 1px rgba(0, 0, 0, 0.75), 0 0 8px 1px rgba(150, 240, 150, 0.5) !important; }
-
-/* SELECT */
-.baddonz-select { color: #fff; box-sizing: border-box; background: #0003; border: 1px solid gray; border-radius: 5px; outline: 0; min-width: 0; padding: 2px 3px; line-height: 1.5em; box-shadow: inset 0 0 6px 1px #000000bf; -webkit-appearance: menulist; -moz-appearance: menulist; appearance: menulist; }
-
-/* ================================================= */
-/* 5. SPECJALNE KONTENERY (Klocki Lego)              */
-/* ================================================= */
-
-/* Kontener z Inputem i Przyciskiem + */
-.baddonz-input-addbutton { display: flex; align-items: center; width: 100%; gap: 0; }
-.baddonz-input-addbutton .baddonz-input { flex-grow: 1; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; height: 24px; padding: 2px 5px; font-size: 13px; }
-.baddonz-input-addbutton .baddonz-button { border-top-left-radius: 0; border-bottom-left-radius: 0; height: 24px; width: 24px; padding: 0; margin: 0; display: flex; justify-content: center; align-items: center; font-size: 16px; }
-
-/* Listy Elementów (np. czarna lista, dozwolone nicki) */
-.baddonz-list-item { display: flex; align-items: center; gap: 5px; width: 100%; margin-bottom: 3px; }
-.baddonz-list-item .baddonz-input { flex-grow: 1; height: 24px; padding: 2px 5px; font-size: 13px; }
-
-/* Wiersze Ustawień */
-.baddonz-setting-row { display: flex; flex-direction: row; width: 100%; justify-content: flex-start; align-items: center; gap: 10px; background: none; margin: 0 0 5px 0; padding: 0; line-height: normal; }
-.baddonz-setting-row .baddonz-label { margin: 0; padding: 0; line-height: normal; }
-.baddonz-label-wrapper { display: flex; align-items: center; gap: 5px; }
-
-/* Uniwersalna siatka na ustawienia / checkboxy (dwie kolumny) */
-.baddonz-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; width: 100%; box-sizing: border-box; }
-.baddonz-grid-2col .baddonz-label-wrapper { width: auto; justify-content: flex-start; }
-
-/* Zakładki (Tabs) */
+/* TABS (Zakładki) */
 .baddonz-tabs-container { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
 .baddonz-tab { box-sizing: border-box; color: #fff; text-shadow: 1px 1px 1px #000; background: #3c3c3c99; border: 1px solid gray; border-radius: 5px; padding: 5px 10px; font-size: 13px; text-align: center; transition: background .15s, border-color .15s, transform .1s; box-shadow: inset 0 0 6px 1px #000000bf; flex-grow: 1; white-space: nowrap; display: flex; justify-content: center; align-items: center; }
 .baddonz-tab:hover { background: #5a5a5a99; border-color: #808080; transform: translateY(-1px); }
 .baddonz-tab.active { background: linear-gradient(90deg, #46464666 50%, #46464600); border-color: #96f096; box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680; transform: translateY(0); pointer-events: none; }
 
-/* Karty (np. na liście dodatków) */
+/* KARTY DODATKÓW */
 .baddonz-card { box-sizing: border-box; background: #0003; border: 1px solid gray; width: 100%; height: auto; margin-bottom: 5px; padding: 7px 12px; transition: background .15s; box-shadow: inset 0 0 6px 1px #000000bf; display: flex; flex-direction: column; }
 .baddonz-card:hover { background: #8c8c8c33; }
 .baddonz-card-title { justify-content: flex-start; align-items: center; margin-bottom: 5px; font-weight: 700; display: flex; width: 100%; }
@@ -167,9 +122,43 @@
 .baddonz-card-title .baddonz-checkbox { margin-right: 5px; }
 .baddonz-card p { margin-top: 5px; margin-bottom: 0; font-size: 11px; color: #ccc; }
 
+/* Wiersze ustawień */
+.baddonz-setting-row { display: flex; flex-direction: row; width: 100%; justify-content: flex-start; align-items: center; gap: 10px; margin-bottom: 5px; }
+.baddonz-label-wrapper { display: flex; align-items: center; gap: 5px; }
+
+/* PRZYCISK */
+.baddonz-button { background: #3c3c3c99; border: 1px solid gray; border-radius: 5px; padding: 3px 16px; font-size: 12px; transition: background .15s, border-color .15s; box-shadow: inset 0 0 6px 1px #000000bf; color: #fff; display: flex; justify-content: center; align-items: center; text-wrap: nowrap; }
+.baddonz-button:hover { background: #5a5a5a99; }
+.baddonz-button.active { background: #46464666; border-color: #96f096; box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680; }
+
+/* CHECKBOX */
+.baddonz-checkbox { box-sizing: border-box; background-color: #54545479; border: 1px solid #545454; width: 16px; height: 16px; border-radius: 3px; box-shadow: inset 0 2px 5px #00000080; display: flex; justify-content: center; align-items: center; }
+.baddonz-checkbox:after { content: ""; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230dff00' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e"); width: 100%; height: 100%; transition: transform .2s; transform: scale(0); }
+.baddonz-checkbox.active:after { transform: scale(1); }
+
+/* INPUT */
+.baddonz-input { box-sizing: border-box; border: 1px solid #3b3b3b; background-color: rgba(0, 0, 0, 0.05); color: #fff; padding: 4px 6px; outline: none; font-family: 'Arial', sans-serif; font-size: 13px; border-radius: 3px; box-shadow: inset 0 0 6px 1px #000000bf; }
+.baddonz-input:focus, .baddonz-input.active { border-color: #96f096; box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680; }
+
+/* UNIWERSALNY MODUŁ: INPUT Z PRZYCISKIEM (np. [Wpisz Nick][+]) */
+.baddonz-input-addbutton { display: flex; align-items: center; width: 100%; }
+.baddonz-input-addbutton .baddonz-input { flex-grow: 1; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.baddonz-input-addbutton .baddonz-button { border-top-left-radius: 0; border-bottom-left-radius: 0; margin: 0; padding: 0 10px; height: 100%; }
+
+/* UNIWERSALNY MODUŁ: LISTA (np. Czarna lista) */
+.baddonz-list-item { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; width: 100%; }
+.baddonz-list-item .baddonz-input { flex-grow: 1; }
+/* Jako przycisku usuwania (X) używamy natywnego .baddonz-close-button, dostosowujemy tylko jego zachowanie w liście */
+.baddonz-list-item .baddonz-close-button { margin: 0; flex-shrink: 0; width: 12px; height: 12px; display: block; }
+
+/* SELECT */
+.baddonz-select { color: #fff; box-sizing: border-box; background: #0003; border: 1px solid gray; border-radius: 5px; outline: 0; padding: 2px 3px; box-shadow: inset 0 0 6px 1px #000000bf; -webkit-appearance: menulist; appearance: menulist; }
+
+/* SIATKI CSS */
+.baddonz-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; width: 100%; box-sizing: border-box; }
 
 /* ================================================= */
-/* 6. DOCK (MENU BOCZNE)                             */
+/* 5. DOCK BADDONZA                                  */
 /* ================================================= */
 .baddonz-dock-wrapper { position: absolute; display: flex; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 9999; }
 .baddonz-dock-wrapper.bottom-right { right: 0; bottom: 0; }
@@ -181,30 +170,28 @@
 .baddonz-dock-wrapper.horizontal { flex-direction: row-reverse; }
 .baddonz-dock-wrapper.horizontal.top-left, .baddonz-dock-wrapper.horizontal.bottom-left { flex-direction: row; }
 
-.baddonz-dock-switch { display: flex; justify-content: center; align-items: center; transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out; border: 1px solid #777; box-sizing: border-box; background: #0009; width: 26px; height: 26px; pointer-events: initial; color: white; font-size: 14px; text-align: center; }
-.baddonz-dock-switch .fa { transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+.baddonz-dock-switch { display: flex; justify-content: center; align-items: center; transition: background-color 0.2s, border-color 0.2s; border: 1px solid #777; box-sizing: border-box; background: #0009; width: 26px; height: 26px; color: white; font-size: 14px; }
+.baddonz-dock-switch .fa { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
 .baddonz-dock-switch.active .fa { transform: rotate(-90deg); }
 .baddonz-dock-wrapper.horizontal .baddonz-dock-switch .fa { transform: none; }
 .baddonz-dock-wrapper.horizontal .baddonz-dock-switch.active .fa { transform: rotate(-90deg); }
-.baddonz-dock-wrapper.horizontal.bottom-left .baddonz-dock-switch.active .fa, .baddonz-dock-wrapper.horizontal.top-left .baddonz-dock-switch.active .fa { transform: rotate(-90deg); }
 .baddonz-dock-switch:hover { background: #5a5a5a99; border-color: #808080; }
 .baddonz-dock-switch.active { border-color: #96f096; }
 
-.baddonz-dock { display: flex; background: transparent; pointer-events: initial; color: #d4d4d4; overflow: hidden; max-height: 500px; max-width: 26px; transition: max-height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), max-width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, padding 0.3s ease !important; }
+.baddonz-dock { display: flex; background: transparent; color: #d4d4d4; transition: max-height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), max-width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, padding 0.3s ease !important; overflow: hidden !important; }
+.baddonz-dock.vertical { flex-direction: column-reverse; max-height: 500px; max-width: 26px; }
+.baddonz-dock-wrapper.top-right .baddonz-dock.vertical, .baddonz-dock-wrapper.top-left .baddonz-dock.vertical { flex-direction: column; }
+.baddonz-dock.horizontal { flex-direction: row-reverse; max-width: 500px; max-height: 26px; }
+.baddonz-dock-wrapper.top-left .baddonz-dock.horizontal, .baddonz-dock-wrapper.bottom-left .baddonz-dock.horizontal { flex-direction: row; }
 .baddonz-dock.collapsed.vertical, .baddonz-dock-wrapper.vertical .baddonz-dock.collapsed { max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; opacity: 0 !important; border: none !important; }
 .baddonz-dock.collapsed.horizontal, .baddonz-dock-wrapper.horizontal .baddonz-dock.collapsed { max-width: 0 !important; padding-left: 0 !important; padding-right: 0 !important; opacity: 0 !important; border: none !important; }
-.baddonz-dock.vertical { flex-direction: column-reverse; }
-.baddonz-dock-wrapper.top-right .baddonz-dock.vertical, .baddonz-dock-wrapper.top-left .baddonz-dock.vertical { flex-direction: column; }
-.baddonz-dock.horizontal { flex-direction: row-reverse; max-width: 500px; max-height: 26px; transition: max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-.baddonz-dock-wrapper.top-left .baddonz-dock.horizontal, .baddonz-dock-wrapper.bottom-left .baddonz-dock.horizontal { flex-direction: row; }
 
-.baddonz-dock-addon { display: flex; justify-content: center; align-items: center; transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out; border: 1px solid #777; box-sizing: border-box; background: #0009; width: 26px; height: 26px; color: white; display: none; }
+.baddonz-dock-addon { display: flex; justify-content: center; align-items: center; transition: background-color 0.2s, border-color 0.2s, color 0.2s; border: 1px solid #777; box-sizing: border-box; background: #0009; width: 26px; height: 26px; color: white; display: none; }
 .baddonz-dock-addon.active { border-color: #96f096; color: #96f096; }
 .baddonz-dock-addon:hover { background: #5a5a5a99; border-color: #808080; }
 
-
 /* ================================================= */
-/* 7. SUWAKI (SLIDERY) BADDONZA                      */
+/* 6. SUWAKI I ITEM SEARCHER (POZOSTAWIONE)          */
 /* ================================================= */
 .baddonz-slider-wrapper { position: relative; width: 100%; height: 4px; background: #404040; border-radius: 2px; }
 .baddonz-slider-fill { position: absolute; top: 0; left: 0; height: 100%; width: 0; background: linear-gradient(to right, #7CFC00, #32CD32); border-radius: 2px; }
@@ -212,15 +199,21 @@
 .baddonz-slider-thumb:hover { background: #7CFC00; border-color: #32CD32; box-shadow: 0 0 5px #32CD32; }
 .baddonz-slider-value-display { position: absolute; top: -15px; transform: translateX(-50%); pointer-events: none; font-size: 10px; color: #FFFFFF; text-shadow: 0 0 2px #000; min-width: 30px; text-align: center; white-space: nowrap; }
 
+.item-searcher-dimmed-item { opacity: 0.15; }
+.item-searcher-bag-counter { position: absolute; top: 1px; right: 2px; color: #ff0000; font-size: 14px; font-weight: bold; z-index: 9999; text-shadow: 1px 1px 1px #000; }
+.item-searcher-window-title { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+.item-searcher-baddonz-window { cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, auto !important; }
+.item-searcher-baddonz-input:focus { outline: none; border-color: transparent; }
+.item-searcher-baddonz-label-wrapper { display: flex; align-items: center; gap: 4px; }
 
 /* ================================================= */
-/* 8. IKONY POWIADOMIEŃ I STANU                      */
+/* 7. IKONY NOTYFIKACJI I STANU                      */
 /* ================================================= */
 .baddonz-state-button { width: 9px; height: 9px; background: radial-gradient(ellipse at center, rgb(255, 0, 0), #101010); border-radius: 50%; box-shadow: 0 0 3px 1px rgba(255, 0, 0, 0.75); display: inline-block; transition: box-shadow 180ms ease-in-out, background 180ms ease-in-out, transform 120ms ease-in-out; padding: 1px; vertical-align: -2px; }
 .baddonz-state-button:hover { box-shadow: 0 0 4px 2px rgba(255, 255, 255, 0.25); transform: scale(1.05); }
 .baddonz-state-button--active { background: radial-gradient(ellipse at center, rgb(0, 255, 0), #101010); box-shadow: 0 0 3px 1px rgba(0, 255, 0, 0.75); }
 
-.baddonz-type-icon { width: 18px; height: 18px; position: relative; margin: auto; background: url("https://gordion.margonem.pl/img/gui/notyfikacje-sprite.png"); }
+.baddonz-type-icon { width: 18px; height: 18px; position: relative; margin-left: auto; margin-right: auto; background: url("https://gordion.margonem.pl/img/gui/notyfikacje-sprite.png"); }
 .baddonz-type-icon.cl-1 { background-position: -1px -100px; }
 .baddonz-type-icon.cl-2 { background-position: -41px -100px; }
 .baddonz-type-icon.cl-3 { background-position: -21px -100px; }
@@ -236,17 +229,3 @@
 .baddonz-type-icon.cl-13 { background-position: -241px -100px; }
 .baddonz-type-icon.cl-14 { background-position: -261px -100px; }
 .baddonz-type-icon.cl-29 { background-position: -401px -100px; }
-
-
-/* ================================================= */
-/* 9. ZACHOWANE ORYGINALNE STYLE: ITEM SEARCHER      */
-/* ================================================= */
-.item-searcher-dimmed-item { opacity: 0.15; }
-.item-searcher-bag-counter { position: absolute; top: 1px; right: 2px; color: #ff0000; font-size: 14px; font-weight: bold; z-index: 9999; text-shadow: 1px 1px 1px #000; }
-.item-searcher-window-title { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
-.item-searcher-baddonz-window-controls > .baddonz-icon,
-.item-searcher-baddonz-input,
-.item-searcher-baddonz-label-wrapper,
-.item-searcher-clear-input-button { cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important; }
-.item-searcher-baddonz-input:focus { outline: none; border-color: transparent; }
-.item-searcher-baddonz-label-wrapper { display: flex; align-items: center; gap: 4px; }
