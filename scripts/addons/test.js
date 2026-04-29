@@ -60,7 +60,7 @@
                     <input type="text" class="baddonz-input" id="ap-blocked-nick-input" placeholder="Wpisz nick" maxlength="20">
                     <button class="baddonz-button" id="ap-add-nick-btn">+</button>
                 </div>
-                <div class="baddonz-scroll" id="ap-blocked-nicks-list" style="overflow-y: auto; max-height: 120px;"></div>
+                <div class="baddonz-scroll" id="ap-blocked-nicks-list" style="max-height: 120px;"></div>
             </div>
         `;
 
@@ -75,15 +75,13 @@
         const renderBlockedNicks = () => {
             apBlockedNicksList.innerHTML = '';
             currentSettings.blockedNicks.forEach((nick, index) => {
-                // Wykorzystanie nowych uniwersalnych klas lego .baddonz-list-item oraz .baddonz-remove-x
                 const el = document.createElement('div');
+                // Korzystamy z nowych klas układu list z poprawionego CSS
                 el.className = 'baddonz-list-item';
-                el.innerHTML = `
-                    <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
-                    <span class="baddonz-remove-x ap-remove-nick-x" data-index="${index}">&times;</span>
-                `;
+                el.innerHTML = `<input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20"><span class="baddonz-remove-x" data-index="${index}">&times;</span>`;
                 apBlockedNicksList.appendChild(el);
             });
+            // Odsunięcie od paska przewijania
             apBlockedNicksList.style.paddingRight = (apBlockedNicksList.scrollHeight > apBlockedNicksList.clientHeight) ? '6px' : '0';
         };
 
@@ -104,16 +102,8 @@
             }
         });
 
-        // Nasłuchiwanie na enter przy inpucie
-        apBlockedNickInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                apAddNickBtn.click();
-            }
-        });
-
         apBlockedNicksList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('ap-remove-nick-x')) {
+            if (e.target.classList.contains('baddonz-remove-x')) {
                 currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
                 saveSettings(); renderBlockedNicks();
             }
@@ -127,6 +117,7 @@
         renderBlockedNicks();
     }
 
+    // --- CYKL ŻYCIA ---
     function addonInit() {
         loadSettings();
         enableLogic();
@@ -141,11 +132,14 @@
         }
     }
 
+    // Odpala się gdy klikniesz PPM na docku
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
+        
         if (uiWindowElement) {
             const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
             const section = uiWindowElement.querySelector("#ap-blocked-nicks-section");
+            
             if (apCheckbox) {
                 if (isEnabled) apCheckbox.classList.add('active');
                 else apCheckbox.classList.remove('active');
@@ -161,7 +155,7 @@
         window.BaddonzAPI.registerAddon(ADDON_ID, { 
             init: addonInit, 
             stop: addonStop,
-            onStateToggle: onStateToggle
+            onStateToggle: onStateToggle 
         });
     };
     
