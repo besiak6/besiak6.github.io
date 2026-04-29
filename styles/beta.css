@@ -6,7 +6,6 @@
 /* 1. KURSORY (GLOBALNE)                             */
 /* ================================================= */
 
-/* Domyślny kursor (strzałka 1n) - Tła, okna, puste przestrzenie */
 .baddonz-window,
 .baddonz-dock,
 .baddonz-window-body {
@@ -14,7 +13,6 @@
     line-height: 1;
 }
 
-/* Kursor tekstowy (1n) - Pola tekstowe i opisy */
 .baddonz-input:not(.keybind),
 .baddonz-textarea,
 .baddonz-text,
@@ -23,7 +21,6 @@
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, text !important;
 }
 
-/* Kursor rączki (5n) - Przeciąganie, przyciski, zakładki, checkboxy */
 .baddonz-window-header,
 .baddonz-button,
 .baddonz-tab,
@@ -36,6 +33,10 @@
 .baddonz-input.keybind,
 .baddonz-type-icon {
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+}
+
+.baddonz-window-title {
+    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, move !important;
 }
 
 /* ================================================= */
@@ -63,7 +64,8 @@
 .baddonz-window {
     pointer-events: all; text-shadow: 1px 1px 1px #000; color: #fff; background: #0009;
     border-radius: 7px; flex-direction: column; min-width: 190px; font-family: sans-serif;
-    display: flex; position: absolute; box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66; z-index: 29;
+    display: flex; position: absolute; box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66; 
+    z-index: 9; /* BAZOWY INDEX ZMIENIONY NA 9 */
 }
 .baddonz-window.blur { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 .baddonz-window.opacity-0 { background: 0 0; }
@@ -127,16 +129,31 @@
 .baddonz-checkbox:after { content: ""; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%230dff00' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e"); width: 100%; height: 100%; transition: transform .2s; transform: scale(0); }
 .baddonz-checkbox.active:after { transform: scale(1); }
 
-/* INPUTY */
-.baddonz-input { box-sizing: border-box; border: 1px solid #3b3b3b; background-color: rgba(0, 0, 0, 0.05); color: #fff; padding: 4px 6px; outline: none; font-family: 'Arial', sans-serif; font-size: 13px; border-radius: 3px; box-shadow: inset 0 0 6px 1px #000000bf; }
-.baddonz-input:focus, .baddonz-input.active { border-color: #777; box-shadow: inset 0 0 6px 1px #000000bf; }
-.baddonz-input.keybind { text-align: center; caret-color: #0000; }
-.baddonz-input.keybind:focus, .baddonz-input.active-keybind-mode { border-color: #96f096 !important; caret-color: transparent !important; box-shadow: inset 0 0 6px 1px rgba(0, 0, 0, 0.75), 0 0 8px 1px rgba(150, 240, 150, 0.5) !important; }
+/* INPUTY (ZAWSZE WIDOCZNA RAMKA) */
+.baddonz-input { 
+    box-sizing: border-box; border: 1px solid #777; background-color: rgba(0, 0, 0, 0.4); 
+    color: #fff; padding: 4px 6px; outline: none; font-family: 'Arial', sans-serif; 
+    font-size: 13px; border-radius: 3px; box-shadow: inset 0 0 6px 1px #000000bf; 
+}
+.baddonz-input:focus { border-color: #aaa; }
 
-/* WERSJA PLUS (INPUT połączony z przyciskiem, np. dodawanie do listy) */
-.baddonz-input-plus { display: flex; align-items: center; width: 100%; }
-.baddonz-input-plus .baddonz-input { flex-grow: 1; border-top-right-radius: 0; border-bottom-right-radius: 0; }
-.baddonz-input-plus .baddonz-button { border-top-left-radius: 0; border-bottom-left-radius: 0; margin: 0; padding: 0 10px; height: 100%; }
+/* TRYB SKRÓTÓW (ZIELONA RAMKA) */
+.baddonz-input.keybind { text-align: center; caret-color: transparent; border-color: #555; }
+.baddonz-input.keybind:focus, .baddonz-input.active-keybind-mode { 
+    border-color: #96f096 !important; 
+    box-shadow: inset 0 0 6px 1px rgba(0, 0, 0, 0.75), 0 0 8px 1px rgba(150, 240, 150, 0.5) !important; 
+}
+
+/* KONTENER INPUT + PRZYCISK (Idealne spasowanie) */
+.baddonz-input-plus { 
+    display: flex; align-items: center; width: 100%; height: 26px; 
+}
+.baddonz-input-plus .baddonz-input { 
+    flex-grow: 1; height: 100%; border-top-right-radius: 0; border-bottom-right-radius: 0; border-right: none; margin: 0; 
+}
+.baddonz-input-plus .baddonz-button { 
+    height: 100%; border-top-left-radius: 0; border-bottom-left-radius: 0; margin: 0; padding: 0 10px; font-weight: bold; font-size: 14px; 
+}
 
 /* SELECT (Rozwijana lista) */
 .baddonz-select { color: #fff; box-sizing: border-box; background: #0003; border: 1px solid gray; border-radius: 5px; outline: 0; padding: 2px 3px; box-shadow: inset 0 0 6px 1px #000000bf; -webkit-appearance: menulist; -moz-appearance: menulist; appearance: menulist; }
