@@ -56,12 +56,12 @@
 
     function buildUI() {
         const bodyHtml = `
-            <div class="baddonz-label-wrapper" style="justify-content: flex-start;">
+            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ap-checkbox"></div>
                 <div class="baddonz-text" style="padding: 0;">Auto Przywo</div>
             </div>
 
-            <div id="ap-blocked-nicks-section" class="baddonz-flex column" style="gap: 5px; margin-top: 5px; display: ${currentSettings.enabled ? 'flex' : 'none'};">
+            <div id="ap-blocked-nicks-section" class="baddonz-flex column" style="gap: 5px; margin-top: 5px; display: ${currentSettings.enabled ? 'flex' : 'none'}; box-sizing: border-box; max-width: 100%;">
                 <hr style="width: 100%; border-color: #303030; margin: 0;">
                 <div class="baddonz-text" style="padding: 0;">Nie akceptuj od:</div>
                 
@@ -74,7 +74,6 @@
             </div>
         `;
 
-        // ZMIANA: Zmniejszono szerokość na zgrabne 195px
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '195px' });
 
         const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
@@ -87,12 +86,12 @@
             apBlockedNicksList.innerHTML = '';
             currentSettings.blockedNicks.forEach((nick, index) => {
                 const el = document.createElement('div');
-                // Korzystamy z uniwersalnego rozwiązania dla list
-                el.style.cssText = `position: relative; width: 100%; display: flex; align-items: center; margin-bottom: 3px; padding-top: 2px;`;
+                el.className = 'baddonz-list-item'; 
                 
+                // Zastąpiono tekstowe "&times;" gotową, systemową klasą baddonz-close-button z Margo
                 el.innerHTML = `
-                    <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20" style="flex-grow: 1; padding-right: 20px; height: 24px; padding: 2px 5px; font-size: 13px;">
-                    <span class="ap-remove-nick-x baddonz-remove-x" data-index="${index}">&times;</span>
+                    <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
+                    <div class="baddonz-icon baddonz-close-button" data-index="${index}" title="Usuń z listy"></div>
                 `;
                 apBlockedNicksList.appendChild(el);
             });
@@ -116,7 +115,8 @@
         });
 
         apBlockedNicksList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('ap-remove-nick-x') || e.target.classList.contains('baddonz-remove-x')) {
+            // Reagujemy na kliknięcie w baddonz-close-button
+            if (e.target.classList.contains('baddonz-close-button')) {
                 currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
                 saveSettings(); renderBlockedNicks();
             }
