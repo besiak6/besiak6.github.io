@@ -86,7 +86,7 @@
             apBlockedNicksList.innerHTML = '';
             currentSettings.blockedNicks.forEach((nick, index) => {
                 const el = document.createElement('div');
-                el.className = 'baddonz-list-item'; 
+                el.style.cssText = `position: relative; width: 100%; display: flex; align-items: center; margin-bottom: 3px; padding-top: 2px;`;
                 
                 // Użycie NATYWNEGO X (close-button) z Menedżera, zabezpieczone na kliknięcia
                 el.innerHTML = `
