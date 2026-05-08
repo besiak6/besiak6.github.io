@@ -50,8 +50,8 @@
 .baddonz-window.resizable-x { resize: horizontal; overflow-x: hidden; }
 .baddonz-window.resizable-y { resize: vertical; overflow-y: hidden; }
 
-/* ZMIANA SZEROKOŚCI ZWINIĘTEGO OKNA Z 90px NA 115px */
-.baddonz-window.collapsed { width: 115px !important; height: 25px !important; resize: none !important; overflow: hidden !important; min-width: 115px !important; min-height: 25px !important; }
+/* ZMIANA SZEROKOŚCI ZWINIĘTEGO OKNA Z 115px NA 105px */
+.baddonz-window.collapsed { width: 105px !important; height: 25px !important; resize: none !important; overflow: hidden !important; min-width: 105px !important; min-height: 25px !important; }
 .baddonz-window.collapsed .baddonz-window-body { display: none !important; }
 
 .baddonz-window-header { white-space: nowrap; box-sizing: border-box; height: 25px; display: flex; justify-content: space-between; align-items: center; max-width: 100%; }
@@ -64,7 +64,6 @@
 .baddonz-window-title { text-align: center; color: beige; flex: 3; font-size: 11px; line-height: 25px; flex-grow: 1; padding: 0 5px; overflow: hidden; text-overflow: ellipsis; }
 .baddonz-window.collapsed .baddonz-window-title { font-size: 9px; }
 
-/* ZMIANA PADDINGU Z 0 NA 6px NA GÓRZE (Żeby zakładki się nie ucinały) */
 .baddonz-window-body { color: #fff; box-sizing: border-box; flex-direction: column; flex: 1; height: calc(100% - 25px); font-size: 12px; display: flex; padding: 6px 10px 10px 10px; max-width: 100%; overflow-x: hidden; }
 
 .baddonz-opacity-button { background: url(https://gordion.margonem.pl/img/gui/buttony.png) -725px -131px; width: 13px; height: 13px; margin-right: 0px; }
@@ -246,7 +245,6 @@ input.zap-nick-display { cursor: url("https://gordion.margonem.pl/img/gui/cursor
 .item-searcher-dimmed-item { opacity: 0.15; }
 .item-searcher-bag-counter { position: absolute; top: 1px; right: 2px; color: #ff0000; font-size: 14px; font-weight: bold; z-index: 9999; text-shadow: 1px 1px 1px #000; }
 .item-searcher-window-title { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
-.item-searcher-baddonz-window { cursor: url(https://gordion.margonem.pl/img/gui/cursor/1n.png?v=1730794617277) 5 -5, auto; }
 .item-searcher-baddonz-input:focus { outline: none; border-color: transparent; }
 .item-searcher-baddonz-label-wrapper { display: flex; align-items: center; gap: 4px; }
 
