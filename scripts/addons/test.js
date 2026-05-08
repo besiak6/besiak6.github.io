@@ -88,10 +88,10 @@
                 const el = document.createElement('div');
                 el.className = 'baddonz-list-item'; 
                 
-                // Zastąpiono tekstowe "&times;" gotową, systemową klasą baddonz-close-button z Margo
+                // Użycie NATYWNEGO X (close-button) z Menedżera, zabezpieczone na kliknięcia
                 el.innerHTML = `
-                    <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20">
-                    <div class="baddonz-icon baddonz-close-button" data-index="${index}" title="Usuń z listy"></div>
+                    <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20" style="flex-grow: 1; padding-right: 22px; height: 24px; padding: 2px 5px; font-size: 13px; box-sizing: border-box;">
+                    <div class="baddonz-icon baddonz-close-button baddonz-remove-x" data-index="${index}" title="Usuń z listy"></div>
                 `;
                 apBlockedNicksList.appendChild(el);
             });
@@ -115,8 +115,8 @@
         });
 
         apBlockedNicksList.addEventListener('click', (e) => {
-            // Reagujemy na kliknięcie w baddonz-close-button
-            if (e.target.classList.contains('baddonz-close-button')) {
+            // Reagujemy na kliknięcie w systemowy "X"
+            if (e.target.classList.contains('baddonz-remove-x') || e.target.classList.contains('baddonz-close-button')) {
                 currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
                 saveSettings(); renderBlockedNicks();
             }
