@@ -11,7 +11,7 @@
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, text !important;
 }
 
-.baddonz-window-header, .baddonz-window-title, .baddonz-button, .baddonz-tab, .baddonz-checkbox, .baddonz-icon, .baddonz-card, .baddonz-dock-switch, .baddonz-dock-addon, .baddonz-input.keybind, .baddonz-state-button, .baddonz-type-icon, .baddon_set_button, .item-searcher-baddonz-window-controls > .baddonz-icon, .item-searcher-baddonz-input, .item-searcher-baddonz-label-wrapper, .item-searcher-clear-input-button, .zap-remove-nick-x, .ap-remove-nick-x {
+.baddonz-window-header, .baddonz-window-title, .baddonz-button, .baddonz-tab, .baddonz-checkbox, .baddonz-icon, .baddonz-card, .baddonz-dock-switch, .baddonz-dock-addon, .zap-remove-nick-x, .ap-remove-nick-x, .baddonz-remove-x, .baddonz-input.keybind, .baddonz-state-button, .baddonz-type-icon, .baddon_set_button, .item-searcher-baddonz-window-controls > .baddonz-icon, .item-searcher-baddonz-input, .item-searcher-baddonz-label-wrapper, .item-searcher-clear-input-button {
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
 }
 
@@ -20,6 +20,7 @@
 .baddonz-jsx-root ::-webkit-scrollbar-track, #zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-track, #ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-track, .baddonz-scroll::-webkit-scrollbar-track { background: #1414148f; border-radius: 3px; }
 .baddonz-jsx-root ::-webkit-scrollbar-thumb, #zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-thumb, #ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-thumb, .baddonz-scroll::-webkit-scrollbar-thumb { background: #505050; border-radius: 3px; }
 .baddonz-jsx-root ::-webkit-scrollbar-thumb:hover, #zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-thumb:hover, #ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-thumb:hover, .baddonz-scroll::-webkit-scrollbar-thumb:hover { background: #808080; }
+.baddonz-scroll { scroll-behavior: smooth; }
 
 /* --- 3. GŁÓWNE STYLE BADDONZA --- */
 .baddonz-manager { width: 380px; height: 450px; }
@@ -35,8 +36,7 @@
 .baddonz-flex.centered { align-items: center; }
 .baddonz-flex.end { justify-content: flex-end; }
 
-/* BAZA Z-INDEX 10! */
-.baddonz-window { pointer-events: all; text-shadow: 1px 1px 1px #000; color: #fff; background: #0009; border-radius: 7px; flex-direction: column; min-width: 191px; min-height: 22px; font-family: sans-serif; display: flex; position: absolute; box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66; z-index: 10; box-sizing: border-box; }
+.baddonz-window { pointer-events: all; text-shadow: 1px 1px 1px #000; color: #fff; background: #0009; border-radius: 7px; flex-direction: column; min-width: 191px; min-height: 22px; font-family: sans-serif; display: flex; position: absolute; box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66; z-index: 29; box-sizing: border-box; }
 .baddonz-window.anon { min-width: unset; }
 .baddonz-window.anon .baddonz-window-controls { width: 26px; }
 .baddonz-window.top { z-index: 1; }
@@ -50,7 +50,7 @@
 .baddonz-window.resizable-x { resize: horizontal; overflow-x: hidden; }
 .baddonz-window.resizable-y { resize: vertical; overflow-y: hidden; }
 
-/* ZMIANA SZEROKOŚCI ZWINIĘTEGO OKNA Z 115px NA 105px */
+/* ZMIANA SZEROKOŚCI NA KOMPAKTOWE 105px */
 .baddonz-window.collapsed { width: 105px !important; height: 25px !important; resize: none !important; overflow: hidden !important; min-width: 105px !important; min-height: 25px !important; }
 .baddonz-window.collapsed .baddonz-window-body { display: none !important; }
 
@@ -63,7 +63,6 @@
 
 .baddonz-window-title { text-align: center; color: beige; flex: 3; font-size: 11px; line-height: 25px; flex-grow: 1; padding: 0 5px; overflow: hidden; text-overflow: ellipsis; }
 .baddonz-window.collapsed .baddonz-window-title { font-size: 9px; }
-
 .baddonz-window-body { color: #fff; box-sizing: border-box; flex-direction: column; flex: 1; height: calc(100% - 25px); font-size: 12px; display: flex; padding: 6px 10px 10px 10px; max-width: 100%; overflow-x: hidden; }
 
 .baddonz-opacity-button { background: url(https://gordion.margonem.pl/img/gui/buttony.png) -725px -131px; width: 13px; height: 13px; margin-right: 0px; }
@@ -89,18 +88,15 @@
 .baddonz-input.color { box-sizing: border-box; visibility: hidden; border-width: 0; width: 0; height: 0; margin: 0; padding: 0; }
 .baddonz-input.color-selector { box-sizing: border-box; border-top-left-radius: 0; border-bottom-left-radius: 0; width: 50px; }
 
-/* --- 4. ZAAWANSOWANE INPUTY (BEZ WYCHODZENIA POZA OKNO) --- */
+/* --- 4. ZAAWANSOWANE INPUTY --- */
 .baddonz-input { box-sizing: border-box; border: 1px solid #777; background-color: rgba(0, 0, 0, 0.05); color: #fff; padding: 4px 6px; outline: none; font-family: 'Arial', sans-serif; font-size: 13px; border-radius: 3px; transition: none; box-shadow: inset 0 0 6px 1px #000000bf; max-width: 100%; }
-
 .baddonz-input.keybind { text-align: center; caret-color: #0000; transition: none; max-width: 140px; border-color: #3b3b3b; }
 .baddonz-input.keybind:focus, .baddonz-input.active-keybind-mode { border-color: #96f096 !important; box-shadow: inset 0 0 6px 1px rgba(0, 0, 0, 0.75), 0 0 8px 1px rgba(150, 240, 150, 0.5) !important; caret-color: transparent !important; }
 
-/* KLOCEK 1: Input połączony z dużym przyciskiem "+" */
 .baddonz-input-addbutton { display: flex; align-items: center; width: 100%; box-sizing: border-box; max-width: 100%; }
 .baddonz-input-addbutton .baddonz-input { flex-grow: 1; min-width: 0; border-top-right-radius: 0 !important; border-bottom-right-radius: 0 !important; height: 24px; padding: 2px 5px; font-size: 13px; box-sizing: border-box; }
 .baddonz-input-addbutton .baddonz-button { border-top-left-radius: 0; border-bottom-left-radius: 0; height: 24px; width: 24px; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; font-size: 16px; line-height: 1; flex-shrink: 0; }
 
-/* KLOCEK 2: Wiersz na liście z inputem i guzikiem "X" z Margo */
 .baddonz-list-item { position: relative; width: 100%; display: flex; align-items: center; margin-bottom: 3px; padding-top: 2px; box-sizing: border-box; max-width: 100%; }
 .baddonz-list-item .baddonz-input { flex-grow: 1; min-width: 0; padding-right: 22px; height: 24px; padding-top: 2px; padding-bottom: 2px; font-size: 13px; box-sizing: border-box; }
 .baddonz-list-item .baddonz-close-button { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); margin: 0; flex-shrink: 0; }
@@ -245,6 +241,7 @@ input.zap-nick-display { cursor: url("https://gordion.margonem.pl/img/gui/cursor
 .item-searcher-dimmed-item { opacity: 0.15; }
 .item-searcher-bag-counter { position: absolute; top: 1px; right: 2px; color: #ff0000; font-size: 14px; font-weight: bold; z-index: 9999; text-shadow: 1px 1px 1px #000; }
 .item-searcher-window-title { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+.item-searcher-baddonz-window { cursor: url(https://gordion.margonem.pl/img/gui/cursor/1n.png?v=1730794617277) 5 -5, auto; }
 .item-searcher-baddonz-input:focus { outline: none; border-color: transparent; }
 .item-searcher-baddonz-label-wrapper { display: flex; align-items: center; gap: 4px; }
 
