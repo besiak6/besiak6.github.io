@@ -35,7 +35,8 @@
 .baddonz-flex.centered { align-items: center; }
 .baddonz-flex.end { justify-content: flex-end; }
 
-.baddonz-window { pointer-events: all; text-shadow: 1px 1px 1px #000; color: #fff; background: #0009; border-radius: 7px; flex-direction: column; min-width: 191px; min-height: 22px; font-family: sans-serif; display: flex; position: absolute; box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66; z-index: 29; box-sizing: border-box; }
+/* BAZA Z-INDEX 10! */
+.baddonz-window { pointer-events: all; text-shadow: 1px 1px 1px #000; color: #fff; background: #0009; border-radius: 7px; flex-direction: column; min-width: 191px; min-height: 22px; font-family: sans-serif; display: flex; position: absolute; box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66; z-index: 10; box-sizing: border-box; }
 .baddonz-window.anon { min-width: unset; }
 .baddonz-window.anon .baddonz-window-controls { width: 26px; }
 .baddonz-window.top { z-index: 1; }
@@ -48,7 +49,9 @@
 .baddonz-window.resizable { resize: both; overflow: hidden; }
 .baddonz-window.resizable-x { resize: horizontal; overflow-x: hidden; }
 .baddonz-window.resizable-y { resize: vertical; overflow-y: hidden; }
-.baddonz-window.collapsed { width: 90px !important; height: 25px !important; resize: none !important; overflow: hidden !important; min-width: 90px !important; min-height: 25px !important; }
+
+/* ZMIANA SZEROKOŚCI ZWINIĘTEGO OKNA Z 90px NA 115px */
+.baddonz-window.collapsed { width: 115px !important; height: 25px !important; resize: none !important; overflow: hidden !important; min-width: 115px !important; min-height: 25px !important; }
 .baddonz-window.collapsed .baddonz-window-body { display: none !important; }
 
 .baddonz-window-header { white-space: nowrap; box-sizing: border-box; height: 25px; display: flex; justify-content: space-between; align-items: center; max-width: 100%; }
@@ -60,7 +63,9 @@
 
 .baddonz-window-title { text-align: center; color: beige; flex: 3; font-size: 11px; line-height: 25px; flex-grow: 1; padding: 0 5px; overflow: hidden; text-overflow: ellipsis; }
 .baddonz-window.collapsed .baddonz-window-title { font-size: 9px; }
-.baddonz-window-body { color: #fff; box-sizing: border-box; flex-direction: column; flex: 1; height: calc(100% - 25px); font-size: 12px; display: flex; padding: 0 10px 10px 10px; max-width: 100%; overflow-x: hidden; }
+
+/* ZMIANA PADDINGU Z 0 NA 6px NA GÓRZE (Żeby zakładki się nie ucinały) */
+.baddonz-window-body { color: #fff; box-sizing: border-box; flex-direction: column; flex: 1; height: calc(100% - 25px); font-size: 12px; display: flex; padding: 6px 10px 10px 10px; max-width: 100%; overflow-x: hidden; }
 
 .baddonz-opacity-button { background: url(https://gordion.margonem.pl/img/gui/buttony.png) -725px -131px; width: 13px; height: 13px; margin-right: 0px; }
 .baddonz-opacity-button:hover { filter: brightness(1.3); }
@@ -170,9 +175,9 @@
 /* --- 5. STARE STYLE DLA SZYBKIEJ GRUPY / RELOGGERA ITP. --- */
 .baddon_set_button.ZAP { cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important; }
 #zap-wnd { min-width: 191px; }
-#zap-wnd .baddonz-window-body { gap: 5px; }
+#zap-wnd .baddonz-window-body, #rg-wnd .baddonz-window-body { gap: 5px; }
 #zap-main-header-controls { display: flex; align-items: center; gap: 5px; width: 100%; justify-content: flex-start; }
-#zap-keybind-input.compact { width: 100px; flex-shrink: 0; text-align: center; padding: 1px 0px; font-size: 11px; height: 20px; line-height: 18px; margin-left: 5px; }
+#zap-keybind-input.compact, .zap-level-input { width: 100px; flex-shrink: 0; text-align: center; padding: 1px 0px; font-size: 11px; height: 20px; line-height: 18px; margin-left: 5px; }
 #zap-specific-nicks-list { max-height: 86px; overflow-y: auto; padding-right: 2px; width: 100%; }
 input.zap-nick-display { cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important; }
 #zap-specific-nicks-list-section { margin-top: 2px !important; width: 100%; }
@@ -180,27 +185,23 @@ input.zap-nick-display { cursor: url("https://gordion.margonem.pl/img/gui/cursor
 #zap-level-range-section .baddonz-input.level-input { flex-grow: 1; height: 20px; text-align: center; padding: 1px 0px; font-size: 11px; line-height: 18px; }
 #zap-level-range-section .separator { color: #fff; font-size: 16px; line-height: 1; margin: 0 2px; }
 #zap-accept-options-section { gap: 3px; }
-.zap-accept-checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; width: 100%; box-sizing: border-box; }
-.zap-accept-checkbox-grid .baddonz-label-wrapper { width: auto; justify-content: flex-start; }
-.baddonz-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; width: 100%; box-sizing: border-box; }
-.baddonz-grid-2col .baddonz-label-wrapper { width: auto; justify-content: flex-start; }
+.zap-accept-checkbox-grid, .baddonz-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 10px; width: 100%; box-sizing: border-box; }
+.zap-accept-checkbox-grid .baddonz-label-wrapper, .baddonz-grid-2col .baddonz-label-wrapper { width: auto; justify-content: flex-start; }
 
-#ap-wnd { cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important; }
-#ap-wnd .baddonz-window-controls > .baddonz-icon, #ap-wnd .baddonz-checkbox, #ap-wnd input.ap-nick-display { cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important; }
-.ap-scroll-container { max-height: 155px; overflow-y: auto; box-sizing: border-box; }
-.ap-nick-display { flex-grow: 1; padding-right: 20px; height: 24px; padding: 2px 5px; font-size: 13px; }
+.ap-remove-nick-x, .zap-remove-nick-x { position: absolute; right: 8px; color: #888; font-weight: normal; font-size: 12px; line-height: 1; top: 50%; transform: translateY(-50%); width: 10px; text-align: center; }
+.ap-remove-nick-x:hover, .zap-remove-nick-x:hover { color: #ff5555; }
+.ap-nick-display, input.zap-nick-display { flex-grow: 1; padding-right: 20px; height: 24px; padding: 2px 5px; font-size: 13px; }
 
 .baddon_set_button.RG { cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important; }
 #rg-keybind-input { border: 1px solid #777; border-radius: 3px; padding: 4px 6px; box-shadow: none; text-align: center; font-size: 13px; height: auto; line-height: normal; box-sizing: border-box; transition: none; }
 #rg-keybind-input.active-keybind-mode { caret-color: transparent !important; cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important; border-color: #96f096; box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680; }
-#rg-wnd .baddonz-window-body { gap: 5px; }
 #rg-wnd hr { display: none; }
 
 .baddonz-info-icon { width: 17px; height: 17px; background: url(../img/gui/buttony.png?v=1753438686037) no-repeat -497px -199px }
 .baddonz-info-icon:hover { filter: brightness(1.3); }
 .relogger-window { min-width: 220px; }
 
-/* --- 6. DOCK --- */
+/* --- 6. ORYGINALNY DOCK --- */
 .baddonz-dock-wrapper { position: absolute; display: flex; transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 9999; }
 .baddonz-dock-wrapper.bottom-right { right: 0; bottom: 0; }
 .baddonz-dock-wrapper.top-right { right: 0; top: 0; }
@@ -216,13 +217,16 @@ input.zap-nick-display { cursor: url("https://gordion.margonem.pl/img/gui/cursor
 .baddonz-dock-switch.active .fa { transform: rotate(-90deg); }
 .baddonz-dock-wrapper.horizontal .baddonz-dock-switch .fa { transform: none; }
 .baddonz-dock-wrapper.horizontal .baddonz-dock-switch.active .fa { transform: rotate(-90deg); }
-.baddonz-dock-wrapper.horizontal.bottom-left .baddonz-dock-switch.active .fa, .baddonz-dock-wrapper.horizontal.top-left .baddonz-dock-switch.active .fa { transform: rotate(-90deg); }
+.baddonz-dock-wrapper.horizontal.bottom-left .baddonz-dock-switch.active .fa,
+.baddonz-dock-wrapper.horizontal.top-left .baddonz-dock-switch.active .fa { transform: rotate(-90deg); }
 .baddonz-dock-switch:hover { background: #5a5a5a99; border-color: #808080; }
 .baddonz-dock-switch.active { border-color: #96f096; }
 
 .baddonz-dock { display: flex; background: transparent; pointer-events: initial; color: #d4d4d4; max-height: 500px; max-width: 26px; transition: max-height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), max-width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s ease, padding 0.3s ease !important; overflow: hidden !important; }
-.baddonz-dock.collapsed.vertical, .baddonz-dock-wrapper.vertical .baddonz-dock.collapsed { max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; opacity: 0 !important; border: none !important; overflow: hidden !important; }
-.baddonz-dock.collapsed.horizontal, .baddonz-dock-wrapper.horizontal .baddonz-dock.collapsed { max-width: 0 !important; padding-left: 0 !important; padding-right: 0 !important; opacity: 0 !important; border: none !important; overflow: hidden !important; }
+.baddonz-dock.collapsed.vertical,
+.baddonz-dock-wrapper.vertical .baddonz-dock.collapsed { max-height: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; opacity: 0 !important; border: none !important; overflow: hidden !important; }
+.baddonz-dock.collapsed.horizontal,
+.baddonz-dock-wrapper.horizontal .baddonz-dock.collapsed { max-width: 0 !important; padding-left: 0 !important; padding-right: 0 !important; opacity: 0 !important; border: none !important; overflow: hidden !important; }
 .baddonz-dock.vertical { flex-direction: column-reverse; }
 .baddonz-dock-wrapper.top-right .baddonz-dock.vertical, .baddonz-dock-wrapper.top-left .baddonz-dock.vertical { flex-direction: column; }
 .baddonz-dock.horizontal { flex-direction: row-reverse; max-width: 500px; max-height: 26px; transition: max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -232,7 +236,7 @@ input.zap-nick-display { cursor: url("https://gordion.margonem.pl/img/gui/cursor
 .baddonz-dock-addon.active { border-color: #96f096; color: #96f096; }
 .baddonz-dock-addon:hover { background: #5a5a5a99; border-color: #808080; }
 
-/* --- 7. SUWAKI, WYSZUKIWARKA ITEMÓW, IKONY --- */
+/* --- 7. SUWAKI, SZUKACZ ITEMÓW, IKONY --- */
 .baddonz-slider-wrapper { position: relative; width: 100%; height: 4px; background: #404040; border-radius: 2px; }
 .baddonz-slider-fill { position: absolute; top: 0; left: 0; height: 100%; width: 0; background: linear-gradient(to right, #7CFC00, #32CD32); border-radius: 2px; }
 .baddonz-slider-thumb { position: absolute; top: 50%; transform: translateY(-50%); width: 10px; height: 10px; border-radius: 50%; background: #7e7474; border: 1px solid #303030; box-shadow: 0 0 3px #000; transition: background 0.2s, border-color 0.2s, box-shadow 0.2s; }
@@ -246,11 +250,11 @@ input.zap-nick-display { cursor: url("https://gordion.margonem.pl/img/gui/cursor
 .item-searcher-baddonz-input:focus { outline: none; border-color: transparent; }
 .item-searcher-baddonz-label-wrapper { display: flex; align-items: center; gap: 4px; }
 
-.baddonz-state-button { width: 9px; height: 9px; background: radial-gradient(ellipse at center, rgb(255, 0, 0), #101010); border-radius: 50%; box-shadow: 0 0 3px 1px rgba(255, 0, 0, 0.75); display: inline-block; transition: box-shadow 180ms ease-in-out, background 180ms ease-in-out, transform 120ms ease-in-out; padding: 1px; vertical-align: -2px; cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer; }
-.baddonz-state-button:hover { box-shadow: 0 0 4px 2px rgba(255, 255, 255, 0.25); transform: scale(1.05); cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer; }
-.baddonz-state-button--active { background: radial-gradient(ellipse at center, rgb(0, 255, 0), #101010); box-shadow: 0 0 3px 1px rgba(0, 255, 0, 0.75); cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer; }
+.baddonz-state-button { width: 9px; height: 9px; background: radial-gradient(ellipse at center, rgb(255, 0, 0), #101010); border-radius: 50%; box-shadow: 0 0 3px 1px rgba(255, 0, 0, 0.75); display: inline-block; transition: box-shadow 180ms ease-in-out, background 180ms ease-in-out, transform 120ms ease-in-out; padding: 1px; vertical-align: -2px; }
+.baddonz-state-button:hover { box-shadow: 0 0 4px 2px rgba(255, 255, 255, 0.25); transform: scale(1.05); }
+.baddonz-state-button--active { background: radial-gradient(ellipse at center, rgb(0, 255, 0), #101010); box-shadow: 0 0 3px 1px rgba(0, 255, 0, 0.75); }
 
-.baddonz-type-icon { width: 18px; height: 18px; position: relative; margin-left: auto; margin-right: auto; background: url("https://gordion.margonem.pl/img/gui/notyfikacje-sprite.png"); cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer; }
+.baddonz-type-icon { width: 18px; height: 18px; position: relative; margin-left: auto; margin-right: auto; background: url("https://gordion.margonem.pl/img/gui/notyfikacje-sprite.png"); }
 .baddonz-type-icon.cl-1 { background-position: -1px -100px; }
 .baddonz-type-icon.cl-2 { background-position: -41px -100px; }
 .baddonz-type-icon.cl-3 { background-position: -21px -100px; }
