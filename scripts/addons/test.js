@@ -55,7 +55,6 @@
     }
 
     function buildUI() {
-        // Wszystko zbudowane na uniwersalnych klasach z głównego pliku CSS
         const bodyHtml = `
             <div class="baddonz-label-wrapper" style="justify-content: flex-start;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ap-checkbox"></div>
@@ -75,6 +74,7 @@
             </div>
         `;
 
+        // Szerokość: 195px
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '195px' });
 
         const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
@@ -87,12 +87,12 @@
             apBlockedNicksList.innerHTML = '';
             currentSettings.blockedNicks.forEach((nick, index) => {
                 const el = document.createElement('div');
-                el.className = 'baddonz-list-item'; // Zunifikowany wiersz listy
+                el.style.cssText = `position: relative; width: 100%; display: flex; align-items: center; margin-bottom: 3px; padding-top: 2px;`;
                 
-                // Używamy uniwersalnych klas Baddonza dla inputa i usuwania
+                // Użycie Twojej starej, bezpiecznej klasy ap-remove-nick-x
                 el.innerHTML = `
-                    <input type="text" class="baddonz-input baddonz-list-item-input" value="${nick}" readonly data-index="${index}" maxlength="20">
-                    <span class="baddonz-remove-x" data-index="${index}">✖</span>
+                    <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20" style="flex-grow: 1; padding-right: 20px; height: 24px; padding: 2px 5px; font-size: 13px;">
+                    <span class="ap-remove-nick-x" data-index="${index}">&times;</span>
                 `;
                 apBlockedNicksList.appendChild(el);
             });
@@ -116,7 +116,7 @@
         });
 
         apBlockedNicksList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('baddonz-remove-x')) {
+            if (e.target.classList.contains('ap-remove-nick-x')) {
                 currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
                 saveSettings(); renderBlockedNicks();
             }
