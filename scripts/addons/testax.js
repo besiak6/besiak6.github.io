@@ -190,9 +190,7 @@
         }
     }
 
-    // --- BUDOWANIE INTERFEJSU (BADDONZ API) ---
-    function buildUI() {
-        // 1. GŁÓWNE OKNO
+function buildUI() {
         const mainBodyHtml = `
             <div class="baddonz-setting-row ax-main-row">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ax-enabled-checkbox"></div>
@@ -210,10 +208,9 @@
             hasClose: false
         });
 
-        // 2. OKNO USTAWIEŃ
         const settingsBodyHtml = `
-            <div class="baddonz-scroll" style="display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; max-height:300px; padding-right:5px;">
-                <button class="baddonz-button" style="width:100%; margin-bottom: 5px;" id="ax-reset-pos-btn">Resetuj Pozycję Głównego Okna</button>
+            <div style="display:flex; flex-direction:column; gap:5px; padding-right:5px;">
+                <button class="baddonz-button" style="width:100%; margin-bottom: 5px;" id="ax-reset-pos-btn">Resetuj pozycję okienka</button>
                 
                 <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.attackFriends ? 'active' : ''}" id="ax-attack-friends-checkbox"></div><span>Atakuj Przyjaciół</span></div>
                 <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.attackClan ? 'active' : ''}" id="ax-attack-clan-checkbox"></div><span>Atakuj Klan/Sojusz</span></div>
@@ -236,7 +233,7 @@
             </div>
         `;
         uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "AutoX Ustawienia", settingsBodyHtml, { width: '250px', customId: 'baddonz-ax-wnd-settings' });
-        
+    }
         uiSettingsWindow.removeAttribute('data-addon-id');
         uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
         
@@ -244,8 +241,6 @@
         if (!isUnified) {
             uiSettingsWindow.className = uiSettingsWindow.className.replace(/opacity-\d/, `opacity-${currentSettings.windowSettingsOpacity}`);
         }
-
-        // === EVENTY GŁÓWNEGO OKNA ===
         const axEnabledCheckbox = uiMainWindow.querySelector("#ax-enabled-checkbox");
         const axLevelRangeInput = uiMainWindow.querySelector("#ax-level-range-input");
         const axCollapsedBtn = uiMainWindow.querySelector(".baddonz-collapsed");
