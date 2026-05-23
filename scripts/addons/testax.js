@@ -12,14 +12,14 @@
 
     const ADDON_ID = "AX";
     
-    // ZACHOWANE SPECJALNE STYLE TYLKO DLA AUTOX (Nadpisujące np. paddingi dla lepszego spasowania)
+    // Niestandardowe modyfikacje tylko dla AutoX (M.in. likwidacja paddingu od góry)
     const styleSheet = document.createElement("style");
     styleSheet.type = "text/css";
     styleSheet.id = "autox-custom-styles";
     styleSheet.innerText = `
         #baddonz-ax-wnd { width:110px; min-width:110px; }
         #baddonz-ax-wnd-settings { width:250px; min-width:250px; }
-        #baddonz-ax-wnd .baddonz-window-body { padding:2px 5px 5px 5px; gap:4px; }
+        #baddonz-ax-wnd .baddonz-window-body { padding: 0px 5px 5px 5px !important; gap: 3px !important; }
         #ax-s-walka-btn { width:100%; }
         .baddonz-setting-row.ax-main-row { gap:5px; margin: 0; }
         .baddonz-input.ax-small { width:100%; max-width:79px; font-size:11px; height:20px !important; line-height:18px; text-align:center; padding:1px 0px; }
@@ -198,11 +198,10 @@
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ax-enabled-checkbox"></div>
                 <input type="text" class="baddonz-input ax-small" id="ax-level-range-input" value="${currentSettings.levelRange}">
             </div>
-            <div id="ax-expanded-controls" style="display: ${currentSettings.isExpanded ? 'flex' : 'none'}; flex-direction: column; margin-top: 5px;">
+            <div id="ax-expanded-controls" style="display: ${currentSettings.isExpanded ? 'flex' : 'none'}; flex-direction: column; margin-top: 2px;">
                 <button class="baddonz-button ${currentSettings.fastFight ? 'active' : ''}" id="ax-s-walka-btn">S.WALKA</button>
             </div>
         `;
-        // Generujemy okno bez X'a, a z ustawieniami i zwijaniem
         uiMainWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "autox", mainBodyHtml, { 
             width: '110px', 
             customId: 'baddonz-ax-wnd',
@@ -273,9 +272,20 @@
         });
 
         if (axCollapsedBtn) {
+            // Ustawienie początkowego Tipa ("Rozwiń" lub "Zwiń")
+            if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
+                $(axCollapsedBtn).tip(currentSettings.isExpanded ? "Zwiń" : "Rozwiń");
+            }
+            
             axCollapsedBtn.addEventListener('click', () => {
                 currentSettings.isExpanded = !currentSettings.isExpanded;
                 axExpandedControls.style.display = currentSettings.isExpanded ? 'flex' : 'none';
+                
+                // Dynamiczna zmiana Tipa po kliknięciu
+                if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
+                    $(axCollapsedBtn).tip(currentSettings.isExpanded ? "Zwiń" : "Rozwiń");
+                }
+                
                 saveSettings();
             });
         }
@@ -308,7 +318,6 @@
             saveSettings();
         });
 
-        // RESTART POZYCJI
         uiSettingsWindow.querySelector("#ax-reset-pos-btn").addEventListener('click', () => {
             if (uiMainWindow) {
                 uiMainWindow.style.left = '0px'; 
