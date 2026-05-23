@@ -16,13 +16,13 @@
 }
 
 /* --- 2. ZGRUPOWANE SCROLLBARY I PŁYNNE PRZEWIJANIE --- */
-.baddonz-jsx-root ::-webkit-scrollbar, #zap-wnd #zap-specific-nicks-list::-webkit-scrollbar, #ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar, .baddonz-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-.baddonz-jsx-root ::-webkit-scrollbar-track, #zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-track, #ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-track, .baddonz-scroll::-webkit-scrollbar-track { background: #1414148f; border-radius: 3px; }
-.baddonz-jsx-root ::-webkit-scrollbar-thumb, #zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-thumb, #ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-thumb, .baddonz-scroll::-webkit-scrollbar-thumb { background: #505050; border-radius: 3px; }
-.baddonz-jsx-root ::-webkit-scrollbar-thumb:hover, #zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-thumb:hover, #ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-thumb:hover, .baddonz-scroll::-webkit-scrollbar-thumb:hover { background: #808080; }
+.baddonz-jsx-root ::-webkit-scrollbar, #zap-wnd #zap-specific-nicks-list::-webkit-scrollbar, #ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar, .baddonz-scroll::-webkit-scrollbar, .baddonz-textarea::-webkit-scrollbar { width: 6px; height: 6px; }
+.baddonz-jsx-root ::-webkit-scrollbar-track, #zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-track, #ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-track, .baddonz-scroll::-webkit-scrollbar-track, .baddonz-textarea::-webkit-scrollbar-track { background: #1414148f; border-radius: 3px; }
+.baddonz-jsx-root ::-webkit-scrollbar-thumb, #zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-thumb, #ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-thumb, .baddonz-scroll::-webkit-scrollbar-thumb, .baddonz-textarea::-webkit-scrollbar-thumb { background: #505050; border-radius: 3px; }
+.baddonz-jsx-root ::-webkit-scrollbar-thumb:hover, #zap-wnd #zap-specific-nicks-list::-webkit-scrollbar-thumb:hover, #ap-wnd #ap-blocked-nicks-list::-webkit-scrollbar-thumb:hover, .baddonz-scroll::-webkit-scrollbar-thumb:hover, .baddonz-textarea::-webkit-scrollbar-thumb:hover { background: #808080; }
 
 /* PŁYNNE PRZEWIJANIE (Masło!) */
-.baddonz-scroll, .baddonz-tab-content-container, .baddonz-box, #zap-specific-nicks-list, .ap-scroll-container {
+.baddonz-scroll, .baddonz-tab-content-container, .baddonz-box, #zap-specific-nicks-list, .ap-scroll-container, .baddonz-textarea {
     scroll-behavior: smooth;
 }
 
@@ -54,7 +54,6 @@
 .baddonz-window.resizable-x { resize: horizontal; overflow-x: hidden; }
 .baddonz-window.resizable-y { resize: vertical; overflow-y: hidden; }
 
-/* ZMIANA SZEROKOŚCI ZWINIĘTEGO OKNA NA 100px (Minimalizm!) */
 .baddonz-window.collapsed { width: 100px !important; height: 25px !important; resize: none !important; overflow: hidden !important; min-width: 100px !important; min-height: 25px !important; }
 .baddonz-window.collapsed .baddonz-window-body { display: none !important; }
 
