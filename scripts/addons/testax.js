@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          AutoX baddonz
-// @version       05.08.2025
+// @version       1.0
 // @description   autox
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -24,12 +24,11 @@
         .baddonz-setting-row.ax-main-row { gap:5px; margin: 0; }
         .baddonz-input.ax-small { width:100%; max-width:79px; font-size:11px; height:20px !important; line-height:18px; text-align:center; padding:1px 0px; }
         #baddonz-ax-wnd-settings .baddonz-input { text-align:center; height:26px !important; }
-        .baddonz-input.ax-hotkey { width:100%; padding:1px 5px; font-size:14px; height:22px !important; line-height:20px; caret-color:transparent; }
         .baddonz-setting-row span { white-space:nowrap; font-size:11px; }
     `;
     if (!document.getElementById("autox-custom-styles")) document.head.appendChild(styleSheet);
 
-    // BAZA USTAWIEŃ
+    // BAZA USTAWIEŃ (USUNIĘTO HOTKEYE I CHODZENIE)
     let currentSettings = {
         enabled: true,
         windowOpacity: 2,
@@ -45,10 +44,7 @@
         ignoreClans: "692,164,3,1517,256,58,1386,1504,1925,1757,758,2230,27,2141,10,1807,1029,2274,1459,1071,9,1829,516,2302,71,622,2761",
         alwaysAttackClans: "",
         enableNickOptions: false,
-        ignoreNicks: "",
-        enableAttackHotkey: false,
-        hotkeyAttackKey: "z",
-        onlyHotkeyAttack: false
+        ignoreNicks: ""
     };
 
     let uiMainWindow = null;
@@ -58,8 +54,6 @@
     let BADDONZ_TRACK_INTERVAL = null;
     let isEngineObserved = false;
     let isEndBattleHooked = false;
-    let isAwaitingKey = false;
-    let isKeyDownBound = false;
     let parsedLevelRange = { min: 0, max: 500 };
 
     class Emitter {
@@ -175,22 +169,9 @@
         return false;
     }
 
-    function hotkeyAttackAction() {
-        if (!currentSettings.enabled || !notInBattle()) return;
-        const map = Engine?.map?.d;
-        if (!map || !isMapValidForAttack(map)) return;
-
-        const closestTargetWithDistance = getClosestTarget();
-        if (closestTargetWithDistance) {
-            attack(closestTargetWithDistance.target, closestTargetWithDistance.distance);
-        }
-    }
-
     function handleAutoXLogic() {
         const map = Engine?.map?.d;
         if (!map || !isMapValidForAttack(map)) return;
-
-        if (currentSettings.onlyHotkeyAttack) return; // Jeśli zaznaczone, auto atakowanie nic nie robi
 
         const closestTargetWithDistance = getClosestTarget();
         if (closestTargetWithDistance) {
@@ -207,31 +188,9 @@
         }
     }
 
-    function handleKeyDown(event) {
-        if (isAwaitingKey) {
-            event.preventDefault(); event.stopPropagation();
-            if (['control', 'shift', 'alt', 'meta', 'escape', 'enter', 'tab'].includes(event.key.toLowerCase())) return;
-            const key = event.key.toLowerCase();
-            currentSettings.hotkeyAttackKey = key;
-            saveSettings();
-            
-            const axHotkeyInput = uiSettingsWindow.querySelector("#ax-hotkey-attack-input");
-            if (axHotkeyInput) {
-                axHotkeyInput.value = key.toUpperCase();
-                axHotkeyInput.blur();
-            }
-            return;
-        }
-        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
-        if (currentSettings.enabled && currentSettings.enableAttackHotkey && event.key.toLowerCase() === currentSettings.hotkeyAttackKey.toLowerCase()) {
-            hotkeyAttackAction();
-            event.preventDefault();
-        }
-    }
-
     // --- BUDOWANIE INTERFEJSU (BADDONZ API) ---
     function buildUI() {
-        // 1. GŁÓWNE OKNO (Małe)
+        // 1. GŁÓWNE OKNO
         const mainBodyHtml = `
             <div class="baddonz-setting-row ax-main-row">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ax-enabled-checkbox"></div>
@@ -243,7 +202,6 @@
         `;
         uiMainWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "autox", mainBodyHtml, { width: '110px', customId: 'baddonz-ax-wnd' });
 
-        // PRZEBUDOWA NAGŁÓWKA: Wstawiamy trybik ustawień i zwijanie zamiast domyślnego zamykania (X)
         const mainLeftControls = uiMainWindow.querySelector('.baddonz-window-controls.left');
         mainLeftControls.insertAdjacentHTML('beforeend', '<div class="baddonz-icon baddonz-settings-button" id="ax-settings-btn" title="Ustawienia"></div>');
         
@@ -253,7 +211,7 @@
         // 2. OKNO USTAWIEŃ
         const settingsBodyHtml = `
             <div class="baddonz-scroll" style="display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; max-height:300px; padding-right:5px;">
-                <button class="baddonz-button" style="width:100%; margin-bottom: 5px;" id="ax-reset-pos-btn">Resetuj Pozycje Ustawień</button>
+                <button class="baddonz-button" style="width:100%; margin-bottom: 5px;" id="ax-reset-pos-btn">Resetuj Pozycję Głównego Okna</button>
                 
                 <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.attackFriends ? 'active' : ''}" id="ax-attack-friends-checkbox"></div><span>Atakuj Przyjaciół</span></div>
                 <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.attackClan ? 'active' : ''}" id="ax-attack-clan-checkbox"></div><span>Atakuj Klan/Sojusz</span></div>
@@ -262,36 +220,24 @@
                 <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.enableClanOptions ? 'active' : ''}" id="ax-enable-clan-options-checkbox"></div><span>Kryteria Klanowe</span></div>
                 <div id="ax-clan-options" style="display: ${currentSettings.enableClanOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
                     <span class="baddonz-text" style="padding:0;">Nie atakuj klanów:</span>
-                    <textarea class="baddonz-textarea" id="ax-ignore-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.ignoreClans}</textarea>
+                    <textarea class="baddonz-textarea baddonz-scroll" id="ax-ignore-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.ignoreClans}</textarea>
                     <span class="baddonz-text" style="padding:0;">Zawsze atakuj klany:</span>
-                    <textarea class="baddonz-textarea" id="ax-always-attack-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.alwaysAttackClans}</textarea>
+                    <textarea class="baddonz-textarea baddonz-scroll" id="ax-always-attack-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.alwaysAttackClans}</textarea>
                 </div>
 
                 <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
                 <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.enableNickOptions ? 'active' : ''}" id="ax-enable-nick-options-checkbox"></div><span>Po nickach</span></div>
                 <div id="ax-nick-options" style="display: ${currentSettings.enableNickOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
                     <span class="baddonz-text" style="padding:0;">Nie atakuj graczy:</span>
-                    <textarea class="baddonz-textarea" id="ax-ignore-nicks-textarea" placeholder="Nick1, Nick2">${currentSettings.ignoreNicks}</textarea>
-                </div>
-
-                <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
-                <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.enableAttackHotkey ? 'active' : ''}" id="ax-enable-attack-hotkey-checkbox"></div><span>Skrót Ataku</span></div>
-                <div id="ax-hotkey-options" style="display: ${currentSettings.enableAttackHotkey ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
-                    <input type="text" class="baddonz-input keybind ax-hotkey" id="ax-hotkey-attack-input" value="${currentSettings.hotkeyAttackKey.toUpperCase()}" placeholder="Klawisz">
-                    <div class="baddonz-setting-row" style="margin-top:5px;">
-                        <div class="baddonz-checkbox ${currentSettings.onlyHotkeyAttack ? 'active' : ''}" id="ax-only-hotkey-attack-checkbox"></div>
-                        <span>Atakowanie tylko skrótem</span>
-                    </div>
+                    <textarea class="baddonz-textarea baddonz-scroll" id="ax-ignore-nicks-textarea" placeholder="Nick1, Nick2">${currentSettings.ignoreNicks}</textarea>
                 </div>
             </div>
         `;
         uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "AutoX Ustawienia", settingsBodyHtml, { width: '250px', customId: 'baddonz-ax-wnd-settings' });
         
-        // Zabezpieczenie, żeby ustawienia nie reagowały na "pokaż/ukryj" z głównego Docka i miały własną widoczność
         uiSettingsWindow.removeAttribute('data-addon-id');
         uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
         
-        // Przywrócenie własnej (innej) przezroczystości dla okna ustawień (Jeśli nie ma zunifikowanej)
         const isUnified = localStorage.getItem('BaddonzData') && JSON.parse(localStorage.getItem('BaddonzData'))[window.BaddonzAPI.accountId]?.manager?.unifiedOpacityEnabled;
         if (!isUnified) {
             uiSettingsWindow.className = uiSettingsWindow.className.replace(/opacity-\d/, `opacity-${currentSettings.windowSettingsOpacity}`);
@@ -348,20 +294,22 @@
         });
 
         uiSettingsWindow.querySelector('.baddonz-opacity-button').addEventListener('click', () => {
-            if (isUnified) return; // Zablokowane jeśli wymuszono jedną przezroczystość z baddonz
+            if (isUnified) return; 
             uiSettingsWindow.classList.remove(`opacity-${currentSettings.windowSettingsOpacity}`);
             currentSettings.windowSettingsOpacity = (currentSettings.windowSettingsOpacity + 1) % 5;
             uiSettingsWindow.classList.add(`opacity-${currentSettings.windowSettingsOpacity}`);
             saveSettings();
         });
 
+        // RESTART POZYCJI TYLKO DLA GŁÓWNEGO OKNA
         uiSettingsWindow.querySelector("#ax-reset-pos-btn").addEventListener('click', () => {
-            uiSettingsWindow.style.left = '0px'; 
-            uiSettingsWindow.style.top = '0px';
-            // Symulacja wymuszenia zapisu w globalnym menedżerze
+            if (uiMainWindow) {
+                uiMainWindow.style.left = '0px'; 
+                uiMainWindow.style.top = '0px';
+            }
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if(data[window.BaddonzAPI.accountId] && data[window.BaddonzAPI.accountId].manager) {
-                data[window.BaddonzAPI.accountId].manager.positions['baddonz-ax-wnd-settings'] = { left: '0px', top: '0px' };
+                data[window.BaddonzAPI.accountId].manager.positions['baddonz-ax-wnd'] = { left: '0px', top: '0px' };
                 localStorage.setItem('BaddonzData', JSON.stringify(data));
             }
         });
@@ -384,17 +332,6 @@
         chbNickOpt.addEventListener('click', () => { currentSettings.enableNickOptions = chbNickOpt.classList.toggle('active'); divNickOpt.style.display = currentSettings.enableNickOptions ? 'flex' : 'none'; saveSettings(); });
 
         uiSettingsWindow.querySelector("#ax-ignore-nicks-textarea").addEventListener('change', (e) => { currentSettings.ignoreNicks = e.target.value; saveSettings(); });
-
-        const chbHotkeyOpt = uiSettingsWindow.querySelector("#ax-enable-attack-hotkey-checkbox");
-        const divHotkeyOpt = uiSettingsWindow.querySelector("#ax-hotkey-options");
-        chbHotkeyOpt.addEventListener('click', () => { currentSettings.enableAttackHotkey = chbHotkeyOpt.classList.toggle('active'); divHotkeyOpt.style.display = currentSettings.enableAttackHotkey ? 'flex' : 'none'; saveSettings(); });
-
-        const axHotkeyInput = uiSettingsWindow.querySelector("#ax-hotkey-attack-input");
-        axHotkeyInput.addEventListener('click', () => { isAwaitingKey = true; axHotkeyInput.classList.add('active-keybind-mode'); axHotkeyInput.focus(); });
-        axHotkeyInput.addEventListener('blur', () => { isAwaitingKey = false; axHotkeyInput.classList.remove('active-keybind-mode'); });
-
-        const chbOnlyHotkey = uiSettingsWindow.querySelector("#ax-only-hotkey-attack-checkbox");
-        chbOnlyHotkey.addEventListener('click', () => { currentSettings.onlyHotkeyAttack = chbOnlyHotkey.classList.toggle('active'); saveSettings(); });
     }
 
     // --- CYKL ŻYCIA DODATKU ---
@@ -419,11 +356,6 @@
             isEndBattleHooked = true;
         }
 
-        if (!isKeyDownBound) {
-            document.addEventListener('keydown', handleKeyDown);
-            isKeyDownBound = true;
-        }
-
         BADDONZ_FAST_FIGHT_INTERVAL = setInterval(() => { if (currentSettings.fastFight) handleFastFight(); }, 200);
         BADDONZ_TRACK_INTERVAL = setInterval(() => { if (currentSettings.enabled && notInBattle()) handleAutoXLogic(); }, 200);
     }
@@ -433,11 +365,6 @@
         if (BADDONZ_TRACK_INTERVAL) clearInterval(BADDONZ_TRACK_INTERVAL);
         BADDONZ_FAST_FIGHT_INTERVAL = null;
         BADDONZ_TRACK_INTERVAL = null;
-
-        if (isKeyDownBound) {
-            document.removeEventListener('keydown', handleKeyDown);
-            isKeyDownBound = false;
-        }
 
         if (uiMainWindow) { uiMainWindow.remove(); uiMainWindow = null; }
         if (uiSettingsWindow) { uiSettingsWindow.remove(); uiSettingsWindow = null; }
