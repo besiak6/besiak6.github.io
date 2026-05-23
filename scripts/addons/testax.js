@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          AutoX baddonz
-// @version       1.0
+// @version       05.08.2025
 // @description   autox
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -12,14 +12,14 @@
 
     const ADDON_ID = "AX";
     
-    // ZACHOWANE SPECJALNE STYLE TYLKO DLA AUTOX
+    // ZACHOWANE SPECJALNE STYLE TYLKO DLA AUTOX (Nadpisujące np. paddingi dla lepszego spasowania)
     const styleSheet = document.createElement("style");
     styleSheet.type = "text/css";
     styleSheet.id = "autox-custom-styles";
     styleSheet.innerText = `
         #baddonz-ax-wnd { width:110px; min-width:110px; }
         #baddonz-ax-wnd-settings { width:250px; min-width:250px; }
-        #baddonz-ax-wnd .baddonz-window-body { padding:0 5px 5px 5px; gap:5px; }
+        #baddonz-ax-wnd .baddonz-window-body { padding:2px 5px 5px 5px; gap:4px; }
         #ax-s-walka-btn { width:100%; }
         .baddonz-setting-row.ax-main-row { gap:5px; margin: 0; }
         .baddonz-input.ax-small { width:100%; max-width:79px; font-size:11px; height:20px !important; line-height:18px; text-align:center; padding:1px 0px; }
@@ -28,7 +28,7 @@
     `;
     if (!document.getElementById("autox-custom-styles")) document.head.appendChild(styleSheet);
 
-    // BAZA USTAWIEŃ (USUNIĘTO HOTKEYE I CHODZENIE)
+    // BAZA USTAWIEŃ
     let currentSettings = {
         enabled: true,
         windowOpacity: 2,
@@ -42,9 +42,9 @@
         attackClan: false,
         enableClanOptions: true,
         ignoreClans: "692,164,3,1517,256,58,1386,1504,1925,1757,758,2230,27,2141,10,1807,1029,2274,1459,1071,9,1829,516,2302,71,622,2761",
-        alwaysAttackClans: "",
         enableNickOptions: false,
-        ignoreNicks: ""
+        ignoreNicks: "",
+        alwaysAttackNicks: ""
     };
 
     let uiMainWindow = null;
@@ -112,20 +112,22 @@
         if (!other || typeof other.relation !== 'number') return false;
         if (Engine.party?.d && Array.isArray(Engine.party.d) && Engine.party.d.some(p => p.id === other.id)) return false;
 
-        const ignoreNicksList = currentSettings.ignoreNicks.split(',').map(s => s.trim()).filter(Boolean);
-        if (currentSettings.enableNickOptions && ignoreNicksList.includes(other.nick)) return false;
+        const lowerNick = other.nick.toLowerCase();
+        const alwaysAttackNicksList = currentSettings.alwaysAttackNicks.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+        const ignoreNicksList = currentSettings.ignoreNicks.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+
+        if (currentSettings.enableNickOptions) {
+            if (alwaysAttackNicksList.includes(lowerNick)) return true;
+            if (ignoreNicksList.includes(lowerNick)) return false;
+        }
 
         let otherClanId = other.clan && typeof other.clan === 'object' ? other.clan.id : null;
         let otherClanName = other.clan && (typeof other.clan === 'object' ? other.clan.name : other.clan);
         
         const ignoreClansList = currentSettings.ignoreClans.split(',').map(s => s.trim()).filter(Boolean);
-        const alwaysAttackClansList = currentSettings.alwaysAttackClans.split(',').map(s => s.trim()).filter(Boolean);
-
         const isClanIgnored = (id, name) => (id && ignoreClansList.includes(id.toString())) || (name && ignoreClansList.includes(name));
-        const isClanAlwaysAttacked = (id, name) => (id && alwaysAttackClansList.includes(id.toString())) || (name && alwaysAttackClansList.includes(name));
 
         if (currentSettings.enableClanOptions) {
-            if ((otherClanId || otherClanName) && isClanAlwaysAttacked(otherClanId, otherClanName)) return true;
             if ((otherClanId || otherClanName) && isClanIgnored(otherClanId, otherClanName)) return false;
         }
 
@@ -200,13 +202,14 @@
                 <button class="baddonz-button ${currentSettings.fastFight ? 'active' : ''}" id="ax-s-walka-btn">S.WALKA</button>
             </div>
         `;
-        uiMainWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "autox", mainBodyHtml, { width: '110px', customId: 'baddonz-ax-wnd' });
-
-        const mainLeftControls = uiMainWindow.querySelector('.baddonz-window-controls.left');
-        mainLeftControls.insertAdjacentHTML('beforeend', '<div class="baddonz-icon baddonz-settings-button" id="ax-settings-btn" title="Ustawienia"></div>');
-        
-        const mainRightControls = uiMainWindow.querySelector('.baddonz-window-controls.right');
-        mainRightControls.innerHTML = '<div class="baddonz-icon baddonz-collapsed" id="ax-collapsed-btn" title="Zwiń/Rozwiń okno"></div>';
+        // Generujemy okno bez X'a, a z ustawieniami i zwijaniem
+        uiMainWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "autox", mainBodyHtml, { 
+            width: '110px', 
+            customId: 'baddonz-ax-wnd',
+            hasSettings: true,
+            hasCollapse: true,
+            hasClose: false
+        });
 
         // 2. OKNO USTAWIEŃ
         const settingsBodyHtml = `
@@ -219,17 +222,17 @@
                 <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
                 <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.enableClanOptions ? 'active' : ''}" id="ax-enable-clan-options-checkbox"></div><span>Kryteria Klanowe</span></div>
                 <div id="ax-clan-options" style="display: ${currentSettings.enableClanOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
-                    <span class="baddonz-text" style="padding:0;">Nie atakuj klanów:</span>
+                    <span class="baddonz-text" style="padding:0;">Nigdy nie atakuj klanów:</span>
                     <textarea class="baddonz-textarea baddonz-scroll" id="ax-ignore-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.ignoreClans}</textarea>
-                    <span class="baddonz-text" style="padding:0;">Zawsze atakuj klany:</span>
-                    <textarea class="baddonz-textarea baddonz-scroll" id="ax-always-attack-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.alwaysAttackClans}</textarea>
                 </div>
 
                 <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
                 <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.enableNickOptions ? 'active' : ''}" id="ax-enable-nick-options-checkbox"></div><span>Po nickach</span></div>
                 <div id="ax-nick-options" style="display: ${currentSettings.enableNickOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
-                    <span class="baddonz-text" style="padding:0;">Nie atakuj graczy:</span>
+                    <span class="baddonz-text" style="padding:0;">Nigdy nie atakuj:</span>
                     <textarea class="baddonz-textarea baddonz-scroll" id="ax-ignore-nicks-textarea" placeholder="Nick1, Nick2">${currentSettings.ignoreNicks}</textarea>
+                    <span class="baddonz-text" style="padding:0;">Zawsze atakuj:</span>
+                    <textarea class="baddonz-textarea baddonz-scroll" id="ax-always-attack-nicks-textarea" placeholder="Nick1, Nick2">${currentSettings.alwaysAttackNicks}</textarea>
                 </div>
             </div>
         `;
@@ -246,8 +249,8 @@
         // === EVENTY GŁÓWNEGO OKNA ===
         const axEnabledCheckbox = uiMainWindow.querySelector("#ax-enabled-checkbox");
         const axLevelRangeInput = uiMainWindow.querySelector("#ax-level-range-input");
-        const axCollapsedBtn = uiMainWindow.querySelector("#ax-collapsed-btn");
-        const axSettingsBtn = uiMainWindow.querySelector("#ax-settings-btn");
+        const axCollapsedBtn = uiMainWindow.querySelector(".baddonz-collapsed");
+        const axSettingsBtn = uiMainWindow.querySelector(".baddonz-settings-button");
         const axSWalkaBtn = uiMainWindow.querySelector("#ax-s-walka-btn");
         const axExpandedControls = uiMainWindow.querySelector("#ax-expanded-controls");
 
@@ -269,18 +272,22 @@
             }
         });
 
-        axCollapsedBtn.addEventListener('click', () => {
-            currentSettings.isExpanded = !currentSettings.isExpanded;
-            axExpandedControls.style.display = currentSettings.isExpanded ? 'flex' : 'none';
-            saveSettings();
-        });
+        if (axCollapsedBtn) {
+            axCollapsedBtn.addEventListener('click', () => {
+                currentSettings.isExpanded = !currentSettings.isExpanded;
+                axExpandedControls.style.display = currentSettings.isExpanded ? 'flex' : 'none';
+                saveSettings();
+            });
+        }
 
-        axSettingsBtn.addEventListener('click', () => {
-            const isVisible = uiSettingsWindow.style.display !== 'none';
-            uiSettingsWindow.style.display = isVisible ? 'none' : 'flex';
-            currentSettings.settingsWindowVisible = !isVisible;
-            saveSettings();
-        });
+        if (axSettingsBtn) {
+            axSettingsBtn.addEventListener('click', () => {
+                const isVisible = uiSettingsWindow.style.display !== 'none';
+                uiSettingsWindow.style.display = isVisible ? 'none' : 'flex';
+                currentSettings.settingsWindowVisible = !isVisible;
+                saveSettings();
+            });
+        }
 
         axSWalkaBtn.addEventListener('click', () => {
             currentSettings.fastFight = axSWalkaBtn.classList.toggle('active');
@@ -301,7 +308,7 @@
             saveSettings();
         });
 
-        // RESTART POZYCJI TYLKO DLA GŁÓWNEGO OKNA
+        // RESTART POZYCJI
         uiSettingsWindow.querySelector("#ax-reset-pos-btn").addEventListener('click', () => {
             if (uiMainWindow) {
                 uiMainWindow.style.left = '0px'; 
@@ -325,13 +332,13 @@
         chbClanOpt.addEventListener('click', () => { currentSettings.enableClanOptions = chbClanOpt.classList.toggle('active'); divClanOpt.style.display = currentSettings.enableClanOptions ? 'flex' : 'none'; saveSettings(); });
 
         uiSettingsWindow.querySelector("#ax-ignore-clans-textarea").addEventListener('change', (e) => { currentSettings.ignoreClans = e.target.value; saveSettings(); });
-        uiSettingsWindow.querySelector("#ax-always-attack-clans-textarea").addEventListener('change', (e) => { currentSettings.alwaysAttackClans = e.target.value; saveSettings(); });
 
         const chbNickOpt = uiSettingsWindow.querySelector("#ax-enable-nick-options-checkbox");
         const divNickOpt = uiSettingsWindow.querySelector("#ax-nick-options");
         chbNickOpt.addEventListener('click', () => { currentSettings.enableNickOptions = chbNickOpt.classList.toggle('active'); divNickOpt.style.display = currentSettings.enableNickOptions ? 'flex' : 'none'; saveSettings(); });
 
         uiSettingsWindow.querySelector("#ax-ignore-nicks-textarea").addEventListener('change', (e) => { currentSettings.ignoreNicks = e.target.value; saveSettings(); });
+        uiSettingsWindow.querySelector("#ax-always-attack-nicks-textarea").addEventListener('change', (e) => { currentSettings.alwaysAttackNicks = e.target.value; saveSettings(); });
     }
 
     // --- CYKL ŻYCIA DODATKU ---
