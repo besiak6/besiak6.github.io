@@ -82,36 +82,57 @@
         return min > max ? null : { min, max };
     }
 
-    function notInBattle() { return !Engine.battle.show; }
-    function getOthers() { return Engine.others.getDrawableList().map(o => o.d); }
-    function getHero() { return Engine.hero; }
+    function notInBattle() { 
+        return window.Engine && window.Engine.battle && !window.Engine.battle.show; 
+    }
+    
+    function getOthers() { 
+        if (!window.Engine || !window.Engine.others) return [];
+        return window.Engine.others.getDrawableList().map(o => o.d); 
+    }
 
+    // Nowoczesne sprawdzanie ochrony (Emotki NI)
     function checkTargetProtection(other) {
-        if (!Engine.others.getById(other.id)) return true;
-        const emoList = Engine.others.getById(other.id).getOnSelfEmoList();
+        if (!window.Engine.others.getById(other.id)) return true;
+        const otherObj = window.Engine.others.getById(other.id);
+        const emoList = typeof otherObj.getOnSelfEmoList === 'function' ? otherObj.getOnSelfEmoList() : [];
         if (!emoList || emoList.length === 0) return true;
         return !emoList.some(e => ['battle', 'pvpprotected'].includes(e.name));
     }
 
     function checkSelfProtection() {
-        const hero = Engine.hero;
+        const hero = window.Engine.hero;
         if (!hero) return false;
-        const emoList = hero.getOnSelfEmoList();
+        const emoList = typeof hero.getOnSelfEmoList === 'function' ? hero.getOnSelfEmoList() : [];
         if (!emoList || emoList.length === 0) return false;
         return emoList.some(e => e.name === 'pvpprotected');
     }
 
     function isMapValidForAttack(map) {
         if (!map) return false;
-        if (map.pvp === 2 || ['Mapa testerów'].includes(map.name)) return true;
+        if (map.pvp === 2) return true; // Typowa mapa PvP
+        if (['Mapa testerów', 'Polana ekwipunku'].includes(map.name)) return true;
         return false;
     }
 
+    // Nowoczesne filtrowanie i sprawdzanie grupy (Dostosowane do PartyPlayers/PartyFollowers)
     function isEnemy(other) {
-        const map = Engine?.map?.d;
-        if (!other || typeof other.relation !== 'number') return false;
-        if (Engine.party?.d && Array.isArray(Engine.party.d) && Engine.party.d.some(p => p.id === other.id)) return false;
+        // 1. ZABEZPIECZENIE GRUPY (Nowy system oparty na Mapach ES6 z plików Party.ts)
+        if (window.Engine.party && typeof window.Engine.party.getMembers === 'function') {
+            const members = window.Engine.party.getMembers();
+            if (members) {
+                // Nowy interfejs używa obiektu Map
+                if (typeof members.has === 'function' && members.has(other.id)) return false;
+                // Fallback gdyby użyli zwykłego obiektu
+                if (members[other.id]) return false;
+            }
+        } else if (window.Engine.party && window.Engine.party.d) {
+            // Starszy fallback
+            if (Array.isArray(window.Engine.party.d) && window.Engine.party.d.some(p => p.id === other.id)) return false;
+            if (window.Engine.party.d[other.id]) return false;
+        }
 
+        // 2. Filtry Nicków
         const lowerNick = other.nick.toLowerCase();
         const alwaysAttackNicksList = currentSettings.alwaysAttackNicks.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
         const ignoreNicksList = currentSettings.ignoreNicks.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
@@ -121,6 +142,7 @@
             if (ignoreNicksList.includes(lowerNick)) return false;
         }
 
+        // 3. Filtry Klanów
         let otherClanId = other.clan && typeof other.clan === 'object' ? other.clan.id : null;
         let otherClanName = other.clan && (typeof other.clan === 'object' ? other.clan.name : other.clan);
         
@@ -131,40 +153,54 @@
             if ((otherClanId || otherClanName) && isClanIgnored(otherClanId, otherClanName)) return false;
         }
 
-        if (other.relation === 2) return currentSettings.attackFriends;
-        if ([4, 7].includes(other.relation)) return currentSettings.attackClan;
+        // 4. Globalne Relacje Margonem
+        if (other.relation === 2 && !currentSettings.attackFriends) return false;
+        if ([4, 5, 7].includes(other.relation) && !currentSettings.attackClan) return false;
 
-        if (map && isMapValidForAttack(map)) {
-            if ([1, 3, 6].includes(other.relation)) return true;
-            if ([4, 7].includes(other.relation) && currentSettings.attackClan) return true;
-            if (other.relation === 2 && currentSettings.attackFriends) return true;
-        }
-        return false;
+        return true;
     }
 
+    // Zwraca tylko czyste cele (bez ochrony, bez grupy, w przedziale LVL)
     function getValidTargets() {
         if (checkSelfProtection()) return [];
-        return getOthers().filter(other => isEnemy(other) && !other.inBattle && other.lvl >= parsedLevelRange.min && other.lvl <= parsedLevelRange.max && checkTargetProtection(other));
+        const map = window.Engine?.map?.d;
+        if (!map || !isMapValidForAttack(map)) return [];
+
+        return getOthers()
+            .filter(other => other && !other.inBattle)
+            .filter(other => other.lvl >= parsedLevelRange.min && other.lvl <= parsedLevelRange.max)
+            .filter(other => isEnemy(other))
+            .filter(other => checkTargetProtection(other));
     }
 
+    // Precyzyjne namierzanie
     function getClosestTarget() {
-        const hero = getHero().d;
+        const hero = window.Engine.hero.d;
         const targets = getValidTargets();
         if (!targets.length) return null;
 
-        const targetsWithDistance = targets.map(other => ({
-            target: other,
-            distance: Math.hypot(hero.x - other.x, hero.y - other.y)
-        }));
+        const hx = typeof hero.rx !== 'undefined' ? hero.rx : hero.x;
+        const hy = typeof hero.ry !== 'undefined' ? hero.ry : hero.y;
+
+        const targetsWithDistance = targets.map(other => {
+            const ox = typeof other.rx !== 'undefined' ? other.rx : other.x;
+            const oy = typeof other.ry !== 'undefined' ? other.ry : other.y;
+            return {
+                target: other,
+                distance: Math.hypot(hx - ox, hy - oy)
+            };
+        });
+
         targetsWithDistance.sort((a, b) => a.distance - b.distance);
-        return targetsWithDistance[0];
+        return targetsWithDistance[0]; // Zwracamy nabliższego
     }
 
     let BADDONZ_LAST_ATTACK = 0;
     function attack(target, distance) {
         if (Date.now() - BADDONZ_LAST_ATTACK < 300) return false;
-        if (distance <= 3) {
-            _g('fight&a=attack&id=' + target.id);
+        // Odległość 3.85 (ukos) lub mniej
+        if (distance <= 3.85) {
+            window._g('fight&a=attack&id=' + target.id);
             BADDONZ_LAST_ATTACK = Date.now();
             return true;
         }
@@ -172,9 +208,6 @@
     }
 
     function handleAutoXLogic() {
-        const map = Engine?.map?.d;
-        if (!map || !isMapValidForAttack(map)) return;
-
         const closestTargetWithDistance = getClosestTarget();
         if (closestTargetWithDistance) {
             attack(closestTargetWithDistance.target, closestTargetWithDistance.distance);
@@ -182,9 +215,9 @@
     }
 
     function handleFastFight() {
-        if (Engine?.battle?.show && !Engine?.battle?.endBattle) {
+        if (window.Engine?.battle?.show && !window.Engine?.battle?.endBattle) {
             if (currentSettings.fastFight && !BADDONZ_FAST_FIGHT_SENT) {
-                _g('fight&a=f');
+                window._g('fight&a=f');
                 BADDONZ_FAST_FIGHT_SENT = true;
             }
         }
@@ -210,7 +243,7 @@
             hasClose: false
         });
 
-        // 2. OKNO USTAWIEŃ (Usunięto wrapujący scrollbar, okno samo dostosuje wysokość)
+        // 2. OKNO USTAWIEŃ (Auto-wysokość, Płynny scroll)
         const settingsBodyHtml = `
             <button class="baddonz-button" style="width:100%; margin-bottom: 5px;" id="ax-reset-pos-btn">Resetuj pozycje okienka</button>
             
@@ -264,8 +297,8 @@
                 saveSettings();
             } else {
                 axLevelRangeInput.value = currentSettings.levelRange;
-                if (window.message) message("Błędna wartość lvl. Format: min-max");
-                else if (window._g) _g('message|Błędna wartość lvl. Format: min-max');
+                if (window.message) window.message("Błędna wartość lvl. Format: min-max");
+                else if (window._g) window._g('message|Błędna wartość lvl. Format: min-max');
             }
         });
 
@@ -314,7 +347,6 @@
             saveSettings();
         });
 
-        // RESTART POZYCJI
         uiSettingsWindow.querySelector("#ax-reset-pos-btn").addEventListener('click', () => {
             if (uiMainWindow) {
                 uiMainWindow.style.left = '0px'; 
@@ -363,9 +395,9 @@
             }
         }
 
-        if (!isEndBattleHooked && typeof Engine?.battle?.setEndBattle === 'function') {
-            const originalSetEndBattle = Engine.battle.setEndBattle.bind(Engine.battle);
-            Engine.battle.setEndBattle = function() { originalSetEndBattle(); BADDONZ_FAST_FIGHT_SENT = false; };
+        if (!isEndBattleHooked && typeof window.Engine?.battle?.setEndBattle === 'function') {
+            const originalSetEndBattle = window.Engine.battle.setEndBattle.bind(window.Engine.battle);
+            window.Engine.battle.setEndBattle = function() { originalSetEndBattle(); BADDONZ_FAST_FIGHT_SENT = false; };
             isEndBattleHooked = true;
         }
 
