@@ -12,7 +12,7 @@
 
     const ADDON_ID = "AX";
     
-    // Niestandardowe modyfikacje tylko dla AutoX (M.in. likwidacja paddingu od góry)
+    // Niestandardowe modyfikacje tylko dla AutoX
     const styleSheet = document.createElement("style");
     styleSheet.type = "text/css";
     styleSheet.id = "autox-custom-styles";
@@ -210,29 +210,27 @@
             hasClose: false
         });
 
-        // 2. OKNO USTAWIEŃ
+        // 2. OKNO USTAWIEŃ (Usunięto wrapujący scrollbar, okno samo dostosuje wysokość)
         const settingsBodyHtml = `
-            <div class="baddonz-scroll" style="display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; max-height:300px; padding-right:5px;">
-                <button class="baddonz-button" style="width:100%; margin-bottom: 5px;" id="ax-reset-pos-btn">Resetuj Pozycję Głównego Okna</button>
-                
-                <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.attackFriends ? 'active' : ''}" id="ax-attack-friends-checkbox"></div><span>Atakuj Przyjaciół</span></div>
-                <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.attackClan ? 'active' : ''}" id="ax-attack-clan-checkbox"></div><span>Atakuj Klan/Sojusz</span></div>
-                
-                <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
-                <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.enableClanOptions ? 'active' : ''}" id="ax-enable-clan-options-checkbox"></div><span>Kryteria Klanowe</span></div>
-                <div id="ax-clan-options" style="display: ${currentSettings.enableClanOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
-                    <span class="baddonz-text" style="padding:0;">Nigdy nie atakuj klanów:</span>
-                    <textarea class="baddonz-textarea baddonz-scroll" id="ax-ignore-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.ignoreClans}</textarea>
-                </div>
+            <button class="baddonz-button" style="width:100%; margin-bottom: 5px;" id="ax-reset-pos-btn">Resetuj pozycje okienka</button>
+            
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.attackFriends ? 'active' : ''}" id="ax-attack-friends-checkbox"></div><span>Atakuj Przyjaciół</span></div>
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.attackClan ? 'active' : ''}" id="ax-attack-clan-checkbox"></div><span>Atakuj Klan/Sojusz</span></div>
+            
+            <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.enableClanOptions ? 'active' : ''}" id="ax-enable-clan-options-checkbox"></div><span>Kryteria Klanowe</span></div>
+            <div id="ax-clan-options" style="display: ${currentSettings.enableClanOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
+                <span class="baddonz-text" style="padding:0;">Nigdy nie atakuj klanów:</span>
+                <textarea class="baddonz-textarea baddonz-scroll" id="ax-ignore-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.ignoreClans}</textarea>
+            </div>
 
-                <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
-                <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.enableNickOptions ? 'active' : ''}" id="ax-enable-nick-options-checkbox"></div><span>Po nickach</span></div>
-                <div id="ax-nick-options" style="display: ${currentSettings.enableNickOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
-                    <span class="baddonz-text" style="padding:0;">Nigdy nie atakuj:</span>
-                    <textarea class="baddonz-textarea baddonz-scroll" id="ax-ignore-nicks-textarea" placeholder="Nick1, Nick2">${currentSettings.ignoreNicks}</textarea>
-                    <span class="baddonz-text" style="padding:0;">Zawsze atakuj:</span>
-                    <textarea class="baddonz-textarea baddonz-scroll" id="ax-always-attack-nicks-textarea" placeholder="Nick1, Nick2">${currentSettings.alwaysAttackNicks}</textarea>
-                </div>
+            <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.enableNickOptions ? 'active' : ''}" id="ax-enable-nick-options-checkbox"></div><span>Po nickach</span></div>
+            <div id="ax-nick-options" style="display: ${currentSettings.enableNickOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
+                <span class="baddonz-text" style="padding:0;">Nigdy nie atakuj:</span>
+                <textarea class="baddonz-textarea baddonz-scroll" id="ax-ignore-nicks-textarea" placeholder="Nick1, Nick2">${currentSettings.ignoreNicks}</textarea>
+                <span class="baddonz-text" style="padding:0;">Zawsze atakuj:</span>
+                <textarea class="baddonz-textarea baddonz-scroll" id="ax-always-attack-nicks-textarea" placeholder="Nick1, Nick2">${currentSettings.alwaysAttackNicks}</textarea>
             </div>
         `;
         uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "AutoX Ustawienia", settingsBodyHtml, { width: '250px', customId: 'baddonz-ax-wnd-settings' });
@@ -272,7 +270,6 @@
         });
 
         if (axCollapsedBtn) {
-            // Ustawienie początkowego Tipa ("Rozwiń" lub "Zwiń")
             if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
                 $(axCollapsedBtn).tip(currentSettings.isExpanded ? "Zwiń" : "Rozwiń");
             }
@@ -281,7 +278,6 @@
                 currentSettings.isExpanded = !currentSettings.isExpanded;
                 axExpandedControls.style.display = currentSettings.isExpanded ? 'flex' : 'none';
                 
-                // Dynamiczna zmiana Tipa po kliknięciu
                 if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
                     $(axCollapsedBtn).tip(currentSettings.isExpanded ? "Zwiń" : "Rozwiń");
                 }
@@ -318,6 +314,7 @@
             saveSettings();
         });
 
+        // RESTART POZYCJI
         uiSettingsWindow.querySelector("#ax-reset-pos-btn").addEventListener('click', () => {
             if (uiMainWindow) {
                 uiMainWindow.style.left = '0px'; 
