@@ -12,7 +12,7 @@
 
     const ADDON_ID = "AX";
     
-    // Niestandardowe modyfikacje dla AutoX
+    // Niestandardowe modyfikacje tylko dla AutoX
     const styleSheet = document.createElement("style");
     styleSheet.type = "text/css";
     styleSheet.id = "autox-custom-styles";
@@ -81,38 +81,31 @@
         return window.Engine.others.getDrawableList().map(o => o.d); 
     }
 
-    // SPRAWDZANIE EMOTEK (Wprost z ax1.txt - uwzględnia ochronę PvP oraz bycie w walce)
-    function checkEmotion(other) {
-        if (!window.Engine || !window.Engine.others) return true;
+    // Bezpieczne sprawdzanie ochronki (zapożyczone z ax1)
+    function checkTargetProtection(other) {
+        if (!window.Engine.others.getById(other.id)) return true;
         const otherObj = window.Engine.others.getById(other.id);
-        if (!otherObj) return true;
-        
         const emoList = typeof otherObj.getOnSelfEmoList === 'function' ? otherObj.getOnSelfEmoList() : [];
-        if (!emoList || emoList.length === 0) return true; // Brak emotek = brak ochrony
-
-        // Zwraca FALSE (czyli nie atakuj) jeśli gracz ma pvpprotected lub battle
-        const isProtected = emoList.some(e => e.name === 'battle' || e.name === 'pvpprotected');
-        return !isProtected;
+        if (!emoList || emoList.length === 0) return true;
+        // Weryfikacja ochronki i faktu bycia w walce
+        return !emoList.some(e => e && ['battle', 'pvpprotected'].includes(e.name));
     }
 
-    // Sprawdzanie ochrony własnej postaci
     function checkSelfProtection() {
         const hero = window.Engine.hero;
         if (!hero) return false;
         const emoList = typeof hero.getOnSelfEmoList === 'function' ? hero.getOnSelfEmoList() : [];
         if (!emoList || emoList.length === 0) return false;
-        return emoList.some(e => e.name === 'pvpprotected');
+        return emoList.some(e => e && e.name === 'pvpprotected');
     }
 
-    // Walidacja Mapy (Z ax1.txt)
     function isMapValidForAttack(map) {
         if (!map) return false;
-        if (map.pvp === 2) return true; 
+        if (map.pvp === 2) return true; // Standardowe mapy PvP
         if (['Mapa testerów', 'Polana ekwipunku'].includes(map.name)) return true;
         return false;
     }
 
-    // BEZWZGLĘDNE SPRAWDZANIE GRUPY
     function isInParty(other) {
         if (!window.Engine || !window.Engine.party) return false;
         
@@ -125,6 +118,7 @@
 
         if (!members) return false;
 
+        // Obsługa nowego formatu grup w Margonem (Map ES6) oraz starszego.
         if (members instanceof Map) {
             return members.has(other.id) || members.has(Number(other.id));
         } else if (Array.isArray(members)) {
@@ -135,24 +129,21 @@
         return false;
     }
 
-    // Walidacja przeciwnika
     function isEnemy(other) {
         if (!other || typeof other.relation !== 'number') return false;
 
-        // Jeśli jest w naszej grupie, całkowicie ignorujemy!
+        // Bezwzględne ignorowanie własnej drużyny
         if (isInParty(other)) return false;
 
         const lowerNick = other.nick.toLowerCase();
         const alwaysAttackNicksList = currentSettings.alwaysAttackNicks.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
         const ignoreNicksList = currentSettings.ignoreNicks.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
 
-        // Filtry Nicków
         if (currentSettings.enableNickOptions) {
             if (alwaysAttackNicksList.includes(lowerNick)) return true;
             if (ignoreNicksList.includes(lowerNick)) return false;
         }
 
-        // Filtry Klanów
         let otherClanId = other.clan && typeof other.clan === 'object' ? other.clan.id : null;
         let otherClanName = other.clan && (typeof other.clan === 'object' ? other.clan.name : other.clan);
         const ignoreClansList = currentSettings.ignoreClans.split(',').map(s => s.trim()).filter(Boolean);
@@ -162,16 +153,14 @@
             if ((otherClanId || otherClanName) && isClanIgnored(otherClanId, otherClanName)) return false;
         }
 
-        // Relacje (1: Brak, 3: Wróg, 6: Wojna, 8: Wroga frakcja)
+        // Relacje (1: Brak, 3: Wróg, 6: Wojna, 8: Wroga Frakcja)
         if ([1, 3, 6, 8].includes(other.relation)) return true;
-
         if (other.relation === 2 && currentSettings.attackFriends) return true;
         if ([4, 5, 7].includes(other.relation) && currentSettings.attackClan) return true;
 
         return false;
     }
 
-    // Pobiera ostateczną listę poprawnych celów (wzorowane na ax1.txt)
     function getValidTargets() {
         if (checkSelfProtection()) return [];
         const map = window.Engine?.map?.d;
@@ -180,54 +169,54 @@
         return getOthers()
             .filter(other => other && !other.inBattle)
             .filter(other => other.lvl >= parsedLevelRange.min && other.lvl <= parsedLevelRange.max)
-            .filter(other => checkEmotion(other)) // Sprawdzenie ochronki (battle / pvpprotected)
-            .filter(other => isEnemy(other)); // Grupa / Klany / Relacje
+            .filter(other => checkTargetProtection(other))
+            .filter(other => isEnemy(other));
     }
 
-    // Wyciąga z listy celów najbliższego gracza na podstawie "rx" (jak w ax1.txt)
     function getClosestTarget() {
         const hero = window.Engine.hero.d;
         const targets = getValidTargets();
         if (!targets.length) return null;
 
-        let closestTarget = targets[0];
-        let minDistance = Math.hypot(closestTarget.x - hero.rx, closestTarget.y - hero.ry);
+        const hx = typeof hero.rx !== 'undefined' ? hero.rx : hero.x;
+        const hy = typeof hero.ry !== 'undefined' ? hero.ry : hero.y;
 
-        for (let i = 1; i < targets.length; i++) {
-            const other = targets[i];
-            const dist = Math.hypot(other.x - hero.rx, other.y - hero.ry);
-            if (dist < minDistance) {
-                minDistance = dist;
-                closestTarget = other;
-            }
-        }
-        
-        return { target: closestTarget, distance: minDistance };
+        const targetsWithDistance = targets.map(other => {
+            const ox = typeof other.rx !== 'undefined' ? other.rx : other.x;
+            const oy = typeof other.ry !== 'undefined' ? other.ry : other.y;
+            return {
+                target: other,
+                // Skrypt ax1 używa Math.hypot, działa to najlepiej i najszybciej
+                distance: Math.hypot(hx - ox, hy - oy)
+            };
+        });
+
+        targetsWithDistance.sort((a, b) => a.distance - b.distance);
+        return targetsWithDistance[0]; 
     }
 
     let BADDONZ_LAST_ATTACK = 0;
-    function attackTarget(target) {
-        if (Date.now() - BADDONZ_LAST_ATTACK < 300) return;
-        window._g('fight&a=attack&id=' + target.id);
-        BADDONZ_LAST_ATTACK = Date.now();
+    function attack(target, distance) {
+        // Cooldown 300ms na ataki z ax1
+        if (Date.now() - BADDONZ_LAST_ATTACK < 300) return false;
+        
+        // Atakuj tylko tych w rozsądnym zasięgu. ax1 używał attackDist = [2, 3.85]
+        if (distance <= 3.85) {
+            window._g('fight&a=attack&id=' + target.id);
+            BADDONZ_LAST_ATTACK = Date.now();
+            return true;
+        }
+        return false;
     }
 
-    // Główna pętla sprawdzająca i atakująca (Zastępuje nasłuchiwanie z ParseJSON)
     function handleAutoXLogic() {
-        if (!currentSettings.enabled || !notInBattle()) return;
-
-        const map = window.Engine?.map?.d;
-        if (!map || !isMapValidForAttack(map)) return;
-
         const closestTargetWithDistance = getClosestTarget();
-        if (!closestTargetWithDistance) return;
-
-        // Atakuje, jeśli odległość jest mniejsza lub równa 3.85 kratek
-        if (closestTargetWithDistance.distance <= 3.85) {
-            attackTarget(closestTargetWithDistance.target);
+        if (closestTargetWithDistance) {
+            attack(closestTargetWithDistance.target, closestTargetWithDistance.distance);
         }
     }
 
+    // Bezbłędna funkcja szybkiej walki
     function handleFastFight() {
         if (window.Engine?.battle?.show && !window.Engine?.battle?.endBattle) {
             if (currentSettings.fastFight && !BADDONZ_FAST_FIGHT_SENT) {
@@ -239,6 +228,7 @@
 
     // --- BUDOWANIE INTERFEJSU (BADDONZ API) ---
     function buildUI() {
+        // 1. GŁÓWNE OKNO
         const mainBodyHtml = `
             <div class="baddonz-setting-row ax-main-row">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ax-enabled-checkbox"></div>
@@ -256,6 +246,7 @@
             hasClose: false
         });
 
+        // 2. OKNO USTAWIEŃ
         const settingsBodyHtml = `
             <button class="baddonz-button" style="width:100%; margin-bottom: 5px;" id="ax-reset-pos-btn">Resetuj pozycje okienka</button>
             
@@ -396,16 +387,25 @@
         loadSettings();
         if (!uiMainWindow) buildUI();
 
-        // Obejście na reset flagi S.Walki
+        // 1. Zamiast obciążać Emiter, używamy natywnego interwału jak w ax1 do sprawdzania i atakowania.
+        // Daje to idealną płynność i zero lagów przy pojawianiu się nowych obiektów.
+        BADDONZ_TRACK_INTERVAL = setInterval(() => { 
+            if (currentSettings.enabled && notInBattle()) handleAutoXLogic(); 
+        }, 100); // 100ms - Szybko i optymalnie.
+
+        // 2. Interwał do szybkiej walki (niezawodny, 200ms by nie zalać serwera).
+        BADDONZ_FAST_FIGHT_INTERVAL = setInterval(() => { 
+            if (currentSettings.fastFight) handleFastFight(); 
+        }, 200);
+
         if (!isEndBattleHooked && typeof window.Engine?.battle?.setEndBattle === 'function') {
             const originalSetEndBattle = window.Engine.battle.setEndBattle.bind(window.Engine.battle);
-            window.Engine.battle.setEndBattle = function() { originalSetEndBattle(); BADDONZ_FAST_FIGHT_SENT = false; };
+            window.Engine.battle.setEndBattle = function() { 
+                originalSetEndBattle(); 
+                BADDONZ_FAST_FIGHT_SENT = false; // Resetujemy wysłanie szybkiej walki po zakończeniu.
+            };
             isEndBattleHooked = true;
         }
-
-        // Interwały z ax1.txt (Szybka walka co 200ms, Skanowanie celów co 101ms)
-        BADDONZ_FAST_FIGHT_INTERVAL = setInterval(() => { if (currentSettings.fastFight) handleFastFight(); }, 200);
-        BADDONZ_TRACK_INTERVAL = setInterval(handleAutoXLogic, 101);
     }
 
     function addonStop() {
