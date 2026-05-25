@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          AutoX baddonz
-// @version       1.0
-// @description   autox
+// @version       05.08.2025
+// @description   autox (API 2.0 - Perfekcyjne namierzanie, zero atakowania grupy)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -115,28 +115,42 @@
         return false;
     }
 
-    // Nowoczesne filtrowanie i sprawdzanie grupy (Dostosowane do PartyPlayers/PartyFollowers)
-    function isEnemy(other) {
-        // 1. ZABEZPIECZENIE GRUPY (Nowy system oparty na Mapach ES6 z plików Party.ts)
-        if (window.Engine.party && typeof window.Engine.party.getMembers === 'function') {
-            const members = window.Engine.party.getMembers();
-            if (members) {
-                // Nowy interfejs używa obiektu Map
-                if (typeof members.has === 'function' && members.has(other.id)) return false;
-                // Fallback gdyby użyli zwykłego obiektu
-                if (members[other.id]) return false;
-            }
-        } else if (window.Engine.party && window.Engine.party.d) {
-            // Starszy fallback
-            if (Array.isArray(window.Engine.party.d) && window.Engine.party.d.some(p => p.id === other.id)) return false;
-            if (window.Engine.party.d[other.id]) return false;
+    // BEZWZGLĘDNE SPRAWDZANIE GRUPY (Żeby nigdy nie zaatakował swoich!)
+    function isInParty(other) {
+        if (!window.Engine || !window.Engine.party) return false;
+        
+        let members = null;
+        if (typeof window.Engine.party.getMembers === 'function') {
+            members = window.Engine.party.getMembers();
+        } else if (window.Engine.party.d) {
+            members = window.Engine.party.d;
         }
 
-        // 2. Filtry Nicków
+        if (!members) return false;
+
+        // Margonem potrafi używać różnych struktur danych
+        if (members instanceof Map) {
+            return members.has(other.id) || members.has(Number(other.id));
+        } else if (Array.isArray(members)) {
+            return members.some(p => p.id === other.id);
+        } else if (typeof members === 'object') {
+            return !!members[other.id];
+        }
+        return false;
+    }
+
+    // Główna funkcja walidująca wroga
+    function isEnemy(other) {
+        if (!other || typeof other.relation !== 'number') return false;
+
+        // 1. ZABEZPIECZENIE: Jeśli jest w naszej grupie, NIE ATAKUJ!
+        if (isInParty(other)) return false;
+
         const lowerNick = other.nick.toLowerCase();
         const alwaysAttackNicksList = currentSettings.alwaysAttackNicks.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
         const ignoreNicksList = currentSettings.ignoreNicks.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
 
+        // 2. Filtry Nicków
         if (currentSettings.enableNickOptions) {
             if (alwaysAttackNicksList.includes(lowerNick)) return true;
             if (ignoreNicksList.includes(lowerNick)) return false;
@@ -145,7 +159,6 @@
         // 3. Filtry Klanów
         let otherClanId = other.clan && typeof other.clan === 'object' ? other.clan.id : null;
         let otherClanName = other.clan && (typeof other.clan === 'object' ? other.clan.name : other.clan);
-        
         const ignoreClansList = currentSettings.ignoreClans.split(',').map(s => s.trim()).filter(Boolean);
         const isClanIgnored = (id, name) => (id && ignoreClansList.includes(id.toString())) || (name && ignoreClansList.includes(name));
 
@@ -153,14 +166,18 @@
             if ((otherClanId || otherClanName) && isClanIgnored(otherClanId, otherClanName)) return false;
         }
 
-        // 4. Globalne Relacje Margonem
-        if (other.relation === 2 && !currentSettings.attackFriends) return false;
-        if ([4, 5, 7].includes(other.relation) && !currentSettings.attackClan) return false;
+        // 4. RELACJE MARGONEM (1: Brak, 2: Znajomy, 3: Wróg, 4: Klan, 5: Sojusz Klanowy, 6: Wojna, 7: Frakcja sojusz, 8: Frakcja wróg)
+        // Domyślnie pozwalamy bić czystych wrogów lub bez relacji
+        if ([1, 3, 6, 8].includes(other.relation)) return true;
 
-        return true;
+        // Sprawdzamy ustawienia dla opcjonalnych relacji
+        if (other.relation === 2 && currentSettings.attackFriends) return true;
+        if ([4, 5, 7].includes(other.relation) && currentSettings.attackClan) return true;
+
+        // Jeśli dotarł tutaj, to znaczy, że to ktoś kogo nie powinniśmy bić (np. klan bez zaznaczonej opcji)
+        return false;
     }
 
-    // Zwraca tylko czyste cele (bez ochrony, bez grupy, w przedziale LVL)
     function getValidTargets() {
         if (checkSelfProtection()) return [];
         const map = window.Engine?.map?.d;
@@ -169,11 +186,10 @@
         return getOthers()
             .filter(other => other && !other.inBattle)
             .filter(other => other.lvl >= parsedLevelRange.min && other.lvl <= parsedLevelRange.max)
-            .filter(other => isEnemy(other))
-            .filter(other => checkTargetProtection(other));
+            .filter(other => checkTargetProtection(other))
+            .filter(other => isEnemy(other)); // Przechodzi przez ostre sito isEnemy
     }
 
-    // Precyzyjne namierzanie
     function getClosestTarget() {
         const hero = window.Engine.hero.d;
         const targets = getValidTargets();
@@ -192,13 +208,13 @@
         });
 
         targetsWithDistance.sort((a, b) => a.distance - b.distance);
-        return targetsWithDistance[0]; // Zwracamy nabliższego
+        return targetsWithDistance[0]; 
     }
 
     let BADDONZ_LAST_ATTACK = 0;
     function attack(target, distance) {
         if (Date.now() - BADDONZ_LAST_ATTACK < 300) return false;
-        // Odległość 3.85 (ukos) lub mniej
+        // Odległość ataku w NI to przeważnie 3-3.85 kratek
         if (distance <= 3.85) {
             window._g('fight&a=attack&id=' + target.id);
             BADDONZ_LAST_ATTACK = Date.now();
@@ -225,7 +241,6 @@
 
     // --- BUDOWANIE INTERFEJSU (BADDONZ API) ---
     function buildUI() {
-        // 1. GŁÓWNE OKNO
         const mainBodyHtml = `
             <div class="baddonz-setting-row ax-main-row">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ax-enabled-checkbox"></div>
@@ -243,7 +258,6 @@
             hasClose: false
         });
 
-        // 2. OKNO USTAWIEŃ (Auto-wysokość, Płynny scroll)
         const settingsBodyHtml = `
             <button class="baddonz-button" style="width:100%; margin-bottom: 5px;" id="ax-reset-pos-btn">Resetuj pozycje okienka</button>
             
