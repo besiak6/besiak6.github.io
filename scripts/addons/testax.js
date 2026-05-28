@@ -40,7 +40,6 @@
         enableClanOptions: true,
         ignoreClans: "692,164,3,1517,256,58,1386,1504,1925,1757,758,2230,27,2141,10,1807,1029,2274,1459,1071,9,1829,516,2302,71,622,2761",
         alwaysAttackClans: "",
-
         levelRange: "0-500",
         enableNickOptions: false,
         ignoreNicks: "",
@@ -71,7 +70,10 @@
 
         let accSettings = {};
         try {
-            accSettings = JSON.parse(localStorage.getItem('Baddonz_AX_Acc_' + accId)) || {};
+            const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
+            if (data[accId] && data[accId].accountAddons) {
+                accSettings = data[accId].accountAddons[ADDON_ID] || {};
+            }
         } catch (e) {}
 
         let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
@@ -94,7 +96,14 @@
         charKeys.forEach(k => charSettings[k] = currentSettings[k]);
 
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
-        localStorage.setItem('Baddonz_AX_Acc_' + accId, JSON.stringify(accSettings));
+
+        try {
+            let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
+            if (!data[accId]) data[accId] = {};
+            if (!data[accId].accountAddons) data[accId].accountAddons = {};
+            data[accId].accountAddons[ADDON_ID] = accSettings;
+            localStorage.setItem('BaddonzData', JSON.stringify(data));
+        } catch (e) {}
     }
 
     function parseLevelRange(str) {
