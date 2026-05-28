@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Szybka Grupa baddonz
-// @version       05.08.2025
+// @version       28.05.2026
 // @description   Szybka Grupa
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -27,21 +27,12 @@
     if (!document.getElementById("zap-custom-styles")) document.head.appendChild(styleSheet);
 
     const MARGONEM_RELATIONS = {
-        NONE: 1,
-        FRIEND: 2,
-        ENEMY: 3,
-        CLAN: 4,
-        CLAN_ALLY: 5,
-        CLAN_ENEMY: 6
+        NONE: 1, FRIEND: 2, ENEMY: 3, CLAN: 4, CLAN_ALLY: 5, CLAN_ENEMY: 6
     };
 
     const PROFESSION_NAMES = {
-        't': 'Tropiciel',
-        'b': 'T. Ostrzy',
-        'w': 'Wojownik',
-        'p': 'Paladyn',
-        'm': 'Mag',
-        'h': 'Łowca'
+        't': 'Tropiciel', 'b': 'T. Ostrzy', 'w': 'Wojownik',
+        'p': 'Paladyn', 'm': 'Mag', 'h': 'Łowca'
     };
 
     let currentSettings = {
@@ -51,17 +42,18 @@
         inviteKey: "b",
         InviteRandoms: false,
         InviteNear: false,
-        InvitebyLevel: false,
-        minLevel: 0,
-        maxLevel: 500,
-        FilterbyProfession: false,
-        SelectedProfessions: { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true },
         autoAcceptEnabled: true,
         acceptClan: true,
         acceptAlly: true,
         acceptFriend: true,
         acceptOthers: false,
         rejectUnchecked: false,
+
+        InvitebyLevel: false,
+        minLevel: 0,
+        maxLevel: 500,
+        FilterbyProfession: false,
+        SelectedProfessions: { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true }
     };
 
     let uiWindowElement = null;
@@ -71,18 +63,49 @@
     const partyInviteRegexPL = /Czy chcesz dołączyć do drużyny gracza <strong>(.+?)<\/strong>\?/;
     const partyInviteRegexEN = /Party invitation received from <strong>(.+?)<\/strong>\. Would you like to join\?/;
 
+    // === ZAAWANSOWANE ŁADOWANIE USTAWIEŃ (KONTO VS POSTAĆ) ===
     function loadSettings() {
-        if (window.BaddonzAPI) {
-            const loaded = window.BaddonzAPI.getAddonSettings(ADDON_ID);
-            currentSettings = { ...currentSettings, ...loaded };
-            if (!currentSettings.SelectedProfessions) {
-                currentSettings.SelectedProfessions = { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true };
-            }
+        if (!window.BaddonzAPI) return;
+        const accId = window.BaddonzAPI.accountId;
+
+        // 1. Ładowanie ustawień z poziomu KONTA
+        let accSettings = {};
+        try {
+            accSettings = JSON.parse(localStorage.getItem('Baddonz_ZAP_Acc_' + accId)) || {};
+        } catch (e) {}
+
+        // 2. Ładowanie ustawień z poziomu POSTACI
+        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+
+        // 3. Scalenie wszystkiego
+        currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
+
+        // Fallback dla profesji
+        if (!currentSettings.SelectedProfessions) {
+            currentSettings.SelectedProfessions = { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true };
         }
     }
 
+    // === ZAAWANSOWANY ZAPIS USTAWIEŃ (KONTO VS POSTAĆ) ===
     function saveSettings() {
-        if (window.BaddonzAPI) window.BaddonzAPI.saveAddonSettings(ADDON_ID, currentSettings);
+        if (!window.BaddonzAPI) return;
+        const accId = window.BaddonzAPI.accountId;
+
+        // Podział kluczy
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'inviteKey', 'InviteRandoms', 'InviteNear', 'autoAcceptEnabled', 'acceptClan', 'acceptAlly', 'acceptFriend', 'acceptOthers', 'rejectUnchecked'];
+        const charKeys = ['InvitebyLevel', 'minLevel', 'maxLevel', 'FilterbyProfession', 'SelectedProfessions'];
+
+        let accSettings = {};
+        let charSettings = {};
+
+        accKeys.forEach(k => accSettings[k] = currentSettings[k]);
+        charKeys.forEach(k => charSettings[k] = currentSettings[k]);
+
+        // Zapis na POSTAĆ (Główny Menedżer Baddonza)
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
+
+        // Zapis na KONTO (Oddzielny, bezpieczny klucz w LocalStorage)
+        localStorage.setItem('Baddonz_ZAP_Acc_' + accId, JSON.stringify(accSettings));
     }
 
     function isChatFocused() {
@@ -92,23 +115,14 @@
 
     function isInParty(otherId) {
         if (!window.Engine || !window.Engine.party) return false;
-        
         let members = null;
-        if (typeof window.Engine.party.getMembers === 'function') {
-            members = window.Engine.party.getMembers();
-        } else if (window.Engine.party.d) {
-            members = window.Engine.party.d;
-        }
-
+        if (typeof window.Engine.party.getMembers === 'function') members = window.Engine.party.getMembers();
+        else if (window.Engine.party.d) members = window.Engine.party.d;
         if (!members) return false;
 
-        if (members instanceof Map) {
-            return members.has(otherId) || members.has(Number(otherId));
-        } else if (Array.isArray(members)) {
-            return members.some(p => p.id === otherId);
-        } else if (typeof members === 'object') {
-            return !!members[otherId];
-        }
+        if (members instanceof Map) return members.has(otherId) || members.has(Number(otherId));
+        else if (Array.isArray(members)) return members.some(p => p.id === otherId);
+        else if (typeof members === 'object') return !!members[otherId];
         return false;
     }
 
@@ -121,13 +135,17 @@
         return [MARGONEM_RELATIONS.FRIEND, MARGONEM_RELATIONS.CLAN, MARGONEM_RELATIONS.CLAN_ALLY].includes(player.d.relation);
     }
 
+    function isRandomOrEnemyRelation(player) {
+        if (!player || typeof player.d?.relation !== 'number') return false;
+        return [MARGONEM_RELATIONS.NONE, MARGONEM_RELATIONS.ENEMY, MARGONEM_RELATIONS.CLAN_ENEMY].includes(player.d.relation);
+    }
+
     function isInRange(player, range) {
         if (!window.Engine.hero || !player || !player.d) return false;
         const heroX = typeof window.Engine.hero.d.rx !== 'undefined' ? window.Engine.hero.d.rx : window.Engine.hero.d.x;
         const heroY = typeof window.Engine.hero.d.ry !== 'undefined' ? window.Engine.hero.d.ry : window.Engine.hero.d.y;
         const playerX = typeof player.d.rx !== 'undefined' ? player.d.rx : player.d.x;
         const playerY = typeof player.d.ry !== 'undefined' ? player.d.ry : player.d.y;
-        
         return Math.abs(heroX - playerX) <= range && Math.abs(heroY - playerY) <= range;
     }
 
@@ -140,18 +158,15 @@
         if (window.Engine.party) {
             let members = typeof window.Engine.party.getMembers === 'function' ? window.Engine.party.getMembers() : window.Engine.party.d;
             if (members instanceof Map) {
-                members.forEach(member => {
-                    if (member && member.nick) partyMemberNicks.add(member.nick.toLowerCase());
-                });
+                members.forEach(member => { if (member && member.nick) partyMemberNicks.add(member.nick.toLowerCase()); });
             } else if (members && typeof members === 'object') {
                 for (const memberId in members) {
-                    if (members[memberId] && members[memberId].nick) {
-                        partyMemberNicks.add(members[memberId].nick.toLowerCase());
-                    }
+                    if (members[memberId] && members[memberId].nick) partyMemberNicks.add(members[memberId].nick.toLowerCase());
                 }
             }
         }
 
+        // POBIERANIE WSZYSTKICH I CAŁKOWICIE LOSOWE SORTOWANIE
         let playersOnMap = Object.values(window.Engine.others.getDrawableList())
             .filter(entry => entry.isPlayer && entry.d && entry.d.id !== window.Engine.hero.d.id && !isInParty(entry.d.id) && !is_he_in_any_party(entry))
             .map(entry => ({ p: entry, sort: Math.random() }))
@@ -173,6 +188,7 @@
                 shouldInvite = true;
             }
 
+            // Twarde wymuszenie 1 kratki (Jeżeli "Grupa z kratki" jest włączone, ucinamy wszystko poza nią)
             if (currentSettings.InviteNear && !isInRange(player, 1)) {
                 shouldInvite = false;
             }
@@ -243,6 +259,7 @@
                     if (currentSettings.acceptFriend && inviterRelation === MARGONEM_RELATIONS.FRIEND) shouldAccept = true;
                     if (currentSettings.acceptOthers && (inviterRelation === MARGONEM_RELATIONS.NONE || inviterRelation === MARGONEM_RELATIONS.ENEMY || inviterRelation === MARGONEM_RELATIONS.CLAN_ENEMY)) shouldAccept = true;
                 } else {
+                    // Akceptacja "w ciemno" gracza z innej mapy, pod warunkiem włączonego klanu/znajomego
                     if (currentSettings.acceptClan || currentSettings.acceptFriend) {
                         shouldAccept = true;
                     }
@@ -325,12 +342,12 @@
             </div>
 
             <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}" id="zap-randoms-checkbox" title="Zapraszaj wszystkich graczy"></div>
+                <div class="baddonz-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}" id="zap-randoms-checkbox"></div>
                 <span class="baddonz-text" style="padding:0;">Zapraszaj randomów obok</span>
             </div>
 
             <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox ${currentSettings.InviteNear ? 'active' : ''}" id="zap-from-square-checkbox" title="Przydatne na tytanów"></div>
+                <div class="baddonz-checkbox ${currentSettings.InviteNear ? 'active' : ''}" id="zap-from-square-checkbox"></div>
                 <span class="baddonz-text" style="padding:0;">Grupa z kratki (inne relacje)</span>
             </div>
 
