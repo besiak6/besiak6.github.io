@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Szybka Grupa baddonz
-// @version       1.0
+// @version       05.08.2025
 // @description   Szybka Grupa
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -121,11 +121,6 @@
         return [MARGONEM_RELATIONS.FRIEND, MARGONEM_RELATIONS.CLAN, MARGONEM_RELATIONS.CLAN_ALLY].includes(player.d.relation);
     }
 
-    function isRandomOrEnemyRelation(player) {
-        if (!player || typeof player.d?.relation !== 'number') return false;
-        return [MARGONEM_RELATIONS.NONE, MARGONEM_RELATIONS.ENEMY, MARGONEM_RELATIONS.CLAN_ENEMY].includes(player.d.relation);
-    }
-
     function isInRange(player, range) {
         if (!window.Engine.hero || !player || !player.d) return false;
         const heroX = typeof window.Engine.hero.d.rx !== 'undefined' ? window.Engine.hero.d.rx : window.Engine.hero.d.x;
@@ -157,23 +152,28 @@
             }
         }
 
-        let playersOnMap = Object.values(window.Engine.others.getDrawableList()).filter(entry =>
-            entry.isPlayer && entry.d && entry.d.id !== window.Engine.hero.d.id && !isInParty(entry.d.id) && !is_he_in_any_party(entry)
-        );
+        let playersOnMap = Object.values(window.Engine.others.getDrawableList())
+            .filter(entry => entry.isPlayer && entry.d && entry.d.id !== window.Engine.hero.d.id && !isInParty(entry.d.id) && !is_he_in_any_party(entry))
+            .map(entry => ({ p: entry, sort: Math.random() }))
+            .sort((a, b) => a.sort - b.sort)
+            .map(obj => obj.p);
 
         playersOnMap.forEach(player => {
             const lowerCasePlayerNick = player.d.nick.toLowerCase();
             if (partyMemberNicks.has(lowerCasePlayerNick)) return;
             if (idInvites.some(invite => invite.type === 'id' && invite.value === player.d.id)) return;
 
-            let shouldInvite = true;
+            let shouldInvite = false;
 
-            if (isRandomOrEnemyRelation(player)) {
-                if (!isInRange(player, 1)) shouldInvite = false;
-                if (!currentSettings.InviteRandoms) shouldInvite = false;
+            if (currentSettings.InviteRandoms) {
+                shouldInvite = true;
             } else if (isFriendlyRelation(player)) {
                 shouldInvite = true;
-            } else {
+            } else if (currentSettings.InviteNear && isInRange(player, 1)) {
+                shouldInvite = true;
+            }
+
+            if (currentSettings.InviteNear && !isInRange(player, 1)) {
                 shouldInvite = false;
             }
 
@@ -233,30 +233,34 @@
                     }
                 }
 
+                let shouldAccept = false;
+                let shouldReject = false;
+
                 if (foundInviter) {
                     const inviterRelation = foundInviter.d.relation;
-                    let shouldAccept = false;
-                    let shouldReject = false;
-
                     if (currentSettings.acceptClan && inviterRelation === MARGONEM_RELATIONS.CLAN) shouldAccept = true;
                     if (currentSettings.acceptAlly && inviterRelation === MARGONEM_RELATIONS.CLAN_ALLY) shouldAccept = true;
                     if (currentSettings.acceptFriend && inviterRelation === MARGONEM_RELATIONS.FRIEND) shouldAccept = true;
                     if (currentSettings.acceptOthers && (inviterRelation === MARGONEM_RELATIONS.NONE || inviterRelation === MARGONEM_RELATIONS.ENEMY || inviterRelation === MARGONEM_RELATIONS.CLAN_ENEMY)) shouldAccept = true;
-
-                    if (shouldAccept) {
-                        window._g(eventData[0].re + "1");
-                    } else if (currentSettings.rejectUnchecked) {
-                        shouldReject = true;
-                        window._g(eventData[0].re + "0");
+                } else {
+                    if (currentSettings.acceptClan || currentSettings.acceptFriend) {
+                        shouldAccept = true;
                     }
+                }
 
-                    if (shouldAccept || shouldReject) {
-                        if (typeof window.closeModal === "function") window.closeModal();
-                        if (eventData[1] && eventData[1].$ && typeof eventData[1].$.remove === 'function') {
-                            eventData[1].$.remove();
-                            if (eventData[1].$backdrop && typeof eventData[1].$backdrop.remove === 'function') {
-                                eventData[1].$backdrop.remove();
-                            }
+                if (shouldAccept) {
+                    window._g(eventData[0].re + "1");
+                } else if (currentSettings.rejectUnchecked) {
+                    shouldReject = true;
+                    window._g(eventData[0].re + "0");
+                }
+
+                if (shouldAccept || shouldReject) {
+                    if (typeof window.closeModal === "function") window.closeModal();
+                    if (eventData[1] && eventData[1].$ && typeof eventData[1].$.remove === 'function') {
+                        eventData[1].$.remove();
+                        if (eventData[1].$backdrop && typeof eventData[1].$backdrop.remove === 'function') {
+                            eventData[1].$backdrop.remove();
                         }
                     }
                 }
