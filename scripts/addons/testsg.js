@@ -14,7 +14,7 @@
 
     const styleSheet = document.createElement("style");
     styleSheet.type = "text/css";
-    styleSheet.id = "zap-custom-styles";
+    styleSheet.className = "zap-custom-styles";
     styleSheet.innerText = `
         .baddonz-zap-wnd { width:195px; min-width:195px; }
         .baddonz-zap-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
@@ -24,7 +24,7 @@
         .baddonz-grid-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px 5px; width: 100%; box-sizing: border-box; }
         .baddonz-zap-wnd .baddonz-input.compact { width: 45px !important; height: 18px !important; line-height: 16px !important; padding: 1px 2px !important; font-size: 11px !important; text-align: center; margin: 0; }
     `;
-    if (!document.getElementById("zap-custom-styles")) document.head.appendChild(styleSheet);
+    if (!document.querySelector(".zap-custom-styles")) document.head.appendChild(styleSheet);
 
     const MARGONEM_RELATIONS = {
         NONE: 1, FRIEND: 2, ENEMY: 3, CLAN: 4, CLAN_ALLY: 5, CLAN_ENEMY: 6
@@ -82,8 +82,6 @@
         if (!currentSettings.SelectedProfessions) {
             currentSettings.SelectedProfessions = { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true };
         }
-        
-        if (currentSettings.inviteKey === 'space' || currentSettings.inviteKey === ' ') currentSettings.inviteKey = 'b';
     }
 
     function saveSettings() {
@@ -281,7 +279,7 @@
 
     function handleKeyDown(e) {
         if (!currentSettings.enabled) return;
-        const zapKeybindInput = uiWindowElement ? uiWindowElement.querySelector("#zap-keybind-input") : null;
+        const zapKeybindInput = uiWindowElement ? uiWindowElement.querySelector(".zap-keybind-input") : null;
 
         if (keybindInputActive && zapKeybindInput) {
             e.preventDefault();
@@ -317,7 +315,7 @@
             Object.keys(PROFESSION_NAMES).forEach(code => {
                 html += `
                     <div class="baddonz-label-wrapper prof-row-${code}" style="justify-content: flex-start; align-items: center; gap: 4px;">
-                        <div class="baddonz-checkbox" id="prof-checkbox-${code}"></div>
+                        <div class="baddonz-checkbox prof-checkbox-${code}"></div>
                         <div class="baddonz-text" style="padding: 0; font-size: 11px;">${code.toUpperCase()}</div>
                     </div>
                 `;
@@ -327,57 +325,57 @@
 
         const bodyHtml = `
             <div class="baddonz-setting-row" style="margin-bottom: 4px !important; display: flex; align-items: center;">
-                <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="zap-checkbox"></div>
+                <div class="baddonz-checkbox zap-checkbox ${currentSettings.enabled ? 'active' : ''}"></div>
                 <span class="baddonz-text" style="padding: 0; margin-left: 5px;">Szybka Grupa</span>
-                <input type="text" class="baddonz-input keybind" id="zap-keybind-input" value="${currentSettings.inviteKey.toUpperCase()}" readonly style="width: 50px; height: 20px; line-height: 18px; font-size: 11px; padding: 1px 0; margin-left: auto;">
+                <input type="text" class="baddonz-input keybind zap-keybind-input" value="${currentSettings.inviteKey.toUpperCase()}" readonly style="width: 50px; height: 20px; line-height: 18px; font-size: 11px; padding: 1px 0; margin-left: auto;">
             </div>
 
             <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}" id="zap-randoms-checkbox"></div>
+                <div class="baddonz-checkbox zap-randoms-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}"></div>
                 <span class="baddonz-text" style="padding:0;">Zapraszaj randomów obok</span>
             </div>
 
             <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox ${currentSettings.InviteNear ? 'active' : ''}" id="zap-from-square-checkbox"></div>
+                <div class="baddonz-checkbox zap-from-square-checkbox ${currentSettings.InviteNear ? 'active' : ''}"></div>
                 <span class="baddonz-text" style="padding:0;">Grupa z kratki (inne relacje)</span>
             </div>
 
             <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox ${currentSettings.InvitebyLevel ? 'active' : ''}" id="zap-by-level-checkbox"></div>
+                <div class="baddonz-checkbox zap-by-level-checkbox ${currentSettings.InvitebyLevel ? 'active' : ''}"></div>
                 <span class="baddonz-text" style="padding:0;">Grupa po levelu</span>
             </div>
 
-            <div id="zap-level-range-section" style="display: ${currentSettings.InvitebyLevel ? 'flex' : 'none'}; flex-direction: row; align-items: center; justify-content: center; gap: 5px; margin-bottom: 2px; width: 100%;">
-                <input type="number" class="baddonz-input compact" id="zap-min-level-input" value="${currentSettings.minLevel}" min="0" max="500" placeholder="Od">
+            <div class="zap-level-range-section" style="display: ${currentSettings.InvitebyLevel ? 'flex' : 'none'}; flex-direction: row; align-items: center; justify-content: center; gap: 5px; margin-bottom: 2px; width: 100%;">
+                <input type="number" class="baddonz-input compact zap-min-level-input" value="${currentSettings.minLevel}" min="0" max="500" placeholder="Od">
                 <span style="color: #fff; font-size: 16px; line-height: 1;">-</span>
-                <input type="number" class="baddonz-input compact" id="zap-max-level-input" value="${currentSettings.maxLevel}" min="0" max="500" placeholder="Do">
+                <input type="number" class="baddonz-input compact zap-max-level-input" value="${currentSettings.maxLevel}" min="0" max="500" placeholder="Do">
             </div>
 
             <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox ${currentSettings.FilterbyProfession ? 'active' : ''}" id="zap-filter-by-profession-checkbox"></div>
+                <div class="baddonz-checkbox zap-filter-by-profession-checkbox ${currentSettings.FilterbyProfession ? 'active' : ''}"></div>
                 <span class="baddonz-text" style="padding:0;">Grupa po profesjach</span>
             </div>
 
-            <div id="zap-profession-filter-section" class="baddonz-grid-3col" style="display: ${currentSettings.FilterbyProfession ? 'grid' : 'none'}; width: 100%; margin-bottom: 2px;">
+            <div class="baddonz-grid-3col zap-profession-filter-section" style="display: ${currentSettings.FilterbyProfession ? 'grid' : 'none'}; width: 100%; margin-bottom: 2px;">
                 ${createProfessionsCheckboxes()}
             </div>
 
             <hr style="width: 100%; border-color: #303030;">
 
             <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox ${currentSettings.autoAcceptEnabled ? 'active' : ''}" id="zap-auto-accept-checkbox"></div>
+                <div class="baddonz-checkbox zap-auto-accept-checkbox ${currentSettings.autoAcceptEnabled ? 'active' : ''}"></div>
                 <span class="baddonz-text" style="padding:0;">Auto akceptacja zaproszeń</span>
             </div>
 
-            <div id="zap-accept-options-section" class="baddonz-flex column" style="display: ${currentSettings.autoAcceptEnabled ? 'flex' : 'none'}; width: 100%; gap: 2px;">
+            <div class="baddonz-flex column zap-accept-options-section" style="display: ${currentSettings.autoAcceptEnabled ? 'flex' : 'none'}; width: 100%; gap: 2px;">
                 <div class="baddonz-grid-2col">
-                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ${currentSettings.acceptFriend ? 'active' : ''}" id="accept-friend-checkbox"></div><span class="baddonz-text">Znaj</span></div>
-                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ${currentSettings.acceptAlly ? 'active' : ''}" id="accept-ally-checkbox"></div><span class="baddonz-text">Sojusz</span></div>
-                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ${currentSettings.acceptClan ? 'active' : ''}" id="accept-clan-checkbox"></div><span class="baddonz-text">Klan</span></div>
-                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ${currentSettings.acceptOthers ? 'active' : ''}" id="accept-others-checkbox"></div><span class="baddonz-text">Obcy</span></div>
+                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox accept-friend-checkbox ${currentSettings.acceptFriend ? 'active' : ''}"></div><span class="baddonz-text">Znaj</span></div>
+                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox accept-ally-checkbox ${currentSettings.acceptAlly ? 'active' : ''}"></div><span class="baddonz-text">Sojusz</span></div>
+                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox accept-clan-checkbox ${currentSettings.acceptClan ? 'active' : ''}"></div><span class="baddonz-text">Klan</span></div>
+                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox accept-others-checkbox ${currentSettings.acceptOthers ? 'active' : ''}"></div><span class="baddonz-text">Obcy</span></div>
                 </div>
                 <div class="baddonz-setting-row" style="margin-top: 2px; margin-bottom: 0;">
-                    <div class="baddonz-checkbox ${currentSettings.rejectUnchecked ? 'active' : ''}" id="reject-unchecked-checkbox"></div>
+                    <div class="baddonz-checkbox reject-unchecked-checkbox ${currentSettings.rejectUnchecked ? 'active' : ''}"></div>
                     <span class="baddonz-text" style="padding:0;">Odrzucaj zaproszenia</span>
                 </div>
             </div>
@@ -389,28 +387,27 @@
             hasSettings: false,
             hasCollapse: false
         });
-        uiWindowElement.classList.add('baddonz-zap-wnd');
 
-        const zapCheckbox = uiWindowElement.querySelector("#zap-checkbox");
-        const zapKeybindInput = uiWindowElement.querySelector("#zap-keybind-input");
+        const zapCheckbox = uiWindowElement.querySelector(".zap-checkbox");
+        const zapKeybindInput = uiWindowElement.querySelector(".zap-keybind-input");
 
-        const zapRandomsCheckbox = uiWindowElement.querySelector("#zap-randoms-checkbox");
-        const zapFromSquareCheckbox = uiWindowElement.querySelector("#zap-from-square-checkbox");
-        const zapByLevelCheckbox = uiWindowElement.querySelector("#zap-by-level-checkbox");
-        const zapLevelRangeSection = uiWindowElement.querySelector("#zap-level-range-section");
-        const zapMinLevelInput = uiWindowElement.querySelector("#zap-min-level-input");
-        const zapMaxLevelInput = uiWindowElement.querySelector("#zap-max-level-input");
+        const zapRandomsCheckbox = uiWindowElement.querySelector(".zap-randoms-checkbox");
+        const zapFromSquareCheckbox = uiWindowElement.querySelector(".zap-from-square-checkbox");
+        const zapByLevelCheckbox = uiWindowElement.querySelector(".zap-by-level-checkbox");
+        const zapLevelRangeSection = uiWindowElement.querySelector(".zap-level-range-section");
+        const zapMinLevelInput = uiWindowElement.querySelector(".zap-min-level-input");
+        const zapMaxLevelInput = uiWindowElement.querySelector(".zap-max-level-input");
         
-        const zapFilterByProfessionCheckbox = uiWindowElement.querySelector("#zap-filter-by-profession-checkbox");
-        const zapProfessionFilterSection = uiWindowElement.querySelector("#zap-profession-filter-section");
+        const zapFilterByProfessionCheckbox = uiWindowElement.querySelector(".zap-filter-by-profession-checkbox");
+        const zapProfessionFilterSection = uiWindowElement.querySelector(".zap-profession-filter-section");
 
-        const autoAcceptCheckbox = uiWindowElement.querySelector("#zap-auto-accept-checkbox");
-        const acceptOptionsSection = uiWindowElement.querySelector("#zap-accept-options-section");
-        const acceptClanCheckbox = uiWindowElement.querySelector("#accept-clan-checkbox");
-        const acceptAllyCheckbox = uiWindowElement.querySelector("#accept-ally-checkbox");
-        const acceptFriendCheckbox = uiWindowElement.querySelector("#accept-friend-checkbox");
-        const acceptOthersCheckbox = uiWindowElement.querySelector("#accept-others-checkbox");
-        const rejectUncheckedCheckbox = uiWindowElement.querySelector("#reject-unchecked-checkbox");
+        const autoAcceptCheckbox = uiWindowElement.querySelector(".zap-auto-accept-checkbox");
+        const acceptOptionsSection = uiWindowElement.querySelector(".zap-accept-options-section");
+        const acceptClanCheckbox = uiWindowElement.querySelector(".accept-clan-checkbox");
+        const acceptAllyCheckbox = uiWindowElement.querySelector(".accept-ally-checkbox");
+        const acceptFriendCheckbox = uiWindowElement.querySelector(".accept-friend-checkbox");
+        const acceptOthersCheckbox = uiWindowElement.querySelector(".accept-others-checkbox");
+        const rejectUncheckedCheckbox = uiWindowElement.querySelector(".reject-unchecked-checkbox");
 
         zapCheckbox.addEventListener('click', () => {
             currentSettings.enabled = zapCheckbox.classList.toggle('active');
@@ -459,7 +456,7 @@
         });
 
         Object.keys(PROFESSION_NAMES).forEach(profCode => {
-            const checkbox = uiWindowElement.querySelector(`#prof-checkbox-${profCode}`);
+            const checkbox = uiWindowElement.querySelector(`.prof-checkbox-${profCode}`);
             if (checkbox) {
                 if (currentSettings.SelectedProfessions[profCode]) checkbox.classList.add('active');
                 checkbox.addEventListener('click', () => {
@@ -484,6 +481,11 @@
         acceptFriendCheckbox.addEventListener('click', () => { currentSettings.acceptFriend = acceptFriendCheckbox.classList.toggle('active'); saveSettings(); });
         acceptOthersCheckbox.addEventListener('click', () => { currentSettings.acceptOthers = acceptOthersCheckbox.classList.toggle('active'); saveSettings(); });
         rejectUncheckedCheckbox.addEventListener('click', () => { currentSettings.rejectUnchecked = rejectUncheckedCheckbox.classList.toggle('active'); saveSettings(); });
+        
+        if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
+            $(zapRandomsCheckbox).tip("Zapraszaj wszystkich graczy");
+            $(zapFromSquareCheckbox).tip("Przydatne na tytanów");
+        }
     }
 
     function addonInit() {
@@ -514,7 +516,7 @@
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
         if (uiWindowElement) {
-            const zapCheckbox = uiWindowElement.querySelector("#zap-checkbox");
+            const zapCheckbox = uiWindowElement.querySelector(".zap-checkbox");
             if (zapCheckbox) {
                 if (isEnabled) zapCheckbox.classList.add('active');
                 else zapCheckbox.classList.remove('active');
