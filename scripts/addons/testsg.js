@@ -80,7 +80,7 @@
             currentSettings.SelectedProfessions = { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true };
         }
         
-        // MIGARCJA: Jeśli ktoś miał wcześniej spację, zresetuj na "b"
+        // MIGARCJA
         if (currentSettings.inviteKey === 'space') currentSettings.inviteKey = 'b';
     }
 
@@ -126,6 +126,11 @@
     function isFriendlyRelation(player) {
         if (!player || typeof player.d?.relation !== 'number') return false;
         return [MARGONEM_RELATIONS.FRIEND, MARGONEM_RELATIONS.CLAN, MARGONEM_RELATIONS.CLAN_ALLY].includes(player.d.relation);
+    }
+
+    function isRandomOrEnemyRelation(player) {
+        if (!player || typeof player.d?.relation !== 'number') return false;
+        return [MARGONEM_RELATIONS.NONE, MARGONEM_RELATIONS.ENEMY, MARGONEM_RELATIONS.CLAN_ENEMY].includes(player.d.relation);
     }
 
     function isInRange(player, range) {
@@ -283,9 +288,8 @@
                 return;
             }
 
-            // UŻYCIE GLOBALNEJ WALIDACJI BADDONZAPI
-            if (window.BaddonzAPI && !window.BaddonzAPI.isValidHotkey(pressedKey)) return;
-            if (pressedKey.length !== 1) return;
+            // UŻYCIE GLOBALNEJ WALIDACJI Z GŁÓWNEGO SKRYPTU
+            if (window.BaddonzAPI && !window.BaddonzAPI.isValidSingleKey(pressedKey)) return;
 
             currentSettings.inviteKey = pressedKey;
             zapKeybindInput.value = pressedKey.toUpperCase();
@@ -325,12 +329,12 @@
             </div>
 
             <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}" id="zap-randoms-checkbox" title="Zapraszaj wszystkich graczy"></div>
+                <div class="baddonz-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}" id="zap-randoms-checkbox"></div>
                 <span class="baddonz-text" style="padding:0;">Zapraszaj randomów obok</span>
             </div>
 
             <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox ${currentSettings.InviteNear ? 'active' : ''}" id="zap-from-square-checkbox" title="Przydatne na tytanów"></div>
+                <div class="baddonz-checkbox ${currentSettings.InviteNear ? 'active' : ''}" id="zap-from-square-checkbox"></div>
                 <span class="baddonz-text" style="padding:0;">Grupa z kratki (inne relacje)</span>
             </div>
 
