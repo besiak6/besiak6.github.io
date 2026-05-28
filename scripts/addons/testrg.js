@@ -46,7 +46,7 @@
         let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
         currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
 
-        // MIGARCJA: Jeśli ktoś miał wcześniej spację, zresetuj na "n"
+        // MIGARCJA
         if (currentSettings.disbandKey === 'space') currentSettings.disbandKey = 'n';
     }
 
@@ -121,9 +121,8 @@
                 return;
             }
 
-            // UŻYCIE GLOBALNEJ WALIDACJI BADDONZAPI
-            if (window.BaddonzAPI && !window.BaddonzAPI.isValidHotkey(pressedKey)) return;
-            if (pressedKey.length !== 1) return;
+            // UŻYCIE GLOBALNEJ WALIDACJI Z GŁÓWNEGO SKRYPTU
+            if (window.BaddonzAPI && !window.BaddonzAPI.isValidSingleKey(pressedKey)) return;
 
             currentSettings.disbandKey = pressedKey;
             rgKeybindInput.value = pressedKey.toUpperCase();
