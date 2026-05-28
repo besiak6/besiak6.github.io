@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Szybka Grupa baddonz
-// @version       05.08.2025
-// @description   Szybka Grupa (API 2.0 - Oczyszczony)
+// @version       1.0
+// @description   Szybka Grupa
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -34,15 +34,12 @@
         enabled: true,
         windowOpacity: 2,
         windowVisible: true,
-        isExpanded: true,
         inviteKey: "b",
         InviteRandoms: false,
         InviteNear: false,
         InvitebyLevel: false,
         minLevel: 0,
         maxLevel: 500,
-        InvitebyNick: false,
-        specificNicksList: [],
         FilterbyProfession: false,
         SelectedProfessions: { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true },
         autoAcceptEnabled: true,
@@ -128,10 +125,10 @@
     function getPlayersToInvite() {
         if (!window.Engine.others || typeof window.Engine.others.getDrawableList !== 'function') return [];
         
-        const nickInvites = [];
         const idInvites = [];
         const partyMemberNicks = new Set();
 
+        // 1. Zbieramy aktualną drużynę, żeby nie zapraszać tych samych osób
         if (window.Engine.party) {
             let members = typeof window.Engine.party.getMembers === 'function' ? window.Engine.party.getMembers() : window.Engine.party.d;
             if (members instanceof Map) {
@@ -147,30 +144,12 @@
             }
         }
 
-        if (currentSettings.InvitebyNick && currentSettings.specificNicksList.length > 0) {
-            currentSettings.specificNicksList.forEach(nickToInvite => {
-                const lowerCaseNickToInvite = nickToInvite.toLowerCase();
-                if (partyMemberNicks.has(lowerCaseNickToInvite)) return;
-
-                const foundPlayerOnMapFullList = Object.values(window.Engine.others.getDrawableList()).find(p =>
-                    p.isPlayer && p.d && p.d.nick.toLowerCase() === lowerCaseNickToInvite &&
-                    p.d.id !== window.Engine.hero.d.id &&
-                    !isInParty(p.d.id) &&
-                    !is_he_in_any_party(p)
-                );
-
-                if (foundPlayerOnMapFullList) {
-                    idInvites.push({ type: 'id', value: foundPlayerOnMapFullList.d.id });
-                } else {
-                    nickInvites.push({ type: 'nick', value: nickToInvite });
-                }
-            });
-        }
-
+        // 2. Pobieramy poprawnych graczy z mapy
         let playersOnMap = Object.values(window.Engine.others.getDrawableList()).filter(entry =>
             entry.isPlayer && entry.d && entry.d.id !== window.Engine.hero.d.id && !isInParty(entry.d.id) && !is_he_in_any_party(entry)
         );
 
+        // 3. Weryfikujemy każdego gracza
         playersOnMap.forEach(player => {
             const lowerCasePlayerNick = player.d.nick.toLowerCase();
             if (partyMemberNicks.has(lowerCasePlayerNick)) return;
@@ -178,6 +157,7 @@
 
             let shouldInvite = true;
 
+            // Sprawdzanie relacji i odległości
             if (isRandomOrEnemyRelation(player)) {
                 if (!isInRange(player, 1)) shouldInvite = false;
                 if (!currentSettings.InviteRandoms) shouldInvite = false;
@@ -187,6 +167,7 @@
                 shouldInvite = false;
             }
 
+            // Sprawdzanie poziomu
             if (shouldInvite && currentSettings.InvitebyLevel) {
                 const playerLevel = parseInt(player.d.lvl);
                 const minLvl = parseInt(currentSettings.minLevel);
@@ -194,23 +175,24 @@
                 if (isNaN(playerLevel) || playerLevel < minLvl || playerLevel > maxLvl) shouldInvite = false;
             }
 
+            // Sprawdzanie profesji
             if (shouldInvite && currentSettings.FilterbyProfession) {
                 const playerProf = player.d.prof;
                 if (!currentSettings.SelectedProfessions[playerProf]) shouldInvite = false;
             }
 
+            // Dodanie do listy
             if (shouldInvite) {
                 idInvites.push({ type: 'id', value: player.d.id });
             }
         });
 
-        return [...nickInvites, ...idInvites];
+        return idInvites;
     }
 
     function invitePlayer(inviteData) {
         if (!isChatFocused()) {
             if (inviteData.type === 'id') window._g("party&a=inv&id=" + inviteData.value);
-            else if (inviteData.type === 'nick') window._g("party&a=inv&nick=" + inviteData.value);
         }
     }
 
@@ -331,94 +313,86 @@
         };
 
         const bodyHtml = `
-            <div class="baddonz-setting-row" style="margin-bottom: 2px;">
+            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px; margin-bottom: 2px;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="zap-checkbox"></div>
-                <input type="text" class="baddonz-input keybind" id="zap-keybind-input" value="${currentSettings.inviteKey === "space" ? "[SPACJA]" : currentSettings.inviteKey.toUpperCase()}" readonly style="width: 100px; height: 20px; line-height: 18px; font-size: 11px; padding: 1px 0;">
+                <div class="baddonz-text" style="padding: 0;">Szybka Grupa</div>
+                <input type="text" class="baddonz-input keybind compact" id="zap-keybind-input" value="${currentSettings.inviteKey === "space" ? "[SPACJA]" : currentSettings.inviteKey.toUpperCase()}" readonly style="width: 80px; margin-left: auto;">
             </div>
 
-            <div id="zap-expanded-controls" style="display: ${currentSettings.isExpanded ? 'flex' : 'none'}; flex-direction: column; width: 100%;">
-                
-                <div class="baddonz-setting-row">
-                    <div class="baddonz-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}" id="zap-randoms-checkbox" title="Zapraszaj wszystkich graczy"></div>
-                    <span class="baddonz-text" style="padding:0;">Randomi na ekranie</span>
-                </div>
+            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+                <div class="baddonz-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}" id="zap-randoms-checkbox" title="Zapraszaj wszystkich graczy"></div>
+                <div class="baddonz-text" style="padding: 0;">Randomi na ekranie</div>
+            </div>
 
-                <div class="baddonz-setting-row">
-                    <div class="baddonz-checkbox ${currentSettings.InviteNear ? 'active' : ''}" id="zap-from-square-checkbox" title="Przydatne na tytanów"></div>
-                    <span class="baddonz-text" style="padding:0;">Z kratki obok</span>
-                </div>
+            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+                <div class="baddonz-checkbox ${currentSettings.InviteNear ? 'active' : ''}" id="zap-from-square-checkbox" title="Przydatne na tytanów"></div>
+                <div class="baddonz-text" style="padding: 0;">Z kratki obok</div>
+            </div>
 
-                <div class="baddonz-setting-row">
-                    <div class="baddonz-checkbox ${currentSettings.InvitebyLevel ? 'active' : ''}" id="zap-by-level-checkbox"></div>
-                    <span class="baddonz-text" style="padding:0;">Po levelu</span>
-                </div>
+            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+                <div class="baddonz-checkbox ${currentSettings.InvitebyLevel ? 'active' : ''}" id="zap-by-level-checkbox"></div>
+                <div class="baddonz-text" style="padding: 0;">Po levelu</div>
+            </div>
 
-                <div id="zap-level-range-section" style="display: ${currentSettings.InvitebyLevel ? 'flex' : 'none'}; flex-direction: row; align-items: center; gap: 5px; margin-bottom: 5px; width: 100%;">
-                    <input type="number" class="baddonz-input compact" id="zap-min-level-input" value="${currentSettings.minLevel}" min="0" max="500" placeholder="Od" style="flex-grow: 1; margin: 0;">
-                    <span style="color: #fff; font-size: 16px; line-height: 1;">-</span>
-                    <input type="number" class="baddonz-input compact" id="zap-max-level-input" value="${currentSettings.maxLevel}" min="0" max="500" placeholder="Do" style="flex-grow: 1; margin: 0;">
-                </div>
+            <div id="zap-level-range-section" style="display: ${currentSettings.InvitebyLevel ? 'flex' : 'none'}; flex-direction: row; align-items: center; gap: 5px; margin-top: -3px; margin-bottom: 2px;">
+                <input type="number" class="baddonz-input compact" id="zap-min-level-input" value="${currentSettings.minLevel}" min="0" max="500" placeholder="Od" style="flex-grow: 1; margin: 0;">
+                <span style="color: #fff; font-size: 16px; line-height: 1;">-</span>
+                <input type="number" class="baddonz-input compact" id="zap-max-level-input" value="${currentSettings.maxLevel}" min="0" max="500" placeholder="Do" style="flex-grow: 1; margin: 0;">
+            </div>
 
-                <div class="baddonz-setting-row">
-                    <div class="baddonz-checkbox ${currentSettings.FilterbyProfession ? 'active' : ''}" id="zap-filter-by-profession-checkbox"></div>
-                    <span class="baddonz-text" style="padding:0;">Po profesji</span>
-                </div>
+            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+                <div class="baddonz-checkbox ${currentSettings.FilterbyProfession ? 'active' : ''}" id="zap-filter-by-profession-checkbox"></div>
+                <div class="baddonz-text" style="padding: 0;">Po profesji</div>
+            </div>
 
-                <div id="zap-profession-filter-section" class="baddonz-flex" style="display: ${currentSettings.FilterbyProfession ? 'flex' : 'none'}; justify-content: space-around; width: 100%; margin-bottom: 5px;">
-                    ${createProfessionsCheckboxes()}
-                </div>
+            <div id="zap-profession-filter-section" class="baddonz-flex" style="display: ${currentSettings.FilterbyProfession ? 'flex' : 'none'}; justify-content: space-around; width: 100%; margin-bottom: 2px;">
+                ${createProfessionsCheckboxes()}
+            </div>
 
-                <div class="baddonz-setting-row">
-                    <div class="baddonz-checkbox ${currentSettings.InvitebyNick ? 'active' : ''}" id="zap-specific-nicks-checkbox"></div>
-                    <span class="baddonz-text" style="padding:0;">Po nickach</span>
-                </div>
+            <hr style="width: 100%; border-color: #303030; margin: 4px 0;">
 
-                <div id="zap-specific-nicks-list-section" class="baddonz-flex column" style="display: ${currentSettings.InvitebyNick ? 'flex' : 'none'}; gap: 5px; width: 100%;">
-                    <hr style="width: 100%; border-color: #303030; margin: 0;">
-                    <div class="baddonz-input-addbutton">
-                        <input type="text" class="baddonz-input" id="zap-specific-nick-input" placeholder="Wpisz nick" maxlength="24">
-                        <button class="baddonz-button" id="zap-add-nick-btn">+</button>
+            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+                <div class="baddonz-checkbox ${currentSettings.autoAcceptEnabled ? 'active' : ''}" id="zap-auto-accept-checkbox"></div>
+                <div class="baddonz-text" style="padding: 0;">Auto akceptacja (od kogo)</div>
+            </div>
+
+            <div id="zap-accept-options-section" class="baddonz-flex column" style="display: ${currentSettings.autoAcceptEnabled ? 'flex' : 'none'}; gap: 3px;">
+                <div class="baddonz-grid-2col">
+                    <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+                        <div class="baddonz-checkbox ${currentSettings.acceptFriend ? 'active' : ''}" id="accept-friend-checkbox"></div><span class="baddonz-text" style="padding:0;">Znaj</span>
                     </div>
-                    <div class="baddonz-scroll" id="zap-specific-nicks-list" style="overflow-y: auto; max-height: 86px; width: 100%; box-sizing: border-box;"></div>
-                </div>
-
-                <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
-
-                <div class="baddonz-setting-row">
-                    <div class="baddonz-checkbox ${currentSettings.autoAcceptEnabled ? 'active' : ''}" id="zap-auto-accept-checkbox"></div>
-                    <span class="baddonz-text" style="padding:0;">Auto akceptacja (od kogo)</span>
-                </div>
-
-                <div id="zap-accept-options-section" class="baddonz-flex column" style="display: ${currentSettings.autoAcceptEnabled ? 'flex' : 'none'}; width: 100%;">
-                    <div class="baddonz-grid-2col">
-                        <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ${currentSettings.acceptFriend ? 'active' : ''}" id="accept-friend-checkbox"></div><span class="baddonz-text">Znaj</span></div>
-                        <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ${currentSettings.acceptAlly ? 'active' : ''}" id="accept-ally-checkbox"></div><span class="baddonz-text">Sojusz</span></div>
-                        <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ${currentSettings.acceptClan ? 'active' : ''}" id="accept-clan-checkbox"></div><span class="baddonz-text">Klan</span></div>
-                        <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ${currentSettings.acceptOthers ? 'active' : ''}" id="accept-others-checkbox"></div><span class="baddonz-text">Obcy</span></div>
+                    <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+                        <div class="baddonz-checkbox ${currentSettings.acceptAlly ? 'active' : ''}" id="accept-ally-checkbox"></div><span class="baddonz-text" style="padding:0;">Sojusz</span>
                     </div>
-                    <div class="baddonz-setting-row" style="margin-top: 5px;">
-                        <div class="baddonz-checkbox ${currentSettings.rejectUnchecked ? 'active' : ''}" id="reject-unchecked-checkbox"></div>
-                        <span class="baddonz-text" style="padding:0;">Odrzucaj nieodznaczone</span>
+                    <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+                        <div class="baddonz-checkbox ${currentSettings.acceptClan ? 'active' : ''}" id="accept-clan-checkbox"></div><span class="baddonz-text" style="padding:0;">Klan</span>
                     </div>
+                    <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+                        <div class="baddonz-checkbox ${currentSettings.acceptOthers ? 'active' : ''}" id="accept-others-checkbox"></div><span class="baddonz-text" style="padding:0;">Obcy</span>
+                    </div>
+                </div>
+                <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px; margin-top: 2px;">
+                    <div class="baddonz-checkbox ${currentSettings.rejectUnchecked ? 'active' : ''}" id="reject-unchecked-checkbox"></div>
+                    <span class="baddonz-text" style="padding:0;">Odrzucaj nieodznaczone</span>
                 </div>
             </div>
         `;
 
+        // Szerokość dopasowana do AutoX = 195px
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Szybka Grupa", bodyHtml, {
             width: '195px',
             customId: 'baddonz-zap-wnd',
             hasSettings: false,
-            hasCollapse: true,
-            hasClose: false
+            hasCollapse: false, // Usunięto zwiń/rozwiń
+            hasClose: true      // Zostawiono ZAMKNIJ
         });
 
         const zapCheckbox = uiWindowElement.querySelector("#zap-checkbox");
         const zapKeybindInput = uiWindowElement.querySelector("#zap-keybind-input");
-        const zapCollapsedBtn = uiWindowElement.querySelector(".baddonz-collapsed");
-        const zapExpandedControls = uiWindowElement.querySelector("#zap-expanded-controls");
 
         const zapRandomsCheckbox = uiWindowElement.querySelector("#zap-randoms-checkbox");
         const zapFromSquareCheckbox = uiWindowElement.querySelector("#zap-from-square-checkbox");
+        
         const zapByLevelCheckbox = uiWindowElement.querySelector("#zap-by-level-checkbox");
         const zapLevelRangeSection = uiWindowElement.querySelector("#zap-level-range-section");
         const zapMinLevelInput = uiWindowElement.querySelector("#zap-min-level-input");
@@ -426,12 +400,6 @@
         
         const zapFilterByProfessionCheckbox = uiWindowElement.querySelector("#zap-filter-by-profession-checkbox");
         const zapProfessionFilterSection = uiWindowElement.querySelector("#zap-profession-filter-section");
-
-        const zapSpecificNicksCheckbox = uiWindowElement.querySelector("#zap-specific-nicks-checkbox");
-        const zapSpecificNicksListSection = uiWindowElement.querySelector("#zap-specific-nicks-list-section");
-        const zapSpecificNickInput = uiWindowElement.querySelector("#zap-specific-nick-input");
-        const zapAddNickBtn = uiWindowElement.querySelector("#zap-add-nick-btn");
-        const zapSpecificNicksList = uiWindowElement.querySelector("#zap-specific-nicks-list");
 
         const autoAcceptCheckbox = uiWindowElement.querySelector("#zap-auto-accept-checkbox");
         const acceptOptionsSection = uiWindowElement.querySelector("#zap-accept-options-section");
@@ -445,16 +413,6 @@
             currentSettings.enabled = zapCheckbox.classList.toggle('active');
             saveSettings();
         });
-
-        if (zapCollapsedBtn) {
-            if (typeof $ === 'function' && typeof $.fn.tip === 'function') $(zapCollapsedBtn).tip(currentSettings.isExpanded ? "Zwiń" : "Rozwiń");
-            zapCollapsedBtn.addEventListener('click', () => {
-                currentSettings.isExpanded = !currentSettings.isExpanded;
-                zapExpandedControls.style.display = currentSettings.isExpanded ? 'flex' : 'none';
-                if (typeof $ === 'function' && typeof $.fn.tip === 'function') $(zapCollapsedBtn).tip(currentSettings.isExpanded ? "Zwiń" : "Rozwiń");
-                saveSettings();
-            });
-        }
 
         zapKeybindInput.addEventListener('click', () => {
             keybindInputActive = true;
@@ -507,78 +465,6 @@
                 });
             }
         });
-
-        zapSpecificNicksCheckbox.addEventListener('click', () => {
-            currentSettings.InvitebyNick = zapSpecificNicksCheckbox.classList.toggle('active');
-            zapSpecificNicksListSection.style.display = currentSettings.InvitebyNick ? 'flex' : 'none';
-            saveSettings();
-        });
-
-        const renderSpecificNicks = () => {
-            zapSpecificNicksList.innerHTML = '';
-            currentSettings.specificNicksList.forEach((nick, index) => {
-                const nickEntry = document.createElement('div');
-                nickEntry.className = 'baddonz-list-item';
-                nickEntry.innerHTML = `
-                    <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="24">
-                    <div class="baddonz-icon baddonz-close-button baddonz-remove-x" data-index="${index}" title="Usuń z listy"></div>
-                `;
-                zapSpecificNicksList.appendChild(nickEntry);
-            });
-        };
-
-        const addSpecificNick = () => {
-            const nick = zapSpecificNickInput.value.trim();
-            if (nick && !currentSettings.specificNicksList.some(n => n.toLowerCase() === nick.toLowerCase())) {
-                currentSettings.specificNicksList.push(nick);
-                zapSpecificNickInput.value = '';
-                renderSpecificNicks();
-                saveSettings();
-                zapSpecificNicksList.scrollTop = zapSpecificNicksList.scrollHeight;
-            }
-        };
-
-        zapAddNickBtn.addEventListener('click', addSpecificNick);
-        zapSpecificNickInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addSpecificNick(); });
-
-        zapSpecificNicksList.addEventListener('click', (e) => {
-            if (e.target.classList.contains('baddonz-remove-x')) {
-                currentSettings.specificNicksList.splice(parseInt(e.target.dataset.index), 1);
-                saveSettings();
-                renderSpecificNicks();
-            } else if (e.target.tagName === 'INPUT' && e.target.classList.contains('baddonz-input')) {
-                const indexToEdit = parseInt(e.target.dataset.index);
-                const originalNick = currentSettings.specificNicksList[indexToEdit];
-                
-                e.target.readOnly = false;
-                e.target.focus();
-                e.target.setSelectionRange(e.target.value.length, e.target.value.length);
-
-                const handleBlur = () => {
-                    e.target.readOnly = true;
-                    const newNick = e.target.value.trim();
-                    if (newNick && newNick.toLowerCase() !== originalNick.toLowerCase()) {
-                        const isDuplicate = currentSettings.specificNicksList.some((n, i) => i !== indexToEdit && n.toLowerCase() === newNick.toLowerCase());
-                        if (!isDuplicate) currentSettings.specificNicksList[indexToEdit] = newNick;
-                        else e.target.value = originalNick;
-                    } else if (!newNick) {
-                        currentSettings.specificNicksList.splice(indexToEdit, 1);
-                    } else {
-                        e.target.value = originalNick;
-                    }
-                    saveSettings();
-                    renderSpecificNicks();
-                    e.target.removeEventListener('blur', handleBlur);
-                    e.target.removeEventListener('keydown', handleKeyDownEdit);
-                };
-
-                const handleKeyDownEdit = (ev) => { if (ev.key === 'Enter') e.target.blur(); };
-                e.target.addEventListener('blur', handleBlur);
-                e.target.addEventListener('keydown', handleKeyDownEdit);
-            }
-        });
-
-        renderSpecificNicks();
 
         autoAcceptCheckbox.addEventListener('click', () => {
             currentSettings.autoAcceptEnabled = autoAcceptCheckbox.classList.toggle('active');
