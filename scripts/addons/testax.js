@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          AutoX baddonz
-// @version       27.05.2026
+// @version       28.05.2026
 // @description   autox
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -34,12 +34,14 @@
         settingsWindowVisible: false,
         windowSettingsOpacity: 2,
         isExpanded: false,
-        levelRange: "0-500",
         fastFight: false,
         attackFriends: false,
         attackClan: false,
         enableClanOptions: true,
         ignoreClans: "692,164,3,1517,256,58,1386,1504,1925,1757,758,2230,27,2141,10,1807,1029,2274,1459,1071,9,1829,516,2302,71,622,2761",
+        alwaysAttackClans: "",
+
+        levelRange: "0-500",
         enableNickOptions: false,
         ignoreNicks: "",
         alwaysAttackNicks: ""
@@ -50,16 +52,49 @@
     let BADDONZ_FAST_FIGHT_SENT = false;
     let BADDONZ_FAST_FIGHT_INTERVAL = null;
     let BADDONZ_TRACK_INTERVAL = null;
+    let isEngineObserved = false;
     let isEndBattleHooked = false;
     let parsedLevelRange = { min: 0, max: 500 };
 
+    class Emitter {
+        constructor() { this.events = {}; }
+        on(event, listener) { if (typeof this.events[event] !== 'object') this.events[event] = []; this.events[event].push(listener); return () => this.off(event, listener); }
+        off(event, listener) { if (typeof this.events[event] === 'object') { const idx = this.events[event].indexOf(listener); if (idx > -1) this.events[event].splice(idx, 1); } }
+        emit(event, ...args) { if (typeof this.events[event] === 'object') this.events[event].forEach(listener => listener.apply(this, args)); }
+        observe(obj, key, callback) { const originalFunction = obj[key]; const originalContext = obj; obj[key] = (...args) => { callback.apply(this, args); return originalFunction.apply(originalContext, args); }; }
+    }
+    const emitter = new Emitter();
+
     function loadSettings() {
-        if (window.BaddonzAPI) currentSettings = { ...currentSettings, ...window.BaddonzAPI.getAddonSettings(ADDON_ID) };
+        if (!window.BaddonzAPI) return;
+        const accId = window.BaddonzAPI.accountId;
+
+        let accSettings = {};
+        try {
+            accSettings = JSON.parse(localStorage.getItem('Baddonz_AX_Acc_' + accId)) || {};
+        } catch (e) {}
+
+        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+
+        currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
         parsedLevelRange = parseLevelRange(currentSettings.levelRange) || { min: 0, max: 500 };
     }
 
     function saveSettings() {
-        if (window.BaddonzAPI) window.BaddonzAPI.saveAddonSettings(ADDON_ID, currentSettings);
+        if (!window.BaddonzAPI) return;
+        const accId = window.BaddonzAPI.accountId;
+
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'settingsWindowVisible', 'windowSettingsOpacity', 'isExpanded', 'fastFight', 'attackFriends', 'attackClan', 'enableClanOptions', 'ignoreClans', 'alwaysAttackClans'];
+        const charKeys = ['levelRange', 'enableNickOptions', 'ignoreNicks', 'alwaysAttackNicks'];
+
+        let accSettings = {};
+        let charSettings = {};
+
+        accKeys.forEach(k => accSettings[k] = currentSettings[k]);
+        charKeys.forEach(k => charSettings[k] = currentSettings[k]);
+
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
+        localStorage.setItem('Baddonz_AX_Acc_' + accId, JSON.stringify(accSettings));
     }
 
     function parseLevelRange(str) {
@@ -101,7 +136,7 @@
         return false;
     }
 
-    function isInParty(other) {
+    function isInParty(otherId) {
         if (!window.Engine || !window.Engine.party) return false;
         
         let members = null;
@@ -114,11 +149,11 @@
         if (!members) return false;
 
         if (members instanceof Map) {
-            return members.has(other.id) || members.has(Number(other.id));
+            return members.has(otherId) || members.has(Number(otherId));
         } else if (Array.isArray(members)) {
-            return members.some(p => p.id === other.id);
+            return members.some(p => p.id === otherId);
         } else if (typeof members === 'object') {
-            return !!members[other.id];
+            return !!members[otherId];
         }
         return false;
     }
@@ -138,10 +173,15 @@
 
         let otherClanId = other.clan && typeof other.clan === 'object' ? other.clan.id : null;
         let otherClanName = other.clan && (typeof other.clan === 'object' ? other.clan.name : other.clan);
+        
         const ignoreClansList = currentSettings.ignoreClans.split(',').map(s => s.trim()).filter(Boolean);
+        const alwaysAttackClansList = currentSettings.alwaysAttackClans.split(',').map(s => s.trim()).filter(Boolean);
+
         const isClanIgnored = (id, name) => (id && ignoreClansList.includes(id.toString())) || (name && ignoreClansList.includes(name));
+        const isClanAlwaysAttacked = (id, name) => (id && alwaysAttackClansList.includes(id.toString())) || (name && alwaysAttackClansList.includes(name));
 
         if (currentSettings.enableClanOptions) {
+            if ((otherClanId || otherClanName) && isClanAlwaysAttacked(otherClanId, otherClanName)) return true;
             if ((otherClanId || otherClanName) && isClanIgnored(otherClanId, otherClanName)) return false;
         }
 
@@ -241,6 +281,8 @@
             <div id="ax-clan-options" style="display: ${currentSettings.enableClanOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
                 <span class="baddonz-text" style="padding:0;">Nigdy nie atakuj klanów:</span>
                 <textarea class="baddonz-textarea baddonz-scroll" id="ax-ignore-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.ignoreClans}</textarea>
+                <span class="baddonz-text" style="padding:0;">Zawsze atakuj klany:</span>
+                <textarea class="baddonz-textarea baddonz-scroll" id="ax-always-attack-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.alwaysAttackClans}</textarea>
             </div>
 
             <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
@@ -354,6 +396,7 @@
         chbClanOpt.addEventListener('click', () => { currentSettings.enableClanOptions = chbClanOpt.classList.toggle('active'); divClanOpt.style.display = currentSettings.enableClanOptions ? 'flex' : 'none'; saveSettings(); });
 
         uiSettingsWindow.querySelector("#ax-ignore-clans-textarea").addEventListener('change', (e) => { currentSettings.ignoreClans = e.target.value; saveSettings(); });
+        uiSettingsWindow.querySelector("#ax-always-attack-clans-textarea").addEventListener('change', (e) => { currentSettings.alwaysAttackClans = e.target.value; saveSettings(); });
 
         const chbNickOpt = uiSettingsWindow.querySelector("#ax-enable-nick-options-checkbox");
         const divNickOpt = uiSettingsWindow.querySelector("#ax-nick-options");
@@ -367,6 +410,23 @@
         loadSettings();
         if (!uiMainWindow) buildUI();
 
+        if (!isEngineObserved) {
+            if (window.Engine && window.Engine.communication) {
+                emitter.observe(window.Engine.communication, 'parseJSON', data => {
+                    if (data && (data.o || data.h || data.f)) {
+                        if (currentSettings.enabled && notInBattle()) handleAutoXLogic();
+                    }
+                });
+                isEngineObserved = true;
+            }
+        }
+
+        if (!isEndBattleHooked && typeof window.Engine?.battle?.setEndBattle === 'function') {
+            const originalSetEndBattle = window.Engine.battle.setEndBattle.bind(window.Engine.battle);
+            window.Engine.battle.setEndBattle = function() { originalSetEndBattle(); BADDONZ_FAST_FIGHT_SENT = false; };
+            isEndBattleHooked = true;
+        }
+
         BADDONZ_TRACK_INTERVAL = setInterval(() => { 
             if (currentSettings.enabled && notInBattle()) handleAutoXLogic(); 
         }, 100); 
@@ -374,15 +434,6 @@
         BADDONZ_FAST_FIGHT_INTERVAL = setInterval(() => { 
             if (currentSettings.fastFight) handleFastFight(); 
         }, 200);
-
-        if (!isEndBattleHooked && typeof window.Engine?.battle?.setEndBattle === 'function') {
-            const originalSetEndBattle = window.Engine.battle.setEndBattle.bind(window.Engine.battle);
-            window.Engine.battle.setEndBattle = function() { 
-                originalSetEndBattle(); 
-                BADDONZ_FAST_FIGHT_SENT = false; 
-            };
-            isEndBattleHooked = true;
-        }
     }
 
     function addonStop() {
