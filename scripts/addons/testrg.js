@@ -14,14 +14,14 @@
 
     const styleSheet = document.createElement("style");
     styleSheet.type = "text/css";
-    styleSheet.id = "rg-custom-styles";
+    styleSheet.className = "rg-custom-styles";
     styleSheet.innerText = `
         .baddonz-rg-wnd { width:180px; min-width:180px; }
         .baddonz-rg-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
         .baddonz-rg-wnd .baddonz-setting-row { margin-bottom: 2px !important; }
         .baddonz-rg-wnd .baddonz-text { font-size: 11px; }
     `;
-    if (!document.getElementById("rg-custom-styles")) document.head.appendChild(styleSheet);
+    if (!document.querySelector(".rg-custom-styles")) document.head.appendChild(styleSheet);
 
     let currentSettings = {
         enabled: true,
@@ -48,8 +48,6 @@
         
         let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
         currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
-
-        if (currentSettings.disbandKey === 'space' || currentSettings.disbandKey === ' ') currentSettings.disbandKey = 'n';
     }
 
     function saveSettings() {
@@ -119,7 +117,7 @@
 
     function handleKeyDown(e) {
         if (!currentSettings.enabled) return;
-        const rgKeybindInput = uiWindowElement ? uiWindowElement.querySelector("#rg-keybind-input") : null;
+        const rgKeybindInput = uiWindowElement ? uiWindowElement.querySelector(".rg-keybind-input") : null;
 
         if (keybindInputActive && rgKeybindInput) {
             e.preventDefault();
@@ -152,12 +150,12 @@
     function buildUI() {
         const bodyHtml = `
             <div class="baddonz-setting-row" style="margin-bottom: 4px !important; display: flex; align-items: center;">
-                <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="rg-checkbox"></div>
+                <div class="baddonz-checkbox rg-checkbox ${currentSettings.enabled ? 'active' : ''}"></div>
                 <span class="baddonz-text" style="padding: 0; margin-left: 5px;">Rozwiązywanie</span>
-                <input type="text" class="baddonz-input keybind" id="rg-keybind-input" value="${currentSettings.disbandKey.toUpperCase()}" readonly style="width: 50px; height: 20px; line-height: 18px; font-size: 11px; padding: 1px 0; margin-left: auto;">
+                <input type="text" class="baddonz-input keybind rg-keybind-input" value="${currentSettings.disbandKey.toUpperCase()}" readonly style="width: 50px; height: 20px; line-height: 18px; font-size: 11px; padding: 1px 0; margin-left: auto;">
             </div>
-            <div id="rg-leave-group-option" class="baddonz-setting-row" style="display: ${currentSettings.enabled ? 'flex' : 'none'};">
-                <div class="baddonz-checkbox ${currentSettings.leaveEnabled ? 'active' : ''}" id="rg-leave-checkbox"></div>
+            <div class="baddonz-setting-row rg-leave-group-option" style="display: ${currentSettings.enabled ? 'flex' : 'none'};">
+                <div class="baddonz-checkbox rg-leave-checkbox ${currentSettings.leaveEnabled ? 'active' : ''}"></div>
                 <span class="baddonz-text" style="padding:0;">Opuszczaj grupę</span>
             </div>
         `;
@@ -168,12 +166,11 @@
             hasSettings: false,
             hasCollapse: false
         });
-        uiWindowElement.classList.add('baddonz-rg-wnd');
 
-        const rgCheckbox = uiWindowElement.querySelector("#rg-checkbox");
-        const rgLeaveCheckbox = uiWindowElement.querySelector("#rg-leave-checkbox");
-        const rgKeybindInput = uiWindowElement.querySelector("#rg-keybind-input");
-        const leaveGroupOption = uiWindowElement.querySelector("#rg-leave-group-option");
+        const rgCheckbox = uiWindowElement.querySelector(".rg-checkbox");
+        const rgLeaveCheckbox = uiWindowElement.querySelector(".rg-leave-checkbox");
+        const rgKeybindInput = uiWindowElement.querySelector(".rg-keybind-input");
+        const leaveGroupOption = uiWindowElement.querySelector(".rg-leave-group-option");
 
         rgCheckbox.addEventListener('click', () => {
             currentSettings.enabled = rgCheckbox.classList.toggle('active');
@@ -230,8 +227,8 @@
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
         if (uiWindowElement) {
-            const rgCheckbox = uiWindowElement.querySelector("#rg-checkbox");
-            const leaveGroupOption = uiWindowElement.querySelector("#rg-leave-group-option");
+            const rgCheckbox = uiWindowElement.querySelector(".rg-checkbox");
+            const leaveGroupOption = uiWindowElement.querySelector(".rg-leave-group-option");
             if (rgCheckbox) {
                 if (isEnabled) rgCheckbox.classList.add('active');
                 else rgCheckbox.classList.remove('active');
