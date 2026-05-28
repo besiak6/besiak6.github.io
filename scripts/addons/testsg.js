@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Szybka Grupa baddonz
-// @version       28.05.2026
+// @version       28.05.2026v2
 // @description   Szybka Grupa
 // @author        besiak
 // @match         https://*.margonem.pl/*
