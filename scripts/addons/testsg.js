@@ -12,6 +12,18 @@
 
     const ADDON_ID = "ZAP";
 
+    const styleSheet = document.createElement("style");
+    styleSheet.type = "text/css";
+    styleSheet.id = "zap-custom-styles";
+    styleSheet.innerText = `
+        #baddonz-zap-wnd { width:195px; min-width:195px; }
+        #baddonz-zap-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
+        #baddonz-zap-wnd .baddonz-setting-row { margin-bottom: 2px !important; }
+        #baddonz-zap-wnd .baddonz-text { font-size: 11px; }
+        #baddonz-zap-wnd hr { margin: 3px 0 !important; }
+    `;
+    if (!document.getElementById("zap-custom-styles")) document.head.appendChild(styleSheet);
+
     const MARGONEM_RELATIONS = {
         NONE: 1,
         FRIEND: 2,
@@ -128,7 +140,6 @@
         const idInvites = [];
         const partyMemberNicks = new Set();
 
-        // 1. Zbieramy aktualną drużynę, żeby nie zapraszać tych samych osób
         if (window.Engine.party) {
             let members = typeof window.Engine.party.getMembers === 'function' ? window.Engine.party.getMembers() : window.Engine.party.d;
             if (members instanceof Map) {
@@ -144,12 +155,10 @@
             }
         }
 
-        // 2. Pobieramy poprawnych graczy z mapy
         let playersOnMap = Object.values(window.Engine.others.getDrawableList()).filter(entry =>
             entry.isPlayer && entry.d && entry.d.id !== window.Engine.hero.d.id && !isInParty(entry.d.id) && !is_he_in_any_party(entry)
         );
 
-        // 3. Weryfikujemy każdego gracza
         playersOnMap.forEach(player => {
             const lowerCasePlayerNick = player.d.nick.toLowerCase();
             if (partyMemberNicks.has(lowerCasePlayerNick)) return;
@@ -157,7 +166,6 @@
 
             let shouldInvite = true;
 
-            // Sprawdzanie relacji i odległości
             if (isRandomOrEnemyRelation(player)) {
                 if (!isInRange(player, 1)) shouldInvite = false;
                 if (!currentSettings.InviteRandoms) shouldInvite = false;
@@ -167,7 +175,6 @@
                 shouldInvite = false;
             }
 
-            // Sprawdzanie poziomu
             if (shouldInvite && currentSettings.InvitebyLevel) {
                 const playerLevel = parseInt(player.d.lvl);
                 const minLvl = parseInt(currentSettings.minLevel);
@@ -175,13 +182,11 @@
                 if (isNaN(playerLevel) || playerLevel < minLvl || playerLevel > maxLvl) shouldInvite = false;
             }
 
-            // Sprawdzanie profesji
             if (shouldInvite && currentSettings.FilterbyProfession) {
                 const playerProf = player.d.prof;
                 if (!currentSettings.SelectedProfessions[playerProf]) shouldInvite = false;
             }
 
-            // Dodanie do listy
             if (shouldInvite) {
                 idInvites.push({ type: 'id', value: player.d.id });
             }
@@ -295,96 +300,79 @@
     function buildUI() {
         const createProfessionsCheckboxes = () => {
             let html = '';
-            const professionCodes = Object.keys(PROFESSION_NAMES);
-            for (let i = 0; i < professionCodes.length; i += 2) {
-                html += '<div class="baddonz-flex column">';
-                for (let j = 0; j < 2 && (i + j) < professionCodes.length; j++) {
-                    const code = professionCodes[i + j];
-                    html += `
-                        <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
-                            <div class="baddonz-checkbox" id="prof-checkbox-${code}"></div>
-                            <div class="baddonz-text" style="padding: 0; font-size: 12px; font-weight: bold;" title="${PROFESSION_NAMES[code]}">${code.toUpperCase()}</div>
-                        </div>
-                    `;
-                }
-                html += '</div>';
-            }
+            Object.keys(PROFESSION_NAMES).forEach(code => {
+                html += `
+                    <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+                        <div class="baddonz-checkbox" id="prof-checkbox-${code}"></div>
+                        <div class="baddonz-text" style="padding: 0; font-size: 11px;" title="${PROFESSION_NAMES[code]}">${code.toUpperCase()}</div>
+                    </div>
+                `;
+            });
             return html;
         };
 
         const bodyHtml = `
-            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px; margin-bottom: 2px;">
+            <div class="baddonz-setting-row" style="margin-bottom: 4px !important;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="zap-checkbox"></div>
-                <div class="baddonz-text" style="padding: 0;">Szybka Grupa</div>
-                <input type="text" class="baddonz-input keybind compact" id="zap-keybind-input" value="${currentSettings.inviteKey === "space" ? "[SPACJA]" : currentSettings.inviteKey.toUpperCase()}" readonly style="width: 80px; margin-left: auto;">
+                <input type="text" class="baddonz-input keybind" id="zap-keybind-input" value="${currentSettings.inviteKey === "space" ? "[SPACJA]" : currentSettings.inviteKey.toUpperCase()}" readonly style="width: 100px; height: 20px; line-height: 18px; font-size: 11px; padding: 1px 0; margin-left: 5px;">
             </div>
 
-            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+            <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}" id="zap-randoms-checkbox" title="Zapraszaj wszystkich graczy"></div>
-                <div class="baddonz-text" style="padding: 0;">Randomi na ekranie</div>
+                <span class="baddonz-text" style="padding:0;">Randomi na ekranie</span>
             </div>
 
-            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+            <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox ${currentSettings.InviteNear ? 'active' : ''}" id="zap-from-square-checkbox" title="Przydatne na tytanów"></div>
-                <div class="baddonz-text" style="padding: 0;">Z kratki obok</div>
+                <span class="baddonz-text" style="padding:0;">Z kratki obok</span>
             </div>
 
-            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+            <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox ${currentSettings.InvitebyLevel ? 'active' : ''}" id="zap-by-level-checkbox"></div>
-                <div class="baddonz-text" style="padding: 0;">Po levelu</div>
+                <span class="baddonz-text" style="padding:0;">Po levelu</span>
             </div>
 
-            <div id="zap-level-range-section" style="display: ${currentSettings.InvitebyLevel ? 'flex' : 'none'}; flex-direction: row; align-items: center; gap: 5px; margin-top: -3px; margin-bottom: 2px;">
+            <div id="zap-level-range-section" style="display: ${currentSettings.InvitebyLevel ? 'flex' : 'none'}; flex-direction: row; align-items: center; gap: 5px; margin-bottom: 2px; width: 100%;">
                 <input type="number" class="baddonz-input compact" id="zap-min-level-input" value="${currentSettings.minLevel}" min="0" max="500" placeholder="Od" style="flex-grow: 1; margin: 0;">
                 <span style="color: #fff; font-size: 16px; line-height: 1;">-</span>
                 <input type="number" class="baddonz-input compact" id="zap-max-level-input" value="${currentSettings.maxLevel}" min="0" max="500" placeholder="Do" style="flex-grow: 1; margin: 0;">
             </div>
 
-            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+            <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox ${currentSettings.FilterbyProfession ? 'active' : ''}" id="zap-filter-by-profession-checkbox"></div>
-                <div class="baddonz-text" style="padding: 0;">Po profesji</div>
+                <span class="baddonz-text" style="padding:0;">Po profesji</span>
             </div>
 
-            <div id="zap-profession-filter-section" class="baddonz-flex" style="display: ${currentSettings.FilterbyProfession ? 'flex' : 'none'}; justify-content: space-around; width: 100%; margin-bottom: 2px;">
+            <div id="zap-profession-filter-section" class="baddonz-grid-2col" style="display: ${currentSettings.FilterbyProfession ? 'grid' : 'none'}; width: 100%; margin-bottom: 2px;">
                 ${createProfessionsCheckboxes()}
             </div>
 
-            <hr style="width: 100%; border-color: #303030; margin: 4px 0;">
+            <hr style="width: 100%; border-color: #303030;">
 
-            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+            <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox ${currentSettings.autoAcceptEnabled ? 'active' : ''}" id="zap-auto-accept-checkbox"></div>
-                <div class="baddonz-text" style="padding: 0;">Auto akceptacja (od kogo)</div>
+                <span class="baddonz-text" style="padding:0;">Auto akceptacja</span>
             </div>
 
-            <div id="zap-accept-options-section" class="baddonz-flex column" style="display: ${currentSettings.autoAcceptEnabled ? 'flex' : 'none'}; gap: 3px;">
+            <div id="zap-accept-options-section" class="baddonz-flex column" style="display: ${currentSettings.autoAcceptEnabled ? 'flex' : 'none'}; width: 100%; gap: 2px;">
                 <div class="baddonz-grid-2col">
-                    <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
-                        <div class="baddonz-checkbox ${currentSettings.acceptFriend ? 'active' : ''}" id="accept-friend-checkbox"></div><span class="baddonz-text" style="padding:0;">Znaj</span>
-                    </div>
-                    <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
-                        <div class="baddonz-checkbox ${currentSettings.acceptAlly ? 'active' : ''}" id="accept-ally-checkbox"></div><span class="baddonz-text" style="padding:0;">Sojusz</span>
-                    </div>
-                    <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
-                        <div class="baddonz-checkbox ${currentSettings.acceptClan ? 'active' : ''}" id="accept-clan-checkbox"></div><span class="baddonz-text" style="padding:0;">Klan</span>
-                    </div>
-                    <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
-                        <div class="baddonz-checkbox ${currentSettings.acceptOthers ? 'active' : ''}" id="accept-others-checkbox"></div><span class="baddonz-text" style="padding:0;">Obcy</span>
-                    </div>
+                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ${currentSettings.acceptFriend ? 'active' : ''}" id="accept-friend-checkbox"></div><span class="baddonz-text">Znaj</span></div>
+                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ${currentSettings.acceptAlly ? 'active' : ''}" id="accept-ally-checkbox"></div><span class="baddonz-text">Sojusz</span></div>
+                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ${currentSettings.acceptClan ? 'active' : ''}" id="accept-clan-checkbox"></div><span class="baddonz-text">Klan</span></div>
+                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ${currentSettings.acceptOthers ? 'active' : ''}" id="accept-others-checkbox"></div><span class="baddonz-text">Obcy</span></div>
                 </div>
-                <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px; margin-top: 2px;">
+                <div class="baddonz-setting-row" style="margin-top: 2px; margin-bottom: 0;">
                     <div class="baddonz-checkbox ${currentSettings.rejectUnchecked ? 'active' : ''}" id="reject-unchecked-checkbox"></div>
                     <span class="baddonz-text" style="padding:0;">Odrzucaj nieodznaczone</span>
                 </div>
             </div>
         `;
 
-        // Szerokość dopasowana do AutoX = 195px
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Szybka Grupa", bodyHtml, {
             width: '195px',
             customId: 'baddonz-zap-wnd',
             hasSettings: false,
-            hasCollapse: false, // Usunięto zwiń/rozwiń
-            hasClose: true      // Zostawiono ZAMKNIJ
+            hasCollapse: false
         });
 
         const zapCheckbox = uiWindowElement.querySelector("#zap-checkbox");
@@ -392,7 +380,6 @@
 
         const zapRandomsCheckbox = uiWindowElement.querySelector("#zap-randoms-checkbox");
         const zapFromSquareCheckbox = uiWindowElement.querySelector("#zap-from-square-checkbox");
-        
         const zapByLevelCheckbox = uiWindowElement.querySelector("#zap-by-level-checkbox");
         const zapLevelRangeSection = uiWindowElement.querySelector("#zap-level-range-section");
         const zapMinLevelInput = uiWindowElement.querySelector("#zap-min-level-input");
@@ -451,7 +438,7 @@
 
         zapFilterByProfessionCheckbox.addEventListener('click', () => {
             currentSettings.FilterbyProfession = zapFilterByProfessionCheckbox.classList.toggle('active');
-            zapProfessionFilterSection.style.display = currentSettings.FilterbyProfession ? 'flex' : 'none';
+            zapProfessionFilterSection.style.display = currentSettings.FilterbyProfession ? 'grid' : 'none';
             saveSettings();
         });
 
