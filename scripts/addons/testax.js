@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          AutoX baddonz
-// @version       28.05.2026
-// @description   autox
+// @version       05.08.2025
+// @description   autox (API 2.0 - Czyste klasy, poprawny zapis)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -14,18 +14,18 @@
     
     const styleSheet = document.createElement("style");
     styleSheet.type = "text/css";
-    styleSheet.id = "autox-custom-styles";
+    styleSheet.className = "autox-custom-styles";
     styleSheet.innerText = `
         .baddonz-ax-wnd { width:110px; min-width:110px; }
         .baddonz-ax-wnd-settings { width:250px; min-width:250px; }
         .baddonz-ax-wnd .baddonz-window-body { padding: 0px 5px 5px 5px !important; gap: 3px !important; }
-        #ax-s-walka-btn { width:100%; }
+        .ax-s-walka-btn { width:100%; }
         .baddonz-setting-row.ax-main-row { gap:5px; margin: 0; }
         .baddonz-input.ax-small { width:100%; max-width:79px; font-size:11px; height:20px !important; line-height:18px; text-align:center; padding:1px 0px; }
         .baddonz-ax-wnd-settings .baddonz-input { text-align:center; height:26px !important; }
         .baddonz-setting-row span { white-space:nowrap; font-size:11px; }
     `;
-    if (!document.getElementById("autox-custom-styles")) document.head.appendChild(styleSheet);
+    if (!document.querySelector(".autox-custom-styles")) document.head.appendChild(styleSheet);
 
     let currentSettings = {
         enabled: true,
@@ -264,11 +264,11 @@
     function buildUI() {
         const mainBodyHtml = `
             <div class="baddonz-setting-row ax-main-row">
-                <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ax-enabled-checkbox"></div>
-                <input type="text" class="baddonz-input ax-small" id="ax-level-range-input" value="${currentSettings.levelRange}">
+                <div class="baddonz-checkbox ax-enabled-checkbox ${currentSettings.enabled ? 'active' : ''}"></div>
+                <input type="text" class="baddonz-input ax-small ax-level-range-input" value="${currentSettings.levelRange}">
             </div>
-            <div id="ax-expanded-controls" style="display: ${currentSettings.isExpanded ? 'flex' : 'none'}; flex-direction: column; margin-top: 2px;">
-                <button class="baddonz-button ${currentSettings.fastFight ? 'active' : ''}" id="ax-s-walka-btn">S.WALKA</button>
+            <div class="ax-expanded-controls" style="display: ${currentSettings.isExpanded ? 'flex' : 'none'}; flex-direction: column; margin-top: 2px;">
+                <button class="baddonz-button ax-s-walka-btn ${currentSettings.fastFight ? 'active' : ''}">S.WALKA</button>
             </div>
         `;
         uiMainWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "autox", mainBodyHtml, { 
@@ -278,34 +278,34 @@
             hasCollapse: true,
             hasClose: false
         });
-        uiMainWindow.classList.add('baddonz-ax-wnd');
 
         const settingsBodyHtml = `
-            <button class="baddonz-button" style="width:100%; margin-bottom: 5px;" id="ax-reset-pos-btn">Resetuj pozycje okienka</button>
+            <button class="baddonz-button ax-reset-pos-btn" style="width:100%; margin-bottom: 5px;">Resetuj pozycje okienka</button>
             
-            <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.attackFriends ? 'active' : ''}" id="ax-attack-friends-checkbox"></div><span>Atakuj Przyjaciół</span></div>
-            <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.attackClan ? 'active' : ''}" id="ax-attack-clan-checkbox"></div><span>Atakuj Klan/Sojusz</span></div>
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ax-attack-friends-checkbox ${currentSettings.attackFriends ? 'active' : ''}"></div><span>Atakuj Przyjaciół</span></div>
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ax-attack-clan-checkbox ${currentSettings.attackClan ? 'active' : ''}"></div><span>Atakuj Klan/Sojusz</span></div>
             
             <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
-            <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.enableClanOptions ? 'active' : ''}" id="ax-enable-clan-options-checkbox"></div><span>Kryteria Klanowe</span></div>
-            <div id="ax-clan-options" style="display: ${currentSettings.enableClanOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ax-enable-clan-options-checkbox ${currentSettings.enableClanOptions ? 'active' : ''}"></div><span>Kryteria Klanowe</span></div>
+            <div class="ax-clan-options" style="display: ${currentSettings.enableClanOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
                 <span class="baddonz-text" style="padding:0;">Nigdy nie atakuj klanów:</span>
-                <textarea class="baddonz-textarea baddonz-scroll" id="ax-ignore-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.ignoreClans}</textarea>
+                <textarea class="baddonz-textarea baddonz-scroll ax-ignore-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.ignoreClans}</textarea>
                 <span class="baddonz-text" style="padding:0;">Zawsze atakuj klany:</span>
-                <textarea class="baddonz-textarea baddonz-scroll" id="ax-always-attack-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.alwaysAttackClans}</textarea>
+                <textarea class="baddonz-textarea baddonz-scroll ax-always-attack-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.alwaysAttackClans}</textarea>
             </div>
 
             <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
-            <div class="baddonz-setting-row"><div class="baddonz-checkbox ${currentSettings.enableNickOptions ? 'active' : ''}" id="ax-enable-nick-options-checkbox"></div><span>Po nickach</span></div>
-            <div id="ax-nick-options" style="display: ${currentSettings.enableNickOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ax-enable-nick-options-checkbox ${currentSettings.enableNickOptions ? 'active' : ''}"></div><span>Po nickach</span></div>
+            <div class="ax-nick-options" style="display: ${currentSettings.enableNickOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
                 <span class="baddonz-text" style="padding:0;">Nigdy nie atakuj:</span>
-                <textarea class="baddonz-textarea baddonz-scroll" id="ax-ignore-nicks-textarea" placeholder="Nick1, Nick2">${currentSettings.ignoreNicks}</textarea>
+                <textarea class="baddonz-textarea baddonz-scroll ax-ignore-nicks-textarea" placeholder="Nick1, Nick2">${currentSettings.ignoreNicks}</textarea>
                 <span class="baddonz-text" style="padding:0;">Zawsze atakuj:</span>
-                <textarea class="baddonz-textarea baddonz-scroll" id="ax-always-attack-nicks-textarea" placeholder="Nick1, Nick2">${currentSettings.alwaysAttackNicks}</textarea>
+                <textarea class="baddonz-textarea baddonz-scroll ax-always-attack-nicks-textarea" placeholder="Nick1, Nick2">${currentSettings.alwaysAttackNicks}</textarea>
             </div>
         `;
         uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "AutoX Ustawienia", settingsBodyHtml, { width: '250px', customId: 'baddonz-ax-wnd-settings' });
-        uiSettingsWindow.classList.add('baddonz-ax-wnd-settings');
+        
+        uiSettingsWindow.classList.add('settings-window');
         uiSettingsWindow.removeAttribute('data-addon-id');
         uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
         
@@ -314,12 +314,12 @@
             uiSettingsWindow.className = uiSettingsWindow.className.replace(/opacity-\d/, `opacity-${currentSettings.windowSettingsOpacity}`);
         }
 
-        const axEnabledCheckbox = uiMainWindow.querySelector("#ax-enabled-checkbox");
-        const axLevelRangeInput = uiMainWindow.querySelector("#ax-level-range-input");
+        const axEnabledCheckbox = uiMainWindow.querySelector(".ax-enabled-checkbox");
+        const axLevelRangeInput = uiMainWindow.querySelector(".ax-level-range-input");
         const axCollapsedBtn = uiMainWindow.querySelector(".baddonz-collapsed");
         const axSettingsBtn = uiMainWindow.querySelector(".baddonz-settings-button");
-        const axSWalkaBtn = uiMainWindow.querySelector("#ax-s-walka-btn");
-        const axExpandedControls = uiMainWindow.querySelector("#ax-expanded-controls");
+        const axSWalkaBtn = uiMainWindow.querySelector(".ax-s-walka-btn");
+        const axExpandedControls = uiMainWindow.querySelector(".ax-expanded-controls");
 
         axEnabledCheckbox.addEventListener('click', () => {
             currentSettings.enabled = axEnabledCheckbox.classList.toggle('active');
@@ -383,7 +383,7 @@
             saveSettings();
         });
 
-        uiSettingsWindow.querySelector("#ax-reset-pos-btn").addEventListener('click', () => {
+        uiSettingsWindow.querySelector(".ax-reset-pos-btn").addEventListener('click', () => {
             if (uiMainWindow) {
                 uiMainWindow.style.left = '0px'; 
                 uiMainWindow.style.top = '0px';
@@ -395,25 +395,25 @@
             }
         });
 
-        const chbAttFriends = uiSettingsWindow.querySelector("#ax-attack-friends-checkbox");
+        const chbAttFriends = uiSettingsWindow.querySelector(".ax-attack-friends-checkbox");
         chbAttFriends.addEventListener('click', () => { currentSettings.attackFriends = chbAttFriends.classList.toggle('active'); saveSettings(); });
 
-        const chbAttClan = uiSettingsWindow.querySelector("#ax-attack-clan-checkbox");
+        const chbAttClan = uiSettingsWindow.querySelector(".ax-attack-clan-checkbox");
         chbAttClan.addEventListener('click', () => { currentSettings.attackClan = chbAttClan.classList.toggle('active'); saveSettings(); });
 
-        const chbClanOpt = uiSettingsWindow.querySelector("#ax-enable-clan-options-checkbox");
-        const divClanOpt = uiSettingsWindow.querySelector("#ax-clan-options");
+        const chbClanOpt = uiSettingsWindow.querySelector(".ax-enable-clan-options-checkbox");
+        const divClanOpt = uiSettingsWindow.querySelector(".ax-clan-options");
         chbClanOpt.addEventListener('click', () => { currentSettings.enableClanOptions = chbClanOpt.classList.toggle('active'); divClanOpt.style.display = currentSettings.enableClanOptions ? 'flex' : 'none'; saveSettings(); });
 
-        uiSettingsWindow.querySelector("#ax-ignore-clans-textarea").addEventListener('change', (e) => { currentSettings.ignoreClans = e.target.value; saveSettings(); });
-        uiSettingsWindow.querySelector("#ax-always-attack-clans-textarea").addEventListener('change', (e) => { currentSettings.alwaysAttackClans = e.target.value; saveSettings(); });
+        uiSettingsWindow.querySelector(".ax-ignore-clans-textarea").addEventListener('change', (e) => { currentSettings.ignoreClans = e.target.value; saveSettings(); });
+        uiSettingsWindow.querySelector(".ax-always-attack-clans-textarea").addEventListener('change', (e) => { currentSettings.alwaysAttackClans = e.target.value; saveSettings(); });
 
-        const chbNickOpt = uiSettingsWindow.querySelector("#ax-enable-nick-options-checkbox");
-        const divNickOpt = uiSettingsWindow.querySelector("#ax-nick-options");
+        const chbNickOpt = uiSettingsWindow.querySelector(".ax-enable-nick-options-checkbox");
+        const divNickOpt = uiSettingsWindow.querySelector(".ax-nick-options");
         chbNickOpt.addEventListener('click', () => { currentSettings.enableNickOptions = chbNickOpt.classList.toggle('active'); divNickOpt.style.display = currentSettings.enableNickOptions ? 'flex' : 'none'; saveSettings(); });
 
-        uiSettingsWindow.querySelector("#ax-ignore-nicks-textarea").addEventListener('change', (e) => { currentSettings.ignoreNicks = e.target.value; saveSettings(); });
-        uiSettingsWindow.querySelector("#ax-always-attack-nicks-textarea").addEventListener('change', (e) => { currentSettings.alwaysAttackNicks = e.target.value; saveSettings(); });
+        uiSettingsWindow.querySelector(".ax-ignore-nicks-textarea").addEventListener('change', (e) => { currentSettings.ignoreNicks = e.target.value; saveSettings(); });
+        uiSettingsWindow.querySelector(".ax-always-attack-nicks-textarea").addEventListener('change', (e) => { currentSettings.alwaysAttackNicks = e.target.value; saveSettings(); });
     }
 
     function addonInit() {
@@ -459,7 +459,7 @@
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
         if (uiMainWindow) {
-            const axEnabledCheckbox = uiMainWindow.querySelector("#ax-enabled-checkbox");
+            const axEnabledCheckbox = uiMainWindow.querySelector(".ax-enabled-checkbox");
             if (axEnabledCheckbox) {
                 if (isEnabled) axEnabledCheckbox.classList.add('active');
                 else axEnabledCheckbox.classList.remove('active');
