@@ -16,10 +16,10 @@
     styleSheet.type = "text/css";
     styleSheet.id = "rg-custom-styles";
     styleSheet.innerText = `
-        #baddonz-rg-wnd { width:180px; min-width:180px; }
-        #baddonz-rg-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
-        #baddonz-rg-wnd .baddonz-setting-row { margin-bottom: 2px !important; }
-        #baddonz-rg-wnd .baddonz-text { font-size: 11px; }
+        .baddonz-rg-wnd { width:180px; min-width:180px; }
+        .baddonz-rg-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
+        .baddonz-rg-wnd .baddonz-setting-row { margin-bottom: 2px !important; }
+        .baddonz-rg-wnd .baddonz-text { font-size: 11px; }
     `;
     if (!document.getElementById("rg-custom-styles")) document.head.appendChild(styleSheet);
 
@@ -46,8 +46,7 @@
         let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
         currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
 
-        // MIGARCJA
-        if (currentSettings.disbandKey === 'space') currentSettings.disbandKey = 'n';
+        if (currentSettings.disbandKey === 'space' || currentSettings.disbandKey === ' ') currentSettings.disbandKey = 'n';
     }
 
     function saveSettings() {
@@ -121,13 +120,12 @@
                 return;
             }
 
-            // UŻYCIE GLOBALNEJ WALIDACJI Z GŁÓWNEGO SKRYPTU
-            if (window.BaddonzAPI && !window.BaddonzAPI.isValidSingleKey(pressedKey)) return;
+            if (pressedKey.length === 1 && pressedKey !== ' ') {
+                currentSettings.disbandKey = pressedKey;
+                rgKeybindInput.value = pressedKey.toUpperCase();
+                saveSettings();
+            }
 
-            currentSettings.disbandKey = pressedKey;
-            rgKeybindInput.value = pressedKey.toUpperCase();
-
-            saveSettings();
             keybindInputActive = false;
             rgKeybindInput.blur();
             rgKeybindInput.classList.remove('active-keybind-mode');
@@ -168,6 +166,7 @@
             hasSettings: false,
             hasCollapse: false
         });
+        uiWindowElement.classList.add('baddonz-rg-wnd');
 
         const rgCheckbox = uiWindowElement.querySelector("#rg-checkbox");
         const rgLeaveCheckbox = uiWindowElement.querySelector("#rg-leave-checkbox");
