@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Szybka Grupa baddonz
-// @version       05.08.2025
-// @description   Szybka Grupa (API 2.0 - Oryginalne nazwy, 3 kolumny prof, naprawiony nagłówek)
+// @version       1.0
+// @description   Szybka Grupa
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
