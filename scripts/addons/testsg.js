@@ -63,35 +63,31 @@
     const partyInviteRegexPL = /Czy chcesz dołączyć do drużyny gracza <strong>(.+?)<\/strong>\?/;
     const partyInviteRegexEN = /Party invitation received from <strong>(.+?)<\/strong>\. Would you like to join\?/;
 
-    // === ZAAWANSOWANE ŁADOWANIE USTAWIEŃ (KONTO VS POSTAĆ) ===
     function loadSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
 
-        // 1. Ładowanie ustawień z poziomu KONTA
         let accSettings = {};
         try {
             accSettings = JSON.parse(localStorage.getItem('Baddonz_ZAP_Acc_' + accId)) || {};
         } catch (e) {}
 
-        // 2. Ładowanie ustawień z poziomu POSTACI
         let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
 
-        // 3. Scalenie wszystkiego
         currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
 
-        // Fallback dla profesji
         if (!currentSettings.SelectedProfessions) {
             currentSettings.SelectedProfessions = { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true };
         }
+        
+        // MIGARCJA: Jeśli ktoś miał wcześniej spację, zresetuj na "b"
+        if (currentSettings.inviteKey === 'space') currentSettings.inviteKey = 'b';
     }
 
-    // === ZAAWANSOWANY ZAPIS USTAWIEŃ (KONTO VS POSTAĆ) ===
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
 
-        // Podział kluczy
         const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'inviteKey', 'InviteRandoms', 'InviteNear', 'autoAcceptEnabled', 'acceptClan', 'acceptAlly', 'acceptFriend', 'acceptOthers', 'rejectUnchecked'];
         const charKeys = ['InvitebyLevel', 'minLevel', 'maxLevel', 'FilterbyProfession', 'SelectedProfessions'];
 
@@ -101,10 +97,7 @@
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
         charKeys.forEach(k => charSettings[k] = currentSettings[k]);
 
-        // Zapis na POSTAĆ (Główny Menedżer Baddonza)
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
-
-        // Zapis na KONTO (Oddzielny, bezpieczny klucz w LocalStorage)
         localStorage.setItem('Baddonz_ZAP_Acc_' + accId, JSON.stringify(accSettings));
     }
 
@@ -135,11 +128,6 @@
         return [MARGONEM_RELATIONS.FRIEND, MARGONEM_RELATIONS.CLAN, MARGONEM_RELATIONS.CLAN_ALLY].includes(player.d.relation);
     }
 
-    function isRandomOrEnemyRelation(player) {
-        if (!player || typeof player.d?.relation !== 'number') return false;
-        return [MARGONEM_RELATIONS.NONE, MARGONEM_RELATIONS.ENEMY, MARGONEM_RELATIONS.CLAN_ENEMY].includes(player.d.relation);
-    }
-
     function isInRange(player, range) {
         if (!window.Engine.hero || !player || !player.d) return false;
         const heroX = typeof window.Engine.hero.d.rx !== 'undefined' ? window.Engine.hero.d.rx : window.Engine.hero.d.x;
@@ -166,7 +154,6 @@
             }
         }
 
-        // POBIERANIE WSZYSTKICH I CAŁKOWICIE LOSOWE SORTOWANIE
         let playersOnMap = Object.values(window.Engine.others.getDrawableList())
             .filter(entry => entry.isPlayer && entry.d && entry.d.id !== window.Engine.hero.d.id && !isInParty(entry.d.id) && !is_he_in_any_party(entry))
             .map(entry => ({ p: entry, sort: Math.random() }))
@@ -188,7 +175,6 @@
                 shouldInvite = true;
             }
 
-            // Twarde wymuszenie 1 kratki (Jeżeli "Grupa z kratki" jest włączone, ucinamy wszystko poza nią)
             if (currentSettings.InviteNear && !isInRange(player, 1)) {
                 shouldInvite = false;
             }
@@ -259,7 +245,6 @@
                     if (currentSettings.acceptFriend && inviterRelation === MARGONEM_RELATIONS.FRIEND) shouldAccept = true;
                     if (currentSettings.acceptOthers && (inviterRelation === MARGONEM_RELATIONS.NONE || inviterRelation === MARGONEM_RELATIONS.ENEMY || inviterRelation === MARGONEM_RELATIONS.CLAN_ENEMY)) shouldAccept = true;
                 } else {
-                    // Akceptacja "w ciemno" gracza z innej mapy, pod warunkiem włączonego klanu/znajomego
                     if (currentSettings.acceptClan || currentSettings.acceptFriend) {
                         shouldAccept = true;
                     }
@@ -292,20 +277,18 @@
         if (keybindInputActive && zapKeybindInput) {
             e.preventDefault();
             const pressedKey = e.key.toLowerCase();
-            if (['escape', 'enter', 'tab', 'shift', 'control', 'alt', 'meta', 'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10', 'f11', 'f12', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'capslock', 'numlock', 'scrolllock'].includes(pressedKey)) {
-                if (['escape', 'enter', 'tab'].includes(pressedKey)) zapKeybindInput.blur();
+            
+            if (['escape', 'enter', 'tab'].includes(pressedKey)) {
+                zapKeybindInput.blur();
                 return;
             }
 
-            if (pressedKey === ' ') {
-                currentSettings.inviteKey = "space";
-                zapKeybindInput.value = "[SPACJA]";
-            } else if (pressedKey.length === 1) {
-                currentSettings.inviteKey = pressedKey;
-                zapKeybindInput.value = pressedKey.toUpperCase();
-            } else {
-                return;
-            }
+            // UŻYCIE GLOBALNEJ WALIDACJI BADDONZAPI
+            if (window.BaddonzAPI && !window.BaddonzAPI.isValidHotkey(pressedKey)) return;
+            if (pressedKey.length !== 1) return;
+
+            currentSettings.inviteKey = pressedKey;
+            zapKeybindInput.value = pressedKey.toUpperCase();
 
             saveSettings();
             keybindInputActive = false;
@@ -338,16 +321,16 @@
             <div class="baddonz-setting-row" style="margin-bottom: 4px !important; display: flex; align-items: center;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="zap-checkbox"></div>
                 <span class="baddonz-text" style="padding: 0; margin-left: 5px;">Szybka Grupa</span>
-                <input type="text" class="baddonz-input keybind" id="zap-keybind-input" value="${currentSettings.inviteKey === "space" ? "[SPACJA]" : currentSettings.inviteKey.toUpperCase()}" readonly style="width: 50px; height: 20px; line-height: 18px; font-size: 11px; padding: 1px 0; margin-left: auto;">
+                <input type="text" class="baddonz-input keybind" id="zap-keybind-input" value="${currentSettings.inviteKey.toUpperCase()}" readonly style="width: 50px; height: 20px; line-height: 18px; font-size: 11px; padding: 1px 0; margin-left: auto;">
             </div>
 
             <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}" id="zap-randoms-checkbox"></div>
+                <div class="baddonz-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}" id="zap-randoms-checkbox" title="Zapraszaj wszystkich graczy"></div>
                 <span class="baddonz-text" style="padding:0;">Zapraszaj randomów obok</span>
             </div>
 
             <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox ${currentSettings.InviteNear ? 'active' : ''}" id="zap-from-square-checkbox"></div>
+                <div class="baddonz-checkbox ${currentSettings.InviteNear ? 'active' : ''}" id="zap-from-square-checkbox" title="Przydatne na tytanów"></div>
                 <span class="baddonz-text" style="padding:0;">Grupa z kratki (inne relacje)</span>
             </div>
 
@@ -434,7 +417,7 @@
         zapKeybindInput.addEventListener('focusout', () => {
             if (keybindInputActive) {
                 keybindInputActive = false;
-                zapKeybindInput.value = currentSettings.inviteKey === "space" ? "[SPACJA]" : currentSettings.inviteKey.toUpperCase();
+                zapKeybindInput.value = currentSettings.inviteKey.toUpperCase();
             }
             zapKeybindInput.classList.remove('active-keybind-mode');
         });
