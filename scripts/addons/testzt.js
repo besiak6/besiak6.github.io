@@ -48,14 +48,11 @@
 
     let currentSettings = {
         enabled: true,
-        windowOpacity: 2,
-        windowVisible: true,
         customLabels: {},
         teleportmass: {},
         ignored_sign: {}
     };
 
-    let uiMainWindow = null;
     let uiAddWindow = null;
     let uiEditWindow = null;
     let uiMassEditWindow = null;
@@ -86,7 +83,7 @@
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
 
-        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'customLabels', 'teleportmass', 'ignored_sign'];
+        const accKeys = ['enabled', 'customLabels', 'teleportmass', 'ignored_sign'];
         let accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
 
@@ -259,30 +256,6 @@
     }
 
     function buildUI() {
-        const mainBodyHtml = `
-            <div class="baddonz-setting-row" style="margin-bottom: 2px !important; display: flex; align-items: center;">
-                <div class="baddonz-checkbox zt-main-checkbox ${currentSettings.enabled ? 'active' : ''}"></div>
-                <span class="baddonz-text" style="padding: 0; margin-left: 5px;">Włączone</span>
-            </div>
-        `;
-
-        uiMainWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Teleporty", mainBodyHtml, { 
-            width: '150px', 
-            customId: 'baddonz-zt-wnd',
-            hasSettings: false,
-            hasCollapse: false,
-            hasClose: true
-        });
-        uiMainWindow.classList.add('baddonz-zt-wnd');
-
-        const mainCheckbox = uiMainWindow.querySelector(".zt-main-checkbox");
-        mainCheckbox.addEventListener('click', () => {
-            currentSettings.enabled = mainCheckbox.classList.toggle('active');
-            saveSettings();
-            if (currentSettings.enabled) applyLabelsToAllVisibleItems();
-            else removeAllTxov();
-        });
-
         const actionBodyHtml = `
             <div class="baddonz-flex column centered" style="padding: 5px;">
                 <input type="text" class="baddonz-input zt-action-input" maxlength="8" style="width: 100%; text-align: center;" autocomplete="off">
@@ -296,6 +269,10 @@
         uiAddWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Dodaj Znacznik", actionBodyHtml, { width: '200px', customId: 'baddonz-zt-wnd-add', hasSettings: false, hasCollapse: false, hasClose: true });
         uiEditWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Edytuj Znacznik", actionBodyHtml, { width: '200px', customId: 'baddonz-zt-wnd-edit', hasSettings: false, hasCollapse: false, hasClose: true });
         uiMassEditWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Edytuj Podpisy", actionBodyHtml, { width: '200px', customId: 'baddonz-zt-wnd-mass', hasSettings: false, hasCollapse: false, hasClose: true });
+
+        uiAddWindow.classList.add('baddonz-zt-wnd-add');
+        uiEditWindow.classList.add('baddonz-zt-wnd-edit');
+        uiMassEditWindow.classList.add('baddonz-zt-wnd-mass');
 
         uiAddWindow.style.display = 'none';
         uiEditWindow.style.display = 'none';
@@ -376,7 +353,7 @@
 
     function addonInit() {
         loadSettings();
-        if (!uiMainWindow) buildUI();
+        if (!uiAddWindow) buildUI();
 
         if (!isEngineObserved) {
             const originalParseJSON = window.Engine.communication.parseJSON;
@@ -542,7 +519,6 @@
 
     function addonStop() {
         removeAllTxov();
-        if (uiMainWindow) { uiMainWindow.remove(); uiMainWindow = null; }
         if (uiAddWindow) { uiAddWindow.remove(); uiAddWindow = null; }
         if (uiEditWindow) { uiEditWindow.remove(); uiEditWindow = null; }
         if (uiMassEditWindow) { uiMassEditWindow.remove(); uiMassEditWindow = null; }
@@ -550,13 +526,6 @@
 
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
-        if (uiMainWindow) {
-            const mainCb = uiMainWindow.querySelector(".zt-main-checkbox");
-            if (mainCb) {
-                if (isEnabled) mainCb.classList.add('active');
-                else mainCb.classList.remove('active');
-            }
-        }
         if (isEnabled) applyLabelsToAllVisibleItems();
         else removeAllTxov();
         saveSettings();
