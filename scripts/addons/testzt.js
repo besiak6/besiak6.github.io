@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Znacznik Teleportów baddonz
-// @version       1.0
+// @version       28.05.2026
 // @description   Znacznik Teleportów
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -11,18 +11,6 @@
     'use strict';
 
     const ADDON_ID = "ZT";
-
-    const styleSheet = document.createElement("style");
-    styleSheet.type = "text/css";
-    styleSheet.className = "zt-custom-styles";
-    styleSheet.innerText = `
-        .baddonz-zt-wnd { width:180px; min-width:180px; }
-        .baddonz-zt-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
-        .baddonz-zt-wnd .baddonz-setting-row { margin-bottom: 2px !important; }
-        .baddonz-zt-wnd .baddonz-text { font-size: 11px; }
-        .zt-modal-wnd { width: 220px; z-index: 12; }
-    `;
-    if (!document.querySelector(".zt-custom-styles")) document.head.appendChild(styleSheet);
 
     const config = {
         "610": "D.AUK", "1224": "KENDAL", "630": "PORT", "1297": "TRIST", "8116": "EVE",
@@ -43,21 +31,19 @@
         "7338": "TEŚC", "7466": "KOW", "7453": "AMUN", "7454": "AMUN", "7440": "FODUG", "7441": "FODUG",
         "1322": "ADA", "1315": "ADA", "5872": "DWK", "7473": "GONS", "7474": "GONS", "5856": "BURK",
         "5855": "BURK", "5851": "SHEB", "5849": "SHEB", "5862": "SK", "5861": "SK",
-        "6053": "TOR","6051": "TOR","7345": "K.ŚNI","6054": "DD", "6055": "DD", "7693": "OGR","4185": "PM",
-        "7688": "CERA", "7689": "CERA", "1912": "CZEM", "2063": "BREH", "7701": "MYSZ", "5940": "SADO", 
-        "5941": "TS", "7694": "SAT", "5945": "BERG","5943": "ZUF", "7864": "MARL", "7843": "M.MAD",
-        "7842": "M.MAD", "1480": "M.MAD", "1142": "ARACH", "1159": "ARACH","7859": "AI","7827": "HIPO",
-        "8181": "FANG","8180": "FANG", "3615": "DEND", "3597": "DEND", "5660": "TOLY", "5693": "JAJO", 
-        "8187": "WABI", "8186": "WABI", "5694": "JAJO", "5684": "P9", "5683": "P9", "3339": "PUST", 
-        "2353": "ART", "2354": "ZOR", "2356": "FUR", "3039": "SET", "3035": "CHOP", "6064": "NYMF", 
-        "1901": "CIUT", "4056": "SYBA", "3327": "TER", "3335": "Z. TER", "3334": "Z. TER", 
-        "3341": "CHAG", "3340": "VERA",
+        "6053": "TOR","6051": "TOR","7345": "K.ŚNI","6054": "DD", "6055": "DD", "7693": "OGR","4185": "PM","7688": "CERA", "7689": "CERA", "1912": "CZEM",
+        "2063": "BREH", "7701": "MYSZ", "5940": "SADO", "5941": "TS", "7694": "SAT", "5945": "BERG","5943": "ZUF",
+        "7864": "MARL", "7843": "M.MAD","7842": "M.MAD", "1480": "M.MAD", "1142": "ARACH", "1159": "ARACH","7859": "AI","7827": "HIPO",
+        "8181": "FANG","8180": "FANG", "3615": "DEND", "3597": "DEND", "5660": "TOLY", "5693": "JAJO", "8187": "WABI", "8186": "WABI",
+        "5694": "JAJO", "5684": "P9", "5683": "P9", "3339": "PUST", "2353": "ART", "2354": "ZOR",
+        "2356": "FUR", "3039": "SET", "3035": "CHOP", "6064": "NYMF", "1901": "CIUT", "4056": "SYBA",
+        "3327": "TER", "3335": "Z. TER", "3334": "Z. TER", "3341": "CHAG", "3340": "VERA",
         "3361": "36", "3883": "63", "202": "63", "4046": "83", "1387": "83", "7353": "114",
         "1739": "114", "4161": "144", "349": "144", "4066": "167", "264": "167", "4196": "190",
         "6052": "190", "4206": "213", "1131": "213", "4266": "244", "3596": "244",
-        "4268": "279", "3037": "279", "189": "ORLA", "1746": "KIC", "6949": "RENE", "7060": "ARCY", 
-        "7477": "ZONS", "6477": "ŁOWK", "6476": "PRZY", "7848": "MAGU", "5709": "TEZA", "5708": "TEZA",
-        "3312": "BB", "2357": "TH", "2355": "TH",
+        "4268": "279", "3037": "279", "189": "ORLA", "1746": "KIC", "6949": "RENE", "7060": "ARCY", "7477": "ZONS",
+        "6477": "ŁOWK", "6476": "PRZY", "7848": "MAGU", "5709": "TEZA", "5708": "TEZA",
+        "3312": "BB", "2357": "TH", "2355": "TH"
     };
 
     let currentSettings = {
@@ -70,17 +56,17 @@
     };
 
     let uiMainWindow = null;
-    let addWindow = null;
-    let editWindow = null;
-    let massEditWindow = null;
+    let uiAddWindow = null;
+    let uiEditWindow = null;
+    let uiMassEditWindow = null;
     let currentItemId = null;
-    let isEngineHooked = false;
+    let isEngineObserved = false;
+    let isMenuIntercepted = false;
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
         let accSettings = {};
-        
         try {
             const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (data[accId] && data[accId].accountAddons) {
@@ -88,34 +74,29 @@
             }
         } catch (e) {}
 
-        let oldCustom = JSON.parse(localStorage.getItem('custom_teleport_sign'));
-        let oldMass = JSON.parse(localStorage.getItem('teleportmass'));
-        let oldIgnored = JSON.parse(localStorage.getItem('ignored_sign'));
+        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
 
-        currentSettings = { ...currentSettings, ...accSettings };
-
-        if (currentSettings.customLabels && Object.keys(currentSettings.customLabels).length === 0 && oldCustom) {
-            currentSettings.customLabels = oldCustom || {};
-            currentSettings.teleportmass = oldMass || {};
-            currentSettings.ignored_sign = oldIgnored || {};
-            
-            localStorage.removeItem('custom_teleport_sign');
-            localStorage.removeItem('teleportmass');
-            localStorage.removeItem('ignored_sign');
-            saveSettings();
-        }
+        if (!currentSettings.customLabels) currentSettings.customLabels = {};
+        if (!currentSettings.teleportmass) currentSettings.teleportmass = {};
+        if (!currentSettings.ignored_sign) currentSettings.ignored_sign = {};
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
+
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'customLabels', 'teleportmass', 'ignored_sign'];
+        let accSettings = {};
+        accKeys.forEach(k => accSettings[k] = currentSettings[k]);
+
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
-        
+
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
             if (!data[accId].accountAddons) data[accId].accountAddons = {};
-            data[accId].accountAddons[ADDON_ID] = currentSettings;
+            data[accId].accountAddons[ADDON_ID] = accSettings;
             localStorage.setItem('BaddonzData', JSON.stringify(data));
         } catch (e) {}
     }
@@ -143,7 +124,6 @@
             fontFamily: "'Arial Black', Gadget, sans-serif",
             userSelect: "none", pointerEvents: "none",
             textRendering: "optimizeLegibility",
-            zIndex: "5"
         });
     }
 
@@ -152,6 +132,10 @@
         if (!$it) return;
         const tz = $it.querySelector(".znacznik-teleport");
         if (tz) tz.remove();
+    }
+
+    function removeAllTxov() {
+        document.querySelectorAll('.znacznik-teleport').forEach(el => el.remove());
     }
 
     function parseStats(stats) {
@@ -192,6 +176,7 @@
     }
 
     function applyLabelsToAllVisibleItems() {
+        if (!currentSettings.enabled) return;
         if (!window.Engine?.items?.fetchLocationItems) return;
         const itemsArray = window.Engine.items.fetchLocationItems("g");
         const items = {};
@@ -202,17 +187,16 @@
     }
 
     function uiz(items) {
+        if (!currentSettings.enabled) return;
         if (!items || typeof items !== "object") return;
+        
         for (const id in items) {
             const it = items[id];
             if (!it || typeof it !== "object") continue;
 
-            if (!currentSettings.enabled) {
-                removeTxov(id);
-                continue;
-            }
-
             const tp = getItemTeleport(it);
+            if (!tp) continue;
+            
             const tpMap = getTpMap(tp);
 
             const customLabel = currentSettings.customLabels[id];
@@ -231,19 +215,16 @@
                 finalLabel = autoLabel;
             }
 
-            if (finalLabel) {
-                txov(id, finalLabel);
-            } else {
-                removeTxov(id);
-            }
+            if (finalLabel) txov(id, finalLabel);
+            else removeTxov(id);
         }
     }
 
     const intercept = (obj, key, cb) => {
-        const original = obj[key];
+        const _orig = obj[key];
         obj[key] = function (...args) {
             cb(...args);
-            return original.apply(this, args);
+            return _orig.apply(this, args);
         };
     };
 
@@ -268,230 +249,159 @@
         return finalLabel;
     }
 
-    function bringToFront(wnd) {
-        document.querySelectorAll('.baddonz-window').forEach(w => { w.style.zIndex = '11'; });
-        if (wnd) wnd.style.zIndex = '12';
-    }
-
     function centerWindow(windowElement) {
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
-        const windowWidth = 220; 
-        const windowHeight = 100;
+        const windowWidth = windowElement.offsetWidth || 200;
+        const windowHeight = windowElement.offsetHeight || 100;
         windowElement.style.left = `${(screenWidth - windowWidth) / 2}px`;
         windowElement.style.top = `${(screenHeight - windowHeight) / 2}px`;
     }
 
-    function showAddWindow(id) {
-        currentItemId = id;
-        const input = addWindow.querySelector('.zt-add-input');
-        input.value = '';
-        addWindow.style.display = 'flex';
-        centerWindow(addWindow);
-        bringToFront(addWindow);
-        input.focus();
-    }
-
-    function showEditWindow(id, currentLabel) {
-        currentItemId = id;
-        const input = editWindow.querySelector('.zt-edit-input');
-        input.value = currentLabel;
-        editWindow.style.display = 'flex';
-        centerWindow(editWindow);
-        bringToFront(editWindow);
-        input.focus();
-    }
-
-    function showMassEditWindow(id, currentLabel) {
-        currentItemId = id;
-        const input = massEditWindow.querySelector('.zt-mass-edit-input');
-        input.value = currentLabel;
-        massEditWindow.style.display = 'flex';
-        centerWindow(massEditWindow);
-        bringToFront(massEditWindow);
-        input.focus();
-    }
-
-    function handleAddLabel() {
-        const input = addWindow.querySelector('.zt-add-input');
-        const newLabelInput = input.value.trim();
-        const finalLabel = validateLabelInput(newLabelInput);
-
-        if (finalLabel) {
-            currentSettings.customLabels[currentItemId] = finalLabel;
-            delete currentSettings.ignored_sign[currentItemId];
-            saveSettings();
-            applyLabelsToAllVisibleItems();
-            addWindow.style.display = 'none';
-        } else if (newLabelInput === '') {
-            addWindow.style.display = 'none';
-        }
-    }
-
-    function handleEditLabel() {
-        const input = editWindow.querySelector('.zt-edit-input');
-        const newLabelInput = input.value.trim();
-        const finalLabel = validateLabelInput(newLabelInput);
-
-        if (finalLabel) {
-            currentSettings.customLabels[currentItemId] = finalLabel;
-            delete currentSettings.ignored_sign[currentItemId];
-            saveSettings();
-            applyLabelsToAllVisibleItems();
-            editWindow.style.display = 'none';
-        } else if (newLabelInput === '') {
-            delete currentSettings.customLabels[currentItemId];
-            currentSettings.ignored_sign[currentItemId] = true;
-            saveSettings();
-            applyLabelsToAllVisibleItems();
-            editWindow.style.display = 'none';
-        }
-    }
-
-    function handleMassEditLabel() {
-        const input = massEditWindow.querySelector('.zt-mass-edit-input');
-        const newLabelInput = input.value.trim();
-        const finalLabel = validateLabelInput(newLabelInput);
-
-        const item = window.Engine.items.getItemById(currentItemId);
-        const tp = getItemTeleport(item);
-        const tpMap = getTpMap(tp);
-
-        if (finalLabel) {
-            currentSettings.teleportmass[tpMap] = { enabled: true, label: finalLabel };
-            saveSettings();
-            applyLabelsToAllVisibleItems();
-            massEditWindow.style.display = 'none';
-        } else if (newLabelInput === '') {
-            delete currentSettings.teleportmass[tpMap];
-            saveSettings();
-            applyLabelsToAllVisibleItems();
-            massEditWindow.style.display = 'none';
-        }
-    }
-
     function buildUI() {
         const mainBodyHtml = `
-            <div class="baddonz-setting-row" style="margin-bottom: 4px !important; display: flex; align-items: center;">
-                <div class="baddonz-checkbox zt-checkbox ${currentSettings.enabled ? 'active' : ''}"></div>
-                <span class="baddonz-text" style="padding: 0; margin-left: 5px;">Znaczniki Teleportów</span>
+            <div class="baddonz-setting-row" style="margin-bottom: 2px !important; display: flex; align-items: center;">
+                <div class="baddonz-checkbox zt-main-checkbox ${currentSettings.enabled ? 'active' : ''}"></div>
+                <span class="baddonz-text" style="padding: 0; margin-left: 5px;">Włączone</span>
             </div>
         `;
 
-        uiMainWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Znaczniki", mainBodyHtml, {
-            width: '180px',
+        uiMainWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Teleporty", mainBodyHtml, { 
+            width: '150px', 
             customId: 'baddonz-zt-wnd',
             hasSettings: false,
-            hasCollapse: false
+            hasCollapse: false,
+            hasClose: true
         });
         uiMainWindow.classList.add('baddonz-zt-wnd');
 
-        const ztCheckbox = uiMainWindow.querySelector(".zt-checkbox");
-        ztCheckbox.addEventListener('click', () => {
-            currentSettings.enabled = ztCheckbox.classList.toggle('active');
+        const mainCheckbox = uiMainWindow.querySelector(".zt-main-checkbox");
+        mainCheckbox.addEventListener('click', () => {
+            currentSettings.enabled = mainCheckbox.classList.toggle('active');
             saveSettings();
-            applyLabelsToAllVisibleItems();
+            if (currentSettings.enabled) applyLabelsToAllVisibleItems();
+            else removeAllTxov();
         });
 
-        const dialogsHtml = `
-            <div class="baddonz-window blur zt-modal-wnd zt-wnd-add" style="display: none; position: absolute;">
-                <div class="baddonz-window-header">
-                    <div class="baddonz-window-controls left"></div>
-                    <div class="baddonz-window-title">Dodaj Znacznik</div>
-                    <div class="baddonz-window-controls right">
-                        <div class="baddonz-icon baddonz-close-button zt-add-close-btn"></div>
-                    </div>
-                </div>
-                <div class="baddonz-window-body baddonz-flex column centered" style="padding: 10px;">
-                    <input type="text" class="baddonz-input zt-add-input" placeholder="Wprowadź podpis" maxlength="8" style="width: 100%; text-align: center;" autocomplete="off">
-                    <div class="baddonz-flex between" style="width: 100%; gap: 10px; margin-top: 10px;">
-                        <button class="baddonz-button zt-add-cancel-btn" style="flex: 1;">Anuluj</button>
-                        <button class="baddonz-button zt-add-ok-btn" style="flex: 1;">OK</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="baddonz-window blur zt-modal-wnd zt-wnd-edit" style="display: none; position: absolute;">
-                <div class="baddonz-window-header">
-                    <div class="baddonz-window-controls left"></div>
-                    <div class="baddonz-window-title">Edytuj Znacznik</div>
-                    <div class="baddonz-window-controls right">
-                        <div class="baddonz-icon baddonz-close-button zt-edit-close-btn"></div>
-                    </div>
-                </div>
-                <div class="baddonz-window-body baddonz-flex column centered" style="padding: 10px;">
-                    <input type="text" class="baddonz-input zt-edit-input" maxlength="8" style="width: 100%; text-align: center;" autocomplete="off">
-                    <div class="baddonz-flex between" style="width: 100%; gap: 10px; margin-top: 10px;">
-                        <button class="baddonz-button zt-edit-cancel-btn" style="flex: 1;">Anuluj</button>
-                        <button class="baddonz-button zt-edit-ok-btn" style="flex: 1;">OK</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="baddonz-window blur zt-modal-wnd zt-wnd-mass-edit" style="display: none; position: absolute;">
-                <div class="baddonz-window-header">
-                    <div class="baddonz-window-controls left"></div>
-                    <div class="baddonz-window-title">Edytuj Podpisy</div>
-                    <div class="baddonz-window-controls right">
-                        <div class="baddonz-icon baddonz-close-button zt-mass-edit-close-btn"></div>
-                    </div>
-                </div>
-                <div class="baddonz-window-body baddonz-flex column centered" style="padding: 10px;">
-                    <input type="text" class="baddonz-input zt-mass-edit-input" maxlength="8" style="width: 100%; text-align: center;" autocomplete="off">
-                    <div class="baddonz-flex between" style="width: 100%; gap: 10px; margin-top: 10px;">
-                        <button class="baddonz-button zt-mass-edit-cancel-btn" style="flex: 1;">Anuluj</button>
-                        <button class="baddonz-button zt-mass-edit-ok-btn" style="flex: 1;">OK</button>
-                    </div>
+        const actionBodyHtml = `
+            <div class="baddonz-flex column centered" style="padding: 5px;">
+                <input type="text" class="baddonz-input zt-action-input" maxlength="8" style="width: 100%; text-align: center;" autocomplete="off">
+                <div class="baddonz-flex between" style="width: 100%; gap: 10px; margin-top: 10px;">
+                    <button class="baddonz-button zt-action-cancel-btn" style="flex: 1;">Anuluj</button>
+                    <button class="baddonz-button zt-action-ok-btn" style="flex: 1;">OK</button>
                 </div>
             </div>
         `;
-        document.body.insertAdjacentHTML('beforeend', dialogsHtml);
 
-        addWindow = document.querySelector('.zt-wnd-add');
-        editWindow = document.querySelector('.zt-wnd-edit');
-        massEditWindow = document.querySelector('.zt-wnd-mass-edit');
+        uiAddWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Dodaj Znacznik", actionBodyHtml, { width: '200px', customId: 'baddonz-zt-wnd-add', hasSettings: false, hasCollapse: false, hasClose: true });
+        uiEditWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Edytuj Znacznik", actionBodyHtml, { width: '200px', customId: 'baddonz-zt-wnd-edit', hasSettings: false, hasCollapse: false, hasClose: true });
+        uiMassEditWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Edytuj Podpisy", actionBodyHtml, { width: '200px', customId: 'baddonz-zt-wnd-mass', hasSettings: false, hasCollapse: false, hasClose: true });
 
-        document.querySelector('.zt-add-cancel-btn').addEventListener('click', () => addWindow.style.display = 'none');
-        document.querySelector('.zt-edit-cancel-btn').addEventListener('click', () => editWindow.style.display = 'none');
-        document.querySelector('.zt-mass-edit-cancel-btn').addEventListener('click', () => massEditWindow.style.display = 'none');
+        uiAddWindow.style.display = 'none';
+        uiEditWindow.style.display = 'none';
+        uiMassEditWindow.style.display = 'none';
 
-        document.querySelector('.zt-add-ok-btn').addEventListener('click', handleAddLabel);
-        document.querySelector('.zt-edit-ok-btn').addEventListener('click', handleEditLabel);
-        document.querySelector('.zt-mass-edit-ok-btn').addEventListener('click', handleMassEditLabel);
+        const addInput = uiAddWindow.querySelector('.zt-action-input');
+        const editInput = uiEditWindow.querySelector('.zt-action-input');
+        const massEditInput = uiMassEditWindow.querySelector('.zt-action-input');
 
-        addWindow.querySelector('.zt-add-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAddLabel(); });
-        editWindow.querySelector('.zt-edit-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleEditLabel(); });
-        massEditWindow.querySelector('.zt-mass-edit-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleMassEditLabel(); });
+        uiAddWindow.querySelector('.baddonz-close-button').addEventListener('click', () => uiAddWindow.style.display = 'none');
+        uiEditWindow.querySelector('.baddonz-close-button').addEventListener('click', () => uiEditWindow.style.display = 'none');
+        uiMassEditWindow.querySelector('.baddonz-close-button').addEventListener('click', () => uiMassEditWindow.style.display = 'none');
 
-        if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
-            $('.zt-add-close-btn').tip('Zamknij');
-            $('.zt-edit-close-btn').tip('Zamknij');
-            $('.zt-mass-edit-close-btn').tip('Zamknij');
-        }
+        uiAddWindow.querySelector('.zt-action-cancel-btn').addEventListener('click', () => uiAddWindow.style.display = 'none');
+        uiEditWindow.querySelector('.zt-action-cancel-btn').addEventListener('click', () => uiEditWindow.style.display = 'none');
+        uiMassEditWindow.querySelector('.zt-action-cancel-btn').addEventListener('click', () => uiMassEditWindow.style.display = 'none');
+
+        const handleAdd = () => {
+            const finalLabel = validateLabelInput(addInput.value.trim());
+            if (finalLabel) {
+                currentSettings.customLabels[currentItemId] = finalLabel;
+                delete currentSettings.ignored_sign[currentItemId];
+                saveSettings(); applyLabelsToAllVisibleItems();
+                uiAddWindow.style.display = 'none';
+            } else if (addInput.value.trim() === '') uiAddWindow.style.display = 'none';
+        };
+
+        const handleEdit = () => {
+            const finalLabel = validateLabelInput(editInput.value.trim());
+            if (finalLabel) {
+                currentSettings.customLabels[currentItemId] = finalLabel;
+                delete currentSettings.ignored_sign[currentItemId];
+                saveSettings(); applyLabelsToAllVisibleItems();
+                uiEditWindow.style.display = 'none';
+            } else if (editInput.value.trim() === '') {
+                delete currentSettings.customLabels[currentItemId];
+                currentSettings.ignored_sign[currentItemId] = true;
+                saveSettings(); applyLabelsToAllVisibleItems();
+                uiEditWindow.style.display = 'none';
+            }
+        };
+
+        const handleMassEdit = () => {
+            const finalLabel = validateLabelInput(massEditInput.value.trim());
+            const item = window.Engine.items.getItemById(currentItemId);
+            const tp = getItemTeleport(item);
+            const tpMap = getTpMap(tp);
+
+            if (finalLabel) {
+                currentSettings.teleportmass[tpMap] = { enabled: true, label: finalLabel };
+                saveSettings(); applyLabelsToAllVisibleItems();
+                uiMassEditWindow.style.display = 'none';
+            } else if (massEditInput.value.trim() === '') {
+                delete currentSettings.teleportmass[tpMap];
+                saveSettings(); applyLabelsToAllVisibleItems();
+                uiMassEditWindow.style.display = 'none';
+            }
+        };
+
+        uiAddWindow.querySelector('.zt-action-ok-btn').addEventListener('click', handleAdd);
+        addInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAdd(); });
+
+        uiEditWindow.querySelector('.zt-action-ok-btn').addEventListener('click', handleEdit);
+        editInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleEdit(); });
+
+        uiMassEditWindow.querySelector('.zt-action-ok-btn').addEventListener('click', handleMassEdit);
+        massEditInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleMassEdit(); });
+    }
+
+    function showWindow(wnd, input, id, initialValue = '') {
+        currentItemId = id;
+        input.value = initialValue;
+        wnd.style.display = 'flex';
+        centerWindow(wnd);
+        wnd.dispatchEvent(new Event('mousedown'));
+        input.focus();
     }
 
     function addonInit() {
         loadSettings();
         if (!uiMainWindow) buildUI();
 
-        if (!isEngineHooked) {
-            intercept(window.Engine.communication, 'parseJSON', (data) => {
+        if (!isEngineObserved) {
+            const originalParseJSON = window.Engine.communication.parseJSON;
+            window.Engine.communication.parseJSON = function (data) {
+                const res = originalParseJSON.apply(this, arguments);
                 if (data.item) uiz(data.item);
-            });
+                return res;
+            };
+            isEngineObserved = true;
+        }
 
+        if (!isMenuIntercepted) {
             intercept(window.Engine.interface, 'showPopupMenu', (options, event) => {
                 if (!currentSettings.enabled) return;
 
-                const idMatch = event.target?.className?.match(/item-id-(\d+)/) || event.target?.parentElement?.className?.match(/item-id-(\d+)/);
-                const id = idMatch ? idMatch[1] : null;
+                const id = event.target?.className?.match(/item-id-(\d+)/)?.[1];
                 if (!id) return;
 
                 const item = window.Engine.items.getItemById(id);
                 if (!item) return;
 
                 const tp = getItemTeleport(item);
-                const tpMap = getTpMap(tp);
+                if (!tp) return;
 
+                const tpMap = getTpMap(tp);
                 const autoLabel = getAutoLabel(tp, tpMap);
                 const hasCustomLabel = currentSettings.customLabels.hasOwnProperty(id);
                 const isMassLabeledGlobally = currentSettings.teleportmass[tpMap]?.enabled === true;
@@ -500,40 +410,33 @@
                 
                 let currentLabelSource = 'none';
 
-                if (isIgnoredSingularly) {
-                    currentLabelSource = 'ignored';
-                } else if (hasCustomLabel) {
-                    currentLabelSource = 'custom';
-                } else if (isMassLabeledGlobally) {
-                    currentLabelSource = 'mass';
-                } else if (autoLabel) {
-                    currentLabelSource = 'config';
-                }
+                if (isIgnoredSingularly) currentLabelSource = 'ignored';
+                else if (hasCustomLabel) currentLabelSource = 'custom';
+                else if (isMassLabeledGlobally) currentLabelSource = 'mass';
+                else if (autoLabel) currentLabelSource = 'config';
 
                 let menuOptionsToAdd = [];
                 let spliceIndex = options.length - 1;
 
-                if (tp && (item._cachedStats.custom_teleport || item._cachedStats.teleport)) {
+                if (item._cachedStats && (item._cachedStats.custom_teleport || item._cachedStats.teleport)) {
                     if (autoLabel) {
                         if (currentLabelSource === 'config') {
-                            menuOptionsToAdd.push(['Edytuj Podpis', () => { showEditWindow(id, autoLabel); }, { button: { cls: 'menu-item--green' } }]);
+                            menuOptionsToAdd.push(['Edytuj Podpis', () => showWindow(uiEditWindow, uiEditWindow.querySelector('.zt-action-input'), id, autoLabel), { button: { cls: 'menu-item--green' } }]);
                             menuOptionsToAdd.push(['Usuń Podpis', () => {
                                 delete currentSettings.customLabels[id];
                                 currentSettings.ignored_sign[id] = true;
-                                saveSettings();
-                                applyLabelsToAllVisibleItems();
+                                saveSettings(); applyLabelsToAllVisibleItems();
                             }, { button: { cls: 'menu-item--red' } }]);
                         }
                         else if (currentLabelSource === 'ignored') {
                             menuOptionsToAdd.push(['Przywróć Domyślny Podpis', () => {
                                 delete currentSettings.ignored_sign[id];
                                 delete currentSettings.customLabels[id];
-                                saveSettings();
-                                applyLabelsToAllVisibleItems();
+                                saveSettings(); applyLabelsToAllVisibleItems();
                             }, { button: { cls: 'menu-item--green' } }]);
                         }
                         else if (currentLabelSource === 'custom') {
-                            menuOptionsToAdd.push(['Edytuj Podpis', () => { showEditWindow(id, currentSettings.customLabels[id]); }, { button: { cls: 'menu-item--green' } }]);
+                            menuOptionsToAdd.push(['Edytuj Podpis', () => showWindow(uiEditWindow, uiEditWindow.querySelector('.zt-action-input'), id, currentSettings.customLabels[id]), { button: { cls: 'menu-item--green' } }]);
                             menuOptionsToAdd.push(['Podpisanie tych samych mapek teleportu', () => {
                                 let labelToApply = currentSettings.customLabels[id] || autoLabel;
                                 if (labelToApply) {
@@ -544,19 +447,17 @@
                                             delete currentSettings.ignored_sign[it.id];
                                         }
                                     });
-                                    saveSettings();
-                                    applyLabelsToAllVisibleItems();
+                                    saveSettings(); applyLabelsToAllVisibleItems();
                                 }
                             }, { button: { cls: 'menu-item--green' } }]);
                             menuOptionsToAdd.push(['Usuń Podpis', () => {
                                 delete currentSettings.customLabels[id];
                                 currentSettings.ignored_sign[id] = true;
-                                saveSettings();
-                                applyLabelsToAllVisibleItems();
+                                saveSettings(); applyLabelsToAllVisibleItems();
                             }, { button: { cls: 'menu-item--red' } }]);
                         }
                         else if (currentLabelSource === 'mass') {
-                            menuOptionsToAdd.push(['Edytuj Podpisy', () => { showMassEditWindow(id, currentMassLabel); }, { button: { cls: 'menu-item--green' } }]);
+                            menuOptionsToAdd.push(['Edytuj Podpisy', () => showWindow(uiMassEditWindow, uiMassEditWindow.querySelector('.zt-action-input'), id, currentMassLabel), { button: { cls: 'menu-item--green' } }]);
                             menuOptionsToAdd.push(['Podpisywanie tych samych mapek teleportu', () => {
                                 const labelToPersist = currentMassLabel;
                                 delete currentSettings.teleportmass[tpMap];
@@ -572,23 +473,20 @@
                                         }
                                     }
                                 });
-                                saveSettings();
-                                applyLabelsToAllVisibleItems();
+                                saveSettings(); applyLabelsToAllVisibleItems();
                             }, { button: { cls: 'menu-item--red' } }]);
                             menuOptionsToAdd.push(['Usuń Podpis', () => {
                                 delete currentSettings.customLabels[id];
                                 currentSettings.ignored_sign[id] = true;
-                                saveSettings();
-                                applyLabelsToAllVisibleItems();
+                                saveSettings(); applyLabelsToAllVisibleItems();
                             }, { button: { cls: 'menu-item--red' } }]);
                         }
-                    }
-                    else {
+                    } else {
                         if (currentLabelSource === 'none' || currentLabelSource === 'ignored') {
-                            menuOptionsToAdd.push(['Dodaj Podpis', () => { showAddWindow(id); }, { button: { cls: 'menu-item--green' } }]);
+                            menuOptionsToAdd.push(['Dodaj Podpis', () => showWindow(uiAddWindow, uiAddWindow.querySelector('.zt-action-input'), id), { button: { cls: 'menu-item--green' } }]);
                         }
                         else if (currentLabelSource === 'custom') {
-                            menuOptionsToAdd.push(['Edytuj Podpis', () => { showEditWindow(id, currentSettings.customLabels[id]); }, { button: { cls: 'menu-item--green' } }]);
+                            menuOptionsToAdd.push(['Edytuj Podpis', () => showWindow(uiEditWindow, uiEditWindow.querySelector('.zt-action-input'), id, currentSettings.customLabels[id]), { button: { cls: 'menu-item--green' } }]);
                             menuOptionsToAdd.push(['Podpisanie tych samych mapek teleportu', () => {
                                 let labelToApply = currentSettings.customLabels[id];
                                 if (labelToApply) {
@@ -599,18 +497,16 @@
                                             delete currentSettings.ignored_sign[it.id];
                                         }
                                     });
-                                    saveSettings();
-                                    applyLabelsToAllVisibleItems();
+                                    saveSettings(); applyLabelsToAllVisibleItems();
                                 }
                             }, { button: { cls: 'menu-item--green' } }]);
                             menuOptionsToAdd.push(['Usuń Podpis', () => {
                                 delete currentSettings.customLabels[id];
-                                saveSettings();
-                                applyLabelsToAllVisibleItems();
+                                saveSettings(); applyLabelsToAllVisibleItems();
                             }, { button: { cls: 'menu-item--red' } }]);
                         }
                         else if (currentLabelSource === 'mass') {
-                             menuOptionsToAdd.push(['Edytuj Podpisy', () => { showMassEditWindow(id, currentMassLabel); }, { button: { cls: 'menu-item--green' } }]);
+                             menuOptionsToAdd.push(['Edytuj Podpisy', () => showWindow(uiMassEditWindow, uiMassEditWindow.querySelector('.zt-action-input'), id, currentMassLabel), { button: { cls: 'menu-item--green' } }]);
                              menuOptionsToAdd.push(['Podpisywanie tych samych mapek teleportu', () => {
                                 const labelToPersist = currentMassLabel;
                                 delete currentSettings.teleportmass[tpMap];
@@ -626,51 +522,44 @@
                                         }
                                     }
                                 });
-                                saveSettings();
-                                applyLabelsToAllVisibleItems();
+                                saveSettings(); applyLabelsToAllVisibleItems();
                             }, { button: { cls: 'menu-item--red' } }]);
                             menuOptionsToAdd.push(['Usuń Podpis', () => {
                                 delete currentSettings.customLabels[id];
                                 currentSettings.ignored_sign[id] = true;
-                                saveSettings();
-                                applyLabelsToAllVisibleItems();
+                                saveSettings(); applyLabelsToAllVisibleItems();
                             }, { button: { cls: 'menu-item--red' } }]);
                         }
                     }
-                    if (menuOptionsToAdd.length > 0) {
-                        options.splice(spliceIndex, 0, ...menuOptionsToAdd);
-                    }
+                    if (menuOptionsToAdd.length > 0) options.splice(spliceIndex, 0, ...menuOptionsToAdd);
                 }
             });
-            isEngineHooked = true;
+            isMenuIntercepted = true;
         }
 
-        applyLabelsToAllVisibleItems();
+        if (currentSettings.enabled) applyLabelsToAllVisibleItems();
     }
 
     function addonStop() {
+        removeAllTxov();
         if (uiMainWindow) { uiMainWindow.remove(); uiMainWindow = null; }
-        if (addWindow) { addWindow.remove(); addWindow = null; }
-        if (editWindow) { editWindow.remove(); editWindow = null; }
-        if (massEditWindow) { massEditWindow.remove(); massEditWindow = null; }
-        
-        if (window.Engine?.items?.fetchLocationItems) {
-            window.Engine.items.fetchLocationItems("g").forEach(it => {
-                removeTxov(it.id);
-            });
-        }
+        if (uiAddWindow) { uiAddWindow.remove(); uiAddWindow = null; }
+        if (uiEditWindow) { uiEditWindow.remove(); uiEditWindow = null; }
+        if (uiMassEditWindow) { uiMassEditWindow.remove(); uiMassEditWindow = null; }
     }
 
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
         if (uiMainWindow) {
-            const ztCheckbox = uiMainWindow.querySelector(".zt-checkbox");
-            if (ztCheckbox) {
-                if (isEnabled) ztCheckbox.classList.add('active');
-                else ztCheckbox.classList.remove('active');
+            const mainCb = uiMainWindow.querySelector(".zt-main-checkbox");
+            if (mainCb) {
+                if (isEnabled) mainCb.classList.add('active');
+                else mainCb.classList.remove('active');
             }
         }
-        applyLabelsToAllVisibleItems();
+        if (isEnabled) applyLabelsToAllVisibleItems();
+        else removeAllTxov();
+        saveSettings();
     }
 
     const checkApi = () => {
@@ -679,7 +568,7 @@
         }
         window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle: onStateToggle });
     };
-    
+
     checkApi();
 
 })();
