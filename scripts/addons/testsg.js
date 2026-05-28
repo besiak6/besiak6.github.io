@@ -69,7 +69,10 @@
 
         let accSettings = {};
         try {
-            accSettings = JSON.parse(localStorage.getItem('Baddonz_ZAP_Acc_' + accId)) || {};
+            const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
+            if (data[accId] && data[accId].accountAddons) {
+                accSettings = data[accId].accountAddons[ADDON_ID] || {};
+            }
         } catch (e) {}
 
         let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
@@ -97,7 +100,14 @@
         charKeys.forEach(k => charSettings[k] = currentSettings[k]);
 
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
-        localStorage.setItem('Baddonz_ZAP_Acc_' + accId, JSON.stringify(accSettings));
+
+        try {
+            let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
+            if (!data[accId]) data[accId] = {};
+            if (!data[accId].accountAddons) data[accId].accountAddons = {};
+            data[accId].accountAddons[ADDON_ID] = accSettings;
+            localStorage.setItem('BaddonzData', JSON.stringify(data));
+        } catch (e) {}
     }
 
     function isChatFocused() {
@@ -282,12 +292,13 @@
                 return;
             }
 
-            if (pressedKey.length === 1 && pressedKey !== ' ') {
-                currentSettings.inviteKey = pressedKey;
-                zapKeybindInput.value = pressedKey.toUpperCase();
-                saveSettings();
-            }
+            if (window.BaddonzAPI && !window.BaddonzAPI.isValidHotkey(pressedKey)) return;
+            if (pressedKey.length !== 1) return;
 
+            currentSettings.inviteKey = pressedKey;
+            zapKeybindInput.value = pressedKey.toUpperCase();
+
+            saveSettings();
             keybindInputActive = false;
             zapKeybindInput.blur();
             zapKeybindInput.classList.remove('active-keybind-mode');
@@ -322,12 +333,12 @@
             </div>
 
             <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}" id="zap-randoms-checkbox" title="Zapraszaj wszystkich graczy"></div>
+                <div class="baddonz-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}" id="zap-randoms-checkbox"></div>
                 <span class="baddonz-text" style="padding:0;">Zapraszaj randomów obok</span>
             </div>
 
             <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox ${currentSettings.InviteNear ? 'active' : ''}" id="zap-from-square-checkbox" title="Przydatne na tytanów"></div>
+                <div class="baddonz-checkbox ${currentSettings.InviteNear ? 'active' : ''}" id="zap-from-square-checkbox"></div>
                 <span class="baddonz-text" style="padding:0;">Grupa z kratki (inne relacje)</span>
             </div>
 
