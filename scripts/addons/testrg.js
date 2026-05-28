@@ -40,7 +40,10 @@
         const accId = window.BaddonzAPI.accountId;
         let accSettings = {};
         try {
-            accSettings = JSON.parse(localStorage.getItem('Baddonz_RG_Acc_' + accId)) || {};
+            const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
+            if (data[accId] && data[accId].accountAddons) {
+                accSettings = data[accId].accountAddons[ADDON_ID] || {};
+            }
         } catch (e) {}
         
         let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
@@ -57,8 +60,15 @@
         let accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
         
-        localStorage.setItem('Baddonz_RG_Acc_' + accId, JSON.stringify(accSettings));
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
+        
+        try {
+            let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
+            if (!data[accId]) data[accId] = {};
+            if (!data[accId].accountAddons) data[accId].accountAddons = {};
+            data[accId].accountAddons[ADDON_ID] = accSettings;
+            localStorage.setItem('BaddonzData', JSON.stringify(data));
+        } catch (e) {}
     }
 
     function isChatFocused() {
@@ -120,24 +130,16 @@
                 return;
             }
 
-            if (pressedKey.length === 1 && pressedKey !== ' ') {
-                currentSettings.disbandKey = pressedKey;
-                rgKeybindInput.value = pressedKey.toUpperCase();
-                saveSettings();
-            }
+            if (window.BaddonzAPI && !window.BaddonzAPI.isValidHotkey(pressedKey)) return;
+            if (pressedKey.length !== 1) return;
+
+            currentSettings.disbandKey = pressedKey;
+            rgKeybindInput.value = pressedKey.toUpperCase();
+            saveSettings();
 
             keybindInputActive = false;
             rgKeybindInput.blur();
             rgKeybindInput.classList.remove('active-keybind-mode');
-            
-            if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
-                const rgCheckbox = uiWindowElement.querySelector("#rg-checkbox");
-                const rgLeaveCheckbox = uiWindowElement.querySelector("#rg-leave-checkbox");
-                let displayKey = currentSettings.disbandKey.toUpperCase();
-                if (rgCheckbox) $(rgCheckbox).tip(`Rozwiąż grupę (${displayKey})`);
-                if (rgLeaveCheckbox) $(rgLeaveCheckbox).tip(`Jeżeli nie jesteś liderem, opuść grupę (${displayKey})`);
-            }
-            
             return;
         }
 
@@ -199,9 +201,8 @@
         });
 
         if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
-            let displayKey = currentSettings.disbandKey.toUpperCase();
-            $(rgCheckbox).tip(`Rozwiąż grupę (${displayKey})`);
-            $(rgLeaveCheckbox).tip(`Jeżeli nie jesteś liderem, opuść grupę (${displayKey})`);
+            $(rgCheckbox).tip(`Rozwiąż grupę`);
+            $(rgLeaveCheckbox).tip(`Jeżeli nie jesteś liderem, opuść grupę`);
         }
     }
 
