@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          AutoX baddonz
-// @version       05.08.2025
-// @description   autox (API 2.0 - Czyste klasy, poprawny zapis)
+// @version       28.05.2026
+// @description   autox
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
