@@ -16,13 +16,13 @@
     styleSheet.type = "text/css";
     styleSheet.id = "zap-custom-styles";
     styleSheet.innerText = `
-        #baddonz-zap-wnd { width:195px; min-width:195px; }
-        #baddonz-zap-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
-        #baddonz-zap-wnd .baddonz-setting-row { margin-bottom: 2px !important; }
-        #baddonz-zap-wnd .baddonz-text { font-size: 11px; }
-        #baddonz-zap-wnd hr { margin: 3px 0 !important; }
+        .baddonz-zap-wnd { width:195px; min-width:195px; }
+        .baddonz-zap-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
+        .baddonz-zap-wnd .baddonz-setting-row { margin-bottom: 2px !important; }
+        .baddonz-zap-wnd .baddonz-text { font-size: 11px; }
+        .baddonz-zap-wnd hr { margin: 3px 0 !important; }
         .baddonz-grid-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px 5px; width: 100%; box-sizing: border-box; }
-        #baddonz-zap-wnd .baddonz-input.compact { width: 45px !important; height: 18px !important; line-height: 16px !important; padding: 1px 2px !important; font-size: 11px !important; text-align: center; margin: 0; }
+        .baddonz-zap-wnd .baddonz-input.compact { width: 45px !important; height: 18px !important; line-height: 16px !important; padding: 1px 2px !important; font-size: 11px !important; text-align: center; margin: 0; }
     `;
     if (!document.getElementById("zap-custom-styles")) document.head.appendChild(styleSheet);
 
@@ -80,8 +80,7 @@
             currentSettings.SelectedProfessions = { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true };
         }
         
-        // MIGARCJA
-        if (currentSettings.inviteKey === 'space') currentSettings.inviteKey = 'b';
+        if (currentSettings.inviteKey === 'space' || currentSettings.inviteKey === ' ') currentSettings.inviteKey = 'b';
     }
 
     function saveSettings() {
@@ -126,11 +125,6 @@
     function isFriendlyRelation(player) {
         if (!player || typeof player.d?.relation !== 'number') return false;
         return [MARGONEM_RELATIONS.FRIEND, MARGONEM_RELATIONS.CLAN, MARGONEM_RELATIONS.CLAN_ALLY].includes(player.d.relation);
-    }
-
-    function isRandomOrEnemyRelation(player) {
-        if (!player || typeof player.d?.relation !== 'number') return false;
-        return [MARGONEM_RELATIONS.NONE, MARGONEM_RELATIONS.ENEMY, MARGONEM_RELATIONS.CLAN_ENEMY].includes(player.d.relation);
     }
 
     function isInRange(player, range) {
@@ -288,13 +282,12 @@
                 return;
             }
 
-            // UŻYCIE GLOBALNEJ WALIDACJI Z GŁÓWNEGO SKRYPTU
-            if (window.BaddonzAPI && !window.BaddonzAPI.isValidSingleKey(pressedKey)) return;
+            if (pressedKey.length === 1 && pressedKey !== ' ') {
+                currentSettings.inviteKey = pressedKey;
+                zapKeybindInput.value = pressedKey.toUpperCase();
+                saveSettings();
+            }
 
-            currentSettings.inviteKey = pressedKey;
-            zapKeybindInput.value = pressedKey.toUpperCase();
-
-            saveSettings();
             keybindInputActive = false;
             zapKeybindInput.blur();
             zapKeybindInput.classList.remove('active-keybind-mode');
@@ -329,12 +322,12 @@
             </div>
 
             <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}" id="zap-randoms-checkbox"></div>
+                <div class="baddonz-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}" id="zap-randoms-checkbox" title="Zapraszaj wszystkich graczy"></div>
                 <span class="baddonz-text" style="padding:0;">Zapraszaj randomów obok</span>
             </div>
 
             <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox ${currentSettings.InviteNear ? 'active' : ''}" id="zap-from-square-checkbox"></div>
+                <div class="baddonz-checkbox ${currentSettings.InviteNear ? 'active' : ''}" id="zap-from-square-checkbox" title="Przydatne na tytanów"></div>
                 <span class="baddonz-text" style="padding:0;">Grupa z kratki (inne relacje)</span>
             </div>
 
@@ -385,6 +378,7 @@
             hasSettings: false,
             hasCollapse: false
         });
+        uiWindowElement.classList.add('baddonz-zap-wnd');
 
         const zapCheckbox = uiWindowElement.querySelector("#zap-checkbox");
         const zapKeybindInput = uiWindowElement.querySelector("#zap-keybind-input");
