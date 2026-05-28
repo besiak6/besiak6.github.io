@@ -16,13 +16,13 @@
     styleSheet.type = "text/css";
     styleSheet.id = "autox-custom-styles";
     styleSheet.innerText = `
-        #baddonz-ax-wnd { width:110px; min-width:110px; }
-        #baddonz-ax-wnd-settings { width:250px; min-width:250px; }
-        #baddonz-ax-wnd .baddonz-window-body { padding: 0px 5px 5px 5px !important; gap: 3px !important; }
+        .baddonz-ax-wnd { width:110px; min-width:110px; }
+        .baddonz-ax-wnd-settings { width:250px; min-width:250px; }
+        .baddonz-ax-wnd .baddonz-window-body { padding: 0px 5px 5px 5px !important; gap: 3px !important; }
         #ax-s-walka-btn { width:100%; }
         .baddonz-setting-row.ax-main-row { gap:5px; margin: 0; }
         .baddonz-input.ax-small { width:100%; max-width:79px; font-size:11px; height:20px !important; line-height:18px; text-align:center; padding:1px 0px; }
-        #baddonz-ax-wnd-settings .baddonz-input { text-align:center; height:26px !important; }
+        .baddonz-ax-wnd-settings .baddonz-input { text-align:center; height:26px !important; }
         .baddonz-setting-row span { white-space:nowrap; font-size:11px; }
     `;
     if (!document.getElementById("autox-custom-styles")) document.head.appendChild(styleSheet);
@@ -269,6 +269,7 @@
             hasCollapse: true,
             hasClose: false
         });
+        uiMainWindow.classList.add('baddonz-ax-wnd');
 
         const settingsBodyHtml = `
             <button class="baddonz-button" style="width:100%; margin-bottom: 5px;" id="ax-reset-pos-btn">Resetuj pozycje okienka</button>
@@ -295,7 +296,7 @@
             </div>
         `;
         uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "AutoX Ustawienia", settingsBodyHtml, { width: '250px', customId: 'baddonz-ax-wnd-settings' });
-        
+        uiSettingsWindow.classList.add('baddonz-ax-wnd-settings');
         uiSettingsWindow.removeAttribute('data-addon-id');
         uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
         
