@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Rozwiązywanie grupy baddonz
-// @version       1.0
+// @version       28.05.2026
 // @description   Rozwiązywanie grupy
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -45,6 +45,9 @@
         
         let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
         currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
+
+        // MIGARCJA: Jeśli ktoś miał wcześniej spację, zresetuj na "n"
+        if (currentSettings.disbandKey === 'space') currentSettings.disbandKey = 'n';
     }
 
     function saveSettings() {
@@ -112,20 +115,18 @@
         if (keybindInputActive && rgKeybindInput) {
             e.preventDefault();
             const pressedKey = e.key.toLowerCase();
-            if (['escape', 'enter', 'tab', 'shift', 'control', 'alt', 'meta', 'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10', 'f11', 'f12', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'capslock', 'numlock', 'scrolllock'].includes(pressedKey)) {
-                if (['escape', 'enter', 'tab'].includes(pressedKey)) rgKeybindInput.blur();
+            
+            if (['escape', 'enter', 'tab'].includes(pressedKey)) {
+                rgKeybindInput.blur();
                 return;
             }
 
-            if (pressedKey === ' ') {
-                currentSettings.disbandKey = "space";
-                rgKeybindInput.value = "[SPACJA]";
-            } else if (pressedKey.length === 1) {
-                currentSettings.disbandKey = pressedKey;
-                rgKeybindInput.value = pressedKey.toUpperCase();
-            } else {
-                return;
-            }
+            // UŻYCIE GLOBALNEJ WALIDACJI BADDONZAPI
+            if (window.BaddonzAPI && !window.BaddonzAPI.isValidHotkey(pressedKey)) return;
+            if (pressedKey.length !== 1) return;
+
+            currentSettings.disbandKey = pressedKey;
+            rgKeybindInput.value = pressedKey.toUpperCase();
 
             saveSettings();
             keybindInputActive = false;
@@ -135,7 +136,7 @@
             if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
                 const rgCheckbox = uiWindowElement.querySelector("#rg-checkbox");
                 const rgLeaveCheckbox = uiWindowElement.querySelector("#rg-leave-checkbox");
-                let displayKey = currentSettings.disbandKey === "space" ? "[SPACJA]" : currentSettings.disbandKey.toUpperCase();
+                let displayKey = currentSettings.disbandKey.toUpperCase();
                 if (rgCheckbox) $(rgCheckbox).tip(`Rozwiąż grupę (${displayKey})`);
                 if (rgLeaveCheckbox) $(rgLeaveCheckbox).tip(`Jeżeli nie jesteś liderem, opuść grupę (${displayKey})`);
             }
@@ -154,7 +155,7 @@
             <div class="baddonz-setting-row" style="margin-bottom: 4px !important; display: flex; align-items: center;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="rg-checkbox"></div>
                 <span class="baddonz-text" style="padding: 0; margin-left: 5px;">Rozwiązywanie</span>
-                <input type="text" class="baddonz-input keybind" id="rg-keybind-input" value="${currentSettings.disbandKey === "space" ? "[SPACJA]" : currentSettings.disbandKey.toUpperCase()}" readonly style="width: 50px; height: 20px; line-height: 18px; font-size: 11px; padding: 1px 0; margin-left: auto;">
+                <input type="text" class="baddonz-input keybind" id="rg-keybind-input" value="${currentSettings.disbandKey.toUpperCase()}" readonly style="width: 50px; height: 20px; line-height: 18px; font-size: 11px; padding: 1px 0; margin-left: auto;">
             </div>
             <div id="rg-leave-group-option" class="baddonz-setting-row" style="display: ${currentSettings.enabled ? 'flex' : 'none'};">
                 <div class="baddonz-checkbox ${currentSettings.leaveEnabled ? 'active' : ''}" id="rg-leave-checkbox"></div>
@@ -194,13 +195,13 @@
         rgKeybindInput.addEventListener('focusout', () => {
             if (keybindInputActive) {
                 keybindInputActive = false;
-                rgKeybindInput.value = currentSettings.disbandKey === "space" ? "[SPACJA]" : currentSettings.disbandKey.toUpperCase();
+                rgKeybindInput.value = currentSettings.disbandKey.toUpperCase();
             }
             rgKeybindInput.classList.remove('active-keybind-mode');
         });
 
         if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
-            let displayKey = currentSettings.disbandKey === "space" ? "[SPACJA]" : currentSettings.disbandKey.toUpperCase();
+            let displayKey = currentSettings.disbandKey.toUpperCase();
             $(rgCheckbox).tip(`Rozwiąż grupę (${displayKey})`);
             $(rgLeaveCheckbox).tip(`Jeżeli nie jesteś liderem, opuść grupę (${displayKey})`);
         }
