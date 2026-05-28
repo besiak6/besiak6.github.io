@@ -22,6 +22,7 @@
         #baddonz-zap-wnd .baddonz-text { font-size: 11px; }
         #baddonz-zap-wnd hr { margin: 3px 0 !important; }
         .baddonz-grid-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px 5px; width: 100%; box-sizing: border-box; }
+        #baddonz-zap-wnd .baddonz-input.compact { width: 45px !important; height: 18px !important; line-height: 16px !important; padding: 1px 2px !important; font-size: 11px !important; text-align: center; margin: 0; }
     `;
     if (!document.getElementById("zap-custom-styles")) document.head.appendChild(styleSheet);
 
@@ -303,9 +304,9 @@
             let html = '';
             Object.keys(PROFESSION_NAMES).forEach(code => {
                 html += `
-                    <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 4px;">
+                    <div class="baddonz-label-wrapper prof-row-${code}" style="justify-content: flex-start; align-items: center; gap: 4px;">
                         <div class="baddonz-checkbox" id="prof-checkbox-${code}"></div>
-                        <div class="baddonz-text" style="padding: 0; font-size: 11px;" title="${PROFESSION_NAMES[code]}">${code.toUpperCase()}</div>
+                        <div class="baddonz-text" style="padding: 0; font-size: 11px;">${code.toUpperCase()}</div>
                     </div>
                 `;
             });
@@ -335,9 +336,9 @@
             </div>
 
             <div id="zap-level-range-section" style="display: ${currentSettings.InvitebyLevel ? 'flex' : 'none'}; flex-direction: row; align-items: center; justify-content: center; gap: 5px; margin-bottom: 2px; width: 100%;">
-                <input type="number" class="baddonz-input compact" id="zap-min-level-input" value="${currentSettings.minLevel}" min="0" max="500" placeholder="Od" style="width: 45px; margin: 0;">
+                <input type="number" class="baddonz-input compact" id="zap-min-level-input" value="${currentSettings.minLevel}" min="0" max="500" placeholder="Od">
                 <span style="color: #fff; font-size: 16px; line-height: 1;">-</span>
-                <input type="number" class="baddonz-input compact" id="zap-max-level-input" value="${currentSettings.maxLevel}" min="0" max="500" placeholder="Do" style="width: 45px; margin: 0;">
+                <input type="number" class="baddonz-input compact" id="zap-max-level-input" value="${currentSettings.maxLevel}" min="0" max="500" placeholder="Do">
             </div>
 
             <div class="baddonz-setting-row">
@@ -452,6 +453,10 @@
                     currentSettings.SelectedProfessions[profCode] = checkbox.classList.toggle('active');
                     saveSettings();
                 });
+            }
+            const row = uiWindowElement.querySelector(`.prof-row-${profCode}`);
+            if (row && typeof $ === 'function' && typeof $.fn.tip === 'function') {
+                $(row).tip(PROFESSION_NAMES[profCode]);
             }
         });
 
