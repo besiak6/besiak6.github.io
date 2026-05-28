@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Szybka Grupa baddonz
-// @version       1.0
-// @description   Szybka Grupa
+// @version       05.08.2025
+// @description   Szybka Grupa (API 2.0 - Oryginalne nazwy, 3 kolumny prof, naprawiony nagłówek)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -21,6 +21,7 @@
         #baddonz-zap-wnd .baddonz-setting-row { margin-bottom: 2px !important; }
         #baddonz-zap-wnd .baddonz-text { font-size: 11px; }
         #baddonz-zap-wnd hr { margin: 3px 0 !important; }
+        .baddonz-grid-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px 5px; width: 100%; box-sizing: border-box; }
     `;
     if (!document.getElementById("zap-custom-styles")) document.head.appendChild(styleSheet);
 
@@ -302,7 +303,7 @@
             let html = '';
             Object.keys(PROFESSION_NAMES).forEach(code => {
                 html += `
-                    <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
+                    <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 4px;">
                         <div class="baddonz-checkbox" id="prof-checkbox-${code}"></div>
                         <div class="baddonz-text" style="padding: 0; font-size: 11px;" title="${PROFESSION_NAMES[code]}">${code.toUpperCase()}</div>
                     </div>
@@ -312,38 +313,39 @@
         };
 
         const bodyHtml = `
-            <div class="baddonz-setting-row" style="margin-bottom: 4px !important;">
+            <div class="baddonz-setting-row" style="margin-bottom: 4px !important; display: flex; align-items: center;">
                 <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="zap-checkbox"></div>
-                <input type="text" class="baddonz-input keybind" id="zap-keybind-input" value="${currentSettings.inviteKey === "space" ? "[SPACJA]" : currentSettings.inviteKey.toUpperCase()}" readonly style="width: 100px; height: 20px; line-height: 18px; font-size: 11px; padding: 1px 0; margin-left: 5px;">
+                <span class="baddonz-text" style="padding: 0; margin-left: 5px;">Szybka Grupa</span>
+                <input type="text" class="baddonz-input keybind" id="zap-keybind-input" value="${currentSettings.inviteKey === "space" ? "[SPACJA]" : currentSettings.inviteKey.toUpperCase()}" readonly style="width: 50px; height: 20px; line-height: 18px; font-size: 11px; padding: 1px 0; margin-left: auto;">
             </div>
 
             <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}" id="zap-randoms-checkbox" title="Zapraszaj wszystkich graczy"></div>
-                <span class="baddonz-text" style="padding:0;">Randomi na ekranie</span>
+                <span class="baddonz-text" style="padding:0;">Zapraszaj randomów obok</span>
             </div>
 
             <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox ${currentSettings.InviteNear ? 'active' : ''}" id="zap-from-square-checkbox" title="Przydatne na tytanów"></div>
-                <span class="baddonz-text" style="padding:0;">Z kratki obok</span>
+                <span class="baddonz-text" style="padding:0;">Grupa z kratki (inne relacje)</span>
             </div>
 
             <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox ${currentSettings.InvitebyLevel ? 'active' : ''}" id="zap-by-level-checkbox"></div>
-                <span class="baddonz-text" style="padding:0;">Po levelu</span>
+                <span class="baddonz-text" style="padding:0;">Grupa po levelu</span>
             </div>
 
-            <div id="zap-level-range-section" style="display: ${currentSettings.InvitebyLevel ? 'flex' : 'none'}; flex-direction: row; align-items: center; gap: 5px; margin-bottom: 2px; width: 100%;">
-                <input type="number" class="baddonz-input compact" id="zap-min-level-input" value="${currentSettings.minLevel}" min="0" max="500" placeholder="Od" style="flex-grow: 1; margin: 0;">
+            <div id="zap-level-range-section" style="display: ${currentSettings.InvitebyLevel ? 'flex' : 'none'}; flex-direction: row; align-items: center; justify-content: center; gap: 5px; margin-bottom: 2px; width: 100%;">
+                <input type="number" class="baddonz-input compact" id="zap-min-level-input" value="${currentSettings.minLevel}" min="0" max="500" placeholder="Od" style="width: 45px; margin: 0;">
                 <span style="color: #fff; font-size: 16px; line-height: 1;">-</span>
-                <input type="number" class="baddonz-input compact" id="zap-max-level-input" value="${currentSettings.maxLevel}" min="0" max="500" placeholder="Do" style="flex-grow: 1; margin: 0;">
+                <input type="number" class="baddonz-input compact" id="zap-max-level-input" value="${currentSettings.maxLevel}" min="0" max="500" placeholder="Do" style="width: 45px; margin: 0;">
             </div>
 
             <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox ${currentSettings.FilterbyProfession ? 'active' : ''}" id="zap-filter-by-profession-checkbox"></div>
-                <span class="baddonz-text" style="padding:0;">Po profesji</span>
+                <span class="baddonz-text" style="padding:0;">Grupa po profesjach</span>
             </div>
 
-            <div id="zap-profession-filter-section" class="baddonz-grid-2col" style="display: ${currentSettings.FilterbyProfession ? 'grid' : 'none'}; width: 100%; margin-bottom: 2px;">
+            <div id="zap-profession-filter-section" class="baddonz-grid-3col" style="display: ${currentSettings.FilterbyProfession ? 'grid' : 'none'}; width: 100%; margin-bottom: 2px;">
                 ${createProfessionsCheckboxes()}
             </div>
 
@@ -351,7 +353,7 @@
 
             <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox ${currentSettings.autoAcceptEnabled ? 'active' : ''}" id="zap-auto-accept-checkbox"></div>
-                <span class="baddonz-text" style="padding:0;">Auto akceptacja</span>
+                <span class="baddonz-text" style="padding:0;">Auto akceptacja zaproszeń</span>
             </div>
 
             <div id="zap-accept-options-section" class="baddonz-flex column" style="display: ${currentSettings.autoAcceptEnabled ? 'flex' : 'none'}; width: 100%; gap: 2px;">
@@ -363,7 +365,7 @@
                 </div>
                 <div class="baddonz-setting-row" style="margin-top: 2px; margin-bottom: 0;">
                     <div class="baddonz-checkbox ${currentSettings.rejectUnchecked ? 'active' : ''}" id="reject-unchecked-checkbox"></div>
-                    <span class="baddonz-text" style="padding:0;">Odrzucaj nieodznaczone</span>
+                    <span class="baddonz-text" style="padding:0;">Odrzucaj zaproszenia</span>
                 </div>
             </div>
         `;
