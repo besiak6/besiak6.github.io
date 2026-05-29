@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Item Info baddonz
-// @version       05.08.2025
-// @description   Informacje o itemach (API 2.0 - Natychmiastowa esencja, Ulepszone, Bez bolda)
+// @version       29.05.2026
+// @description   Informacje o itemach
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -224,28 +224,18 @@
             dismantleEssence = costs.dismantleEssence;
         }
 
-        const $visibleTip = window.TIPS?.$tip;
+        const essenceHtml = dismantleEssence !== undefined && dismantleEssence !== null 
+            ? ` <span class="c_green baddonz-essence-marker">[${dismantleEssence}]</span>` 
+            : '';
 
-        // Błyskawiczna esencja bez bolda, bezpieczne wstrzyknięcie:
-        if (dismantleEssence !== undefined && dismantleEssence !== null) {
-            const essenceHtml = ` <span class="c_green baddonz-essence-marker">[${dismantleEssence}]</span>`;
-            
-            // Wstrzyknięcie do HTMLa (dla cache)
+        // 1. Aktualizacja w pamięci wewnętrznej gry
+        if (essenceHtml) {
             let $nameEl = $tip.find('.item-name, .tip-item-stat-item-name, .name').first();
-            if ($nameEl.length && !$nameEl.find('.baddonz-essence-marker').length) {
+            if ($nameEl.length) {
                 $nameEl.append(essenceHtml);
-            }
-
-            // GWARANCJA NATYCHMIASTOWEGO POJAWIENIA SIĘ (Nadpisanie wyścigu z grą)
-            if ($visibleTip && $visibleTip.is(':visible') && $visibleTip.attr('data-tip-id') === tipId) {
-                let $visName = $visibleTip.find('.item-name, .tip-item-stat-item-name, .name').first();
-                if ($visName.length && !$visName.find('.baddonz-essence-marker').length) {
-                    $visName.append(essenceHtml);
-                }
             }
         }
 
-        // Formatowanie loota
         if (stats?.loot) {
             const parts = stats.loot.split(',');
             if (parts.length >= 4) {
@@ -267,7 +257,7 @@
             }
         }
 
-        // Sekcja poziomów i podsumowania
+        let insertionHtml = '';
         if (costs) {
             const totalEssence = costs.totalEssence;
             const totalGold = costs.totalGold;
@@ -275,7 +265,7 @@
             let upgradeLines1_4 = [];
             for (let i = 0; i < 4; i++) upgradeLines1_4.push(`+${i+1}: ${formatBigNumber(costs.costs[i])}`);
             const levelsContent = `<div style="text-align: center;"><span class="c_blue">Koszt Poziomów Ulepszenia:</span></div>${upgradeLines1_4.join(' / ')}<br>+5: ${formatBigNumber(costs.costs[4])} | <span class="c_green">${totalEssence} esy</span> | <span class="c_yellow">${formatBigNumber(totalGold, true)} złota</span>`;
-            let insertionHtml = `<div class="item-tip-section baddonz-levels-marker baddonz-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center; font-size: 11px;">${levelsContent}</div></div>`;
+            insertionHtml += `<div class="item-tip-section baddonz-levels-marker baddonz-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center; font-size: 11px;">${levelsContent}</div></div>`;
 
             let upgradeIcon = LEGEND_UPGRADE_ICON, essenceIcon = LEGEND_ESSENCE_ICON;
             if (itemRarity === 'heroic') { upgradeIcon = HEROIC_UPGRADE_ICON; essenceIcon = HEROIC_ESSENCE_ICON; }
@@ -285,28 +275,65 @@
 
             const summaryContent = `${upgradeIcon} <span class="c_blue">${formatNumber(costs.totalPoints)}</span>&nbsp;&nbsp;&nbsp;&nbsp;${essenceIcon} <span class="c_green">${totalEssence}</span>&nbsp;&nbsp;&nbsp;&nbsp;${GOLD_ICON} <span class="c_yellow">${formatBigNumber(totalGold, true)}</span>`;
             insertionHtml += `<div class="item-tip-section baddonz-summary-marker baddonz-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center;">${summaryContent}</div></div>`;
-            
-            let $s8 = $tip.find('.item-tip-section.s-8');
-            if ($s8.length) {
-                $s8.before(insertionHtml);
-            } else {
-                let $s7 = $tip.find('.item-tip-section.s-7');
-                if ($s7.length) {
-                    $s7.after(insertionHtml);
-                } else {
-                    let $s5 = $tip.find('.item-tip-section.s-5');
-                    if ($s5.length) $s5.after(insertionHtml);
-                    else $tip.append(insertionHtml);
-                }
-            }
         }
 
-        const newHtml = $tip.html();
-        window.TIPS.allTips[tipId] = newHtml;
+        window.TIPS.allTips[tipId] = $tip.html();
 
-        // Natychmiastowe odświeżenie całego widocznego dymku (jeśli otwarty)
+        // 2. LIVE DOM UPDATE (Zapewnia natychmiastowe wyświetlanie na 1szym hoverze)
+        const $visibleTip = window.TIPS?.$tip;
         if ($visibleTip && $visibleTip.is(':visible') && $visibleTip.attr('data-tip-id') === tipId) {
-            $visibleTip.html(newHtml);
+            
+            // Wstrzyknięcie ESENCJI na żywo
+            if (essenceHtml) {
+                let $visName = $visibleTip.find('.item-name, .tip-item-stat-item-name, .name').first();
+                if ($visName.length && !$visName.find('.baddonz-essence-marker').length) {
+                    $visName.append(essenceHtml);
+                }
+            }
+
+            // Wstrzyknięcie LooT na żywo
+            if (stats?.loot) {
+                const parts = stats.loot.split(',');
+                if (parts.length >= 4) {
+                    const groupSize = parts[2];
+                    const timestamp = parts[3];
+                    const date = new Date(Number(timestamp) * 1000);
+                    const dateString = date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                    const timeString = date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+                    
+                    let $looterEl = $visibleTip.find('.tip-item-stat-loot.looter, .looter').first();
+                    if ($looterEl.length) {
+                        let looterText = $looterEl.html();
+                        if (!looterText.includes(timeString.substring(0, 5))) {
+                            looterText = looterText.replace(new RegExp(dateString.replace(/\./g, '\\.'), 'g'), `${dateString} ${timeString}`);
+                            looterText = looterText.replace(/wraz z drużyną/, `wraz z drużyną (<span class="c_orange">${groupSize}</span>)`);
+                            $looterEl.html(looterText);
+                        }
+                    }
+                }
+            }
+
+            // Wstrzyknięcie sekcji Poziomów/Podsumowania na żywo (nietykane i działa!)
+            if (insertionHtml) {
+                let $s8 = $visibleTip.find('.item-tip-section.s-8');
+                if ($s8.length) {
+                    $s8.before(insertionHtml);
+                } else {
+                    let $s7 = $visibleTip.find('.item-tip-section.s-7');
+                    if ($s7.length) {
+                        $s7.after(insertionHtml);
+                    } else {
+                        let $s5 = $visibleTip.find('.item-tip-section.s-5');
+                        if ($s5.length) $s5.after(insertionHtml);
+                        else $visibleTip.append(insertionHtml);
+                    }
+                }
+            }
+            
+            // Oznaczamy widoczny tip jako gotowy
+            if (!$visibleTip.find('.baddonz-item-info-injected').length) {
+                $visibleTip.append('<div style="display:none;" class="baddonz-item-info-injected"></div>');
+            }
         }
     }
 
@@ -314,13 +341,12 @@
         if (!currentSettings.enabled) return;
         const $target = $(this);
         
-        // Zwiększone delikatnie opóźnienie (25ms), aby dać grze czas na wygenerowanie kompletnego DOMu tipa.
-        // Gwarantuje to 100% skuteczność za pierwszym najechaniem na item, bez "wyścigów" z serwerem.
+        // Zabezpieczenie przed silnikiem gry, by skrypt załadował się po odświeżeniu domyślnego tipa
         setTimeout(() => {
             if ($target.is(':hover')) {
                 addLegendInfoToTip($target);
             }
-        }, 25);
+        }, 15);
     }
 
     function buildUI() {
@@ -350,13 +376,11 @@
 
         const bindToggle = (className, key) => {
             const cb = uiWindowElement.querySelector(`.${className}`);
-            if(cb) {
-                cb.addEventListener('click', () => {
-                    currentSettings[key] = cb.classList.toggle('active');
-                    saveSettings();
-                    updateBodyClasses();
-                });
-            }
+            cb.addEventListener('click', () => {
+                currentSettings[key] = cb.classList.toggle('active');
+                saveSettings();
+                updateBodyClasses();
+            });
         };
 
         bindToggle('ii-hide-opis', 'HIDE_OPIS');
