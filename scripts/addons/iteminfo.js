@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Item Info baddonz
 // @version       05.08.2025
-// @description   Informacje o itemach (API 2.0 - Działające Nakładki Legbon, Natychmiastowe Dymki)
+// @description   Informacje o itemach (API 2.0 - Legbony, Hook Dymków, CSS Toggling)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -86,7 +86,7 @@
     };
 
     let uiWindowElement = null;
-    let markersInterval = null;
+    let legbonInterval = null;
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
@@ -207,8 +207,12 @@
         if (!stats || typeof stats !== "string") return {};
         const result = {};
         for (const pair of stats.split(";")) {
-            const [key, value] = pair.split("=");
-            if (key && value !== undefined) result[key] = value;
+            const idx = pair.indexOf("=");
+            if (idx !== -1) {
+                const key = pair.substring(0, idx);
+                const value = pair.substring(idx + 1);
+                result[key] = value;
+            }
         }
         return result;
     }
@@ -216,78 +220,66 @@
     // ==========================================
     // SYSTEM ZNACZNIKÓW BONUSÓW LEGENDARNYCH
     // ==========================================
-    function removeAllLegbonMarkers() {
-        document.querySelectorAll('.baddonz-legbon-marker').forEach(el => el.remove());
-    }
-
-    function processLegbonMarkers() {
+    function applyLegbonMarkers() {
         if (!currentSettings.enabled || !currentSettings.SHOW_LEGBON_MARKERS) {
-            removeAllLegbonMarkers();
+            document.querySelectorAll('.baddonz-legbon-marker').forEach(el => el.remove());
             return;
         }
+
         if (!window.Engine || !window.Engine.items) return;
 
-        // Szukamy wszystkich elementów w grze, które są itemami
-        const itemElements = document.querySelectorAll('.item[class*="item-id-"]');
-        
-        itemElements.forEach($it => {
-            // Jeśli item już ma naszą nakładkę, to go pomijamy (oszczędność mocy)
-            if ($it.querySelector('.baddonz-legbon-marker')) return;
+        const domItems = document.querySelectorAll('.item[class*="item-id-"]');
+        domItems.forEach(el => {
+            const match = el.className.match(/item-id-(\d+)/);
+            if (!match) return;
+            const id = match[1];
 
-            // Zabezpieczenie i wyciągnięcie ID przedmiotu z klasy
-            const classMatch = $it.className.match(/item-id-(\d+)/);
-            if (!classMatch) return;
-            const itemId = classMatch[1];
+            const item = (typeof window.Engine.items.getItemById === 'function' ? window.Engine.items.getItemById(id) : null) || (window.Engine.items.d && window.Engine.items.d[id]);
+            let shortText = null;
 
-            // Pobieramy dane przedmiotu z silnika gry
-            const itemObj = window.Engine.items.getItemById(itemId);
-            if (!itemObj) return;
-
-            // Szukamy bonusa w surowych statystykach, co daje 100% pewność
-            const statStr = itemObj.stat || itemObj.stats || "";
-            if (!statStr.includes('legbon=')) return;
-
-            const legbonMatch = statStr.match(/legbon=([a-zA-Z0-9_-]+)/);
-            if (legbonMatch && LEGBON_SHORT[legbonMatch[1]]) {
-                const markerText = LEGBON_SHORT[legbonMatch[1]];
+            if (item) {
+                let statStr = item.stat || item.stats || item._stat || "";
+                if (!statStr && typeof item.getStat === 'function') statStr = item.getStat();
                 
-                const markerSpan = document.createElement("span");
-                markerSpan.className = "baddonz-legbon-marker";
-                markerSpan.innerText = markerText;
+                let parsed = item._cachedStats || parseStats(statStr);
                 
-                // Identyczne style jakie posiada Znacznik Teleportów
-                Object.assign(markerSpan.style, {
-                    position: "absolute", top: "0", left: "0",
-                    width: "100%", height: "100%", color: "#fff",
-                    fontSize: "10px", textAlign: "center", lineHeight: "1.5",
-                    textShadow: "-2px -2px 0 black, -1px -2px 0 black, 0px -2px 0 black, 1px -2px 0 black, 2px -2px 0 black, -2px -1px 0 black, 2px -1px 0 black, -2px 0px 0 black, 2px 0px 0 black, -2px 1px 0 black, 2px 1px 0 black, -2px 2px 0 black, -1px 2px 0 black, 0px 2px 0 black, 1px 2px 0 black, 2px 2px 0 black",
-                    fontFamily: "'Arial Black', Gadget, sans-serif",
-                    userSelect: "none", pointerEvents: "none", zIndex: "2"
-                });
-                
-                $it.appendChild(markerSpan);
+                if (parsed.legbon) {
+                    const legType = parsed.legbon.split(',')[0];
+                    if (LEGBON_SHORT[legType]) {
+                        shortText = LEGBON_SHORT[legType];
+                    }
+                }
+            }
+
+            let tz = el.querySelector(".baddonz-legbon-marker");
+            if (shortText) {
+                if (!tz) {
+                    tz = document.createElement("span");
+                    tz.className = "baddonz-legbon-marker";
+                    Object.assign(tz.style, {
+                        position: "absolute", top: "0", left: "0",
+                        width: "100%", height: "100%", color: "#fff",
+                        fontSize: "11px",
+                        display: "flex", justifyContent: "center", alignItems: "center",
+                        textShadow: "-2px -2px 0 black, -1px -2px 0 black, 0px -2px 0 black, 1px -2px 0 black, 2px -2px 0 black, -2px -1px 0 black, 2px -1px 0 black, -2px 0px 0 black, 2px 0px 0 black, -2px 1px 0 black, 2px 1px 0 black, -2px 2px 0 black, -1px 2px 0 black, 0px 2px 0 black, 1px 2px 0 black, 2px 2px 0 black",
+                        fontFamily: "'Arial Black', Gadget, sans-serif",
+                        userSelect: "none", pointerEvents: "none",
+                        zIndex: "2"
+                    });
+                    el.appendChild(tz);
+                }
+                if (tz.innerText !== shortText) tz.innerText = shortText;
+            } else {
+                if (tz) tz.remove();
             }
         });
     }
 
-    function startMarkersScanner() {
-        if (!markersInterval) {
-            // Skanuje plecaki co ułamek sekundy, reaguje natychmiast po ich otwarciu
-            markersInterval = setInterval(processLegbonMarkers, 300);
-        }
-    }
-
-    function stopMarkersScanner() {
-        if (markersInterval) {
-            clearInterval(markersInterval);
-            markersInterval = null;
-        }
-        removeAllLegbonMarkers();
-    }
     // ==========================================
-
-    // Wstrzykiwanie HTML do dymku przedmiotu (natychmiastowe)
+    // HOOK SILNIKA (DYMKI W LOCIE)
+    // ==========================================
     function injectCustomInfo(tipHtml, item) {
+        if (!currentSettings.enabled) return tipHtml;
         if (!tipHtml || typeof tipHtml !== 'string') return tipHtml;
         if (tipHtml.includes('baddonz-item-info-injected')) return tipHtml;
 
@@ -378,7 +370,6 @@
         return $tip.html();
     }
 
-    // Bezpośredni Hook w silnik gry, zapewniający 100% natychmiastowe ładowanie info w tipie!
     function hookTipFunction() {
         if (typeof $ !== 'undefined' && $.fn && $.fn.tip && !$.fn.tip._baddonzHooked) {
             const originalTip = $.fn.tip;
@@ -429,10 +420,6 @@
                 currentSettings[key] = cb.classList.toggle('active');
                 saveSettings();
                 updateBodyClasses();
-                
-                if (key === 'SHOW_LEGBON_MARKERS' && currentSettings.enabled) {
-                    currentSettings.SHOW_LEGBON_MARKERS ? processLegbonMarkers() : removeAllLegbonMarkers();
-                }
             });
         };
 
@@ -453,24 +440,28 @@
         loadSettings();
         if (!uiWindowElement) buildUI();
         updateBodyClasses();
-
         hookTipFunction();
-        startMarkersScanner();
+
+        // Niezawodny skaner sprawdzający plecaki/ekwipunek co 400ms, niewrażliwy na otwieranie nowych okien
+        legbonInterval = setInterval(applyLegbonMarkers, 400);
     }
 
     function addonStop() {
+        if (legbonInterval) {
+            clearInterval(legbonInterval);
+            legbonInterval = null;
+        }
+        document.querySelectorAll('.baddonz-legbon-marker').forEach(el => el.remove());
         if (uiWindowElement) {
             uiWindowElement.remove();
             uiWindowElement = null;
         }
-        stopMarkersScanner();
     }
 
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
         saveSettings();
         updateBodyClasses();
-        isEnabled ? startMarkersScanner() : stopMarkersScanner();
     }
 
     const checkApi = () => {
