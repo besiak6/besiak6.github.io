@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Item Info baddonz
 // @version       05.08.2025
-// @description   Informacje o itemach (API 2.0 - Dynamiczny CSS, zero duplikatów)
+// @description   Informacje o itemach (API 2.0 - CSS Toggling, Zero Duplikatów)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -9,8 +9,31 @@
 
 (function() {
     'use strict';
-    
+
     const ADDON_ID = "II";
+
+    const styleSheet = document.createElement("style");
+    styleSheet.type = "text/css";
+    styleSheet.className = "ii-custom-styles";
+    styleSheet.innerText = `
+        .baddonz-ii-wnd { width: 210px; min-width: 210px; }
+        .baddonz-ii-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
+        .baddonz-ii-wnd .baddonz-setting-row { margin-bottom: 2px !important; }
+        .baddonz-ii-wnd .baddonz-text { font-size: 11px; }
+        .baddonz-ii-wnd hr { margin: 3px 0 !important; }
+        
+        /* REACTIVE CSS RULES FOR INSTANT TOGGLING */
+        body.baddonz-ii-hide-opis .item-tip-section.s-7 { display: none !important; }
+        body:not(.baddonz-ii-essence) .baddonz-essence-marker { display: none !important; }
+        body:not(.baddonz-ii-levels) .baddonz-levels-marker { display: none !important; }
+        body:not(.baddonz-ii-summary) .baddonz-summary-marker { display: none !important; }
+
+        body:not(.baddonz-ii-common) .baddonz-rarity-common { display: none !important; }
+        body:not(.baddonz-ii-unique) .baddonz-rarity-unique { display: none !important; }
+        body:not(.baddonz-ii-heroic) .baddonz-rarity-heroic { display: none !important; }
+        body:not(.baddonz-ii-legendary) .baddonz-rarity-legendary { display: none !important; }
+    `;
+    if (!document.querySelector(".ii-custom-styles")) document.head.appendChild(styleSheet);
 
     const UPGRADEABLE_RARITIES = ["legendary", "heroic", "unique", "upgraded", "common"];
     const UPGRADEABLE_CLASSES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 29];
@@ -37,9 +60,9 @@
     let currentSettings = {
         enabled: true,
         windowOpacity: 2,
-        windowVisible: false,
-        amount_essence: true,
+        windowVisible: true,
         HIDE_OPIS: false,
+        amount_essence: true,
         UPGRADE_LEVEL: true,
         SHOW_SUMMARY_LEGEND: true,
         SHOW_COMMON: true,
@@ -60,23 +83,44 @@
                 accSettings = data[accId].accountAddons[ADDON_ID] || {};
             }
         } catch (e) {}
+
         currentSettings = { ...currentSettings, ...accSettings };
-        updateDynamicStyles();
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
+
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'HIDE_OPIS', 'amount_essence', 'UPGRADE_LEVEL', 'SHOW_SUMMARY_LEGEND', 'SHOW_COMMON', 'SHOW_UNIQUE', 'SHOW_HEROIC', 'SHOW_LEGENDARY'];
+        let accSettings = {};
+        accKeys.forEach(k => accSettings[k] = currentSettings[k]);
+
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
-        
+
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
             if (!data[accId].accountAddons) data[accId].accountAddons = {};
-            data[accId].accountAddons[ADDON_ID] = currentSettings;
+            data[accId].accountAddons[ADDON_ID] = accSettings;
             localStorage.setItem('BaddonzData', JSON.stringify(data));
         } catch (e) {}
-        updateDynamicStyles();
+    }
+
+    function updateBodyClasses() {
+        const body = document.body;
+        if (!currentSettings.enabled) {
+            body.classList.remove('baddonz-ii-hide-opis', 'baddonz-ii-essence', 'baddonz-ii-levels', 'baddonz-ii-summary', 'baddonz-ii-common', 'baddonz-ii-unique', 'baddonz-ii-heroic', 'baddonz-ii-legendary');
+            return;
+        }
+        currentSettings.HIDE_OPIS ? body.classList.add('baddonz-ii-hide-opis') : body.classList.remove('baddonz-ii-hide-opis');
+        currentSettings.amount_essence ? body.classList.add('baddonz-ii-essence') : body.classList.remove('baddonz-ii-essence');
+        currentSettings.UPGRADE_LEVEL ? body.classList.add('baddonz-ii-levels') : body.classList.remove('baddonz-ii-levels');
+        currentSettings.SHOW_SUMMARY_LEGEND ? body.classList.add('baddonz-ii-summary') : body.classList.remove('baddonz-ii-summary');
+
+        currentSettings.SHOW_COMMON ? body.classList.add('baddonz-ii-common') : body.classList.remove('baddonz-ii-common');
+        currentSettings.SHOW_UNIQUE ? body.classList.add('baddonz-ii-unique') : body.classList.remove('baddonz-ii-unique');
+        currentSettings.SHOW_HEROIC ? body.classList.add('baddonz-ii-heroic') : body.classList.remove('baddonz-ii-heroic');
+        currentSettings.SHOW_LEGENDARY ? body.classList.add('baddonz-ii-legendary') : body.classList.remove('baddonz-ii-legendary');
     }
 
     function formatNumber(num) {
@@ -111,7 +155,8 @@
 
     function calculateCosts(level, artisanBonus, rarity) {
         const multipliers = [1.0, 1.1, 1.3, 1.6, 2.0];
-        let basePoints, totalGoldCost;
+        let basePoints;
+        let totalGoldCost;
 
         switch (rarity) {
             case "common": basePoints = (Math.floor(level / 10) * 10) + 180; totalGoldCost = 10 * Math.pow(level, 2) + 1300 * level; break;
@@ -132,226 +177,160 @@
         if (lastDigit >= 2 && lastDigit <= 4) totalUpgradeEssence += 1;
         else if (lastDigit >= 5 && lastDigit <= 8) totalUpgradeEssence -= 1;
 
-        let dismantleEssence = baseEssenceValue;
-        if (artisanBonus) {
-            const bonusPercentage = parseInt(artisanBonus, 10) / 100;
-            if (!isNaN(bonusPercentage)) dismantleEssence = Math.round(baseEssenceValue * bonusPercentage);
-        }
-
-        return { costs: costs, totalPoints: totalUpgradePoints, totalEssence: totalUpgradeEssence, totalGold: totalGoldCost, dismantleEssence: dismantleEssence };
+        return { costs: costs, totalPoints: totalUpgradePoints, totalEssence: totalUpgradeEssence, totalGold: totalGoldCost };
     }
 
-    // GŁÓWNA MAGIA - Dynamiczne ukrywanie sekcji tipów (Zamiast modyfikowania kodu w locie)
-    function updateDynamicStyles() {
-        let css = '';
-        if (!currentSettings.enabled) {
-            css += `
-                .baddonz-ii-essence-marker { display: none !important; }
-                .baddonz-ii-levels { display: none !important; }
-                .baddonz-ii-summary { display: none !important; }
-            `;
-        } else {
-            if (!currentSettings.amount_essence) css += `.baddonz-ii-essence-marker { display: none !important; }\n`;
-            if (currentSettings.HIDE_OPIS) css += `.item-tip-section.s-7 { display: none !important; }\n`;
-            if (!currentSettings.UPGRADE_LEVEL) css += `.baddonz-ii-levels { display: none !important; }\n`;
-            if (!currentSettings.SHOW_SUMMARY_LEGEND) css += `.baddonz-ii-summary { display: none !important; }\n`;
-            
-            if (!currentSettings.SHOW_COMMON) css += `.baddonz-ii-common { display: none !important; }\n`;
-            if (!currentSettings.SHOW_UNIQUE) css += `.baddonz-ii-unique { display: none !important; }\n`;
-            if (!currentSettings.SHOW_HEROIC) css += `.baddonz-ii-heroic { display: none !important; }\n`;
-            if (!currentSettings.SHOW_LEGENDARY) css += `.baddonz-ii-legendary { display: none !important; }\n`;
+    function parseStats(stats) {
+        if (!stats || typeof stats !== "string") return {};
+        const result = {};
+        for (const pair of stats.split(";")) {
+            const [key, value] = pair.split("=");
+            if (key && value !== undefined) result[key] = value;
         }
-        
-        let styleEl = document.getElementById('baddonz-ii-dynamic-styles');
-        if (!styleEl) {
-            styleEl = document.createElement('style');
-            styleEl.id = 'baddonz-ii-dynamic-styles';
-            document.head.appendChild(styleEl);
-        }
-        styleEl.innerText = css;
+        return result;
     }
 
     function addLegendInfoToTip() {
+        if (!currentSettings.enabled) return;
+
         const $target = $(this);
         const item = $target.data('item');
-
         if (!item) return;
 
-        const stats = item._cachedStats;
-        let itemLevel = parseInt(stats?.lvl, 10);
-        if (stats.lowreq) itemLevel += parseInt(stats.lowreq, 10);
-
-        const itemClass = item.cl;
-        const itemRarity = stats?.rarity;
+        const stats = item._cachedStats || parseStats(item.stat);
         const tipId = $target.attr('tip-id');
         let currentTipContent = window.TIPS?.allTips[tipId] || "";
         const $visibleTip = window.TIPS?.$tip;
 
-        // Esencja w nazwie (Wstrzykujemy zawsze jako SPAN, żeby CSS mógł go chować i pokazywać natychmiastowo)
-        if (item.salvageItems && !currentTipContent.includes('baddonz-ii-essence-marker')) {
-            const itemDisplayName = item.name || 'Brak nazwy';
-            const newNameContent = `${itemDisplayName} <span class="baddonz-ii-essence-marker">[<span class="c_green" style="font-weight: bold;">${item.salvageItems}</span>]</span>`;
+        // Jeśli raz wstrzyknęliśmy nasz szkielet HTML do tego tipa, to nic więcej nie robimy!
+        // Całą magię pokazywania/ukrywania odwala CSS. Zero lagów, zero duplikatów.
+        if (currentTipContent.includes('baddonz-item-info-injected')) return;
 
-            $target.changeInTip('.tip-item-stat-item-name', newNameContent);
-            currentTipContent = window.TIPS?.allTips[tipId] || "";
+        currentTipContent += '<div style="display:none;" class="baddonz-item-info-injected"></div>';
 
-            if ($visibleTip) {
-                const $itemName = $visibleTip.find('.tip-item-stat-item-name');
-                if ($itemName.length) $itemName.html(newNameContent);
+        // 1. Esencja w tytule
+        if (item.salvageItems) {
+            const essenceHtml = ` <span class="c_green baddonz-essence-marker" style="font-weight: bold;">[${item.salvageItems}]</span>`;
+            const nameMatch = currentTipContent.match(/<div class="tip-item-stat-item-name".*?>([\s\S]*?)<\/div>/);
+            if (nameMatch) {
+                const newName = nameMatch[1] + essenceHtml;
+                currentTipContent = currentTipContent.replace(nameMatch[1], newName);
+                if ($visibleTip) $target.changeInTip('.tip-item-stat-item-name', newName);
             }
         }
 
-        // Zmiana Daty Lootu (Zostaje na zawsze po wczytaniu, to tylko formatowanie)
-        const lootData = stats?.loot;
-        if (lootData && $visibleTip) {
-            const parts = lootData.split(',');
-            const [, , groupSize, timestamp] = parts;
-
-            const dateMs = Number(timestamp) * 1000;
-            const date = new Date(dateMs);
-            const dateString = date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-            const timeString = date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-
-            const $lootElement = $visibleTip.find('.tip-item-stat-loot.looter');
-
-            if ($lootElement.length) {
-                const originalLootText = $lootElement.html();
-                if (!originalLootText.includes(timeString.substring(0, 5))) {
-                    const findDateRegex = new RegExp(dateString.replace(/\./g, '\\.'), 'g');
-                    const findTeamRegex = /wraz z drużyną/;
-                    let newLootText = originalLootText.replace(findDateRegex, `${dateString} ${timeString}`);
-                    newLootText = newLootText.replace(findTeamRegex, `wraz z drużyną (<span class="c_orange">${groupSize}</span>)`);
-
-                    $lootElement.html(newLootText);
-                    $target.changeInTip('.tip-item-stat-loot.looter', newLootText);
-                    currentTipContent = window.TIPS?.allTips[tipId] || "";
+        // 2. Format daty loota
+        if (stats?.loot) {
+            const parts = stats.loot.split(',');
+            if (parts.length >= 4) {
+                const groupSize = parts[2];
+                const timestamp = parts[3];
+                const date = new Date(Number(timestamp) * 1000);
+                const dateString = date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const timeString = date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+                
+                const looterMatch = currentTipContent.match(/<div class="tip-item-stat-loot looter">([\s\S]*?)<\/div>/);
+                if (looterMatch && !looterMatch[1].includes(timeString.substring(0, 5))) {
+                    let newLooterText = looterMatch[1].replace(new RegExp(dateString.replace(/\./g, '\\.'), 'g'), `${dateString} ${timeString}`);
+                    newLooterText = newLooterText.replace(/wraz z drużyną/, `wraz z drużyną (<span class="c_orange">${groupSize}</span>)`);
+                    currentTipContent = currentTipContent.replace(looterMatch[1], newLooterText);
+                    if ($visibleTip) $target.changeInTip('.tip-item-stat-loot.looter', newLooterText);
                 }
             }
         }
 
-        // Statystyki Kosztów ulepszeń
-        if (isNaN(itemLevel) || !UPGRADEABLE_CLASSES.includes(itemClass) || !UPGRADEABLE_RARITIES.includes(itemRarity)) return;
-        
-        // Zapobiega duplikatom: wstrzykuje sekcję tylko raz!
-        if (currentTipContent.includes('baddonz-ii-stats-marker')) return;
+        // 3. Poziomy Ulepszeń i Podsumowanie
+        let itemLevel = parseInt(stats?.lvl, 10);
+        if (stats.lowreq) itemLevel += parseInt(stats.lowreq, 10);
+        const itemClass = item.cl;
+        const itemRarity = stats?.rarity;
 
-        const artisanBonus = stats.artisanbon;
-        const costs = calculateCosts(itemLevel, artisanBonus, itemRarity);
+        let insertionHtml = '';
+        if (!isNaN(itemLevel) && UPGRADEABLE_CLASSES.includes(itemClass) && UPGRADEABLE_RARITIES.includes(itemRarity)) {
+            const costs = calculateCosts(itemLevel, stats.artisanbon, itemRarity);
+            if (costs) {
+                const totalEssence = costs.totalEssence;
+                const totalGold = costs.totalGold;
 
-        if (!costs) return;
+                let upgradeLines1_4 = [];
+                for (let i = 0; i < 4; i++) upgradeLines1_4.push(`+${i+1}: ${formatBigNumber(costs.costs[i])}`);
+                const levelsContent = `<div style="text-align: center;"><span class="c_blue">Koszt Poziomów Ulepszenia:</span></div>${upgradeLines1_4.join(' / ')}<br>+5: ${formatBigNumber(costs.costs[4])} | <span class="c_green">${totalEssence} esy</span> | <span class="c_yellow">${formatBigNumber(totalGold, true)} złota</span>`;
+                insertionHtml += `<div class="item-tip-section baddonz-levels-marker baddonz-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center; font-size: 11px;">${levelsContent}</div></div>`;
 
-        const totalEssence = costs.totalEssence;
-        const totalGold = costs.totalGold;
+                let upgradeIcon = LEGEND_UPGRADE_ICON, essenceIcon = LEGEND_ESSENCE_ICON;
+                if (itemRarity === 'heroic') { upgradeIcon = HEROIC_UPGRADE_ICON; essenceIcon = HEROIC_ESSENCE_ICON; }
+                else if (itemRarity === 'unique') { upgradeIcon = UNIQUE_UPGRADE_ICON; essenceIcon = UNIQUE_ESSENCE_ICON; }
+                else if (itemRarity === 'upgraded') { upgradeIcon = UPGRADED_UPGRADE_ICON; essenceIcon = UPGRADED_ESSENCE_ICON; }
+                else if (itemRarity === 'common') { upgradeIcon = COMMON_UPGRADE_ICON; essenceIcon = COMMON_ESSENCE_ICON; }
 
-        // Wstrzykiwanie ZAWSZE, chowanie i wyświetlanie leży po stronie wygenerowanych klas CSS w locie
-        let upgradeLines1_4 = [];
-        for (let i = 0; i < 4; i++) {
-            upgradeLines1_4.push(`+${i + 1}: ${formatBigNumber(costs.costs[i])}`);
+                const summaryContent = `${upgradeIcon} <span class="c_blue">${formatNumber(costs.totalPoints)}</span>&nbsp;&nbsp;&nbsp;&nbsp;${essenceIcon} <span class="c_green">${totalEssence}</span>&nbsp;&nbsp;&nbsp;&nbsp;${GOLD_ICON} <span class="c_yellow">${formatBigNumber(totalGold, true)}</span>`;
+                insertionHtml += `<div class="item-tip-section baddonz-summary-marker baddonz-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center;">${summaryContent}</div></div>`;
+            }
         }
 
-        const upgradeLine5 = `+5: ${formatBigNumber(costs.costs[4])} | <span class="c_green">${totalEssence} esy</span> | <span class="c_yellow">${formatBigNumber(totalGold, true)} złota</span>`;
-        const levelsContent = `<div style="text-align: center;"><span class="c_blue">Koszt Poziomów Ulepszenia:</span></div>${upgradeLines1_4.join(' / ')}<br>${upgradeLine5}`;
-        
-        const levelsSectionHtml = `
-            <div class="item-tip-section baddonz-ii-levels baddonz-ii-${itemRarity} baddonz-ii-stats-marker">
-                <div class="tip-item-stat-addon" style="text-align: center; font-size: 11px;">${levelsContent}</div>
-            </div>
-        `;
-
-        let upgradeIcon, essenceIcon;
-        switch (itemRarity) {
-            case "legendary": upgradeIcon = LEGEND_UPGRADE_ICON; essenceIcon = LEGEND_ESSENCE_ICON; break;
-            case "heroic": upgradeIcon = HEROIC_UPGRADE_ICON; essenceIcon = HEROIC_ESSENCE_ICON; break;
-            case "unique": upgradeIcon = UNIQUE_UPGRADE_ICON; essenceIcon = UNIQUE_ESSENCE_ICON; break;
-            case "upgraded": upgradeIcon = UPGRADED_UPGRADE_ICON; essenceIcon = UPGRADED_ESSENCE_ICON; break;
-            case "common": upgradeIcon = COMMON_UPGRADE_ICON; essenceIcon = COMMON_ESSENCE_ICON; break;
-            default: upgradeIcon = LEGEND_UPGRADE_ICON; essenceIcon = LEGEND_ESSENCE_ICON;
-        }
-
-        const summaryContent = `${upgradeIcon} <span class="c_blue">${formatNumber(costs.totalPoints)}</span>&nbsp;&nbsp;&nbsp;&nbsp;${essenceIcon} <span class="c_green">${totalEssence}</span>&nbsp;&nbsp;&nbsp;&nbsp;${GOLD_ICON} <span class="c_yellow">${formatBigNumber(totalGold, true)}</span>`;
-        const summarySectionHtml = `
-            <div class="item-tip-section baddonz-ii-summary baddonz-ii-${itemRarity}">
-                <div class="tip-item-stat-addon" style="text-align: center;">${summaryContent}</div>
-            </div>
-        `;
-
-        const insertionHtml = levelsSectionHtml + summarySectionHtml;
-        const insertionMarker = '<div class="item-tip-section s-8">';
-
-        if ($visibleTip) {
-            const $s8 = $visibleTip.find('.item-tip-section.s-8');
-
-            if ($s8.length) {
-                $s8.before(insertionHtml);
-            } else {
-                const $s7 = $visibleTip.find('.item-tip-section.s-7');
-                if ($s7.length) {
-                     $s7.after(insertionHtml);
+        // Szybkie i bezpieczne wstrzykiwanie za pomocą sztywnych punktów (np. s-8, s-7, s-5)
+        if (insertionHtml) {
+            const index8 = currentTipContent.indexOf('<div class="item-tip-section s-8">');
+            if (index8 !== -1) currentTipContent = currentTipContent.substring(0, index8) + insertionHtml + currentTipContent.substring(index8);
+            else {
+                const index7 = currentTipContent.indexOf('<div class="item-tip-section s-7">');
+                if (index7 !== -1) {
+                    const endOf7 = currentTipContent.indexOf('</div>', index7) + 6;
+                    currentTipContent = currentTipContent.substring(0, endOf7) + insertionHtml + currentTipContent.substring(endOf7);
                 } else {
-                    const $s5 = $visibleTip.find('.item-tip-section.s-5');
-                    if ($s5.length) $s5.after(insertionHtml);
+                    const index5 = currentTipContent.indexOf('<div class="item-tip-section s-5">');
+                    if (index5 !== -1) {
+                         const endOf5 = currentTipContent.indexOf('</div>', index5) + 6;
+                         currentTipContent = currentTipContent.substring(0, endOf5) + insertionHtml + currentTipContent.substring(endOf5);
+                    } else {
+                        currentTipContent += insertionHtml;
+                    }
                 }
             }
 
-            const index = currentTipContent.indexOf(insertionMarker);
-
-            if (index !== -1) {
-                const partBefore = currentTipContent.substring(0, index);
-                const partAfter = currentTipContent.substring(index);
-                window.TIPS.allTips[tipId] = partBefore + insertionHtml + partAfter;
-            } else {
-                $target.concatTip(insertionHtml);
+            // Natychmiastowo załącz do widocznego HTML, o ile to możliwe bezpiecznie (jQuery)
+            if ($visibleTip) {
+                const $s8 = $visibleTip.find('.item-tip-section.s-8');
+                if ($s8.length) $s8.before(insertionHtml);
+                else {
+                    const $s7 = $visibleTip.find('.item-tip-section.s-7');
+                    if ($s7.length) $s7.after(insertionHtml);
+                    else {
+                        const $s5 = $visibleTip.find('.item-tip-section.s-5');
+                        if ($s5.length) $s5.after(insertionHtml);
+                        else $target.concatTip(insertionHtml);
+                    }
+                }
             }
         }
+
+        window.TIPS.allTips[tipId] = currentTipContent;
     }
 
     function buildUI() {
         const bodyHtml = `
-            <div class="baddonz-setting-row" style="margin-bottom: 2px !important;">
-                <div class="baddonz-checkbox ii-amount-essence-cb ${currentSettings.amount_essence ? 'active' : ''}"></div>
-                <span class="baddonz-text" style="padding:0;">Ilość esencji w nazwie</span>
+            <div class="baddonz-setting-row" style="margin-bottom: 4px !important; display: flex; align-items: center;">
+                <div class="baddonz-checkbox ii-enabled-checkbox ${currentSettings.enabled ? 'active' : ''}"></div>
+                <span class="baddonz-text" style="padding: 0; margin-left: 5px; font-weight: bold;">Item Info</span>
             </div>
-            <div class="baddonz-setting-row" style="margin-bottom: 2px !important;">
-                <div class="baddonz-checkbox ii-hide-opis-cb ${currentSettings.HIDE_OPIS ? 'active' : ''}"></div>
-                <span class="baddonz-text" style="padding:0;">Ukryj fabułę (opis)</span>
-            </div>
+            <hr style="width: 100%; border-color: #303030; margin: 3px 0;">
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-hide-opis ${currentSettings.HIDE_OPIS ? 'active' : ''}"></div><span class="baddonz-text">Ukryj opis przedmiotu</span></div>
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-essence ${currentSettings.amount_essence ? 'active' : ''}"></div><span class="baddonz-text">Esencja obok nazwy</span></div>
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-levels ${currentSettings.UPGRADE_LEVEL ? 'active' : ''}"></div><span class="baddonz-text">Poziomy ulepszeń</span></div>
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-summary ${currentSettings.SHOW_SUMMARY_LEGEND ? 'active' : ''}"></div><span class="baddonz-text">Podsumowanie kosztów</span></div>
             
-            <hr style="width: 100%; border-color: #303030; margin: 4px 0;">
-            
-            <div class="baddonz-setting-row" style="margin-bottom: 2px !important;">
-                <div class="baddonz-checkbox ii-upgrade-level-cb ${currentSettings.UPGRADE_LEVEL ? 'active' : ''}"></div>
-                <span class="baddonz-text" style="padding:0;">Koszty poziomów</span>
-            </div>
-            <div class="baddonz-setting-row" style="margin-bottom: 2px !important;">
-                <div class="baddonz-checkbox ii-show-summary-cb ${currentSettings.SHOW_SUMMARY_LEGEND ? 'active' : ''}"></div>
-                <span class="baddonz-text" style="padding:0;">Podsumowanie kosztów</span>
-            </div>
-            
-            <hr style="width: 100%; border-color: #303030; margin: 4px 0;">
-            <div class="baddonz-text" style="text-align:center; width:100%; margin-bottom:1px; padding:0;">Pokazuj ulepszenia dla:</div>
-            
-            <div class="baddonz-grid-2col" style="margin-bottom: 2px;">
-                <div class="baddonz-label-wrapper" style="padding: 0; justify-content: flex-start;">
-                    <div class="baddonz-checkbox ii-show-common-cb ${currentSettings.SHOW_COMMON ? 'active' : ''}"></div>
-                    <span class="baddonz-text" style="color:#aaa; padding-left:4px;">Zwykłe</span>
-                </div>
-                <div class="baddonz-label-wrapper" style="padding: 0; justify-content: flex-start;">
-                    <div class="baddonz-checkbox ii-show-unique-cb ${currentSettings.SHOW_UNIQUE ? 'active' : ''}"></div>
-                    <span class="baddonz-text" style="color:#e5b922; padding-left:4px;">Unikaty</span>
-                </div>
-                <div class="baddonz-label-wrapper" style="padding: 0; justify-content: flex-start;">
-                    <div class="baddonz-checkbox ii-show-heroic-cb ${currentSettings.SHOW_HEROIC ? 'active' : ''}"></div>
-                    <span class="baddonz-text" style="color:#2286e5; padding-left:4px;">Herosy</span>
-                </div>
-                <div class="baddonz-label-wrapper" style="padding: 0; justify-content: flex-start;">
-                    <div class="baddonz-checkbox ii-show-legendary-cb ${currentSettings.SHOW_LEGENDARY ? 'active' : ''}"></div>
-                    <span class="baddonz-text" style="color:#e52222; padding-left:4px;">Legendy</span>
-                </div>
+            <hr style="width: 100%; border-color: #303030; margin: 3px 0;">
+            <div class="baddonz-text" style="text-align: center; font-weight: bold; margin-bottom: 2px;">Wyświetlaj dla:</div>
+            <div class="baddonz-grid-2col">
+                <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-common ${currentSettings.SHOW_COMMON ? 'active' : ''}"></div><span class="baddonz-text">Zwykłe</span></div>
+                <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-unique ${currentSettings.SHOW_UNIQUE ? 'active' : ''}"></div><span class="baddonz-text">Unikaty</span></div>
+                <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-heroic ${currentSettings.SHOW_HEROIC ? 'active' : ''}"></div><span class="baddonz-text">Heroiki</span></div>
+                <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-legendary ${currentSettings.SHOW_LEGENDARY ? 'active' : ''}"></div><span class="baddonz-text">Legendy</span></div>
             </div>
         `;
 
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Item Info", bodyHtml, {
-            width: '185px',
+            width: '210px',
             customId: 'baddonz-ii-wnd',
             hasSettings: false,
             hasCollapse: false,
@@ -359,47 +338,59 @@
         });
         uiWindowElement.classList.add('baddonz-ii-wnd');
 
-        // Bindowanie akcji do checkboxów -> aktualizacja zmiennych -> zapis -> uderzenie nowego CSS
-        const bindCheckbox = (selector, key) => {
-            const cb = uiWindowElement.querySelector(selector);
+        const bindToggle = (className, key) => {
+            const cb = uiWindowElement.querySelector(`.${className}`);
             cb.addEventListener('click', () => {
                 currentSettings[key] = cb.classList.toggle('active');
                 saveSettings();
+                updateBodyClasses();
             });
         };
 
-        bindCheckbox('.ii-amount-essence-cb', 'amount_essence');
-        bindCheckbox('.ii-hide-opis-cb', 'HIDE_OPIS');
-        bindCheckbox('.ii-upgrade-level-cb', 'UPGRADE_LEVEL');
-        bindCheckbox('.ii-show-summary-cb', 'SHOW_SUMMARY_LEGEND');
-        bindCheckbox('.ii-show-common-cb', 'SHOW_COMMON');
-        bindCheckbox('.ii-show-unique-cb', 'SHOW_UNIQUE');
-        bindCheckbox('.ii-show-heroic-cb', 'SHOW_HEROIC');
-        bindCheckbox('.ii-show-legendary-cb', 'SHOW_LEGENDARY');
+        bindToggle('ii-enabled-checkbox', 'enabled');
+        bindToggle('ii-hide-opis', 'HIDE_OPIS');
+        bindToggle('ii-essence', 'amount_essence');
+        bindToggle('ii-levels', 'UPGRADE_LEVEL');
+        bindToggle('ii-summary', 'SHOW_SUMMARY_LEGEND');
+        
+        bindToggle('ii-common', 'SHOW_COMMON');
+        bindToggle('ii-unique', 'SHOW_UNIQUE');
+        bindToggle('ii-heroic', 'SHOW_HEROIC');
+        bindToggle('ii-legendary', 'SHOW_LEGENDARY');
     }
 
     function addonInit() {
         loadSettings();
         if (!uiWindowElement) buildUI();
+        updateBodyClasses();
+
+        // Główne podpięcie na pojawienie się tipa z przedmiotem
         $(document).on('pointerenter', '[tip-id]', addLegendInfoToTip);
     }
 
     function addonStop() {
-        $(document).off('pointerenter', '[tip-id]', addLegendInfoToTip);
         if (uiWindowElement) {
             uiWindowElement.remove();
             uiWindowElement = null;
         }
+        $(document).off('pointerenter', '[tip-id]', addLegendInfoToTip);
     }
 
-    // To odpala się w przypadku kliknięcia w Docku, nie niszczy UI, po prostu aktualizuje CSS
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
+        if (uiWindowElement) {
+            const cb = uiWindowElement.querySelector(".ii-enabled-checkbox");
+            if (cb) {
+                if (isEnabled) cb.classList.add('active');
+                else cb.classList.remove('active');
+            }
+        }
         saveSettings();
+        updateBodyClasses();
     }
 
     const checkApi = () => {
-        if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon || !window.Engine || !window.Engine.allInit || !window.Engine.items) {
+        if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon) {
             setTimeout(checkApi, 500); return;
         }
         window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle: onStateToggle });
