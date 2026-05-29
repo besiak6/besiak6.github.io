@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Item Info baddonz
 // @version       05.08.2025
-// @description   Informacje o itemach (API 2.0 - Legbony, Hook Dymków, CSS Toggling)
+// @description   Informacje o itemach (API 2.0 - Znaczniki Legbonów, Natychmiastowe dymki)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -86,7 +86,7 @@
     };
 
     let uiWindowElement = null;
-    let legbonInterval = null;
+    let isEngineObserved = false;
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
@@ -207,12 +207,8 @@
         if (!stats || typeof stats !== "string") return {};
         const result = {};
         for (const pair of stats.split(";")) {
-            const idx = pair.indexOf("=");
-            if (idx !== -1) {
-                const key = pair.substring(0, idx);
-                const value = pair.substring(idx + 1);
-                result[key] = value;
-            }
+            const [key, value] = pair.split("=");
+            if (key && value !== undefined) result[key] = value;
         }
         return result;
     }
@@ -220,66 +216,83 @@
     // ==========================================
     // SYSTEM ZNACZNIKÓW BONUSÓW LEGENDARNYCH
     // ==========================================
-    function applyLegbonMarkers() {
-        if (!currentSettings.enabled || !currentSettings.SHOW_LEGBON_MARKERS) {
-            document.querySelectorAll('.baddonz-legbon-marker').forEach(el => el.remove());
-            return;
+    function addLegbonMarker(id, text) {
+        const $it = document.querySelector(`.item-id-${id}`);
+        if (!$it) return;
+
+        let tz = $it.querySelector(".baddonz-legbon-marker");
+        if (tz && tz.innerText === text) return;
+
+        if (!tz) {
+            tz = document.createElement("span");
+            tz.className = "baddonz-legbon-marker";
+            $it.appendChild(tz);
         }
 
-        if (!window.Engine || !window.Engine.items) return;
-
-        const domItems = document.querySelectorAll('.item[class*="item-id-"]');
-        domItems.forEach(el => {
-            const match = el.className.match(/item-id-(\d+)/);
-            if (!match) return;
-            const id = match[1];
-
-            const item = (typeof window.Engine.items.getItemById === 'function' ? window.Engine.items.getItemById(id) : null) || (window.Engine.items.d && window.Engine.items.d[id]);
-            let shortText = null;
-
-            if (item) {
-                let statStr = item.stat || item.stats || item._stat || "";
-                if (!statStr && typeof item.getStat === 'function') statStr = item.getStat();
-                
-                let parsed = item._cachedStats || parseStats(statStr);
-                
-                if (parsed.legbon) {
-                    const legType = parsed.legbon.split(',')[0];
-                    if (LEGBON_SHORT[legType]) {
-                        shortText = LEGBON_SHORT[legType];
-                    }
-                }
-            }
-
-            let tz = el.querySelector(".baddonz-legbon-marker");
-            if (shortText) {
-                if (!tz) {
-                    tz = document.createElement("span");
-                    tz.className = "baddonz-legbon-marker";
-                    Object.assign(tz.style, {
-                        position: "absolute", top: "0", left: "0",
-                        width: "100%", height: "100%", color: "#fff",
-                        fontSize: "11px",
-                        display: "flex", justifyContent: "center", alignItems: "center",
-                        textShadow: "-2px -2px 0 black, -1px -2px 0 black, 0px -2px 0 black, 1px -2px 0 black, 2px -2px 0 black, -2px -1px 0 black, 2px -1px 0 black, -2px 0px 0 black, 2px 0px 0 black, -2px 1px 0 black, 2px 1px 0 black, -2px 2px 0 black, -1px 2px 0 black, 0px 2px 0 black, 1px 2px 0 black, 2px 2px 0 black",
-                        fontFamily: "'Arial Black', Gadget, sans-serif",
-                        userSelect: "none", pointerEvents: "none",
-                        zIndex: "2"
-                    });
-                    el.appendChild(tz);
-                }
-                if (tz.innerText !== shortText) tz.innerText = shortText;
-            } else {
-                if (tz) tz.remove();
-            }
+        tz.innerText = text;
+        Object.assign(tz.style, {
+            position: "absolute", top: 0, left: 0,
+            width: "100%", height: "100%", color: "#fff",
+            fontSize: "10px",
+            textAlign: "center", lineHeight: 1.5,
+            textShadow: `-2px -2px 0 black, -1px -2px 0 black, 0px -2px 0 black, 1px -2px 0 black, 2px -2px 0 black, -2px -1px 0 black, 2px -1px 0 black, -2px 0px 0 black, 2px 0px 0 black, -2px 1px 0 black, 2px 1px 0 black, -2px 2px 0 black, -1px 2px 0 black, 0px 2px 0 black, 1px 2px 0 black, 2px 2px 0 black`,
+            fontFamily: "'Arial Black', Gadget, sans-serif",
+            userSelect: "none", pointerEvents: "none",
+            textRendering: "optimizeLegibility",
+            zIndex: 2
         });
     }
 
+    function removeLegbonMarker(id) {
+        const $it = document.querySelector(`.item-id-${id}`);
+        if (!$it) return;
+        const tz = $it.querySelector(".baddonz-legbon-marker");
+        if (tz) tz.remove();
+    }
+
+    function removeAllLegbonMarkers() {
+        document.querySelectorAll('.baddonz-legbon-marker').forEach(el => el.remove());
+    }
+
+    function applyLegbonMarkers(items) {
+        if (!currentSettings.enabled || !currentSettings.SHOW_LEGBON_MARKERS) {
+            removeAllLegbonMarkers();
+            return;
+        }
+        if (!items || typeof items !== "object") return;
+        
+        for (const id in items) {
+            const it = items[id];
+            if (!it || typeof it !== "object") continue;
+            
+            const stats = it._cachedStats || parseStats(it.stat || it.stats);
+            if (stats.rarity === 'legendary' && stats.legbon && LEGBON_SHORT[stats.legbon]) {
+                addLegbonMarker(id, LEGBON_SHORT[stats.legbon]);
+            } else {
+                removeLegbonMarker(id);
+            }
+        }
+    }
+
+    function applyToAllVisibleItems() {
+        if (!currentSettings.enabled || !currentSettings.SHOW_LEGBON_MARKERS) {
+            removeAllLegbonMarkers();
+            return;
+        }
+        if (window.Engine && window.Engine.items && window.Engine.items.fetchLocationItems) {
+            const itemsArray = window.Engine.items.fetchLocationItems("g");
+            const itemsMap = {};
+            for (const item of itemsArray) {
+                if (item && item.id) itemsMap[item.id] = item;
+            }
+            applyLegbonMarkers(itemsMap);
+        }
+    }
     // ==========================================
-    // HOOK SILNIKA (DYMKI W LOCIE)
-    // ==========================================
+
+
+    // Główny procesor HTML dymku
     function injectCustomInfo(tipHtml, item) {
-        if (!currentSettings.enabled) return tipHtml;
         if (!tipHtml || typeof tipHtml !== 'string') return tipHtml;
         if (tipHtml.includes('baddonz-item-info-injected')) return tipHtml;
 
@@ -370,6 +383,7 @@
         return $tip.html();
     }
 
+    // Bezpośredni Hook w silnik gry (Wstrzykiwanie HTML ZANIM dymek się wyrenderuje)
     function hookTipFunction() {
         if (typeof $ !== 'undefined' && $.fn && $.fn.tip && !$.fn.tip._baddonzHooked) {
             const originalTip = $.fn.tip;
@@ -385,6 +399,32 @@
                 return originalTip.call(this, content, t_type, i_type, params);
             };
             $.fn.tip._baddonzHooked = true;
+        }
+    }
+
+    function applyToExistingTips() {
+        if (!window.TIPS || !window.TIPS.allTips) return;
+        
+        let modifiedAny = false;
+        $('[tip-id]').each(function() {
+            const $el = $(this);
+            const id = $el.attr('tip-id');
+            const item = $el.data('item');
+            if (item && window.TIPS.allTips[id]) {
+                const newHtml = injectCustomInfo(window.TIPS.allTips[id], item);
+                if (newHtml !== window.TIPS.allTips[id]) {
+                    window.TIPS.allTips[id] = newHtml;
+                    modifiedAny = true;
+                }
+            }
+        });
+
+        const $visibleTip = window.TIPS.$tip;
+        if (modifiedAny && $visibleTip && $visibleTip.is(':visible')) {
+            const visibleId = $visibleTip.attr('data-tip-id');
+            if (visibleId && window.TIPS.allTips[visibleId]) {
+                $visibleTip.html(window.TIPS.allTips[visibleId]);
+            }
         }
     }
 
@@ -414,17 +454,18 @@
         });
         uiWindowElement.classList.add('baddonz-ii-wnd');
 
-        const bindToggle = (className, key) => {
+        const bindToggle = (className, key, callback = null) => {
             const cb = uiWindowElement.querySelector(`.${className}`);
             cb.addEventListener('click', () => {
                 currentSettings[key] = cb.classList.toggle('active');
                 saveSettings();
                 updateBodyClasses();
+                if (callback) callback();
             });
         };
 
         bindToggle('ii-essence', 'amount_essence');
-        bindToggle('ii-legbon-markers', 'SHOW_LEGBON_MARKERS');
+        bindToggle('ii-legbon-markers', 'SHOW_LEGBON_MARKERS', applyToAllVisibleItems);
         bindToggle('ii-hide-opis', 'HIDE_OPIS');
         bindToggle('ii-levels', 'UPGRADE_LEVEL');
         bindToggle('ii-summary', 'SHOW_SUMMARY_LEGEND');
@@ -440,18 +481,29 @@
         loadSettings();
         if (!uiWindowElement) buildUI();
         updateBodyClasses();
-        hookTipFunction();
 
-        // Niezawodny skaner sprawdzający plecaki/ekwipunek co 400ms, niewrażliwy na otwieranie nowych okien
-        legbonInterval = setInterval(applyLegbonMarkers, 400);
+        hookTipFunction();
+        
+        if (!isEngineObserved) {
+            const originalParseJSON = window.Engine.communication.parseJSON;
+            window.Engine.communication.parseJSON = function (data) {
+                const res = originalParseJSON.apply(this, arguments);
+                if (data.item) {
+                    applyLegbonMarkers(data.item);
+                }
+                return res;
+            };
+            isEngineObserved = true;
+        }
+
+        setTimeout(() => {
+            applyToAllVisibleItems();
+            applyToExistingTips();
+        }, 500); 
     }
 
     function addonStop() {
-        if (legbonInterval) {
-            clearInterval(legbonInterval);
-            legbonInterval = null;
-        }
-        document.querySelectorAll('.baddonz-legbon-marker').forEach(el => el.remove());
+        removeAllLegbonMarkers();
         if (uiWindowElement) {
             uiWindowElement.remove();
             uiWindowElement = null;
@@ -462,6 +514,7 @@
         currentSettings.enabled = isEnabled;
         saveSettings();
         updateBodyClasses();
+        applyToAllVisibleItems();
     }
 
     const checkApi = () => {
