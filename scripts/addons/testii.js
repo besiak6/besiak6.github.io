@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Item Info baddonz
-// @version       05.08.2025
-// @description   Informacje o itemach (API 2.0 - Natychmiastowe ładowanie, czysty tekst)
+// @version       29.05.2026
+// @description   Informacje o itemach
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -28,6 +28,7 @@
         body:not(.baddonz-ii-summary) .baddonz-summary-marker { display: none !important; }
 
         body:not(.baddonz-ii-common) .baddonz-rarity-common { display: none !important; }
+        body:not(.baddonz-ii-upgraded) .baddonz-rarity-upgraded { display: none !important; }
         body:not(.baddonz-ii-unique) .baddonz-rarity-unique { display: none !important; }
         body:not(.baddonz-ii-heroic) .baddonz-rarity-heroic { display: none !important; }
         body:not(.baddonz-ii-legendary) .baddonz-rarity-legendary { display: none !important; }
@@ -59,6 +60,7 @@
         UPGRADE_LEVEL: true,
         SHOW_SUMMARY_LEGEND: true,
         SHOW_COMMON: true,
+        SHOW_UPGRADED: true,
         SHOW_UNIQUE: true,
         SHOW_HEROIC: true,
         SHOW_LEGENDARY: true
@@ -83,7 +85,7 @@
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
-        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'HIDE_OPIS', 'amount_essence', 'UPGRADE_LEVEL', 'SHOW_SUMMARY_LEGEND', 'SHOW_COMMON', 'SHOW_UNIQUE', 'SHOW_HEROIC', 'SHOW_LEGENDARY'];
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'HIDE_OPIS', 'amount_essence', 'UPGRADE_LEVEL', 'SHOW_SUMMARY_LEGEND', 'SHOW_COMMON', 'SHOW_UPGRADED', 'SHOW_UNIQUE', 'SHOW_HEROIC', 'SHOW_LEGENDARY'];
         
         let accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
@@ -101,7 +103,7 @@
     function updateBodyClasses() {
         const body = document.body;
         if (!currentSettings.enabled) {
-            body.classList.remove('baddonz-ii-hide-opis', 'baddonz-ii-essence', 'baddonz-ii-levels', 'baddonz-ii-summary', 'baddonz-ii-common', 'baddonz-ii-unique', 'baddonz-ii-heroic', 'baddonz-ii-legendary');
+            body.classList.remove('baddonz-ii-hide-opis', 'baddonz-ii-essence', 'baddonz-ii-levels', 'baddonz-ii-summary', 'baddonz-ii-common', 'baddonz-ii-upgraded', 'baddonz-ii-unique', 'baddonz-ii-heroic', 'baddonz-ii-legendary');
             return;
         }
         currentSettings.HIDE_OPIS ? body.classList.add('baddonz-ii-hide-opis') : body.classList.remove('baddonz-ii-hide-opis');
@@ -110,6 +112,7 @@
         currentSettings.SHOW_SUMMARY_LEGEND ? body.classList.add('baddonz-ii-summary') : body.classList.remove('baddonz-ii-summary');
 
         currentSettings.SHOW_COMMON ? body.classList.add('baddonz-ii-common') : body.classList.remove('baddonz-ii-common');
+        currentSettings.SHOW_UPGRADED ? body.classList.add('baddonz-ii-upgraded') : body.classList.remove('baddonz-ii-upgraded');
         currentSettings.SHOW_UNIQUE ? body.classList.add('baddonz-ii-unique') : body.classList.remove('baddonz-ii-unique');
         currentSettings.SHOW_HEROIC ? body.classList.add('baddonz-ii-heroic') : body.classList.remove('baddonz-ii-heroic');
         currentSettings.SHOW_LEGENDARY ? body.classList.add('baddonz-ii-legendary') : body.classList.remove('baddonz-ii-legendary');
@@ -198,11 +201,12 @@
 
         const stats = item._cachedStats || parseStats(item.stat);
         const tipId = $target.attr('tip-id');
-        let currentTipContent = window.TIPS?.allTips[tipId] || "";
-        const $visibleTip = window.TIPS?.$tip;
+        let tipHtml = window.TIPS?.allTips[tipId];
+        
+        if (!tipHtml) return;
+        if (tipHtml.includes('baddonz-item-info-injected')) return;
 
-        if (!currentTipContent || currentTipContent.includes('baddonz-item-info-injected')) return;
-        currentTipContent += '<div style="display:none;" class="baddonz-item-info-injected"></div>';
+        tipHtml += '<div style="display:none;" class="baddonz-item-info-injected"></div>';
 
         let itemLevel = parseInt(stats?.lvl, 10);
         if (stats.lowreq) itemLevel += parseInt(stats.lowreq, 10);
@@ -221,10 +225,10 @@
 
         if (dismantleEssence !== undefined && dismantleEssence !== null) {
             const essenceHtml = ` <span class="c_green baddonz-essence-marker">[${dismantleEssence}]</span>`;
-            const nameRegex = /(<div[^>]*class="[^"]*(?:tip-item-stat-item-name|item-name)[^"]*"[^>]*>)([\s\S]*?)(<\/div>)/;
-            const nameMatch = currentTipContent.match(nameRegex);
-            if (nameMatch && !nameMatch[0].includes('baddonz-essence-marker')) {
-                currentTipContent = currentTipContent.replace(nameMatch[0], nameMatch[1] + nameMatch[2] + essenceHtml + nameMatch[3]);
+            const nameMatch = tipHtml.match(/<div[^>]*class="[^"]*tip-item-stat-item-name[^"]*"[^>]*>([\s\S]*?)<\/div>/);
+            if (nameMatch && !nameMatch[1].includes('baddonz-essence-marker')) {
+                const newNameHtml = nameMatch[1] + essenceHtml;
+                tipHtml = tipHtml.replace(nameMatch[0], nameMatch[0].replace(nameMatch[1], newNameHtml));
             }
         }
 
@@ -237,12 +241,11 @@
                 const dateString = date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 const timeString = date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
                 
-                const looterRegex = /(<div[^>]*class="[^"]*(?:tip-item-stat-loot looter|looter)[^"]*"[^>]*>)([\s\S]*?)(<\/div>)/;
-                const looterMatch = currentTipContent.match(looterRegex);
-                if (looterMatch && !looterMatch[2].includes(timeString.substring(0, 5))) {
-                    let newLooterText = looterMatch[2].replace(new RegExp(dateString.replace(/\./g, '\\.'), 'g'), `${dateString} ${timeString}`);
+                const looterMatch = tipHtml.match(/<div[^>]*class="[^"]*tip-item-stat-loot looter[^"]*"[^>]*>([\s\S]*?)<\/div>/);
+                if (looterMatch && !looterMatch[1].includes(timeString.substring(0, 5))) {
+                    let newLooterText = looterMatch[1].replace(new RegExp(dateString.replace(/\./g, '\\.'), 'g'), `${dateString} ${timeString}`);
                     newLooterText = newLooterText.replace(/wraz z drużyną/, `wraz z drużyną (<span class="c_orange">${groupSize}</span>)`);
-                    currentTipContent = currentTipContent.replace(looterMatch[0], looterMatch[1] + newLooterText + looterMatch[3]);
+                    tipHtml = tipHtml.replace(looterMatch[0], looterMatch[0].replace(looterMatch[1], newLooterText));
                 }
             }
         }
@@ -265,42 +268,41 @@
             const summaryContent = `${upgradeIcon} <span class="c_blue">${formatNumber(costs.totalPoints)}</span>&nbsp;&nbsp;&nbsp;&nbsp;${essenceIcon} <span class="c_green">${totalEssence}</span>&nbsp;&nbsp;&nbsp;&nbsp;${GOLD_ICON} <span class="c_yellow">${formatBigNumber(totalGold, true)}</span>`;
             insertionHtml += `<div class="item-tip-section baddonz-summary-marker baddonz-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center;">${summaryContent}</div></div>`;
             
-            const index8 = currentTipContent.indexOf('<div class="item-tip-section s-8">');
-            if (index8 !== -1) {
-                currentTipContent = currentTipContent.substring(0, index8) + insertionHtml + currentTipContent.substring(index8);
-            } else {
-                const index7 = currentTipContent.indexOf('<div class="item-tip-section s-7">');
+            const index8 = tipHtml.indexOf('<div class="item-tip-section s-8">');
+            if (index8 !== -1) tipHtml = tipHtml.substring(0, index8) + insertionHtml + tipHtml.substring(index8);
+            else {
+                const index7 = tipHtml.indexOf('<div class="item-tip-section s-7">');
                 if (index7 !== -1) {
-                    const endOf7 = currentTipContent.indexOf('</div>', index7) + 6;
-                    currentTipContent = currentTipContent.substring(0, endOf7) + insertionHtml + currentTipContent.substring(endOf7);
+                    const endOf7 = tipHtml.indexOf('</div>', index7) + 6;
+                    tipHtml = tipHtml.substring(0, endOf7) + insertionHtml + tipHtml.substring(endOf7);
                 } else {
-                    const index5 = currentTipContent.indexOf('<div class="item-tip-section s-5">');
+                    const index5 = tipHtml.indexOf('<div class="item-tip-section s-5">');
                     if (index5 !== -1) {
-                         const endOf5 = currentTipContent.indexOf('</div>', index5) + 6;
-                         currentTipContent = currentTipContent.substring(0, endOf5) + insertionHtml + currentTipContent.substring(endOf5);
+                         const endOf5 = tipHtml.indexOf('</div>', index5) + 6;
+                         tipHtml = tipHtml.substring(0, endOf5) + insertionHtml + tipHtml.substring(endOf5);
                     } else {
-                        currentTipContent += insertionHtml;
+                        tipHtml += insertionHtml;
                     }
                 }
             }
         }
 
-        window.TIPS.allTips[tipId] = currentTipContent;
+        window.TIPS.allTips[tipId] = tipHtml;
 
+        const $visibleTip = window.TIPS?.$tip;
         if ($visibleTip && $visibleTip.is(':visible') && $visibleTip.attr('data-tip-id') === tipId) {
-            $visibleTip.html(currentTipContent);
+            $visibleTip.html(tipHtml);
         }
     }
 
     function handlePointerEnter() {
         if (!currentSettings.enabled) return;
         const $target = $(this);
-        
         setTimeout(() => {
             if ($target.is(':hover')) {
                 addLegendInfoToTip($target);
             }
-        }, 20);
+        }, 15);
     }
 
     function buildUI() {
@@ -312,9 +314,10 @@
             <hr style="width: 100%; border-color: #303030; margin: 3px 0;">
             <div class="baddonz-grid-2col">
                 <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-common ${currentSettings.SHOW_COMMON ? 'active' : ''}"></div><span class="baddonz-text" style="color: #b0b0b0;">Zwykłe</span></div>
+                <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-upgraded ${currentSettings.SHOW_UPGRADED ? 'active' : ''}"></div><span class="baddonz-text" style="color: #a335ee;">Ulepszone</span></div>
                 <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-unique ${currentSettings.SHOW_UNIQUE ? 'active' : ''}"></div><span class="baddonz-text" style="color: #f0d322;">Unikaty</span></div>
                 <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-heroic ${currentSettings.SHOW_HEROIC ? 'active' : ''}"></div><span class="baddonz-text" style="color: #0080ff;">Heroiki</span></div>
-                <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-legendary ${currentSettings.SHOW_LEGENDARY ? 'active' : ''}"></div><span class="baddonz-text" style="color: #ff0000;">Legendy</span></div>
+                <div class="baddonz-label-wrapper" style="grid-column: span 2; justify-content: center;"><div class="baddonz-checkbox ii-legendary ${currentSettings.SHOW_LEGENDARY ? 'active' : ''}"></div><span class="baddonz-text" style="color: #ff0000;">Legendy</span></div>
             </div>
         `;
 
@@ -342,6 +345,7 @@
         bindToggle('ii-summary', 'SHOW_SUMMARY_LEGEND');
         
         bindToggle('ii-common', 'SHOW_COMMON');
+        bindToggle('ii-upgraded', 'SHOW_UPGRADED');
         bindToggle('ii-unique', 'SHOW_UNIQUE');
         bindToggle('ii-heroic', 'SHOW_HEROIC');
         bindToggle('ii-legendary', 'SHOW_LEGENDARY');
