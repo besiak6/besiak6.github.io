@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Item Info baddonz
-// @version       29.05.2026
-// @description   Informacje o itemach
+// @version       05.08.2025
+// @description   Informacje o itemach (API 2.0 - Natychmiastowa esencja, Ulepszone)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -206,8 +206,7 @@
         if (!tipHtml) return;
         if (tipHtml.includes('baddonz-item-info-injected')) return;
 
-        let $tip = $('<div>').html(tipHtml);
-        $tip.append('<div style="display:none;" class="baddonz-item-info-injected"></div>');
+        tipHtml += '<div style="display:none;" class="baddonz-item-info-injected"></div>';
 
         let itemLevel = parseInt(stats?.lvl, 10);
         if (stats.lowreq) itemLevel += parseInt(stats.lowreq, 10);
@@ -224,18 +223,16 @@
             dismantleEssence = costs.dismantleEssence;
         }
 
-        const essenceHtml = dismantleEssence !== undefined && dismantleEssence !== null 
-            ? ` <span class="c_green baddonz-essence-marker">[${dismantleEssence}]</span>` 
-            : '';
-
-        // 1. Aktualizacja w pamięci wewnętrznej gry
-        if (essenceHtml) {
-            let $nameEl = $tip.find('.item-name, .tip-item-stat-item-name, .name').first();
-            if ($nameEl.length) {
-                $nameEl.append(essenceHtml);
+        // 1. BEZPOŚREDNIE WSTRZYKIWANIE ESENCJI DO TEKSTU (Brak problemów z jQuery)
+        if (dismantleEssence !== undefined && dismantleEssence !== null) {
+            const essenceHtml = ` <span class="c_green baddonz-essence-marker">[${dismantleEssence}]</span>`;
+            const nameRegex = /(<div[^>]*class="[^"]*(?:tip-item-stat-item-name|item-name|name)[^"]*"[^>]*>)([\s\S]*?)(<\/div>)/i;
+            if (!tipHtml.includes('baddonz-essence-marker')) {
+                tipHtml = tipHtml.replace(nameRegex, (match, p1, p2, p3) => p1 + p2 + essenceHtml + p3);
             }
         }
 
+        // 2. BEZPOŚREDNIE FORMATOWANIE LOOTA W TEKŚCIE
         if (stats?.loot) {
             const parts = stats.loot.split(',');
             if (parts.length >= 4) {
@@ -245,19 +242,17 @@
                 const dateString = date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 const timeString = date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
                 
-                let $looterEl = $tip.find('.tip-item-stat-loot.looter, .looter').first();
-                if ($looterEl.length) {
-                    let looterText = $looterEl.html();
-                    if (!looterText.includes(timeString.substring(0, 5))) {
-                        looterText = looterText.replace(new RegExp(dateString.replace(/\./g, '\\.'), 'g'), `${dateString} ${timeString}`);
-                        looterText = looterText.replace(/wraz z drużyną/, `wraz z drużyną (<span class="c_orange">${groupSize}</span>)`);
-                        $looterEl.html(looterText);
-                    }
+                const looterRegex = /(<div[^>]*class="[^"]*(?:tip-item-stat-loot looter|looter)[^"]*"[^>]*>)([\s\S]*?)(<\/div>)/i;
+                const looterMatch = tipHtml.match(looterRegex);
+                if (looterMatch && !looterMatch[2].includes(timeString.substring(0, 5))) {
+                    let looterText = looterMatch[2].replace(new RegExp(dateString.replace(/\./g, '\\.'), 'g'), `${dateString} ${timeString}`);
+                    looterText = looterText.replace(/wraz z drużyną/, `wraz z drużyną (<span class="c_orange">${groupSize}</span>)`);
+                    tipHtml = tipHtml.replace(looterRegex, `$1${looterText}$3`);
                 }
             }
         }
 
-        let insertionHtml = '';
+        // 3. WSTRZYKIWANIE POZIOMÓW I PODSUMOWANIA W ODPOWIEDNIE MIEJSCE
         if (costs) {
             const totalEssence = costs.totalEssence;
             const totalGold = costs.totalGold;
@@ -265,7 +260,7 @@
             let upgradeLines1_4 = [];
             for (let i = 0; i < 4; i++) upgradeLines1_4.push(`+${i+1}: ${formatBigNumber(costs.costs[i])}`);
             const levelsContent = `<div style="text-align: center;"><span class="c_blue">Koszt Poziomów Ulepszenia:</span></div>${upgradeLines1_4.join(' / ')}<br>+5: ${formatBigNumber(costs.costs[4])} | <span class="c_green">${totalEssence} esy</span> | <span class="c_yellow">${formatBigNumber(totalGold, true)} złota</span>`;
-            insertionHtml += `<div class="item-tip-section baddonz-levels-marker baddonz-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center; font-size: 11px;">${levelsContent}</div></div>`;
+            let insertionHtml = `<div class="item-tip-section baddonz-levels-marker baddonz-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center; font-size: 11px;">${levelsContent}</div></div>`;
 
             let upgradeIcon = LEGEND_UPGRADE_ICON, essenceIcon = LEGEND_ESSENCE_ICON;
             if (itemRarity === 'heroic') { upgradeIcon = HEROIC_UPGRADE_ICON; essenceIcon = HEROIC_ESSENCE_ICON; }
@@ -275,65 +270,32 @@
 
             const summaryContent = `${upgradeIcon} <span class="c_blue">${formatNumber(costs.totalPoints)}</span>&nbsp;&nbsp;&nbsp;&nbsp;${essenceIcon} <span class="c_green">${totalEssence}</span>&nbsp;&nbsp;&nbsp;&nbsp;${GOLD_ICON} <span class="c_yellow">${formatBigNumber(totalGold, true)}</span>`;
             insertionHtml += `<div class="item-tip-section baddonz-summary-marker baddonz-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center;">${summaryContent}</div></div>`;
+            
+            const index8 = tipHtml.indexOf('<div class="item-tip-section s-8">');
+            if (index8 !== -1) tipHtml = tipHtml.substring(0, index8) + insertionHtml + tipHtml.substring(index8);
+            else {
+                const index7 = tipHtml.indexOf('<div class="item-tip-section s-7">');
+                if (index7 !== -1) {
+                    const endOf7 = tipHtml.indexOf('</div>', index7) + 6;
+                    tipHtml = tipHtml.substring(0, endOf7) + insertionHtml + tipHtml.substring(endOf7);
+                } else {
+                    const index5 = tipHtml.indexOf('<div class="item-tip-section s-5">');
+                    if (index5 !== -1) {
+                         const endOf5 = tipHtml.indexOf('</div>', index5) + 6;
+                         tipHtml = tipHtml.substring(0, endOf5) + insertionHtml + tipHtml.substring(endOf5);
+                    } else {
+                        tipHtml += insertionHtml;
+                    }
+                }
+            }
         }
 
-        window.TIPS.allTips[tipId] = $tip.html();
+        window.TIPS.allTips[tipId] = tipHtml;
 
-        // 2. LIVE DOM UPDATE (Zapewnia natychmiastowe wyświetlanie na 1szym hoverze)
+        // Natychmiastowa aktualizacja widocznego dymka, jeśli to on jest wyświetlany
         const $visibleTip = window.TIPS?.$tip;
         if ($visibleTip && $visibleTip.is(':visible') && $visibleTip.attr('data-tip-id') === tipId) {
-            
-            // Wstrzyknięcie ESENCJI na żywo
-            if (essenceHtml) {
-                let $visName = $visibleTip.find('.item-name, .tip-item-stat-item-name, .name').first();
-                if ($visName.length && !$visName.find('.baddonz-essence-marker').length) {
-                    $visName.append(essenceHtml);
-                }
-            }
-
-            // Wstrzyknięcie LooT na żywo
-            if (stats?.loot) {
-                const parts = stats.loot.split(',');
-                if (parts.length >= 4) {
-                    const groupSize = parts[2];
-                    const timestamp = parts[3];
-                    const date = new Date(Number(timestamp) * 1000);
-                    const dateString = date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                    const timeString = date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-                    
-                    let $looterEl = $visibleTip.find('.tip-item-stat-loot.looter, .looter').first();
-                    if ($looterEl.length) {
-                        let looterText = $looterEl.html();
-                        if (!looterText.includes(timeString.substring(0, 5))) {
-                            looterText = looterText.replace(new RegExp(dateString.replace(/\./g, '\\.'), 'g'), `${dateString} ${timeString}`);
-                            looterText = looterText.replace(/wraz z drużyną/, `wraz z drużyną (<span class="c_orange">${groupSize}</span>)`);
-                            $looterEl.html(looterText);
-                        }
-                    }
-                }
-            }
-
-            // Wstrzyknięcie sekcji Poziomów/Podsumowania na żywo (nietykane i działa!)
-            if (insertionHtml) {
-                let $s8 = $visibleTip.find('.item-tip-section.s-8');
-                if ($s8.length) {
-                    $s8.before(insertionHtml);
-                } else {
-                    let $s7 = $visibleTip.find('.item-tip-section.s-7');
-                    if ($s7.length) {
-                        $s7.after(insertionHtml);
-                    } else {
-                        let $s5 = $visibleTip.find('.item-tip-section.s-5');
-                        if ($s5.length) $s5.after(insertionHtml);
-                        else $visibleTip.append(insertionHtml);
-                    }
-                }
-            }
-            
-            // Oznaczamy widoczny tip jako gotowy
-            if (!$visibleTip.find('.baddonz-item-info-injected').length) {
-                $visibleTip.append('<div style="display:none;" class="baddonz-item-info-injected"></div>');
-            }
+            $visibleTip.html(tipHtml);
         }
     }
 
@@ -341,7 +303,6 @@
         if (!currentSettings.enabled) return;
         const $target = $(this);
         
-        // Zabezpieczenie przed silnikiem gry, by skrypt załadował się po odświeżeniu domyślnego tipa
         setTimeout(() => {
             if ($target.is(':hover')) {
                 addLegendInfoToTip($target);
