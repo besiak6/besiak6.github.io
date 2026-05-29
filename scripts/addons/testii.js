@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Item Info baddonz
 // @version       05.08.2025
-// @description   Informacje o itemach (API 2.0 - Ulepszone ukrywanie opisów, Nowe UI)
+// @description   Informacje o itemach (API 2.0 - Znaczniki Legbonów, Natychmiastowe dymki)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -22,9 +22,11 @@
         .baddonz-ii-wnd .baddonz-text { font-size: 11px; }
         .baddonz-ii-wnd hr { margin: 3px 0 !important; }
         
+        body.baddonz-ii-hide-opis .item-tip-section.s-7 { display: none !important; }
         body:not(.baddonz-ii-essence) .baddonz-essence-marker { display: none !important; }
         body:not(.baddonz-ii-levels) .baddonz-levels-marker { display: none !important; }
         body:not(.baddonz-ii-summary) .baddonz-summary-marker { display: none !important; }
+        body:not(.baddonz-ii-legbon) .baddonz-legbon-marker { display: none !important; }
 
         body:not(.baddonz-ii-common) .baddonz-info-rarity-common { display: none !important; }
         body:not(.baddonz-ii-upgraded) .baddonz-info-rarity-upgraded { display: none !important; }
@@ -56,12 +58,26 @@
     const COMMON_ESSENCE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//neu/ese_zwycz.gif&quot;);"></div>`;
     const GOLD_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://experimental.margonem.pl/img/goldIconNormal.png&quot;);"></div>`;
 
+    const LEGBON_ABBR = {
+        "curse": "KL",
+        "lastheal": "OR",
+        "facade": "FO",
+        "verycrit": "CBK",
+        "holytouch": "DA",
+        "glare": "OŚ",
+        "critred": "KO",
+        "cleanse": "PO",
+        "anguish": "KU",
+        "puncture": "PS"
+    };
+
     let currentSettings = {
         enabled: true,
         windowOpacity: 2,
         windowVisible: true,
         HIDE_OPIS: false,
         amount_essence: true,
+        show_legbon: true,
         UPGRADE_LEVEL: true,
         SHOW_SUMMARY_LEGEND: true,
         SHOW_COMMON: true,
@@ -90,7 +106,7 @@
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
-        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'HIDE_OPIS', 'amount_essence', 'UPGRADE_LEVEL', 'SHOW_SUMMARY_LEGEND', 'SHOW_COMMON', 'SHOW_UPGRADED', 'SHOW_UNIQUE', 'SHOW_HEROIC', 'SHOW_LEGENDARY'];
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'HIDE_OPIS', 'amount_essence', 'show_legbon', 'UPGRADE_LEVEL', 'SHOW_SUMMARY_LEGEND', 'SHOW_COMMON', 'SHOW_UPGRADED', 'SHOW_UNIQUE', 'SHOW_HEROIC', 'SHOW_LEGENDARY'];
         
         let accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
@@ -108,11 +124,12 @@
     function updateBodyClasses() {
         const body = document.body;
         if (!currentSettings.enabled) {
-            body.classList.remove('baddonz-ii-hide-opis', 'baddonz-ii-essence', 'baddonz-ii-levels', 'baddonz-ii-summary', 'baddonz-ii-common', 'baddonz-ii-upgraded', 'baddonz-ii-unique', 'baddonz-ii-heroic', 'baddonz-ii-legendary');
+            body.classList.remove('baddonz-ii-hide-opis', 'baddonz-ii-essence', 'baddonz-ii-legbon', 'baddonz-ii-levels', 'baddonz-ii-summary', 'baddonz-ii-common', 'baddonz-ii-upgraded', 'baddonz-ii-unique', 'baddonz-ii-heroic', 'baddonz-ii-legendary');
             return;
         }
         currentSettings.HIDE_OPIS ? body.classList.add('baddonz-ii-hide-opis') : body.classList.remove('baddonz-ii-hide-opis');
         currentSettings.amount_essence ? body.classList.add('baddonz-ii-essence') : body.classList.remove('baddonz-ii-essence');
+        currentSettings.show_legbon ? body.classList.add('baddonz-ii-legbon') : body.classList.remove('baddonz-ii-legbon');
         currentSettings.UPGRADE_LEVEL ? body.classList.add('baddonz-ii-levels') : body.classList.remove('baddonz-ii-levels');
         currentSettings.SHOW_SUMMARY_LEGEND ? body.classList.add('baddonz-ii-summary') : body.classList.remove('baddonz-ii-summary');
 
@@ -196,6 +213,89 @@
             if (key && value !== undefined) result[key] = value;
         }
         return result;
+    }
+
+    function addLegbonMarker(id, text) {
+        const nodes = document.querySelectorAll(`.item-id-${id}`);
+        nodes.forEach($it => {
+            let marker = $it.querySelector(".baddonz-legbon-marker");
+            if (marker && marker.innerText === text) return;
+            if (!marker) {
+                marker = document.createElement("span");
+                marker.className = "baddonz-legbon-marker";
+                $it.appendChild(marker);
+            }
+            marker.innerText = text;
+            Object.assign(marker.style, {
+                position: "absolute", top: "0px", left: "0px",
+                width: "100%", height: "100%", color: "#ffd700",
+                fontSize: "11px",
+                textAlign: "center", lineHeight: "1.5",
+                textShadow: `-2px -2px 0 #000, -1px -2px 0 #000, 0px -2px 0 #000, 1px -2px 0 #000, 2px -2px 0 #000, -2px -1px 0 #000, 2px -1px 0 #000, -2px 0px 0 #000, 2px 0px 0 #000, -2px 1px 0 #000, 2px 1px 0 #000, -2px 2px 0 #000, -1px 2px 0 #000, 0px 2px 0 #000, 1px 2px 0 #000, 2px 2px 0 #000`,
+                fontFamily: "'Arial Black', Gadget, sans-serif",
+                userSelect: "none", pointerEvents: "none",
+                zIndex: "10"
+            });
+        });
+    }
+
+    function scanAllExistingItems() {
+        const items = document.querySelectorAll('[class*="item-id-"]');
+        items.forEach($it => {
+            const match = $it.className.match(/item-id-(\d+)/);
+            if (match && match[1]) {
+                const it = window.Engine.items.getItemById(match[1]);
+                if (it) {
+                    const stats = it._cachedStats || parseStats(it.stat);
+                    if (stats.rarity === 'legendary' && stats.legbon && LEGBON_ABBR[stats.legbon]) {
+                        addLegbonMarker(match[1], LEGBON_ABBR[stats.legbon]);
+                    }
+                }
+            }
+        });
+    }
+
+    function initMarkerObserver() {
+        if (window._baddonzMarkerObserver) return;
+        
+        const processNode = (n) => {
+            if (n.nodeType !== 1) return;
+            if (n.className && typeof n.className === 'string' && n.className.includes('item-id-')) {
+                const match = n.className.match(/item-id-(\d+)/);
+                if (match && match[1]) {
+                    const it = window.Engine.items.getItemById(match[1]);
+                    if (it) {
+                        const stats = it._cachedStats || parseStats(it.stat);
+                        if (stats.rarity === 'legendary' && stats.legbon && LEGBON_ABBR[stats.legbon]) {
+                            addLegbonMarker(match[1], LEGBON_ABBR[stats.legbon]);
+                        }
+                    }
+                }
+            } else if (n.querySelectorAll) {
+                const items = n.querySelectorAll('[class*="item-id-"]');
+                items.forEach(itemNode => {
+                    const match = itemNode.className.match(/item-id-(\d+)/);
+                    if (match && match[1]) {
+                        const it = window.Engine.items.getItemById(match[1]);
+                        if (it) {
+                            const stats = it._cachedStats || parseStats(it.stat);
+                            if (stats.rarity === 'legendary' && stats.legbon && LEGBON_ABBR[stats.legbon]) {
+                                addLegbonMarker(match[1], LEGBON_ABBR[stats.legbon]);
+                            }
+                        }
+                    }
+                });
+            }
+        };
+
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach(m => {
+                m.addedNodes.forEach(n => processNode(n));
+            });
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+        window._baddonzMarkerObserver = observer;
     }
 
     function injectCustomInfo(tipHtml, item) {
@@ -333,14 +433,30 @@
         }
     }
 
+    function handlePointerEnter() {
+        if (!currentSettings.enabled) return;
+        const $target = $(this);
+        setTimeout(() => {
+            if ($target.is(':hover')) {
+                const tipId = $target.attr('tip-id');
+                const $visibleTip = window.TIPS?.$tip;
+                if ($visibleTip && $visibleTip.is(':visible') && $visibleTip.attr('data-tip-id') === tipId) {
+                    const newHtml = window.TIPS.allTips[tipId];
+                    if (newHtml) $visibleTip.html(newHtml);
+                }
+            }
+        }, 15);
+    }
+
     function buildUI() {
         const bodyHtml = `
-            <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-essence ${currentSettings.amount_essence ? 'active' : ''}"></div><span class="baddonz-text">Ilość Esencji</span></div>
-            <hr style="width: 100%; border-color: #303030; margin: 3px 0;">
             <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-hide-opis ${currentSettings.HIDE_OPIS ? 'active' : ''}"></div><span class="baddonz-text">Ukrywaj opis</span></div>
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-essence ${currentSettings.amount_essence ? 'active' : ''}"></div><span class="baddonz-text">Ilość Esencji</span></div>
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-legbon ${currentSettings.show_legbon ? 'active' : ''}"></div><span class="baddonz-text">Znaczniki legbonów</span></div>
             <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-levels ${currentSettings.UPGRADE_LEVEL ? 'active' : ''}"></div><span class="baddonz-text">Poziomy ulepszenia</span></div>
             <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-summary ${currentSettings.SHOW_SUMMARY_LEGEND ? 'active' : ''}"></div><span class="baddonz-text">Podsumowanie ulepszenia</span></div>
-            <div class="baddonz-grid-2col" style="margin-top: 2px;">
+            <hr style="width: 100%; border-color: #303030; margin: 3px 0;">
+            <div class="baddonz-grid-2col">
                 <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-common ${currentSettings.SHOW_COMMON ? 'active' : ''}"></div><span class="baddonz-text" style="color: #b0b0b0;">Zwykłe</span></div>
                 <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-upgraded ${currentSettings.SHOW_UPGRADED ? 'active' : ''}"></div><span class="baddonz-text" style="color: #cb50ff;">Ulepszone</span></div>
                 <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-unique ${currentSettings.SHOW_UNIQUE ? 'active' : ''}"></div><span class="baddonz-text" style="color: #f0d322;">Unikaty</span></div>
@@ -369,6 +485,7 @@
 
         bindToggle('ii-hide-opis', 'HIDE_OPIS');
         bindToggle('ii-essence', 'amount_essence');
+        bindToggle('ii-legbon', 'show_legbon');
         bindToggle('ii-levels', 'UPGRADE_LEVEL');
         bindToggle('ii-summary', 'SHOW_SUMMARY_LEGEND');
         
@@ -385,7 +502,14 @@
         updateBodyClasses();
 
         hookTipFunction();
-        setTimeout(applyToExistingTips, 500); 
+        initMarkerObserver();
+        
+        setTimeout(() => {
+            applyToExistingTips();
+            scanAllExistingItems();
+        }, 500); 
+
+        $(document).on('pointerenter', '[tip-id]', handlePointerEnter);
     }
 
     function addonStop() {
@@ -393,6 +517,7 @@
             uiWindowElement.remove();
             uiWindowElement = null;
         }
+        $(document).off('pointerenter', '[tip-id]', handlePointerEnter);
     }
 
     function onStateToggle(isEnabled) {
