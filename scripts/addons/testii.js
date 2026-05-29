@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Item Info baddonz
-// @version       05.08.2025
+// @version       29.05.2026
 // @description   Informacje o itemach
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -190,20 +190,22 @@
         return result;
     }
 
-    function addLegendInfoToTip() {
+    function addLegendInfoToTip($target) {
         if (!currentSettings.enabled) return;
 
-        const $target = $(this);
         const item = $target.data('item');
         if (!item) return;
 
         const stats = item._cachedStats || parseStats(item.stat);
         const tipId = $target.attr('tip-id');
-        let currentTipContent = window.TIPS?.allTips[tipId] || "";
-        const $visibleTip = window.TIPS?.$tip;
+        let tipHtml = window.TIPS?.allTips[tipId];
+        
+        if (!tipHtml) return;
+        if (tipHtml.includes('baddonz-item-info-injected')) return;
 
-        if (currentTipContent.includes('baddonz-item-info-injected')) return;
-        currentTipContent += '<div style="display:none;" class="baddonz-item-info-injected"></div>';
+        // Używamy jQuery do bezpiecznej modyfikacji HTML w pamięci (Zero Regexów do nazwy!)
+        let $tip = $('<div>').html(tipHtml);
+        $tip.append('<div style="display:none;" class="baddonz-item-info-injected"></div>');
 
         let itemLevel = parseInt(stats?.lvl, 10);
         if (stats.lowreq) itemLevel += parseInt(stats.lowreq, 10);
@@ -220,16 +222,16 @@
             dismantleEssence = costs.dismantleEssence;
         }
 
+        // Dodawanie esencji używając niezawodnych klas NI
         if (dismantleEssence !== undefined && dismantleEssence !== null) {
             const essenceHtml = ` <span class="c_green baddonz-essence-marker" style="font-weight: bold;">[${dismantleEssence}]</span>`;
-            const nameMatch = currentTipContent.match(/<div[^>]*class="[^"]*tip-item-stat-item-name[^"]*"[^>]*>([\s\S]*?)<\/div>/);
-            if (nameMatch && !nameMatch[1].includes('baddonz-essence-marker')) {
-                const newNameHtml = nameMatch[1] + essenceHtml;
-                currentTipContent = currentTipContent.replace(nameMatch[0], nameMatch[0].replace(nameMatch[1], newNameHtml));
-                if ($visibleTip) $target.changeInTip('.tip-item-stat-item-name', newNameHtml);
+            let $nameEl = $tip.find('.item-name, .tip-item-stat-item-name, .name').first();
+            if ($nameEl.length) {
+                $nameEl.append(essenceHtml);
             }
         }
 
+        // Formatowanie loota
         if (stats?.loot) {
             const parts = stats.loot.split(',');
             if (parts.length >= 4) {
@@ -239,17 +241,19 @@
                 const dateString = date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
                 const timeString = date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
                 
-                const looterMatch = currentTipContent.match(/<div[^>]*class="[^"]*tip-item-stat-loot looter[^"]*"[^>]*>([\s\S]*?)<\/div>/);
-                if (looterMatch && !looterMatch[1].includes(timeString.substring(0, 5))) {
-                    let newLooterText = looterMatch[1].replace(new RegExp(dateString.replace(/\./g, '\\.'), 'g'), `${dateString} ${timeString}`);
-                    newLooterText = newLooterText.replace(/wraz z drużyną/, `wraz z drużyną (<span class="c_orange">${groupSize}</span>)`);
-                    currentTipContent = currentTipContent.replace(looterMatch[0], looterMatch[0].replace(looterMatch[1], newLooterText));
-                    if ($visibleTip) $target.changeInTip('.tip-item-stat-loot.looter', newLooterText);
+                let $looterEl = $tip.find('.tip-item-stat-loot.looter, .looter').first();
+                if ($looterEl.length) {
+                    let looterText = $looterEl.html();
+                    if (!looterText.includes(timeString.substring(0, 5))) {
+                        looterText = looterText.replace(new RegExp(dateString.replace(/\./g, '\\.'), 'g'), `${dateString} ${timeString}`);
+                        looterText = looterText.replace(/wraz z drużyną/, `wraz z drużyną (<span class="c_orange">${groupSize}</span>)`);
+                        $looterEl.html(looterText);
+                    }
                 }
             }
         }
 
-        let insertionHtml = '';
+        // Sekcja poziomów i podsumowania
         if (costs) {
             const totalEssence = costs.totalEssence;
             const totalGold = costs.totalGold;
@@ -257,7 +261,7 @@
             let upgradeLines1_4 = [];
             for (let i = 0; i < 4; i++) upgradeLines1_4.push(`+${i+1}: ${formatBigNumber(costs.costs[i])}`);
             const levelsContent = `<div style="text-align: center;"><span class="c_blue">Koszt Poziomów Ulepszenia:</span></div>${upgradeLines1_4.join(' / ')}<br>+5: ${formatBigNumber(costs.costs[4])} | <span class="c_green">${totalEssence} esy</span> | <span class="c_yellow">${formatBigNumber(totalGold, true)} złota</span>`;
-            insertionHtml += `<div class="item-tip-section baddonz-levels-marker baddonz-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center; font-size: 11px;">${levelsContent}</div></div>`;
+            let insertionHtml = `<div class="item-tip-section baddonz-levels-marker baddonz-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center; font-size: 11px;">${levelsContent}</div></div>`;
 
             let upgradeIcon = LEGEND_UPGRADE_ICON, essenceIcon = LEGEND_ESSENCE_ICON;
             if (itemRarity === 'heroic') { upgradeIcon = HEROIC_UPGRADE_ICON; essenceIcon = HEROIC_ESSENCE_ICON; }
@@ -267,43 +271,43 @@
 
             const summaryContent = `${upgradeIcon} <span class="c_blue">${formatNumber(costs.totalPoints)}</span>&nbsp;&nbsp;&nbsp;&nbsp;${essenceIcon} <span class="c_green">${totalEssence}</span>&nbsp;&nbsp;&nbsp;&nbsp;${GOLD_ICON} <span class="c_yellow">${formatBigNumber(totalGold, true)}</span>`;
             insertionHtml += `<div class="item-tip-section baddonz-summary-marker baddonz-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center;">${summaryContent}</div></div>`;
-        }
-
-        if (insertionHtml) {
-            const index8 = currentTipContent.indexOf('<div class="item-tip-section s-8">');
-            if (index8 !== -1) currentTipContent = currentTipContent.substring(0, index8) + insertionHtml + currentTipContent.substring(index8);
-            else {
-                const index7 = currentTipContent.indexOf('<div class="item-tip-section s-7">');
-                if (index7 !== -1) {
-                    const endOf7 = currentTipContent.indexOf('</div>', index7) + 6;
-                    currentTipContent = currentTipContent.substring(0, endOf7) + insertionHtml + currentTipContent.substring(endOf7);
+            
+            let $s8 = $tip.find('.item-tip-section.s-8');
+            if ($s8.length) {
+                $s8.before(insertionHtml);
+            } else {
+                let $s7 = $tip.find('.item-tip-section.s-7');
+                if ($s7.length) {
+                    $s7.after(insertionHtml);
                 } else {
-                    const index5 = currentTipContent.indexOf('<div class="item-tip-section s-5">');
-                    if (index5 !== -1) {
-                         const endOf5 = currentTipContent.indexOf('</div>', index5) + 6;
-                         currentTipContent = currentTipContent.substring(0, endOf5) + insertionHtml + currentTipContent.substring(endOf5);
-                    } else {
-                        currentTipContent += insertionHtml;
-                    }
-                }
-            }
-
-            if ($visibleTip) {
-                const $s8 = $visibleTip.find('.item-tip-section.s-8');
-                if ($s8.length) $s8.before(insertionHtml);
-                else {
-                    const $s7 = $visibleTip.find('.item-tip-section.s-7');
-                    if ($s7.length) $s7.after(insertionHtml);
-                    else {
-                        const $s5 = $visibleTip.find('.item-tip-section.s-5');
-                        if ($s5.length) $s5.after(insertionHtml);
-                        else $target.concatTip(insertionHtml);
-                    }
+                    let $s5 = $tip.find('.item-tip-section.s-5');
+                    if ($s5.length) $s5.after(insertionHtml);
+                    else $tip.append(insertionHtml);
                 }
             }
         }
 
-        window.TIPS.allTips[tipId] = currentTipContent;
+        const newHtml = $tip.html();
+        window.TIPS.allTips[tipId] = newHtml;
+
+        // Błyskawiczna podmiana otwartego tipa
+        const $visibleTip = window.TIPS?.$tip;
+        if ($visibleTip && $visibleTip.is(':visible') && $visibleTip.attr('data-tip-id') === tipId) {
+            $visibleTip.html(newHtml);
+        }
+    }
+
+    function handlePointerEnter() {
+        if (!currentSettings.enabled) return;
+        const $target = $(this);
+        
+        // Zabezpieczenie czasowe pozwala silnikowi gry wygenerować i nałożyć domyślny dymek,
+        // po czym wkracza nasz skrypt i bezbłędnie go edytuje. Koniec problemu "dwóch najecham"!
+        setTimeout(() => {
+            if ($target.is(':hover')) {
+                addLegendInfoToTip($target);
+            }
+        }, 15);
     }
 
     function buildUI() {
@@ -355,7 +359,7 @@
         if (!uiWindowElement) buildUI();
         updateBodyClasses();
 
-        $(document).on('pointerenter', '[tip-id]', addLegendInfoToTip);
+        $(document).on('pointerenter', '[tip-id]', handlePointerEnter);
     }
 
     function addonStop() {
@@ -363,7 +367,7 @@
             uiWindowElement.remove();
             uiWindowElement = null;
         }
-        $(document).off('pointerenter', '[tip-id]', addLegendInfoToTip);
+        $(document).off('pointerenter', '[tip-id]', handlePointerEnter);
     }
 
     function onStateToggle(isEnabled) {
