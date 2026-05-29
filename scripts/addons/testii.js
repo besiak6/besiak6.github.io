@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Item Info baddonz
 // @version       05.08.2025
-// @description   Informacje o itemach (API 2.0 - Natychmiastowe dymki, CSS Toggling)
+// @description   Informacje o itemach (API 2.0 - Ulepszone ukrywanie opisów, Nowe UI)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -22,16 +22,21 @@
         .baddonz-ii-wnd .baddonz-text { font-size: 11px; }
         .baddonz-ii-wnd hr { margin: 3px 0 !important; }
         
-        body.baddonz-ii-hide-opis .item-tip-section.s-7 { display: none !important; }
         body:not(.baddonz-ii-essence) .baddonz-essence-marker { display: none !important; }
         body:not(.baddonz-ii-levels) .baddonz-levels-marker { display: none !important; }
         body:not(.baddonz-ii-summary) .baddonz-summary-marker { display: none !important; }
 
-        body:not(.baddonz-ii-common) .baddonz-rarity-common { display: none !important; }
-        body:not(.baddonz-ii-upgraded) .baddonz-rarity-upgraded { display: none !important; }
-        body:not(.baddonz-ii-unique) .baddonz-rarity-unique { display: none !important; }
-        body:not(.baddonz-ii-heroic) .baddonz-rarity-heroic { display: none !important; }
-        body:not(.baddonz-ii-legendary) .baddonz-rarity-legendary { display: none !important; }
+        body:not(.baddonz-ii-common) .baddonz-info-rarity-common { display: none !important; }
+        body:not(.baddonz-ii-upgraded) .baddonz-info-rarity-upgraded { display: none !important; }
+        body:not(.baddonz-ii-unique) .baddonz-info-rarity-unique { display: none !important; }
+        body:not(.baddonz-ii-heroic) .baddonz-info-rarity-heroic { display: none !important; }
+        body:not(.baddonz-ii-legendary) .baddonz-info-rarity-legendary { display: none !important; }
+
+        body.baddonz-ii-hide-opis.baddonz-ii-common .baddonz-desc-rarity-common { display: none !important; }
+        body.baddonz-ii-hide-opis.baddonz-ii-upgraded .baddonz-desc-rarity-upgraded { display: none !important; }
+        body.baddonz-ii-hide-opis.baddonz-ii-unique .baddonz-desc-rarity-unique { display: none !important; }
+        body.baddonz-ii-hide-opis.baddonz-ii-heroic .baddonz-desc-rarity-heroic { display: none !important; }
+        body.baddonz-ii-hide-opis.baddonz-ii-legendary .baddonz-desc-rarity-legendary { display: none !important; }
     `;
     if (!document.querySelector(".ii-custom-styles")) document.head.appendChild(styleSheet);
 
@@ -193,7 +198,6 @@
         return result;
     }
 
-    // Główny procesor HTML dymku
     function injectCustomInfo(tipHtml, item) {
         if (!tipHtml || typeof tipHtml !== 'string') return tipHtml;
         if (tipHtml.includes('baddonz-item-info-injected')) return tipHtml;
@@ -254,7 +258,7 @@
             let upgradeLines1_4 = [];
             for (let i = 0; i < 4; i++) upgradeLines1_4.push(`+${i+1}: ${formatBigNumber(costs.costs[i])}`);
             const levelsContent = `<div style="text-align: center;"><span class="c_blue">Koszt Poziomów Ulepszenia:</span></div>${upgradeLines1_4.join(' / ')}<br>+5: ${formatBigNumber(costs.costs[4])} | <span class="c_green">${totalEssence} esy</span> | <span class="c_yellow">${formatBigNumber(totalGold, true)} złota</span>`;
-            let insertionHtml = `<div class="item-tip-section baddonz-levels-marker baddonz-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center; font-size: 11px;">${levelsContent}</div></div>`;
+            let insertionHtml = `<div class="item-tip-section baddonz-levels-marker baddonz-info-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center; font-size: 11px;">${levelsContent}</div></div>`;
 
             let upgradeIcon = LEGEND_UPGRADE_ICON, essenceIcon = LEGEND_ESSENCE_ICON;
             if (itemRarity === 'heroic') { upgradeIcon = HEROIC_UPGRADE_ICON; essenceIcon = HEROIC_ESSENCE_ICON; }
@@ -263,27 +267,28 @@
             else if (itemRarity === 'common') { upgradeIcon = COMMON_UPGRADE_ICON; essenceIcon = COMMON_ESSENCE_ICON; }
 
             const summaryContent = `${upgradeIcon} <span class="c_blue">${formatNumber(costs.totalPoints)}</span>&nbsp;&nbsp;&nbsp;&nbsp;${essenceIcon} <span class="c_green">${totalEssence}</span>&nbsp;&nbsp;&nbsp;&nbsp;${GOLD_ICON} <span class="c_yellow">${formatBigNumber(totalGold, true)}</span>`;
-            insertionHtml += `<div class="item-tip-section baddonz-summary-marker baddonz-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center;">${summaryContent}</div></div>`;
+            insertionHtml += `<div class="item-tip-section baddonz-summary-marker baddonz-info-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center;">${summaryContent}</div></div>`;
             
+            let $s7 = $tip.find('.item-tip-section.s-7');
+            if ($s7.length) {
+                $s7.addClass(`baddonz-desc-rarity-${itemRarity}`);
+            }
+
             let $s8 = $tip.find('.item-tip-section.s-8');
             if ($s8.length) {
                 $s8.before(insertionHtml);
+            } else if ($s7.length) {
+                $s7.after(insertionHtml);
             } else {
-                let $s7 = $tip.find('.item-tip-section.s-7');
-                if ($s7.length) {
-                    $s7.after(insertionHtml);
-                } else {
-                    let $s5 = $tip.find('.item-tip-section.s-5');
-                    if ($s5.length) $s5.after(insertionHtml);
-                    else $tip.append(insertionHtml);
-                }
+                let $s5 = $tip.find('.item-tip-section.s-5');
+                if ($s5.length) $s5.after(insertionHtml);
+                else $tip.append(insertionHtml);
             }
         }
 
         return $tip.html();
     }
 
-    // Bezpośredni Hook w silnik gry (Wstrzykiwanie HTML ZANIM dymek się wyrenderuje)
     function hookTipFunction() {
         if (typeof $ !== 'undefined' && $.fn && $.fn.tip && !$.fn.tip._baddonzHooked) {
             const originalTip = $.fn.tip;
@@ -293,9 +298,7 @@
                     if (item) {
                         try {
                             content = injectCustomInfo(content, item);
-                        } catch (e) {
-                            console.error('Item Info Baddonz Hook Error:', e);
-                        }
+                        } catch (e) {}
                     }
                 }
                 return originalTip.call(this, content, t_type, i_type, params);
@@ -332,12 +335,12 @@
 
     function buildUI() {
         const bodyHtml = `
-            <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-hide-opis ${currentSettings.HIDE_OPIS ? 'active' : ''}"></div><span class="baddonz-text">Ukrywaj opis</span></div>
             <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-essence ${currentSettings.amount_essence ? 'active' : ''}"></div><span class="baddonz-text">Ilość Esencji</span></div>
+            <hr style="width: 100%; border-color: #303030; margin: 3px 0;">
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-hide-opis ${currentSettings.HIDE_OPIS ? 'active' : ''}"></div><span class="baddonz-text">Ukrywaj opis</span></div>
             <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-levels ${currentSettings.UPGRADE_LEVEL ? 'active' : ''}"></div><span class="baddonz-text">Poziomy ulepszenia</span></div>
             <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-summary ${currentSettings.SHOW_SUMMARY_LEGEND ? 'active' : ''}"></div><span class="baddonz-text">Podsumowanie ulepszenia</span></div>
-            <hr style="width: 100%; border-color: #303030; margin: 3px 0;">
-            <div class="baddonz-grid-2col">
+            <div class="baddonz-grid-2col" style="margin-top: 2px;">
                 <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-common ${currentSettings.SHOW_COMMON ? 'active' : ''}"></div><span class="baddonz-text" style="color: #b0b0b0;">Zwykłe</span></div>
                 <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-upgraded ${currentSettings.SHOW_UPGRADED ? 'active' : ''}"></div><span class="baddonz-text" style="color: #cb50ff;">Ulepszone</span></div>
                 <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-unique ${currentSettings.SHOW_UNIQUE ? 'active' : ''}"></div><span class="baddonz-text" style="color: #f0d322;">Unikaty</span></div>
