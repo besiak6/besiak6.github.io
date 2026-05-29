@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Item Info baddonz
 // @version       05.08.2025
-// @description   Informacje o itemach
+// @description   Informacje o itemach (API 2.0 - Natychmiastowe dymki, CSS Toggling)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -67,7 +67,6 @@
     };
 
     let uiWindowElement = null;
-    let isTipHooked = false;
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
@@ -194,20 +193,16 @@
         return result;
     }
 
-    function addLegendInfoToTip($target) {
-        const item = $target.data('item');
-        if (!item) return;
+    // Główny procesor HTML dymku
+    function injectCustomInfo(tipHtml, item) {
+        if (!tipHtml || typeof tipHtml !== 'string') return tipHtml;
+        if (tipHtml.includes('baddonz-item-info-injected')) return tipHtml;
 
-        const tipId = $target.attr('tip-id');
-        if (!tipId || !window.TIPS || !window.TIPS.allTips) return;
+        const stats = item._cachedStats || parseStats(item.stat);
         
-        let tipHtml = window.TIPS.allTips[tipId];
-        if (!tipHtml || tipHtml.includes('baddonz-item-info-injected')) return;
-
         let $tip = $('<div>').html(tipHtml);
         $tip.append('<div style="display:none;" class="baddonz-item-info-injected"></div>');
 
-        const stats = item._cachedStats || parseStats(item.stat);
         let itemLevel = parseInt(stats?.lvl, 10);
         if (stats.lowreq) itemLevel += parseInt(stats.lowreq, 10);
         const itemClass = item.cl;
@@ -226,7 +221,7 @@
         if (dismantleEssence !== undefined && dismantleEssence !== null) {
             const essenceHtml = ` <span class="c_green baddonz-essence-marker">[${dismantleEssence}]</span>`;
             let $nameEl = $tip.find('.item-name, .tip-item-stat-item-name, .name').first();
-            if ($nameEl.length) {
+            if ($nameEl.length && !$nameEl.html().includes('baddonz-essence-marker')) {
                 $nameEl.append(essenceHtml);
             }
         }
@@ -285,32 +280,54 @@
             }
         }
 
-        window.TIPS.allTips[tipId] = $tip.html();
+        return $tip.html();
     }
 
-    function hookTips() {
-        if (isTipHooked || typeof $ === 'undefined' || !$.fn || !$.fn.tip) return;
-        
-        const originalTip = $.fn.tip;
-        $.fn.tip = function() {
-            // Natychmiastowe wstrzyknięcie naszych zmian tuż po wygenerowaniu tipa przez grę
-            const res = originalTip.apply(this, arguments);
-            const $target = $(this);
-            
-            if ($target.attr('tip-id')) {
-                addLegendInfoToTip($target);
-                
-                // Jeśli przedmiot jest właśnie podglądany przez użytkownika i zaktualizował się np. po przeniesieniu, odśwież widok
-                if (window.TIPS && window.TIPS.target && window.TIPS.target[0] === $target[0] && window.TIPS.$tip && window.TIPS.$tip.is(':visible')) {
-                    const tipId = $target.attr('tip-id');
-                    if (window.TIPS.allTips[tipId]) {
-                        window.TIPS.$tip.html(window.TIPS.allTips[tipId]);
+    // Bezpośredni Hook w silnik gry (Wstrzykiwanie HTML ZANIM dymek się wyrenderuje)
+    function hookTipFunction() {
+        if (typeof $ !== 'undefined' && $.fn && $.fn.tip && !$.fn.tip._baddonzHooked) {
+            const originalTip = $.fn.tip;
+            $.fn.tip = function(content, t_type, i_type, params) {
+                if (typeof content === 'string' && content.length > 0) {
+                    const item = this.data('item');
+                    if (item) {
+                        try {
+                            content = injectCustomInfo(content, item);
+                        } catch (e) {
+                            console.error('Item Info Baddonz Hook Error:', e);
+                        }
                     }
                 }
+                return originalTip.call(this, content, t_type, i_type, params);
+            };
+            $.fn.tip._baddonzHooked = true;
+        }
+    }
+
+    function applyToExistingTips() {
+        if (!window.TIPS || !window.TIPS.allTips) return;
+        
+        let modifiedAny = false;
+        $('[tip-id]').each(function() {
+            const $el = $(this);
+            const id = $el.attr('tip-id');
+            const item = $el.data('item');
+            if (item && window.TIPS.allTips[id]) {
+                const newHtml = injectCustomInfo(window.TIPS.allTips[id], item);
+                if (newHtml !== window.TIPS.allTips[id]) {
+                    window.TIPS.allTips[id] = newHtml;
+                    modifiedAny = true;
+                }
             }
-            return res;
-        };
-        isTipHooked = true;
+        });
+
+        const $visibleTip = window.TIPS.$tip;
+        if (modifiedAny && $visibleTip && $visibleTip.is(':visible')) {
+            const visibleId = $visibleTip.attr('data-tip-id');
+            if (visibleId && window.TIPS.allTips[visibleId]) {
+                $visibleTip.html(window.TIPS.allTips[visibleId]);
+            }
+        }
     }
 
     function buildUI() {
@@ -364,13 +381,8 @@
         if (!uiWindowElement) buildUI();
         updateBodyClasses();
 
-        // Inicjalizacja natychmiastowego hooka na tworzenie dymków
-        const initHook = setInterval(() => {
-            if (typeof $ !== 'undefined' && $.fn && $.fn.tip) {
-                hookTips();
-                clearInterval(initHook);
-            }
-        }, 100);
+        hookTipFunction();
+        setTimeout(applyToExistingTips, 500); 
     }
 
     function addonStop() {
@@ -378,8 +390,6 @@
             uiWindowElement.remove();
             uiWindowElement = null;
         }
-        isTipHooked = false;
-        // W razie całkowitego zatrzymania, CSS ukryje wszystko
     }
 
     function onStateToggle(isEnabled) {
