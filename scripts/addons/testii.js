@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Item Info baddonz
 // @version       05.08.2025
-// @description   Informacje o itemach (API 2.0 - Natychmiastowe dymki, Ulepszone, Czysty UI)
+// @description   Informacje o itemach (API 2.0 - Natychmiastowa esencja, Ulepszone, Bez bolda)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -53,6 +53,8 @@
 
     let currentSettings = {
         enabled: true,
+        windowOpacity: 2,
+        windowVisible: true,
         HIDE_OPIS: false,
         amount_essence: true,
         UPGRADE_LEVEL: true,
@@ -78,14 +80,12 @@
         } catch (e) {}
 
         currentSettings = { ...currentSettings, ...accSettings };
-        
-        if (typeof currentSettings.SHOW_UPGRADED === 'undefined') currentSettings.SHOW_UPGRADED = true;
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
-        const accKeys = ['enabled', 'HIDE_OPIS', 'amount_essence', 'UPGRADE_LEVEL', 'SHOW_SUMMARY_LEGEND', 'SHOW_COMMON', 'SHOW_UPGRADED', 'SHOW_UNIQUE', 'SHOW_HEROIC', 'SHOW_LEGENDARY'];
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'HIDE_OPIS', 'amount_essence', 'UPGRADE_LEVEL', 'SHOW_SUMMARY_LEGEND', 'SHOW_COMMON', 'SHOW_UPGRADED', 'SHOW_UNIQUE', 'SHOW_HEROIC', 'SHOW_LEGENDARY'];
         
         let accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
@@ -224,14 +224,28 @@
             dismantleEssence = costs.dismantleEssence;
         }
 
+        const $visibleTip = window.TIPS?.$tip;
+
+        // Błyskawiczna esencja bez bolda, bezpieczne wstrzyknięcie:
         if (dismantleEssence !== undefined && dismantleEssence !== null) {
             const essenceHtml = ` <span class="c_green baddonz-essence-marker">[${dismantleEssence}]</span>`;
+            
+            // Wstrzyknięcie do HTMLa (dla cache)
             let $nameEl = $tip.find('.item-name, .tip-item-stat-item-name, .name').first();
-            if ($nameEl.length) {
+            if ($nameEl.length && !$nameEl.find('.baddonz-essence-marker').length) {
                 $nameEl.append(essenceHtml);
+            }
+
+            // GWARANCJA NATYCHMIASTOWEGO POJAWIENIA SIĘ (Nadpisanie wyścigu z grą)
+            if ($visibleTip && $visibleTip.is(':visible') && $visibleTip.attr('data-tip-id') === tipId) {
+                let $visName = $visibleTip.find('.item-name, .tip-item-stat-item-name, .name').first();
+                if ($visName.length && !$visName.find('.baddonz-essence-marker').length) {
+                    $visName.append(essenceHtml);
+                }
             }
         }
 
+        // Formatowanie loota
         if (stats?.loot) {
             const parts = stats.loot.split(',');
             if (parts.length >= 4) {
@@ -253,6 +267,7 @@
             }
         }
 
+        // Sekcja poziomów i podsumowania
         if (costs) {
             const totalEssence = costs.totalEssence;
             const totalGold = costs.totalGold;
@@ -289,7 +304,7 @@
         const newHtml = $tip.html();
         window.TIPS.allTips[tipId] = newHtml;
 
-        const $visibleTip = window.TIPS?.$tip;
+        // Natychmiastowe odświeżenie całego widocznego dymku (jeśli otwarty)
         if ($visibleTip && $visibleTip.is(':visible') && $visibleTip.attr('data-tip-id') === tipId) {
             $visibleTip.html(newHtml);
         }
@@ -299,14 +314,13 @@
         if (!currentSettings.enabled) return;
         const $target = $(this);
         
-        const tryInject = () => {
-            if ($target.is(':hover') || document.querySelector('.tip-item-stat-item-name')) {
+        // Zwiększone delikatnie opóźnienie (25ms), aby dać grze czas na wygenerowanie kompletnego DOMu tipa.
+        // Gwarantuje to 100% skuteczność za pierwszym najechaniem na item, bez "wyścigów" z serwerem.
+        setTimeout(() => {
+            if ($target.is(':hover')) {
                 addLegendInfoToTip($target);
             }
-        };
-
-        setTimeout(tryInject, 20);
-        setTimeout(tryInject, 50);
+        }, 25);
     }
 
     function buildUI() {
@@ -318,10 +332,10 @@
             <hr style="width: 100%; border-color: #303030; margin: 3px 0;">
             <div class="baddonz-grid-2col">
                 <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-common ${currentSettings.SHOW_COMMON ? 'active' : ''}"></div><span class="baddonz-text" style="color: #b0b0b0;">Zwykłe</span></div>
-                <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-upgraded ${currentSettings.SHOW_UPGRADED ? 'active' : ''}"></div><span class="baddonz-text" style="color: #c800ff;">Ulepszone</span></div>
+                <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-upgraded ${currentSettings.SHOW_UPGRADED ? 'active' : ''}"></div><span class="baddonz-text" style="color: #a335ee;">Ulepszone</span></div>
                 <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-unique ${currentSettings.SHOW_UNIQUE ? 'active' : ''}"></div><span class="baddonz-text" style="color: #f0d322;">Unikaty</span></div>
                 <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-heroic ${currentSettings.SHOW_HEROIC ? 'active' : ''}"></div><span class="baddonz-text" style="color: #0080ff;">Heroiki</span></div>
-                <div class="baddonz-label-wrapper" style="grid-column: span 2; display: flex; justify-content: center;"><div class="baddonz-checkbox ii-legendary ${currentSettings.SHOW_LEGENDARY ? 'active' : ''}"></div><span class="baddonz-text" style="color: #ff0000;">Legendy</span></div>
+                <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-legendary ${currentSettings.SHOW_LEGENDARY ? 'active' : ''}"></div><span class="baddonz-text" style="color: #ff0000;">Legendy</span></div>
             </div>
         `;
 
@@ -336,11 +350,13 @@
 
         const bindToggle = (className, key) => {
             const cb = uiWindowElement.querySelector(`.${className}`);
-            cb.addEventListener('click', () => {
-                currentSettings[key] = cb.classList.toggle('active');
-                saveSettings();
-                updateBodyClasses();
-            });
+            if(cb) {
+                cb.addEventListener('click', () => {
+                    currentSettings[key] = cb.classList.toggle('active');
+                    saveSettings();
+                    updateBodyClasses();
+                });
+            }
         };
 
         bindToggle('ii-hide-opis', 'HIDE_OPIS');
