@@ -2,7 +2,7 @@
 // @name          Item Info baddonz
 // @version       05.08.2025
 // @description   Informacje o itemach (API 2.0 - Znaczniki Legbonów, Natychmiastowe dymki)
-// @author        besiak (Naprawione)
+// @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
 // ==/UserScript==
@@ -56,17 +56,22 @@
     const COMMON_ESSENCE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//neu/ese_zwycz.gif&quot;);"></div>`;
     const GOLD_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://experimental.margonem.pl/img/goldIconNormal.png&quot;);"></div>`;
 
+    // Lista powiększona o brakujące legbony.
     const LEGBON_SHORT = {
         "curse": "KL",
         "lastheal": "OR",
-        "facade": "FO",
+        "facade": "FA", // FA = Fasada (żeby nie gryzło się z Fizyczną Osłoną)
         "verycrit": "CBK",
         "holytouch": "DA",
         "glare": "OŚ",
         "critred": "KO",
         "cleanse": "PO",
         "anguish": "KU",
-        "puncture": "PS"
+        "puncture": "PS",
+        "physred": "FO",
+        "critset": "KT",
+        "resists": "OŻ",
+        "energy": "DE"
     };
 
     let currentSettings = {
@@ -203,23 +208,13 @@
         return { costs: costs, totalPoints: totalUpgradePoints, totalEssence: totalUpgradeEssence, totalGold: totalGoldCost, dismantleEssence: dismantleEssence };
     }
 
-    // NAPRAWIONE: Umożliwienie parsowania samych flag (np. legendary bez znaku '=')
     function parseStats(stats) {
         if (!stats || typeof stats !== "string") return {};
         const result = {};
         for (const pair of stats.split(";")) {
-            const [key, ...rest] = pair.split("=");
-            if (key) {
-                result[key] = rest.length > 0 ? rest.join("=") : true;
-            }
-        }
-        // Automatyczne dopisywanie zmiennej rzadkości na podstawie samych flag
-        if (!result.rarity) {
-            if (result.legendary) result.rarity = 'legendary';
-            else if (result.heroic) result.rarity = 'heroic';
-            else if (result.unique) result.rarity = 'unique';
-            else if (result.upgraded) result.rarity = 'upgraded';
-            else result.rarity = 'common';
+            const [key, value] = pair.split("=");
+            // Usprawnienie: niektóre statystyki nie mają znaku "=", przypisujemy im wartość 'true'.
+            if (key) result[key] = value !== undefined ? value : true; 
         }
         return result;
     }
@@ -228,8 +223,8 @@
     // SYSTEM ZNACZNIKÓW BONUSÓW LEGENDARNYCH
     // ==========================================
     function addLegbonMarker(id, text) {
-        // NAPRAWIONE: Szerokie wsparcie selektora, obejmuje różnorodne API paneli (torba/widok detali)
-        const $it = document.querySelector(`.item-id-${id}, [data-id="${id}"], #item${id}`);
+        // Poprawiony selektor: w Nowym Interfejsie (NI) upewniamy się, że szuka też po atrybucie 'data-id'
+        const $it = document.querySelector(`.item-id-${id}, .item[data-id="${id}"]`);
         if (!$it) return;
 
         let tz = $it.querySelector(".baddonz-legbon-marker");
@@ -256,7 +251,7 @@
     }
 
     function removeLegbonMarker(id) {
-        const $it = document.querySelector(`.item-id-${id}, [data-id="${id}"], #item${id}`);
+        const $it = document.querySelector(`.item-id-${id}, .item[data-id="${id}"]`);
         if (!$it) return;
         const tz = $it.querySelector(".baddonz-legbon-marker");
         if (tz) tz.remove();
@@ -279,17 +274,16 @@
             
             const stats = it._cachedStats || parseStats(it.stat || it.stats);
             
-            // NAPRAWIONE: Szukanie bezpośrednio klucza z obiektu LEGBON_SHORT, a nie mitycznego parametru `stats.legbon`
-            let foundLegbon = null;
-            for (const legbonKey in LEGBON_SHORT) {
-                if (stats[legbonKey] !== undefined) {
-                    foundLegbon = legbonKey;
-                    break;
+            if (stats.rarity === 'legendary') {
+                // W Margonem kluczem jest nazwa bonusu (np. stats['curse']), a nie 'legbon'.
+                let foundLegbon = Object.keys(LEGBON_SHORT).find(bon => stats[bon] !== undefined);
+                
+                if (foundLegbon) {
+                    // Timeout dodany na wypadek, gdyby div z przedmiotem się jeszcze nie wyrenderował w momencie przesyłania JSON.
+                    setTimeout(() => addLegbonMarker(id, LEGBON_SHORT[foundLegbon]), 50);
+                } else {
+                    removeLegbonMarker(id);
                 }
-            }
-
-            if (foundLegbon) {
-                addLegbonMarker(id, LEGBON_SHORT[foundLegbon]);
             } else {
                 removeLegbonMarker(id);
             }
@@ -301,23 +295,29 @@
             removeAllLegbonMarkers();
             return;
         }
-        if (window.Engine && window.Engine.items) {
-            let allItems = {};
-            if (window.Engine.items.rawItems) {
-                allItems = window.Engine.items.rawItems;
-            } else if (window.Engine.items.fetchLocationItems) {
-                // Poszerzony zestaw pobieranych przedmiotów o bag (plecak) i eq, by unikać problemów z odświeżaniem
-                const arr = [
-                    ...(window.Engine.items.fetchLocationItems("g") || []),
-                    ...(window.Engine.items.fetchLocationItems("bag") || []),
-                    ...(window.Engine.items.fetchLocationItems("eq") || [])
-                ];
-                arr.forEach(i => { if (i && i.id) allItems[i.id] = i; });
+        if (window.Engine && window.Engine.items && window.Engine.items.fetchLocationItems) {
+            // Dodano również sprawdzanie zawartości wszystkich toreb gracza ("b"). Samo "g" to tylko ubrany ekwipunek.
+            let itemsArray = [];
+            try {
+                const equipment = window.Engine.items.fetchLocationItems("g") || [];
+                const bags = window.Engine.items.fetchLocationItems("b") || [];
+                itemsArray = equipment.concat(bags);
+            } catch(e) {
+                // Fallback do całego słownika itemów
+                if (window.Engine.items.items) {
+                    itemsArray = Object.values(window.Engine.items.items);
+                }
             }
-            applyLegbonMarkers(allItems);
+            
+            const itemsMap = {};
+            for (const item of itemsArray) {
+                if (item && item.id) itemsMap[item.id] = item;
+            }
+            applyLegbonMarkers(itemsMap);
         }
     }
     // ==========================================
+
 
     // Główny procesor HTML dymku
     function injectCustomInfo(tipHtml, item) {
@@ -411,6 +411,7 @@
         return $tip.html();
     }
 
+    // Bezpośredni Hook w silnik gry (Wstrzykiwanie HTML ZANIM dymek się wyrenderuje)
     function hookTipFunction() {
         if (typeof $ !== 'undefined' && $.fn && $.fn.tip && !$.fn.tip._baddonzHooked) {
             const originalTip = $.fn.tip;
