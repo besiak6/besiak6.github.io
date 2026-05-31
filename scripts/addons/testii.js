@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Item Info baddonz
 // @version       05.08.2025
-// @description   Informacje o itemach (API 2.0 - Znaczniki Legbonów, Natychmiastowe dymki)
+// @description   Informacje o itemach (API 2.0 - Naprawione legbony, CSS Toggling)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -56,22 +56,17 @@
     const COMMON_ESSENCE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//neu/ese_zwycz.gif&quot;);"></div>`;
     const GOLD_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://experimental.margonem.pl/img/goldIconNormal.png&quot;);"></div>`;
 
-    // Lista powiększona o brakujące legbony.
     const LEGBON_SHORT = {
         "curse": "KL",
         "lastheal": "OR",
-        "facade": "FA", // FA = Fasada (żeby nie gryzło się z Fizyczną Osłoną)
+        "facade": "FO",
         "verycrit": "CBK",
         "holytouch": "DA",
         "glare": "OŚ",
         "critred": "KO",
         "cleanse": "PO",
         "anguish": "KU",
-        "puncture": "PS",
-        "physred": "FO",
-        "critset": "KT",
-        "resists": "OŻ",
-        "energy": "DE"
+        "puncture": "PS"
     };
 
     let currentSettings = {
@@ -213,8 +208,7 @@
         const result = {};
         for (const pair of stats.split(";")) {
             const [key, value] = pair.split("=");
-            // Usprawnienie: niektóre statystyki nie mają znaku "=", przypisujemy im wartość 'true'.
-            if (key) result[key] = value !== undefined ? value : true; 
+            if (key && value !== undefined) result[key] = value;
         }
         return result;
     }
@@ -222,99 +216,64 @@
     // ==========================================
     // SYSTEM ZNACZNIKÓW BONUSÓW LEGENDARNYCH
     // ==========================================
-    function addLegbonMarker(id, text) {
-        // Poprawiony selektor: w Nowym Interfejsie (NI) upewniamy się, że szuka też po atrybucie 'data-id'
-        const $it = document.querySelector(`.item-id-${id}, .item[data-id="${id}"]`);
-        if (!$it) return;
-
-        let tz = $it.querySelector(".baddonz-legbon-marker");
+    function _addSpanToElement(el, text) {
+        let tz = el.querySelector(".baddonz-legbon-marker");
         if (tz && tz.innerText === text) return;
 
         if (!tz) {
             tz = document.createElement("span");
             tz.className = "baddonz-legbon-marker";
-            $it.appendChild(tz);
+            el.appendChild(tz);
         }
 
         tz.innerText = text;
         Object.assign(tz.style, {
-            position: "absolute", top: 0, left: 0,
+            position: "absolute", top: "0", left: "0",
             width: "100%", height: "100%", color: "#fff",
             fontSize: "10px",
-            textAlign: "center", lineHeight: 1.5,
-            textShadow: `-2px -2px 0 black, -1px -2px 0 black, 0px -2px 0 black, 1px -2px 0 black, 2px -2px 0 black, -2px -1px 0 black, 2px -1px 0 black, -2px 0px 0 black, 2px 0px 0 black, -2px 1px 0 black, 2px 1px 0 black, -2px 2px 0 black, -1px 2px 0 black, 0px 2px 0 black, 1px 2px 0 black, 2px 2px 0 black`,
+            textAlign: "center", lineHeight: "1.5",
+            textShadow: "-2px -2px 0 black, -1px -2px 0 black, 0px -2px 0 black, 1px -2px 0 black, 2px -2px 0 black, -2px -1px 0 black, 2px -1px 0 black, -2px 0px 0 black, 2px 0px 0 black, -2px 1px 0 black, 2px 1px 0 black, -2px 2px 0 black, -1px 2px 0 black, 0px 2px 0 black, 1px 2px 0 black, 2px 2px 0 black",
             fontFamily: "'Arial Black', Gadget, sans-serif",
             userSelect: "none", pointerEvents: "none",
             textRendering: "optimizeLegibility",
-            zIndex: 2
+            zIndex: "2"
         });
-    }
-
-    function removeLegbonMarker(id) {
-        const $it = document.querySelector(`.item-id-${id}, .item[data-id="${id}"]`);
-        if (!$it) return;
-        const tz = $it.querySelector(".baddonz-legbon-marker");
-        if (tz) tz.remove();
     }
 
     function removeAllLegbonMarkers() {
         document.querySelectorAll('.baddonz-legbon-marker').forEach(el => el.remove());
     }
 
-    function applyLegbonMarkers(items) {
+    function applyLegbonMarkersToAll() {
         if (!currentSettings.enabled || !currentSettings.SHOW_LEGBON_MARKERS) {
             removeAllLegbonMarkers();
             return;
         }
-        if (!items || typeof items !== "object") return;
         
-        for (const id in items) {
-            const it = items[id];
-            if (!it || typeof it !== "object") continue;
-            
-            const stats = it._cachedStats || parseStats(it.stat || it.stats);
-            
-            if (stats.rarity === 'legendary') {
-                // W Margonem kluczem jest nazwa bonusu (np. stats['curse']), a nie 'legbon'.
-                let foundLegbon = Object.keys(LEGBON_SHORT).find(bon => stats[bon] !== undefined);
-                
-                if (foundLegbon) {
-                    // Timeout dodany na wypadek, gdyby div z przedmiotem się jeszcze nie wyrenderował w momencie przesyłania JSON.
-                    setTimeout(() => addLegbonMarker(id, LEGBON_SHORT[foundLegbon]), 50);
-                } else {
-                    removeLegbonMarker(id);
-                }
-            } else {
-                removeLegbonMarker(id);
-            }
-        }
-    }
+        if (!window.Engine || !window.Engine.items) return;
 
-    function applyToAllVisibleItems() {
-        if (!currentSettings.enabled || !currentSettings.SHOW_LEGBON_MARKERS) {
-            removeAllLegbonMarkers();
-            return;
-        }
-        if (window.Engine && window.Engine.items && window.Engine.items.fetchLocationItems) {
-            // Dodano również sprawdzanie zawartości wszystkich toreb gracza ("b"). Samo "g" to tylko ubrany ekwipunek.
-            let itemsArray = [];
-            try {
-                const equipment = window.Engine.items.fetchLocationItems("g") || [];
-                const bags = window.Engine.items.fetchLocationItems("b") || [];
-                itemsArray = equipment.concat(bags);
-            } catch(e) {
-                // Fallback do całego słownika itemów
-                if (window.Engine.items.items) {
-                    itemsArray = Object.values(window.Engine.items.items);
+        document.querySelectorAll('.item').forEach(el => {
+            let idMatch = el.className.match(/item-id-(\d+)/);
+            if (!idMatch) return;
+            let id = idMatch[1];
+            
+            let item = window.Engine.items.getItemById(id);
+            if (!item) return;
+
+            let stats = item._cachedStats || parseStats(item.stat || item.stats);
+            
+            // Poprawione czytanie legbonów z rozdzieleniem przecinkami ("glare,9" -> "glare")
+            if (stats.rarity === 'legendary' && stats.legbon) {
+                let legbonName = stats.legbon.split(',')[0];
+                if (LEGBON_SHORT[legbonName]) {
+                    _addSpanToElement(el, LEGBON_SHORT[legbonName]);
+                    return;
                 }
             }
             
-            const itemsMap = {};
-            for (const item of itemsArray) {
-                if (item && item.id) itemsMap[item.id] = item;
-            }
-            applyLegbonMarkers(itemsMap);
-        }
+            let existingMarker = el.querySelector(".baddonz-legbon-marker");
+            if (existingMarker) existingMarker.remove();
+        });
     }
     // ==========================================
 
@@ -493,7 +452,7 @@
         };
 
         bindToggle('ii-essence', 'amount_essence');
-        bindToggle('ii-legbon-markers', 'SHOW_LEGBON_MARKERS', applyToAllVisibleItems);
+        bindToggle('ii-legbon-markers', 'SHOW_LEGBON_MARKERS', applyLegbonMarkersToAll);
         bindToggle('ii-hide-opis', 'HIDE_OPIS');
         bindToggle('ii-levels', 'UPGRADE_LEVEL');
         bindToggle('ii-summary', 'SHOW_SUMMARY_LEGEND');
@@ -517,7 +476,9 @@
             window.Engine.communication.parseJSON = function (data) {
                 const res = originalParseJSON.apply(this, arguments);
                 if (data.item) {
-                    applyLegbonMarkers(data.item);
+                    // Czekamy chwilę aż silnik gry stworzy widoki HTML przedmiotów i przypinamy znaczniki
+                    setTimeout(applyLegbonMarkersToAll, 20);
+                    setTimeout(applyLegbonMarkersToAll, 200); // Drugi strzał dla bezpieczeństwa (asynchroniczność Margonem)
                 }
                 return res;
             };
@@ -525,7 +486,7 @@
         }
 
         setTimeout(() => {
-            applyToAllVisibleItems();
+            applyLegbonMarkersToAll();
             applyToExistingTips();
         }, 500); 
     }
@@ -542,7 +503,7 @@
         currentSettings.enabled = isEnabled;
         saveSettings();
         updateBodyClasses();
-        applyToAllVisibleItems();
+        applyLegbonMarkersToAll();
     }
 
     const checkApi = () => {
