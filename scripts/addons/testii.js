@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Item Info baddonz
-// @version       05.08.2025
-// @description   Informacje o itemach (API 2.0 - idealny kwadracik, błoga, gniazda)
+// @version       01.06.2026
+// @description   Informacje o itemach
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -212,17 +212,15 @@
             const [key, value] = pair.split("=");
             if (key && value !== undefined) result[key] = value;
         }
-        return result; // Czysty obiekt lokalny, nie zanieczyszcza itemData
+        return result;
     }
 
     // ==========================================
-    // GLOBALNY SYSTEM ZNACZNIKÓW BONUSÓW (L-D i L-G KWADRACIK)
+    // GLOBALNY SYSTEM ZNACZNIKÓW BONUSÓW
     // ==========================================
-    function _addSpanToElement(el, text, isBlessing) {
+    function _addSpanToElement(el, text, isBless) {
         let tz = el.querySelector(".baddonz-legbon-marker");
-        
-        // Zabezpieczenie przed ciągłym przebudowywaniem DOM
-        if (tz && tz.innerText === text && tz.dataset.isBlessing === String(isBlessing)) return;
+        if (tz && tz.innerText === text && tz.dataset.isBless === String(isBless)) return;
 
         if (!tz) {
             tz = document.createElement("span");
@@ -231,35 +229,35 @@
         }
 
         tz.innerText = text;
-        tz.dataset.isBlessing = isBlessing; // Zapisujemy stan
+        tz.dataset.isBless = isBless;
         
-        // Bazowy wygląd idealnego kwadracika
+        // Dopasowany wymiar tła, brak zbędnego paddingu, Arial Black
         Object.assign(tz.style, {
             position: "absolute",
             left: "0",
             backgroundColor: "rgba(0, 0, 0, 0.75)",
-            color: "#fff",                          
-            fontSize: "9px",                        
-            padding: "1px 2px",                     // Ścisłe dopasowanie do tekstu
-            fontFamily: "'Arial Black', Gadget, sans-serif", // Stara czcionka
-            fontWeight: "normal",
-            lineHeight: "1.1",                      // Minimalizacja pionowego odstępu
-            width: "max-content",                   // Brak rozciągania na siłę
+            color: "#fff",
+            fontSize: "9px",
+            padding: "0px 1px",
+            width: "fit-content",
+            height: "fit-content",
+            fontFamily: "'Arial Black', Gadget, sans-serif",
+            lineHeight: "1.1",
             userSelect: "none",
             pointerEvents: "none",
             zIndex: "2"
         });
 
-        // Dostosowanie położenia w zależności czy to błogosławieństwo
-        if (isBlessing) {
+        // Weryfikacja czy to błogosławieństwo (cl: 25) żeby zmienić pozycje L-G
+        if (isBless) {
             tz.style.top = "0";
             tz.style.bottom = "auto";
-            tz.style.borderBottomRightRadius = "3px"; // Zaokrąglenie p-d rogu
+            tz.style.borderBottomRightRadius = "3px"; // Ładne zaokrąglenie p-d
             tz.style.borderTopRightRadius = "0";
         } else {
             tz.style.bottom = "0";
             tz.style.top = "auto";
-            tz.style.borderTopRightRadius = "3px";    // Zaokrąglenie p-g rogu
+            tz.style.borderTopRightRadius = "3px"; // Ładne zaokrąglenie p-g
             tz.style.borderBottomRightRadius = "0";
         }
     }
@@ -283,20 +281,22 @@
 
         if (!itemData) return;
 
-        // Wykorzystujemy czysty zasób z silnika, ewentualnie parsujemy do zmiennej lokalnej.
-        let stats = itemData._cachedStats || parseStats(itemData.stat || itemData.stats || "");
+        // POBIERAMY Z PAMIĘCI GRY ALBO PRZERABIAMY TYLKO LOKALNIE
+        // Absolutnie nic nie nadpisujemy do obiektu itemData!
+        let stats = itemData._cachedStats || parseStats(itemData.stat || itemData.stats);
         
-        // Identyfikacja czy to błogosławieństwo (w Margonem mają slot st=16)
-        let isBlessing = (stats.st == 16 || itemData.st == 16 || stats.blessing !== undefined);
-
-        // Skrypt szuka bonusu w domyślnym slocie, a także w gniazdach "włożonych" i "ulotnych"
-        let legbonStr = stats.legbon || stats.socket_injection_legbon || stats.socket_fleeting_legbon;
-        
-        if (legbonStr) {
-            let legbonName = legbonStr.split(',')[0];
-            if (LEGBON_SHORT[legbonName]) {
-                _addSpanToElement(el, LEGBON_SHORT[legbonName], isBlessing);
-                return;
+        if (stats) {
+            // Szukamy któregokolwiek bonusu z tych 3 typów
+            let legbonStr = stats.legbon || stats.socket_injection_legbon || stats.socket_fleeting_legbon;
+            
+            if (legbonStr) {
+                let legbonName = legbonStr.split(',')[0];
+                if (LEGBON_SHORT[legbonName]) {
+                    // Sprawdzamy, czy przedmiot to "błogo" (cl = 25)
+                    let isBless = (parseInt(itemData.cl, 10) === 25);
+                    _addSpanToElement(el, LEGBON_SHORT[legbonName], isBless);
+                    return;
+                }
             }
         }
         
@@ -406,7 +406,6 @@
         return $tip.html();
     }
 
-    // Wstrzykiwanie HTML ZANIM dymek się wyrenderuje
     function hookTipFunction() {
         if (typeof $ !== 'undefined' && $.fn && $.fn.tip && !$.fn.tip._baddonzHooked) {
             const originalTip = $.fn.tip;
