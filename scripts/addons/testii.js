@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Item Info baddonz
 // @version       05.08.2025
-// @description   Informacje o itemach (API 2.0 - Legbony wszędzie, sklepy, czat)
+// @description   Informacje o itemach
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -214,7 +214,7 @@
     }
 
     // ==========================================
-    // GLOBALNY SYSTEM ZNACZNIKÓW BONUSÓW
+    // GLOBALNY SYSTEM ZNACZNIKÓW BONUSÓW (L-D KWADRACIK)
     // ==========================================
     function _addSpanToElement(el, text) {
         let tz = el.querySelector(".baddonz-legbon-marker");
@@ -227,15 +227,22 @@
         }
 
         tz.innerText = text;
+        
+        // Zaktualizowany wygląd - lewy dolny róg, mały czarny kwadracik
         Object.assign(tz.style, {
-            position: "absolute", top: "0", left: "0",
-            width: "100%", height: "100%", color: "#fff",
-            fontSize: "10px",
-            textAlign: "center", lineHeight: "1.5",
-            textShadow: "-2px -2px 0 black, -1px -2px 0 black, 0px -2px 0 black, 1px -2px 0 black, 2px -2px 0 black, -2px -1px 0 black, 2px -1px 0 black, -2px 0px 0 black, 2px 0px 0 black, -2px 1px 0 black, 2px 1px 0 black, -2px 2px 0 black, -1px 2px 0 black, 0px 2px 0 black, 1px 2px 0 black, 2px 2px 0 black",
-            fontFamily: "'Arial Black', Gadget, sans-serif",
-            userSelect: "none", pointerEvents: "none",
-            textRendering: "optimizeLegibility",
+            position: "absolute",
+            bottom: "0",
+            left: "0",
+            backgroundColor: "rgba(0, 0, 0, 0.75)", // Półprzezroczyste czarne tło
+            color: "#fff",                          // Zwykły biały tekst
+            fontSize: "9px",                        // Mniejsza czcionka
+            padding: "1px 3px",                     // Mały odstęp wewnętrzny
+            fontFamily: "Arial, sans-serif",
+            fontWeight: "bold",
+            lineHeight: "1.2",
+            borderTopRightRadius: "3px",            // Lekkie zaokrąglenie prawego górnego rogu (opcjonalne, ale ładne)
+            userSelect: "none",
+            pointerEvents: "none",
             zIndex: "2"
         });
     }
@@ -248,10 +255,9 @@
         if (!el || el.nodeType !== 1) return;
         
         let $el = $(el);
-        let itemData = $el.data('item'); // Odczytuje itemy ze sklepów, okien handlu, czatu i dymków
+        let itemData = $el.data('item'); 
         
         if (!itemData) {
-            // Bezpieczny fallback do ekwipunku gracza, jeśli data() jest puste
             let idMatch = el.className.match(/item-id-(\d+)/);
             if (idMatch && window.Engine && window.Engine.items) {
                 itemData = window.Engine.items.getItemById(idMatch[1]);
@@ -477,18 +483,15 @@
 
         hookTipFunction();
         
-        // Zamiast polegać tylko na przeładowywaniu, wdrażamy globalnego obserwatora
         observer = new MutationObserver((mutations) => {
             if (!currentSettings.enabled || !currentSettings.SHOW_LEGBON_MARKERS) return;
             
             mutations.forEach(mutation => {
                 mutation.addedNodes.forEach(node => {
                     if (node.nodeType === 1) { 
-                        // Jeśli nowo dodany element to klasa .item (np. czat, dymek)
                         if (node.classList && node.classList.contains('item')) {
                             applyMarkerToElement(node);
                         }
-                        // Jeśli nowo dodany kontener zawiera klasy .item (np. otwarcie okna sklepu)
                         if (node.querySelectorAll) {
                             let items = node.querySelectorAll('.item');
                             if (items.length > 0) {
@@ -500,7 +503,6 @@
             });
         });
 
-        // Podpinamy obserwator pod cały dokument (nasłuchuje każdej zmiany widoku w grze)
         observer.observe(document.body, { childList: true, subtree: true });
 
         setTimeout(() => {
