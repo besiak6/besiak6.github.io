@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Znacznik Teleportów baddonz
-// @version       28.05.2026
+// @version       01.06.2026
 // @description   Znacznik Teleportów
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -57,7 +57,7 @@
     let uiEditWindow = null;
     let uiMassEditWindow = null;
     let currentItemId = null;
-    let isEngineObserved = false;
+    let observer = null;
     let isMenuIntercepted = false;
 
     function loadSettings() {
@@ -98,17 +98,15 @@
         } catch (e) {}
     }
 
-    function txov(id, text) {
-        const $it = document.querySelector(`.item-id-${id}`);
-        if (!$it) return;
-
-        let tz = $it.querySelector(".znacznik-teleport");
+    // Dodawanie podpisu bezposrednio do przekazanego elementu DOM
+    function txovByElement(el, text) {
+        let tz = el.querySelector(".znacznik-teleport");
         if (tz && tz.innerText === text) return;
 
         if (!tz) {
             tz = document.createElement("span");
             tz.classList.add("znacznik-teleport");
-            $it.appendChild(tz);
+            el.appendChild(tz);
         }
 
         tz.innerText = text;
@@ -121,13 +119,12 @@
             fontFamily: "'Arial Black', Gadget, sans-serif",
             userSelect: "none", pointerEvents: "none",
             textRendering: "optimizeLegibility",
+            zIndex: "2"
         });
     }
 
-    function removeTxov(id) {
-        const $it = document.querySelector(`.item-id-${id}`);
-        if (!$it) return;
-        const tz = $it.querySelector(".znacznik-teleport");
+    function removeTxovByElement(el) {
+        const tz = el.querySelector(".znacznik-teleport");
         if (tz) tz.remove();
     }
 
@@ -147,12 +144,10 @@
         return result;
     }
 
+    // Optymalizacja: Nie nadpisujemy danych gry nowymi wlasciwościami
     function getItemStats(it) {
         if (!it || typeof it !== "object") return {};
-        if (!it._znacznikParsedStats) {
-            it._znacznikParsedStats = parseStats(it.stat || it.stats || "");
-        }
-        return it._znacznikParsedStats;
+        return it._cachedStats || parseStats(it.stat || it.stats || "");
     }
 
     function getItemTeleport(it) {
@@ -172,51 +167,61 @@
         return config[tp] || config[tpMap];
     }
 
-    function applyLabelsToAllVisibleItems() {
-        if (!currentSettings.enabled) return;
-        if (!window.Engine?.items?.fetchLocationItems) return;
-        const itemsArray = window.Engine.items.fetchLocationItems("g");
-        const items = {};
-        for (const item of itemsArray) {
-            if (item?.id) items[item.id] = item;
-        }
-        uiz(items);
-    }
-
-    function uiz(items) {
-        if (!currentSettings.enabled) return;
-        if (!items || typeof items !== "object") return;
+    // Aplikuje znaczniki na każdy obiekt, jaki zdoła wyłapać funkcja (i ziemia, i bag, i shop)
+    function applyLabelToElement(el) {
+        if (!el || el.nodeType !== 1) return;
         
-        for (const id in items) {
-            const it = items[id];
-            if (!it || typeof it !== "object") continue;
-
-            const tp = getItemTeleport(it);
-            if (!tp) continue;
-            
-            const tpMap = getTpMap(tp);
-
-            const customLabel = currentSettings.customLabels[id];
-            const massLabelData = currentSettings.teleportmass[tpMap];
-            const autoLabel = getAutoLabel(tp, tpMap);
-            const isDefaultIgnored = currentSettings.ignored_sign[id];
-
-            let finalLabel = null;
-            if (isDefaultIgnored) {
-                finalLabel = null;
-            } else if (customLabel) {
-                finalLabel = customLabel;
-            } else if (massLabelData?.enabled) {
-                finalLabel = massLabelData.label || '';
-            } else if (autoLabel) {
-                finalLabel = autoLabel;
-            }
-
-            if (finalLabel) txov(id, finalLabel);
-            else removeTxov(id);
+        let idMatch = el.className.match(/item-id-(\d+)/);
+        if (!idMatch) return;
+        let id = idMatch[1];
+        
+        let itemData = null;
+        if (window.Engine && window.Engine.items) {
+            itemData = window.Engine.items.getItemById(id);
         }
+        if (!itemData && typeof $ !== 'undefined') {
+            itemData = $(el).data('item');
+        }
+
+        if (!itemData) return;
+
+        const tp = getItemTeleport(itemData);
+        if (!tp) {
+            removeTxovByElement(el);
+            return;
+        }
+        
+        const tpMap = getTpMap(tp);
+
+        const customLabel = currentSettings.customLabels[id];
+        const massLabelData = currentSettings.teleportmass[tpMap];
+        const autoLabel = getAutoLabel(tp, tpMap);
+        const isDefaultIgnored = currentSettings.ignored_sign[id];
+
+        let finalLabel = null;
+        if (isDefaultIgnored) {
+            finalLabel = null;
+        } else if (customLabel) {
+            finalLabel = customLabel;
+        } else if (massLabelData?.enabled) {
+            finalLabel = massLabelData.label || '';
+        } else if (autoLabel) {
+            finalLabel = autoLabel;
+        }
+
+        if (finalLabel) txovByElement(el, finalLabel);
+        else removeTxovByElement(el);
     }
 
+    function applyLabelsToAllVisibleItems() {
+        if (!currentSettings.enabled) {
+            removeAllTxov();
+            return;
+        }
+        document.querySelectorAll('.item').forEach(applyLabelToElement);
+    }
+
+    // Funkcja przechwytująca eventy gry (np. otwieranie menu w popup)
     const intercept = (obj, key, cb) => {
         const _orig = obj[key];
         obj[key] = function (...args) {
@@ -355,15 +360,24 @@
         loadSettings();
         if (!uiAddWindow) buildUI();
 
-        if (!isEngineObserved) {
-            const originalParseJSON = window.Engine.communication.parseJSON;
-            window.Engine.communication.parseJSON = function (data) {
-                const res = originalParseJSON.apply(this, arguments);
-                if (data.item) uiz(data.item);
-                return res;
-            };
-            isEngineObserved = true;
-        }
+        // Obserwator do łapania itemów (w sklepach, torbach, i na ziemi po wejściu)
+        observer = new MutationObserver((mutations) => {
+            if (!currentSettings.enabled) return;
+            mutations.forEach(mutation => {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === 1) { 
+                        if (node.classList && node.classList.contains('item')) {
+                            applyLabelToElement(node);
+                        }
+                        if (node.querySelectorAll) {
+                            let items = node.querySelectorAll('.item');
+                            if (items.length > 0) items.forEach(applyLabelToElement);
+                        }
+                    }
+                });
+            });
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
 
         if (!isMenuIntercepted) {
             intercept(window.Engine.interface, 'showPopupMenu', (options, event) => {
@@ -394,8 +408,10 @@
 
                 let menuOptionsToAdd = [];
                 let spliceIndex = options.length - 1;
+                
+                const statsCheck = getItemStats(item);
 
-                if (item._cachedStats && (item._cachedStats.custom_teleport || item._cachedStats.teleport)) {
+                if (statsCheck && (statsCheck.custom_teleport || statsCheck.teleport)) {
                     if (autoLabel) {
                         if (currentLabelSource === 'config') {
                             menuOptionsToAdd.push(['Edytuj Podpis', () => showWindow(uiEditWindow, uiEditWindow.querySelector('.zt-action-input'), id, autoLabel), { button: { cls: 'menu-item--green' } }]);
@@ -418,10 +434,11 @@
                                 let labelToApply = currentSettings.customLabels[id] || autoLabel;
                                 if (labelToApply) {
                                     currentSettings.teleportmass[tpMap] = { enabled: true, label: labelToApply };
-                                    window.Engine.items.fetchLocationItems("g").forEach(it => {
-                                        if (getTpMap(getItemTeleport(it)) === tpMap) {
-                                            delete currentSettings.customLabels[it.id];
-                                            delete currentSettings.ignored_sign[it.id];
+                                    document.querySelectorAll('.item').forEach(el => {
+                                        let itemToClear = window.Engine?.items?.getItemById(el.className.match(/item-id-(\d+)/)?.[1]) || $(el).data('item');
+                                        if (itemToClear && getTpMap(getItemTeleport(itemToClear)) === tpMap) {
+                                            delete currentSettings.customLabels[itemToClear.id];
+                                            delete currentSettings.ignored_sign[itemToClear.id];
                                         }
                                     });
                                     saveSettings(); applyLabelsToAllVisibleItems();
@@ -438,15 +455,16 @@
                             menuOptionsToAdd.push(['Podpisywanie tych samych mapek teleportu', () => {
                                 const labelToPersist = currentMassLabel;
                                 delete currentSettings.teleportmass[tpMap];
-                                window.Engine.items.fetchLocationItems("g").forEach(it => {
-                                    if (getTpMap(getItemTeleport(it)) === tpMap) {
-                                        if (it.id === id) {
-                                            currentSettings.customLabels[it.id] = labelToPersist;
-                                            delete currentSettings.ignored_sign[it.id];
+                                document.querySelectorAll('.item').forEach(el => {
+                                    let itemToClear = window.Engine?.items?.getItemById(el.className.match(/item-id-(\d+)/)?.[1]) || $(el).data('item');
+                                    if (itemToClear && getTpMap(getItemTeleport(itemToClear)) === tpMap) {
+                                        if (itemToClear.id === id) {
+                                            currentSettings.customLabels[itemToClear.id] = labelToPersist;
+                                            delete currentSettings.ignored_sign[itemToClear.id];
                                         } else {
-                                            removeTxov(it.id);
-                                            delete currentSettings.customLabels[it.id];
-                                            delete currentSettings.ignored_sign[it.id];
+                                            removeTxovByElement(el);
+                                            delete currentSettings.customLabels[itemToClear.id];
+                                            delete currentSettings.ignored_sign[itemToClear.id];
                                         }
                                     }
                                 });
@@ -468,10 +486,11 @@
                                 let labelToApply = currentSettings.customLabels[id];
                                 if (labelToApply) {
                                     currentSettings.teleportmass[tpMap] = { enabled: true, label: labelToApply };
-                                    window.Engine.items.fetchLocationItems("g").forEach(it => {
-                                        if (getTpMap(getItemTeleport(it)) === tpMap) {
-                                            delete currentSettings.customLabels[it.id];
-                                            delete currentSettings.ignored_sign[it.id];
+                                    document.querySelectorAll('.item').forEach(el => {
+                                        let itemToClear = window.Engine?.items?.getItemById(el.className.match(/item-id-(\d+)/)?.[1]) || $(el).data('item');
+                                        if (itemToClear && getTpMap(getItemTeleport(itemToClear)) === tpMap) {
+                                            delete currentSettings.customLabels[itemToClear.id];
+                                            delete currentSettings.ignored_sign[itemToClear.id];
                                         }
                                     });
                                     saveSettings(); applyLabelsToAllVisibleItems();
@@ -487,15 +506,16 @@
                              menuOptionsToAdd.push(['Podpisywanie tych samych mapek teleportu', () => {
                                 const labelToPersist = currentMassLabel;
                                 delete currentSettings.teleportmass[tpMap];
-                                window.Engine.items.fetchLocationItems("g").forEach(it => {
-                                    if (getTpMap(getItemTeleport(it)) === tpMap) {
-                                        if (it.id === id) {
-                                            currentSettings.customLabels[it.id] = labelToPersist;
-                                            delete currentSettings.ignored_sign[it.id];
+                                document.querySelectorAll('.item').forEach(el => {
+                                    let itemToClear = window.Engine?.items?.getItemById(el.className.match(/item-id-(\d+)/)?.[1]) || $(el).data('item');
+                                    if (itemToClear && getTpMap(getItemTeleport(itemToClear)) === tpMap) {
+                                        if (itemToClear.id === id) {
+                                            currentSettings.customLabels[itemToClear.id] = labelToPersist;
+                                            delete currentSettings.ignored_sign[itemToClear.id];
                                         } else {
-                                            removeTxov(it.id);
-                                            delete currentSettings.customLabels[it.id];
-                                            delete currentSettings.ignored_sign[it.id];
+                                            removeTxovByElement(el);
+                                            delete currentSettings.customLabels[itemToClear.id];
+                                            delete currentSettings.ignored_sign[itemToClear.id];
                                         }
                                     }
                                 });
@@ -514,11 +534,14 @@
             isMenuIntercepted = true;
         }
 
-        if (currentSettings.enabled) applyLabelsToAllVisibleItems();
+        setTimeout(() => {
+            if (currentSettings.enabled) applyLabelsToAllVisibleItems();
+        }, 500);
     }
 
     function addonStop() {
         removeAllTxov();
+        if (observer) { observer.disconnect(); observer = null; }
         if (uiAddWindow) { uiAddWindow.remove(); uiAddWindow = null; }
         if (uiEditWindow) { uiEditWindow.remove(); uiEditWindow = null; }
         if (uiMassEditWindow) { uiMassEditWindow.remove(); uiMassEditWindow = null; }
