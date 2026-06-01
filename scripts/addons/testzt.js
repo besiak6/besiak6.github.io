@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Znacznik Teleportów baddonz
-// @version       01.06.2026
+// @version       28.05.2026
 // @description   Znacznik Teleportów
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -13,7 +13,7 @@
     const ADDON_ID = "ZT";
 
     const config = {
-        "610": "D.AUK", "1224": "KENDAL", "630": "PORT", "1297": "TRIST", "8116": "EVE",
+        "610": "D.AUK", "1224": "KENDAL", "630": "PORT", "1297": "TRIST",
         "3328": "SKAŁY", "1926": "MAHO", "3038": "K.LEG", "5858": "SK", "6773": "MARG",
         "2868": "RUIN", "2869": "CICH", "180": "ANDA", "580": "MUSH", "632": "K.TROP",
         "5738": "SHAE S1", "5740": "SHAE RED", "2532": "ZORG", "727": "WŁAD", "3149": "GOB",
@@ -98,40 +98,6 @@
         } catch (e) {}
     }
 
-    // Dodawanie podpisu bezposrednio do przekazanego elementu DOM
-    function txovByElement(el, text) {
-        let tz = el.querySelector(".znacznik-teleport");
-        if (tz && tz.innerText === text) return;
-
-        if (!tz) {
-            tz = document.createElement("span");
-            tz.classList.add("znacznik-teleport");
-            el.appendChild(tz);
-        }
-
-        tz.innerText = text;
-        Object.assign(tz.style, {
-            position: "absolute", top: 0, left: 0,
-            width: "100%", height: "100%", color: "#fff",
-            fontSize: `${text.replace(/\s/g, '').length < 5 ? 9 : 8}px`,
-            textAlign: "center", lineHeight: 1.5,
-            textShadow: `-2px -2px 0 black, -1px -2px 0 black, 0px -2px 0 black, 1px -2px 0 black, 2px -2px 0 black, -2px -1px 0 black, 2px -1px 0 black, -2px 0px 0 black, 2px 0px 0 black, -2px 1px 0 black, 2px 1px 0 black, -2px 2px 0 black, -1px 2px 0 black, 0px 2px 0 black, 1px 2px 0 black, 2px 2px 0 black`,
-            fontFamily: "'Arial Black', Gadget, sans-serif",
-            userSelect: "none", pointerEvents: "none",
-            textRendering: "optimizeLegibility",
-            zIndex: "2"
-        });
-    }
-
-    function removeTxovByElement(el) {
-        const tz = el.querySelector(".znacznik-teleport");
-        if (tz) tz.remove();
-    }
-
-    function removeAllTxov() {
-        document.querySelectorAll('.znacznik-teleport').forEach(el => el.remove());
-    }
-
     function parseStats(stats) {
         if (!stats || typeof stats !== "string") return {};
         const result = {};
@@ -144,14 +110,10 @@
         return result;
     }
 
-    // Optymalizacja: Nie nadpisujemy danych gry nowymi wlasciwościami
-    function getItemStats(it) {
-        if (!it || typeof it !== "object") return {};
-        return it._cachedStats || parseStats(it.stat || it.stats || "");
-    }
-
     function getItemTeleport(it) {
-        const stats = getItemStats(it);
+        if (!it) return "";
+        // Używamy natywnych statystyk lub szybkiego parsowania bez modyfikacji oryginału (usunięto _znacznikParsedStats)
+        const stats = it._cachedStats || parseStats(it.stat || it.stats || "");
         let tp = "";
         if (stats.teleport) tp = stats.teleport;
         else if (stats.custom_teleport && stats.custom_teleport !== "true") tp = stats.custom_teleport;
@@ -167,30 +129,61 @@
         return config[tp] || config[tpMap];
     }
 
-    // Aplikuje znaczniki na każdy obiekt, jaki zdoła wyłapać funkcja (i ziemia, i bag, i shop)
-    function applyLabelToElement(el) {
-        if (!el || el.nodeType !== 1) return;
-        
-        let idMatch = el.className.match(/item-id-(\d+)/);
-        if (!idMatch) return;
-        let id = idMatch[1];
-        
-        let itemData = null;
-        if (window.Engine && window.Engine.items) {
-            itemData = window.Engine.items.getItemById(id);
-        }
-        if (!itemData && typeof $ !== 'undefined') {
-            itemData = $(el).data('item');
+    // Dodaje napis teleportu jako DOM element bezpośrednio na .item
+    function _addSpanToElement(el, text) {
+        let tz = el.querySelector(".znacznik-teleport");
+        if (tz && tz.innerText === text) return;
+
+        if (!tz) {
+            tz = document.createElement("span");
+            tz.className = "znacznik-teleport";
+            el.appendChild(tz);
         }
 
-        if (!itemData) return;
+        tz.innerText = text;
+        Object.assign(tz.style, {
+            position: "absolute", top: "0", left: "0",
+            width: "100%", height: "100%", color: "#fff",
+            fontSize: `${text.replace(/\s/g, '').length < 5 ? 9 : 8}px`,
+            textAlign: "center", lineHeight: "1.5",
+            textShadow: `-2px -2px 0 black, -1px -2px 0 black, 0px -2px 0 black, 1px -2px 0 black, 2px -2px 0 black, -2px -1px 0 black, 2px -1px 0 black, -2px 0px 0 black, 2px 0px 0 black, -2px 1px 0 black, 2px 1px 0 black, -2px 2px 0 black, -1px 2px 0 black, 0px 2px 0 black, 1px 2px 0 black, 2px 2px 0 black`,
+            fontFamily: "'Arial Black', Gadget, sans-serif",
+            userSelect: "none", pointerEvents: "none",
+            textRendering: "optimizeLegibility",
+            zIndex: "2"
+        });
+    }
+
+    function removeAllTxov() {
+        document.querySelectorAll('.znacznik-teleport').forEach(el => el.remove());
+    }
+
+    // Główna funkcja stemplująca przedmioty gdziekolwiek się znajdują
+    function applyMarkerToElement(el) {
+        if (!currentSettings.enabled) return;
+        if (!el || el.nodeType !== 1) return;
+
+        let $el = $(el);
+        let itemData = $el.data('item');
+
+        // Wyciągnij ID na wszelki wypadek
+        let idMatch = el.className.match(/item-id-(\d+)/);
+        let id = idMatch ? idMatch[1] : null;
+
+        // Jeśli z jakiegoś powodu element nie ma jQuery data, ratujemy się silnikiem gry (dla plecaka)
+        if (!itemData && id && window.Engine && window.Engine.items) {
+            itemData = window.Engine.items.getItemById(id);
+        }
+
+        if (!itemData || !id) return;
 
         const tp = getItemTeleport(itemData);
         if (!tp) {
-            removeTxovByElement(el);
+            let tz = el.querySelector(".znacznik-teleport");
+            if (tz) tz.remove();
             return;
         }
-        
+
         const tpMap = getTpMap(tp);
 
         const customLabel = currentSettings.customLabels[id];
@@ -209,8 +202,12 @@
             finalLabel = autoLabel;
         }
 
-        if (finalLabel) txovByElement(el, finalLabel);
-        else removeTxovByElement(el);
+        if (finalLabel) {
+            _addSpanToElement(el, finalLabel);
+        } else {
+            let tz = el.querySelector(".znacznik-teleport");
+            if (tz) tz.remove();
+        }
     }
 
     function applyLabelsToAllVisibleItems() {
@@ -218,10 +215,9 @@
             removeAllTxov();
             return;
         }
-        document.querySelectorAll('.item').forEach(applyLabelToElement);
+        document.querySelectorAll('.item').forEach(applyMarkerToElement);
     }
 
-    // Funkcja przechwytująca eventy gry (np. otwieranie menu w popup)
     const intercept = (obj, key, cb) => {
         const _orig = obj[key];
         obj[key] = function (...args) {
@@ -322,7 +318,12 @@
 
         const handleMassEdit = () => {
             const finalLabel = validateLabelInput(massEditInput.value.trim());
-            const item = window.Engine.items.getItemById(currentItemId);
+            
+            // Pobieranie mapy z DOM aby uniknąć pomyłki
+            let el = document.querySelector(`.item-id-${currentItemId}`);
+            let item = el ? $(el).data('item') : null;
+            if (!item && window.Engine.items) item = window.Engine.items.getItemById(currentItemId);
+
             const tp = getItemTeleport(item);
             const tpMap = getTpMap(tp);
 
@@ -360,33 +361,49 @@
         loadSettings();
         if (!uiAddWindow) buildUI();
 
-        // Obserwator do łapania itemów (w sklepach, torbach, i na ziemi po wejściu)
+        // Podpinamy globalnego obserwatora – działa w każdym oknie (torba, sklep, skrzynka, czat)
         observer = new MutationObserver((mutations) => {
             if (!currentSettings.enabled) return;
+            
             mutations.forEach(mutation => {
                 mutation.addedNodes.forEach(node => {
                     if (node.nodeType === 1) { 
                         if (node.classList && node.classList.contains('item')) {
-                            applyLabelToElement(node);
+                            applyMarkerToElement(node);
                         }
                         if (node.querySelectorAll) {
                             let items = node.querySelectorAll('.item');
-                            if (items.length > 0) items.forEach(applyLabelToElement);
+                            if (items.length > 0) {
+                                items.forEach(applyMarkerToElement);
+                            }
                         }
                     }
                 });
             });
         });
+
         observer.observe(document.body, { childList: true, subtree: true });
 
         if (!isMenuIntercepted) {
             intercept(window.Engine.interface, 'showPopupMenu', (options, event) => {
                 if (!currentSettings.enabled) return;
 
-                const id = event.target?.className?.match(/item-id-(\d+)/)?.[1];
+                // Sprytne znalezienie odpowiedniego kontenera przedmiotu, by obsługiwał czat/sklep
+                let target = event.target;
+                let $itemEl = $(target).closest('.item');
+                if (!$itemEl.length && target.classList.contains('item')) {
+                    $itemEl = $(target);
+                }
+
+                const idMatch = $itemEl.attr('class')?.match(/item-id-(\d+)/);
+                const id = idMatch ? idMatch[1] : null;
                 if (!id) return;
 
-                const item = window.Engine.items.getItemById(id);
+                let item = $itemEl.data('item');
+                if (!item && window.Engine.items) {
+                    item = window.Engine.items.getItemById(id);
+                }
+                
                 if (!item) return;
 
                 const tp = getItemTeleport(item);
@@ -408,10 +425,10 @@
 
                 let menuOptionsToAdd = [];
                 let spliceIndex = options.length - 1;
-                
-                const statsCheck = getItemStats(item);
 
-                if (statsCheck && (statsCheck.custom_teleport || statsCheck.teleport)) {
+                const stats = item._cachedStats || parseStats(item.stat || item.stats || "");
+
+                if (tp && (stats.custom_teleport || stats.teleport)) {
                     if (autoLabel) {
                         if (currentLabelSource === 'config') {
                             menuOptionsToAdd.push(['Edytuj Podpis', () => showWindow(uiEditWindow, uiEditWindow.querySelector('.zt-action-input'), id, autoLabel), { button: { cls: 'menu-item--green' } }]);
@@ -434,13 +451,14 @@
                                 let labelToApply = currentSettings.customLabels[id] || autoLabel;
                                 if (labelToApply) {
                                     currentSettings.teleportmass[tpMap] = { enabled: true, label: labelToApply };
-                                    document.querySelectorAll('.item').forEach(el => {
-                                        let itemToClear = window.Engine?.items?.getItemById(el.className.match(/item-id-(\d+)/)?.[1]) || $(el).data('item');
-                                        if (itemToClear && getTpMap(getItemTeleport(itemToClear)) === tpMap) {
-                                            delete currentSettings.customLabels[itemToClear.id];
-                                            delete currentSettings.ignored_sign[itemToClear.id];
-                                        }
-                                    });
+                                    if (window.Engine && window.Engine.items && window.Engine.items.fetchLocationItems) {
+                                        window.Engine.items.fetchLocationItems("g").forEach(it => {
+                                            if (getTpMap(getItemTeleport(it)) === tpMap) {
+                                                delete currentSettings.customLabels[it.id];
+                                                delete currentSettings.ignored_sign[it.id];
+                                            }
+                                        });
+                                    }
                                     saveSettings(); applyLabelsToAllVisibleItems();
                                 }
                             }, { button: { cls: 'menu-item--green' } }]);
@@ -455,19 +473,19 @@
                             menuOptionsToAdd.push(['Podpisywanie tych samych mapek teleportu', () => {
                                 const labelToPersist = currentMassLabel;
                                 delete currentSettings.teleportmass[tpMap];
-                                document.querySelectorAll('.item').forEach(el => {
-                                    let itemToClear = window.Engine?.items?.getItemById(el.className.match(/item-id-(\d+)/)?.[1]) || $(el).data('item');
-                                    if (itemToClear && getTpMap(getItemTeleport(itemToClear)) === tpMap) {
-                                        if (itemToClear.id === id) {
-                                            currentSettings.customLabels[itemToClear.id] = labelToPersist;
-                                            delete currentSettings.ignored_sign[itemToClear.id];
-                                        } else {
-                                            removeTxovByElement(el);
-                                            delete currentSettings.customLabels[itemToClear.id];
-                                            delete currentSettings.ignored_sign[itemToClear.id];
+                                if (window.Engine && window.Engine.items && window.Engine.items.fetchLocationItems) {
+                                    window.Engine.items.fetchLocationItems("g").forEach(it => {
+                                        if (getTpMap(getItemTeleport(it)) === tpMap) {
+                                            if (it.id === id) {
+                                                currentSettings.customLabels[it.id] = labelToPersist;
+                                                delete currentSettings.ignored_sign[it.id];
+                                            } else {
+                                                delete currentSettings.customLabels[it.id];
+                                                delete currentSettings.ignored_sign[it.id];
+                                            }
                                         }
-                                    }
-                                });
+                                    });
+                                }
                                 saveSettings(); applyLabelsToAllVisibleItems();
                             }, { button: { cls: 'menu-item--red' } }]);
                             menuOptionsToAdd.push(['Usuń Podpis', () => {
@@ -486,13 +504,14 @@
                                 let labelToApply = currentSettings.customLabels[id];
                                 if (labelToApply) {
                                     currentSettings.teleportmass[tpMap] = { enabled: true, label: labelToApply };
-                                    document.querySelectorAll('.item').forEach(el => {
-                                        let itemToClear = window.Engine?.items?.getItemById(el.className.match(/item-id-(\d+)/)?.[1]) || $(el).data('item');
-                                        if (itemToClear && getTpMap(getItemTeleport(itemToClear)) === tpMap) {
-                                            delete currentSettings.customLabels[itemToClear.id];
-                                            delete currentSettings.ignored_sign[itemToClear.id];
-                                        }
-                                    });
+                                    if (window.Engine && window.Engine.items && window.Engine.items.fetchLocationItems) {
+                                        window.Engine.items.fetchLocationItems("g").forEach(it => {
+                                            if (getTpMap(getItemTeleport(it)) === tpMap) {
+                                                delete currentSettings.customLabels[it.id];
+                                                delete currentSettings.ignored_sign[it.id];
+                                            }
+                                        });
+                                    }
                                     saveSettings(); applyLabelsToAllVisibleItems();
                                 }
                             }, { button: { cls: 'menu-item--green' } }]);
@@ -506,19 +525,19 @@
                              menuOptionsToAdd.push(['Podpisywanie tych samych mapek teleportu', () => {
                                 const labelToPersist = currentMassLabel;
                                 delete currentSettings.teleportmass[tpMap];
-                                document.querySelectorAll('.item').forEach(el => {
-                                    let itemToClear = window.Engine?.items?.getItemById(el.className.match(/item-id-(\d+)/)?.[1]) || $(el).data('item');
-                                    if (itemToClear && getTpMap(getItemTeleport(itemToClear)) === tpMap) {
-                                        if (itemToClear.id === id) {
-                                            currentSettings.customLabels[itemToClear.id] = labelToPersist;
-                                            delete currentSettings.ignored_sign[itemToClear.id];
-                                        } else {
-                                            removeTxovByElement(el);
-                                            delete currentSettings.customLabels[itemToClear.id];
-                                            delete currentSettings.ignored_sign[itemToClear.id];
+                                if (window.Engine && window.Engine.items && window.Engine.items.fetchLocationItems) {
+                                    window.Engine.items.fetchLocationItems("g").forEach(it => {
+                                        if (getTpMap(getItemTeleport(it)) === tpMap) {
+                                            if (it.id === id) {
+                                                currentSettings.customLabels[it.id] = labelToPersist;
+                                                delete currentSettings.ignored_sign[it.id];
+                                            } else {
+                                                delete currentSettings.customLabels[it.id];
+                                                delete currentSettings.ignored_sign[it.id];
+                                            }
                                         }
-                                    }
-                                });
+                                    });
+                                }
                                 saveSettings(); applyLabelsToAllVisibleItems();
                             }, { button: { cls: 'menu-item--red' } }]);
                             menuOptionsToAdd.push(['Usuń Podpis', () => {
@@ -534,14 +553,15 @@
             isMenuIntercepted = true;
         }
 
-        setTimeout(() => {
-            if (currentSettings.enabled) applyLabelsToAllVisibleItems();
-        }, 500);
+        setTimeout(applyLabelsToAllVisibleItems, 500);
     }
 
     function addonStop() {
         removeAllTxov();
-        if (observer) { observer.disconnect(); observer = null; }
+        if (observer) {
+            observer.disconnect();
+            observer = null;
+        }
         if (uiAddWindow) { uiAddWindow.remove(); uiAddWindow = null; }
         if (uiEditWindow) { uiEditWindow.remove(); uiEditWindow = null; }
         if (uiMassEditWindow) { uiMassEditWindow.remove(); uiMassEditWindow = null; }
