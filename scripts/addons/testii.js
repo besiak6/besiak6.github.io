@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Item Info baddonz
 // @version       05.08.2025
-// @description   Informacje o itemach (API 2.0 - Naprawione legbony, CSS Toggling)
+// @description   Informacje o itemach (API 2.0 - Legbony wszędzie, sklepy, czat)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -86,7 +86,7 @@
     };
 
     let uiWindowElement = null;
-    let isEngineObserved = false;
+    let observer = null;
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
@@ -214,7 +214,7 @@
     }
 
     // ==========================================
-    // SYSTEM ZNACZNIKÓW BONUSÓW LEGENDARNYCH
+    // GLOBALNY SYSTEM ZNACZNIKÓW BONUSÓW
     // ==========================================
     function _addSpanToElement(el, text) {
         let tz = el.querySelector(".baddonz-legbon-marker");
@@ -244,36 +244,42 @@
         document.querySelectorAll('.baddonz-legbon-marker').forEach(el => el.remove());
     }
 
+    function applyMarkerToElement(el) {
+        if (!el || el.nodeType !== 1) return;
+        
+        let $el = $(el);
+        let itemData = $el.data('item'); // Odczytuje itemy ze sklepów, okien handlu, czatu i dymków
+        
+        if (!itemData) {
+            // Bezpieczny fallback do ekwipunku gracza, jeśli data() jest puste
+            let idMatch = el.className.match(/item-id-(\d+)/);
+            if (idMatch && window.Engine && window.Engine.items) {
+                itemData = window.Engine.items.getItemById(idMatch[1]);
+            }
+        }
+
+        if (!itemData) return;
+
+        let stats = itemData._cachedStats || parseStats(itemData.stat || itemData.stats);
+        
+        if (stats && stats.rarity === 'legendary' && stats.legbon) {
+            let legbonName = stats.legbon.split(',')[0];
+            if (LEGBON_SHORT[legbonName]) {
+                _addSpanToElement(el, LEGBON_SHORT[legbonName]);
+                return;
+            }
+        }
+        
+        let existingMarker = el.querySelector(".baddonz-legbon-marker");
+        if (existingMarker) existingMarker.remove();
+    }
+
     function applyLegbonMarkersToAll() {
         if (!currentSettings.enabled || !currentSettings.SHOW_LEGBON_MARKERS) {
             removeAllLegbonMarkers();
             return;
         }
-        
-        if (!window.Engine || !window.Engine.items) return;
-
-        document.querySelectorAll('.item').forEach(el => {
-            let idMatch = el.className.match(/item-id-(\d+)/);
-            if (!idMatch) return;
-            let id = idMatch[1];
-            
-            let item = window.Engine.items.getItemById(id);
-            if (!item) return;
-
-            let stats = item._cachedStats || parseStats(item.stat || item.stats);
-            
-            // Poprawione czytanie legbonów z rozdzieleniem przecinkami ("glare,9" -> "glare")
-            if (stats.rarity === 'legendary' && stats.legbon) {
-                let legbonName = stats.legbon.split(',')[0];
-                if (LEGBON_SHORT[legbonName]) {
-                    _addSpanToElement(el, LEGBON_SHORT[legbonName]);
-                    return;
-                }
-            }
-            
-            let existingMarker = el.querySelector(".baddonz-legbon-marker");
-            if (existingMarker) existingMarker.remove();
-        });
+        document.querySelectorAll('.item').forEach(applyMarkerToElement);
     }
     // ==========================================
 
@@ -370,7 +376,7 @@
         return $tip.html();
     }
 
-    // Bezpośredni Hook w silnik gry (Wstrzykiwanie HTML ZANIM dymek się wyrenderuje)
+    // Wstrzykiwanie HTML ZANIM dymek się wyrenderuje
     function hookTipFunction() {
         if (typeof $ !== 'undefined' && $.fn && $.fn.tip && !$.fn.tip._baddonzHooked) {
             const originalTip = $.fn.tip;
@@ -471,19 +477,31 @@
 
         hookTipFunction();
         
-        if (!isEngineObserved) {
-            const originalParseJSON = window.Engine.communication.parseJSON;
-            window.Engine.communication.parseJSON = function (data) {
-                const res = originalParseJSON.apply(this, arguments);
-                if (data.item) {
-                    // Czekamy chwilę aż silnik gry stworzy widoki HTML przedmiotów i przypinamy znaczniki
-                    setTimeout(applyLegbonMarkersToAll, 20);
-                    setTimeout(applyLegbonMarkersToAll, 200); // Drugi strzał dla bezpieczeństwa (asynchroniczność Margonem)
-                }
-                return res;
-            };
-            isEngineObserved = true;
-        }
+        // Zamiast polegać tylko na przeładowywaniu, wdrażamy globalnego obserwatora
+        observer = new MutationObserver((mutations) => {
+            if (!currentSettings.enabled || !currentSettings.SHOW_LEGBON_MARKERS) return;
+            
+            mutations.forEach(mutation => {
+                mutation.addedNodes.forEach(node => {
+                    if (node.nodeType === 1) { 
+                        // Jeśli nowo dodany element to klasa .item (np. czat, dymek)
+                        if (node.classList && node.classList.contains('item')) {
+                            applyMarkerToElement(node);
+                        }
+                        // Jeśli nowo dodany kontener zawiera klasy .item (np. otwarcie okna sklepu)
+                        if (node.querySelectorAll) {
+                            let items = node.querySelectorAll('.item');
+                            if (items.length > 0) {
+                                items.forEach(applyMarkerToElement);
+                            }
+                        }
+                    }
+                });
+            });
+        });
+
+        // Podpinamy obserwator pod cały dokument (nasłuchuje każdej zmiany widoku w grze)
+        observer.observe(document.body, { childList: true, subtree: true });
 
         setTimeout(() => {
             applyLegbonMarkersToAll();
@@ -493,6 +511,10 @@
 
     function addonStop() {
         removeAllLegbonMarkers();
+        if (observer) {
+            observer.disconnect();
+            observer = null;
+        }
         if (uiWindowElement) {
             uiWindowElement.remove();
             uiWindowElement = null;
