@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          AutoX baddonz
-// @version       28.05.2026
+// @version       02.06.2026
 // @description   autox
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -17,7 +17,8 @@
     styleSheet.className = "autox-custom-styles";
     styleSheet.innerText = `
         .baddonz-ax-wnd { width:110px; min-width:110px; }
-        .baddonz-ax-wnd-settings { width:250px; min-width:250px; }
+        .baddonz-ax-wnd-settings { width:250px; min-width:250px; height: auto !important; min-height: unset !important; max-height: unset !important; }
+        .baddonz-ax-wnd-settings .baddonz-window-body { height: auto !important; min-height: unset !important; display: flex; flex-direction: column; gap: 5px; }
         .baddonz-ax-wnd .baddonz-window-body { padding: 0px 5px 5px 5px !important; gap: 3px !important; }
         .ax-s-walka-btn { width:100%; }
         .baddonz-setting-row.ax-main-row { gap:5px; margin: 0; }
