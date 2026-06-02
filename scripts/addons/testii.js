@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Znacznik Teleportów baddonz
-// @version       28.05.2026.3
+// @version       02.06.2026
 // @description   Znacznik Teleportów
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -46,9 +46,19 @@
         "3312": "BB", "2357": "TH", "2355": "TH"
     };
 
-    let currentSettings = { enabled: true, customLabels: {}, teleportmass: {}, ignored_sign: {} };
-    let uiAddWindow = null, uiEditWindow = null, uiMassEditWindow = null;
-    let currentItemId = null, observer = null, isMenuIntercepted = false;
+    let currentSettings = {
+        enabled: true,
+        customLabels: {},
+        teleportmass: {},
+        ignored_sign: {}
+    };
+
+    let uiAddWindow = null;
+    let uiEditWindow = null;
+    let uiMassEditWindow = null;
+    let currentItemId = null;
+    let observer = null;
+    let isMenuIntercepted = false;
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
@@ -72,11 +82,13 @@
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
+
         const accKeys = ['enabled', 'customLabels', 'teleportmass', 'ignored_sign'];
         let accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
 
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
+
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
@@ -91,7 +103,9 @@
         const result = {};
         for (const pair of stats.split(";")) {
             const [key, value] = pair.split("=");
-            if (key && value !== undefined) result[key] = value;
+            if (key && value !== undefined) {
+                result[key] = value;
+            }
         }
         return result;
     }
@@ -105,17 +119,25 @@
         return tp;
     }
 
-    function getTpMap(tp) { return tp ? tp.split(",")[0] : ""; }
-    function getAutoLabel(tp, tpMap) { return config[tp] || config[tpMap]; }
+    function getTpMap(tp) {
+        if (!tp || typeof tp !== "string") return "";
+        return tp.split(",")[0];
+    }
+
+    function getAutoLabel(tp, tpMap) {
+        return config[tp] || config[tpMap];
+    }
 
     function _addSpanToElement(el, text) {
         let tz = el.querySelector(".znacznik-teleport");
         if (tz && tz.innerText === text) return;
+
         if (!tz) {
             tz = document.createElement("span");
             tz.className = "znacznik-teleport";
             el.appendChild(tz);
         }
+
         tz.innerText = text;
         Object.assign(tz.style, {
             position: "absolute", top: "0", left: "0",
@@ -125,7 +147,8 @@
             textShadow: `-2px -2px 0 black, -1px -2px 0 black, 0px -2px 0 black, 1px -2px 0 black, 2px -2px 0 black, -2px -1px 0 black, 2px -1px 0 black, -2px 0px 0 black, 2px 0px 0 black, -2px 1px 0 black, 2px 1px 0 black, -2px 2px 0 black, -1px 2px 0 black, 0px 2px 0 black, 1px 2px 0 black, 2px 2px 0 black`,
             fontFamily: "'Arial Black', Gadget, sans-serif",
             userSelect: "none", pointerEvents: "none",
-            textRendering: "optimizeLegibility", zIndex: "2"
+            textRendering: "optimizeLegibility",
+            zIndex: "2"
         });
     }
 
@@ -133,53 +156,25 @@
         document.querySelectorAll('.znacznik-teleport').forEach(el => el.remove());
     }
 
+    // GŁÓWNA ZMIANA: Lepsze radzenie sobie z tipami i wirtualnymi przedmiotami
     function applyMarkerToElement(el) {
-        if (!currentSettings.enabled || !el || el.nodeType !== 1) return;
+        if (!currentSettings.enabled) return;
+        if (!el || el.nodeType !== 1) return;
 
         let $el = $(el);
         let itemData = $el.data('item');
-        let idMatch = el.className.match(/item-id-(\d+)/);
-        let id = idMatch ? idMatch[1] : null;
 
-        // KROK 1: Zwykłe przedmioty (np. torba, sklep) 
+        // Wyciągamy ID. Zabezpieczenie na wypadek, gdyby ID było zaszyte w danych, a nie w klasie
+        let idMatch = el.className.match(/item-id-(\d+)/);
+        let id = idMatch ? idMatch[1] : (itemData ? itemData.id : null);
+
+        // Jeśli element nie ma danych w jQuery, a mamy ID z klasy - pytamy silnik gry (dla normalnych przedmiotów)
         if (!itemData && id && window.Engine && window.Engine.items) {
             itemData = window.Engine.items.getItemById(id);
         }
 
-        // KROK 2: Tooltipy na czacie - magia wyciągania danych z elementu, nad którym jest myszka
-        if (!itemData && el.closest('#tip, .tip')) {
-            let hoveredElements = document.querySelectorAll(':hover');
-            for (let i = hoveredElements.length - 1; i >= 0; i--) {
-                let dataAttr = hoveredElements[i].getAttribute('data-item');
-                if (dataAttr) {
-                    try {
-                        let parsed = JSON.parse(dataAttr);
-                        if (!id || parsed.id == id) {
-                            itemData = parsed;
-                            id = parsed.id;
-                            break;
-                        }
-                    } catch (e) {}
-                }
-            }
-        }
-
-        // KROK 3: Awaryjne skanowanie czatu w poszukiwaniu zgubionego ID
-        if (!itemData && id) {
-            let chatLinks = document.querySelectorAll(`[data-item*='"id":${id}'], [data-item*='"id":"${id}"']`);
-            for (let link of chatLinks) {
-                let dataAttr = link.getAttribute('data-item');
-                if (dataAttr) {
-                    try { itemData = JSON.parse(dataAttr); break; } catch(e) {}
-                }
-            }
-        }
-
-        if (!itemData || !id) {
-            let tz = el.querySelector(".znacznik-teleport");
-            if (tz) tz.remove();
-            return;
-        }
+        // Usunięty ścisły warunek (!id) - teraz jeśli mamy itemData (nawet z dymku czatu bez własnego ID), idziemy dalej
+        if (!itemData) return;
 
         const tp = getItemTeleport(itemData);
         if (!tp) {
@@ -189,37 +184,51 @@
         }
 
         const tpMap = getTpMap(tp);
-        const customLabel = currentSettings.customLabels[id];
+
+        const customLabel = id ? currentSettings.customLabels[id] : null;
         const massLabelData = currentSettings.teleportmass[tpMap];
         const autoLabel = getAutoLabel(tp, tpMap);
-        const isDefaultIgnored = currentSettings.ignored_sign[id];
+        const isDefaultIgnored = id ? currentSettings.ignored_sign[id] : false;
 
         let finalLabel = null;
-        if (isDefaultIgnored) finalLabel = null;
-        else if (customLabel) finalLabel = customLabel;
-        else if (massLabelData?.enabled) finalLabel = massLabelData.label || '';
-        else if (autoLabel) finalLabel = autoLabel;
+        if (isDefaultIgnored) {
+            finalLabel = null;
+        } else if (customLabel) {
+            finalLabel = customLabel;
+        } else if (massLabelData?.enabled) {
+            finalLabel = massLabelData.label || '';
+        } else if (autoLabel) {
+            finalLabel = autoLabel;
+        }
 
-        if (finalLabel) _addSpanToElement(el, finalLabel);
-        else {
+        if (finalLabel) {
+            _addSpanToElement(el, finalLabel);
+        } else {
             let tz = el.querySelector(".znacznik-teleport");
             if (tz) tz.remove();
         }
     }
 
     function applyLabelsToAllVisibleItems() {
-        if (!currentSettings.enabled) { removeAllTxov(); return; }
+        if (!currentSettings.enabled) {
+            removeAllTxov();
+            return;
+        }
         document.querySelectorAll('.item').forEach(applyMarkerToElement);
     }
 
     const intercept = (obj, key, cb) => {
         const _orig = obj[key];
-        obj[key] = function (...args) { cb(...args); return _orig.apply(this, args); };
+        obj[key] = function (...args) {
+            cb(...args);
+            return _orig.apply(this, args);
+        };
     };
 
     function validateLabelInput(newLabelInput) {
         const MAX_CHARS_WITHOUT_SPACES = 8;
         const MAX_SPACES = 2;
+
         newLabelInput = newLabelInput.toUpperCase();
         const charsWithoutSpaces = newLabelInput.replace(/\s/g, '');
         const spaceCount = (newLabelInput.match(/\s/g) || []).length;
@@ -261,8 +270,13 @@
         uiEditWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Edytuj Znacznik", actionBodyHtml, { width: '200px', customId: 'baddonz-zt-wnd-edit', hasSettings: false, hasCollapse: false, hasClose: true });
         uiMassEditWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Edytuj Podpisy", actionBodyHtml, { width: '200px', customId: 'baddonz-zt-wnd-mass', hasSettings: false, hasCollapse: false, hasClose: true });
 
-        uiAddWindow.classList.add('baddonz-zt-wnd-add'); uiEditWindow.classList.add('baddonz-zt-wnd-edit'); uiMassEditWindow.classList.add('baddonz-zt-wnd-mass');
-        uiAddWindow.style.display = 'none'; uiEditWindow.style.display = 'none'; uiMassEditWindow.style.display = 'none';
+        uiAddWindow.classList.add('baddonz-zt-wnd-add');
+        uiEditWindow.classList.add('baddonz-zt-wnd-edit');
+        uiMassEditWindow.classList.add('baddonz-zt-wnd-mass');
+
+        uiAddWindow.style.display = 'none';
+        uiEditWindow.style.display = 'none';
+        uiMassEditWindow.style.display = 'none';
 
         const addInput = uiAddWindow.querySelector('.zt-action-input');
         const editInput = uiEditWindow.querySelector('.zt-action-input');
@@ -279,48 +293,46 @@
         const handleAdd = () => {
             const finalLabel = validateLabelInput(addInput.value.trim());
             if (finalLabel) {
-                currentSettings.customLabels[currentItemId] = finalLabel; delete currentSettings.ignored_sign[currentItemId];
-                saveSettings(); applyLabelsToAllVisibleItems(); uiAddWindow.style.display = 'none';
+                currentSettings.customLabels[currentItemId] = finalLabel;
+                delete currentSettings.ignored_sign[currentItemId];
+                saveSettings(); applyLabelsToAllVisibleItems();
+                uiAddWindow.style.display = 'none';
             } else if (addInput.value.trim() === '') uiAddWindow.style.display = 'none';
         };
 
         const handleEdit = () => {
             const finalLabel = validateLabelInput(editInput.value.trim());
             if (finalLabel) {
-                currentSettings.customLabels[currentItemId] = finalLabel; delete currentSettings.ignored_sign[currentItemId];
-                saveSettings(); applyLabelsToAllVisibleItems(); uiEditWindow.style.display = 'none';
+                currentSettings.customLabels[currentItemId] = finalLabel;
+                delete currentSettings.ignored_sign[currentItemId];
+                saveSettings(); applyLabelsToAllVisibleItems();
+                uiEditWindow.style.display = 'none';
             } else if (editInput.value.trim() === '') {
-                delete currentSettings.customLabels[currentItemId]; currentSettings.ignored_sign[currentItemId] = true;
-                saveSettings(); applyLabelsToAllVisibleItems(); uiEditWindow.style.display = 'none';
+                delete currentSettings.customLabels[currentItemId];
+                currentSettings.ignored_sign[currentItemId] = true;
+                saveSettings(); applyLabelsToAllVisibleItems();
+                uiEditWindow.style.display = 'none';
             }
         };
 
         const handleMassEdit = () => {
             const finalLabel = validateLabelInput(massEditInput.value.trim());
             
-            // Szukamy danych do mass edycji
             let el = document.querySelector(`.item-id-${currentItemId}`);
             let item = el ? $(el).data('item') : null;
             if (!item && window.Engine.items) item = window.Engine.items.getItemById(currentItemId);
-            
-            // Jeśli to czat, wyciągamy ze skanera
-            if (!item) {
-                let chatLinks = document.querySelectorAll(`[data-item*='"id":${currentItemId}'], [data-item*='"id":"${currentItemId}"']`);
-                for (let link of chatLinks) {
-                    let dataAttr = link.getAttribute('data-item');
-                    if (dataAttr) { try { item = JSON.parse(dataAttr); break; } catch(e) {} }
-                }
-            }
 
             const tp = getItemTeleport(item);
             const tpMap = getTpMap(tp);
 
             if (finalLabel) {
                 currentSettings.teleportmass[tpMap] = { enabled: true, label: finalLabel };
-                saveSettings(); applyLabelsToAllVisibleItems(); uiMassEditWindow.style.display = 'none';
+                saveSettings(); applyLabelsToAllVisibleItems();
+                uiMassEditWindow.style.display = 'none';
             } else if (massEditInput.value.trim() === '') {
                 delete currentSettings.teleportmass[tpMap];
-                saveSettings(); applyLabelsToAllVisibleItems(); uiMassEditWindow.style.display = 'none';
+                saveSettings(); applyLabelsToAllVisibleItems();
+                uiMassEditWindow.style.display = 'none';
             }
         };
 
@@ -335,8 +347,12 @@
     }
 
     function showWindow(wnd, input, id, initialValue = '') {
-        currentItemId = id; input.value = initialValue; wnd.style.display = 'flex';
-        centerWindow(wnd); wnd.dispatchEvent(new Event('mousedown')); input.focus();
+        currentItemId = id;
+        input.value = initialValue;
+        wnd.style.display = 'flex';
+        centerWindow(wnd);
+        wnd.dispatchEvent(new Event('mousedown'));
+        input.focus();
     }
 
     function addonInit() {
@@ -345,18 +361,24 @@
 
         observer = new MutationObserver((mutations) => {
             if (!currentSettings.enabled) return;
+            
             mutations.forEach(mutation => {
                 mutation.addedNodes.forEach(node => {
                     if (node.nodeType === 1) { 
-                        if (node.classList && node.classList.contains('item')) applyMarkerToElement(node);
+                        if (node.classList && node.classList.contains('item')) {
+                            applyMarkerToElement(node);
+                        }
                         if (node.querySelectorAll) {
                             let items = node.querySelectorAll('.item');
-                            if (items.length > 0) items.forEach(applyMarkerToElement);
+                            if (items.length > 0) {
+                                items.forEach(applyMarkerToElement);
+                            }
                         }
                     }
                 });
             });
         });
+
         observer.observe(document.body, { childList: true, subtree: true });
 
         if (!isMenuIntercepted) {
@@ -365,22 +387,17 @@
 
                 let target = event.target;
                 let $itemEl = $(target).closest('.item');
-                if (!$itemEl.length && target.classList.contains('item')) $itemEl = $(target);
+                if (!$itemEl.length && target.classList.contains('item')) {
+                    $itemEl = $(target);
+                }
 
                 const idMatch = $itemEl.attr('class')?.match(/item-id-(\d+)/);
                 const id = idMatch ? idMatch[1] : null;
                 if (!id) return;
 
                 let item = $itemEl.data('item');
-                if (!item && window.Engine.items) item = window.Engine.items.getItemById(id);
-
-                // Ratunek dla popup menu wywoływanego z poziomu dymku na czacie
-                if (!item) {
-                     let chatLinks = document.querySelectorAll(`[data-item*='"id":${id}'], [data-item*='"id":"${id}"']`);
-                     for (let link of chatLinks) {
-                         let dataAttr = link.getAttribute('data-item');
-                         if (dataAttr) { try { item = JSON.parse(dataAttr); break; } catch(e) {} }
-                     }
+                if (!item && window.Engine.items) {
+                    item = window.Engine.items.getItemById(id);
                 }
                 
                 if (!item) return;
@@ -396,6 +413,7 @@
                 const isIgnoredSingularly = currentSettings.ignored_sign.hasOwnProperty(id);
                 
                 let currentLabelSource = 'none';
+
                 if (isIgnoredSingularly) currentLabelSource = 'ignored';
                 else if (hasCustomLabel) currentLabelSource = 'custom';
                 else if (isMassLabeledGlobally) currentLabelSource = 'mass';
@@ -403,16 +421,25 @@
 
                 let menuOptionsToAdd = [];
                 let spliceIndex = options.length - 1;
+
                 const stats = item._cachedStats || parseStats(item.stat || item.stats || "");
 
                 if (tp && (stats.custom_teleport || stats.teleport)) {
                     if (autoLabel) {
                         if (currentLabelSource === 'config') {
                             menuOptionsToAdd.push(['Edytuj Podpis', () => showWindow(uiEditWindow, uiEditWindow.querySelector('.zt-action-input'), id, autoLabel), { button: { cls: 'menu-item--green' } }]);
-                            menuOptionsToAdd.push(['Usuń Podpis', () => { delete currentSettings.customLabels[id]; currentSettings.ignored_sign[id] = true; saveSettings(); applyLabelsToAllVisibleItems(); }, { button: { cls: 'menu-item--red' } }]);
+                            menuOptionsToAdd.push(['Usuń Podpis', () => {
+                                delete currentSettings.customLabels[id];
+                                currentSettings.ignored_sign[id] = true;
+                                saveSettings(); applyLabelsToAllVisibleItems();
+                            }, { button: { cls: 'menu-item--red' } }]);
                         }
                         else if (currentLabelSource === 'ignored') {
-                            menuOptionsToAdd.push(['Przywróć Domyślny Podpis', () => { delete currentSettings.ignored_sign[id]; delete currentSettings.customLabels[id]; saveSettings(); applyLabelsToAllVisibleItems(); }, { button: { cls: 'menu-item--green' } }]);
+                            menuOptionsToAdd.push(['Przywróć Domyślny Podpis', () => {
+                                delete currentSettings.ignored_sign[id];
+                                delete currentSettings.customLabels[id];
+                                saveSettings(); applyLabelsToAllVisibleItems();
+                            }, { button: { cls: 'menu-item--green' } }]);
                         }
                         else if (currentLabelSource === 'custom') {
                             menuOptionsToAdd.push(['Edytuj Podpis', () => showWindow(uiEditWindow, uiEditWindow.querySelector('.zt-action-input'), id, currentSettings.customLabels[id]), { button: { cls: 'menu-item--green' } }]);
@@ -422,13 +449,20 @@
                                     currentSettings.teleportmass[tpMap] = { enabled: true, label: labelToApply };
                                     if (window.Engine && window.Engine.items && window.Engine.items.fetchLocationItems) {
                                         window.Engine.items.fetchLocationItems("g").forEach(it => {
-                                            if (getTpMap(getItemTeleport(it)) === tpMap) { delete currentSettings.customLabels[it.id]; delete currentSettings.ignored_sign[it.id]; }
+                                            if (getTpMap(getItemTeleport(it)) === tpMap) {
+                                                delete currentSettings.customLabels[it.id];
+                                                delete currentSettings.ignored_sign[it.id];
+                                            }
                                         });
                                     }
                                     saveSettings(); applyLabelsToAllVisibleItems();
                                 }
                             }, { button: { cls: 'menu-item--green' } }]);
-                            menuOptionsToAdd.push(['Usuń Podpis', () => { delete currentSettings.customLabels[id]; currentSettings.ignored_sign[id] = true; saveSettings(); applyLabelsToAllVisibleItems(); }, { button: { cls: 'menu-item--red' } }]);
+                            menuOptionsToAdd.push(['Usuń Podpis', () => {
+                                delete currentSettings.customLabels[id];
+                                currentSettings.ignored_sign[id] = true;
+                                saveSettings(); applyLabelsToAllVisibleItems();
+                            }, { button: { cls: 'menu-item--red' } }]);
                         }
                         else if (currentLabelSource === 'mass') {
                             menuOptionsToAdd.push(['Edytuj Podpisy', () => showWindow(uiMassEditWindow, uiMassEditWindow.querySelector('.zt-action-input'), id, currentMassLabel), { button: { cls: 'menu-item--green' } }]);
@@ -438,14 +472,23 @@
                                 if (window.Engine && window.Engine.items && window.Engine.items.fetchLocationItems) {
                                     window.Engine.items.fetchLocationItems("g").forEach(it => {
                                         if (getTpMap(getItemTeleport(it)) === tpMap) {
-                                            if (it.id === id) { currentSettings.customLabels[it.id] = labelToPersist; delete currentSettings.ignored_sign[it.id]; } 
-                                            else { delete currentSettings.customLabels[it.id]; delete currentSettings.ignored_sign[it.id]; }
+                                            if (it.id === id) {
+                                                currentSettings.customLabels[it.id] = labelToPersist;
+                                                delete currentSettings.ignored_sign[it.id];
+                                            } else {
+                                                delete currentSettings.customLabels[it.id];
+                                                delete currentSettings.ignored_sign[it.id];
+                                            }
                                         }
                                     });
                                 }
                                 saveSettings(); applyLabelsToAllVisibleItems();
                             }, { button: { cls: 'menu-item--red' } }]);
-                            menuOptionsToAdd.push(['Usuń Podpis', () => { delete currentSettings.customLabels[id]; currentSettings.ignored_sign[id] = true; saveSettings(); applyLabelsToAllVisibleItems(); }, { button: { cls: 'menu-item--red' } }]);
+                            menuOptionsToAdd.push(['Usuń Podpis', () => {
+                                delete currentSettings.customLabels[id];
+                                currentSettings.ignored_sign[id] = true;
+                                saveSettings(); applyLabelsToAllVisibleItems();
+                            }, { button: { cls: 'menu-item--red' } }]);
                         }
                     } else {
                         if (currentLabelSource === 'none' || currentLabelSource === 'ignored') {
@@ -459,13 +502,19 @@
                                     currentSettings.teleportmass[tpMap] = { enabled: true, label: labelToApply };
                                     if (window.Engine && window.Engine.items && window.Engine.items.fetchLocationItems) {
                                         window.Engine.items.fetchLocationItems("g").forEach(it => {
-                                            if (getTpMap(getItemTeleport(it)) === tpMap) { delete currentSettings.customLabels[it.id]; delete currentSettings.ignored_sign[it.id]; }
+                                            if (getTpMap(getItemTeleport(it)) === tpMap) {
+                                                delete currentSettings.customLabels[it.id];
+                                                delete currentSettings.ignored_sign[it.id];
+                                            }
                                         });
                                     }
                                     saveSettings(); applyLabelsToAllVisibleItems();
                                 }
                             }, { button: { cls: 'menu-item--green' } }]);
-                            menuOptionsToAdd.push(['Usuń Podpis', () => { delete currentSettings.customLabels[id]; saveSettings(); applyLabelsToAllVisibleItems(); }, { button: { cls: 'menu-item--red' } }]);
+                            menuOptionsToAdd.push(['Usuń Podpis', () => {
+                                delete currentSettings.customLabels[id];
+                                saveSettings(); applyLabelsToAllVisibleItems();
+                            }, { button: { cls: 'menu-item--red' } }]);
                         }
                         else if (currentLabelSource === 'mass') {
                              menuOptionsToAdd.push(['Edytuj Podpisy', () => showWindow(uiMassEditWindow, uiMassEditWindow.querySelector('.zt-action-input'), id, currentMassLabel), { button: { cls: 'menu-item--green' } }]);
@@ -475,14 +524,23 @@
                                 if (window.Engine && window.Engine.items && window.Engine.items.fetchLocationItems) {
                                     window.Engine.items.fetchLocationItems("g").forEach(it => {
                                         if (getTpMap(getItemTeleport(it)) === tpMap) {
-                                            if (it.id === id) { currentSettings.customLabels[it.id] = labelToPersist; delete currentSettings.ignored_sign[it.id]; } 
-                                            else { delete currentSettings.customLabels[it.id]; delete currentSettings.ignored_sign[it.id]; }
+                                            if (it.id === id) {
+                                                currentSettings.customLabels[it.id] = labelToPersist;
+                                                delete currentSettings.ignored_sign[it.id];
+                                            } else {
+                                                delete currentSettings.customLabels[it.id];
+                                                delete currentSettings.ignored_sign[it.id];
+                                            }
                                         }
                                     });
                                 }
                                 saveSettings(); applyLabelsToAllVisibleItems();
                             }, { button: { cls: 'menu-item--red' } }]);
-                            menuOptionsToAdd.push(['Usuń Podpis', () => { delete currentSettings.customLabels[id]; currentSettings.ignored_sign[id] = true; saveSettings(); applyLabelsToAllVisibleItems(); }, { button: { cls: 'menu-item--red' } }]);
+                            menuOptionsToAdd.push(['Usuń Podpis', () => {
+                                delete currentSettings.customLabels[id];
+                                currentSettings.ignored_sign[id] = true;
+                                saveSettings(); applyLabelsToAllVisibleItems();
+                            }, { button: { cls: 'menu-item--red' } }]);
                         }
                     }
                     if (menuOptionsToAdd.length > 0) options.splice(spliceIndex, 0, ...menuOptionsToAdd);
@@ -490,12 +548,16 @@
             });
             isMenuIntercepted = true;
         }
+
         setTimeout(applyLabelsToAllVisibleItems, 500);
     }
 
     function addonStop() {
         removeAllTxov();
-        if (observer) { observer.disconnect(); observer = null; }
+        if (observer) {
+            observer.disconnect();
+            observer = null;
+        }
         if (uiAddWindow) { uiAddWindow.remove(); uiAddWindow = null; }
         if (uiEditWindow) { uiEditWindow.remove(); uiEditWindow = null; }
         if (uiMassEditWindow) { uiMassEditWindow.remove(); uiMassEditWindow = null; }
@@ -503,12 +565,15 @@
 
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
-        if (isEnabled) applyLabelsToAllVisibleItems(); else removeAllTxov();
+        if (isEnabled) applyLabelsToAllVisibleItems();
+        else removeAllTxov();
         saveSettings();
     }
 
     const checkApi = () => {
-        if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon) { setTimeout(checkApi, 500); return; }
+        if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon) {
+            setTimeout(checkApi, 500); return;
+        }
         window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle: onStateToggle });
     };
 
