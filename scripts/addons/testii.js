@@ -1,64 +1,94 @@
 // ==UserScript==
-// @name          Znacznik Teleportów baddonz
-// @version       02.06.2026
-// @description   Znacznik Teleportów
+// @name          Item Info baddonz
+// @version       01.06.2026
+// @description   Informacje o itemach
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
 // ==/UserScript==
 
-(function () {
+(function() {
     'use strict';
 
-    const ADDON_ID = "ZT";
+    const ADDON_ID = "II";
 
-    const config = {
-        "610": "D.AUK", "1224": "KENDAL", "630": "PORT", "1297": "TRIST", "8116": "EVE",
-        "3328": "SKAŁY", "1926": "MAHO", "3038": "K.LEG", "5858": "SK", "6773": "MARG",
-        "2868": "RUIN", "2869": "CICH", "180": "ANDA", "580": "MUSH", "632": "K.TROP",
-        "5738": "SHAE S1", "5740": "SHAE RED", "2532": "ZORG", "727": "WŁAD", "3149": "GOB",
-        "4157": "DZIK", "4156": "DZIK", "5293": "TOL ST", "2308": "ALIAS", "176": "AGAR",
-        "177": "AGAR", "125": "RAZIU", "2729": "KOB", "816": "KOB", "5395": "OWAD", "5397": "OWAD",
-        "333": "VARI", "2646": "VARI", "3436": "KOZA", "3437": "KOZA", "6535": "JOTU", "6537": "JOTU",
-        "6632": "TOL  P3", "6633": "TOL  P4", "6625": "LISZ", "6627": "LISZ", "6620": "GRAB", "6623": "GRAB",
-        "1204": "STOPA", "3530": "STOPA", "6615": "ZBROJ", "6634": "CHOU P1", "6636": "CHOU P3",
-        "6772": "NADZ", "6774": "MORT", "1325": "WIDMO", "3466": "OHYD", "1150": "GOPA",
-        "6781": "G.FIG", "3765": "CENT", "229": "KAMB", "4998": "KAMB", "6938": "JERT",
-        "6944": "M.RYC", "6946": "M.MAG", "6945": "M.ŁOW", "7066": "CZACH", "7069": "OZIR",
-        "7357": "MORS", "1620": "K.REM", "4271": "K.STAT", "7368": "BORG", "7375": "STWORZ",
-        "7057": "IFRY", "3409": "JACK", "1527": "HELG", "1525": "PIRAT", "1526": "HENRY",
-        "7352": "EOL", "7351": "EOL", "6956": "GRUBY", "3265": "BERK", "352": "GÓRAL", "7340": "WÓJT",
-        "7338": "TEŚC", "7466": "KOW", "7453": "AMUN", "7454": "AMUN", "7440": "FODUG", "7441": "FODUG",
-        "1322": "ADA", "1315": "ADA", "5872": "DWK", "7473": "GONS", "7474": "GONS", "5856": "BURK",
-        "5855": "BURK", "5851": "SHEB", "5849": "SHEB", "5862": "SK", "5861": "SK",
-        "6053": "TOR","6051": "TOR","7345": "K.ŚNI","6054": "DD", "6055": "DD", "7693": "OGR","4185": "PM","7688": "CERA", "7689": "CERA", "1912": "CZEM",
-        "2063": "BREH", "7701": "MYSZ", "5940": "SADO", "5941": "TS", "7694": "SAT", "5945": "BERG","5943": "ZUF",
-        "7864": "MARL", "7843": "M.MAD","7842": "M.MAD", "1480": "M.MAD", "1142": "ARACH", "1159": "ARACH","7859": "AI","7827": "HIPO",
-        "8181": "FANG","8180": "FANG", "3615": "DEND", "3597": "DEND", "5660": "TOLY", "5693": "JAJO", "8187": "WABI", "8186": "WABI",
-        "5694": "JAJO", "5684": "P9", "5683": "P9", "3339": "PUST", "2353": "ART", "2354": "ZOR",
-        "2356": "FUR", "3039": "SET", "3035": "CHOP", "6064": "NYMF", "1901": "CIUT", "4056": "SYBA",
-        "3327": "TER", "3335": "Z. TER", "3334": "Z. TER", "3341": "CHAG", "3340": "VERA",
-        "3361": "36", "3883": "63", "202": "63", "4046": "83", "1387": "83", "7353": "114",
-        "1739": "114", "4161": "144", "349": "144", "4066": "167", "264": "167", "4196": "190",
-        "6052": "190", "4206": "213", "1131": "213", "4266": "244", "3596": "244",
-        "4268": "279", "3037": "279", "189": "ORLA", "1746": "KIC", "6949": "RENE", "7060": "ARCY", "7477": "ZONS",
-        "6477": "ŁOWK", "6476": "PRZY", "7848": "MAGU", "5709": "TEZA", "5708": "TEZA",
-        "3312": "BB", "2357": "TH", "2355": "TH"
+    const styleSheet = document.createElement("style");
+    styleSheet.type = "text/css";
+    styleSheet.className = "ii-custom-styles";
+    styleSheet.innerText = `
+        .baddonz-ii-wnd { width: 210px; min-width: 210px; }
+        .baddonz-ii-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
+        .baddonz-ii-wnd .baddonz-setting-row { margin-bottom: 2px !important; }
+        .baddonz-ii-wnd .baddonz-text { font-size: 11px; }
+        .baddonz-ii-wnd hr { margin: 3px 0 !important; }
+        
+        body:not(.baddonz-ii-essence) .baddonz-essence-marker { display: none !important; }
+        body:not(.baddonz-ii-levels) .baddonz-levels-marker { display: none !important; }
+        body:not(.baddonz-ii-summary) .baddonz-summary-marker { display: none !important; }
+
+        body:not(.baddonz-ii-common) .baddonz-info-rarity-common { display: none !important; }
+        body:not(.baddonz-ii-upgraded) .baddonz-info-rarity-upgraded { display: none !important; }
+        body:not(.baddonz-ii-unique) .baddonz-info-rarity-unique { display: none !important; }
+        body:not(.baddonz-ii-heroic) .baddonz-info-rarity-heroic { display: none !important; }
+        body:not(.baddonz-ii-legendary) .baddonz-info-rarity-legendary { display: none !important; }
+
+        body.baddonz-ii-hide-opis.baddonz-ii-common .baddonz-desc-rarity-common { display: none !important; }
+        body.baddonz-ii-hide-opis.baddonz-ii-upgraded .baddonz-desc-rarity-upgraded { display: none !important; }
+        body.baddonz-ii-hide-opis.baddonz-ii-unique .baddonz-desc-rarity-unique { display: none !important; }
+        body.baddonz-ii-hide-opis.baddonz-ii-heroic .baddonz-desc-rarity-heroic { display: none !important; }
+        body.baddonz-ii-hide-opis.baddonz-ii-legendary .baddonz-desc-rarity-legendary { display: none !important; }
+    `;
+    if (!document.querySelector(".ii-custom-styles")) document.head.appendChild(styleSheet);
+
+    const UPGRADEABLE_RARITIES = ["legendary", "heroic", "unique", "upgraded", "common"];
+    const UPGRADEABLE_CLASSES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 29];
+    const ICON_STYLE = 'width: 22px; height: 22px; background-size: 100%; display: inline-block; vertical-align: middle;';
+
+    const LEGEND_UPGRADE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//upg/lege_enh_ball.gif&quot;);"></div>`;
+    const LEGEND_ESSENCE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//neu/pyl-sakryfikacji.gif&quot;);"></div>`;
+    const HEROIC_UPGRADE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy/upg/hero_enh_ball.gif&quot;);"></div>`;
+    const HEROIC_ESSENCE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//neu/ese_hero.gif&quot;);"></div>`;
+    const UNIQUE_UPGRADE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//upg/uniq_enh_ball.gif&quot;);"></div>`;
+    const UNIQUE_ESSENCE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//neu/ese_unikat.gif&quot;);"></div>`;
+    const UPGRADED_UPGRADE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//upg/upgr_enh_ball.gif&quot;);"></div>`;
+    const UPGRADED_ESSENCE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//neu/ese_ulep.gif&quot;);"></div>`;
+    const COMMON_UPGRADE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//upg/comm_enh_ball.gif&quot;);"></div>`;
+    const COMMON_ESSENCE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//neu/ese_zwycz.gif&quot;);"></div>`;
+    const GOLD_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://experimental.margonem.pl/img/goldIconNormal.png&quot;);"></div>`;
+
+    const LEGBON_SHORT = {
+        "curse": "KL",
+        "lastheal": "OR",
+        "facade": "FO",
+        "verycrit": "CBK",
+        "holytouch": "DA",
+        "glare": "OŚ",
+        "critred": "KO",
+        "cleanse": "PO",
+        "anguish": "KU",
+        "puncture": "PS",
+        "retaliation": "AO",
+        "frenzy": "ES"
     };
 
     let currentSettings = {
         enabled: true,
-        customLabels: {},
-        teleportmass: {},
-        ignored_sign: {}
+        windowOpacity: 2,
+        windowVisible: true,
+        amount_essence: true,
+        SHOW_LEGBON_MARKERS: true,
+        HIDE_OPIS: false,
+        UPGRADE_LEVEL: true,
+        SHOW_SUMMARY_LEGEND: true,
+        SHOW_COMMON: true,
+        SHOW_UPGRADED: true,
+        SHOW_UNIQUE: true,
+        SHOW_HEROIC: true,
+        SHOW_LEGENDARY: true
     };
 
-    let uiAddWindow = null;
-    let uiEditWindow = null;
-    let uiMassEditWindow = null;
-    let currentItemId = null;
+    let uiWindowElement = null;
     let observer = null;
-    let isMenuIntercepted = false;
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
@@ -71,22 +101,16 @@
             }
         } catch (e) {}
 
-        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
-
-        if (!currentSettings.customLabels) currentSettings.customLabels = {};
-        if (!currentSettings.teleportmass) currentSettings.teleportmass = {};
-        if (!currentSettings.ignored_sign) currentSettings.ignored_sign = {};
+        currentSettings = { ...currentSettings, ...accSettings };
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
-
-        const accKeys = ['enabled', 'customLabels', 'teleportmass', 'ignored_sign'];
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'amount_essence', 'SHOW_LEGBON_MARKERS', 'HIDE_OPIS', 'UPGRADE_LEVEL', 'SHOW_SUMMARY_LEGEND', 'SHOW_COMMON', 'SHOW_UPGRADED', 'SHOW_UNIQUE', 'SHOW_HEROIC', 'SHOW_LEGENDARY'];
+        
         let accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
-
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
 
         try {
@@ -98,269 +122,392 @@
         } catch (e) {}
     }
 
+    function updateBodyClasses() {
+        const body = document.body;
+        if (!currentSettings.enabled) {
+            body.classList.remove('baddonz-ii-hide-opis', 'baddonz-ii-essence', 'baddonz-ii-levels', 'baddonz-ii-summary', 'baddonz-ii-common', 'baddonz-ii-upgraded', 'baddonz-ii-unique', 'baddonz-ii-heroic', 'baddonz-ii-legendary');
+            return;
+        }
+        currentSettings.HIDE_OPIS ? body.classList.add('baddonz-ii-hide-opis') : body.classList.remove('baddonz-ii-hide-opis');
+        currentSettings.amount_essence ? body.classList.add('baddonz-ii-essence') : body.classList.remove('baddonz-ii-essence');
+        currentSettings.UPGRADE_LEVEL ? body.classList.add('baddonz-ii-levels') : body.classList.remove('baddonz-ii-levels');
+        currentSettings.SHOW_SUMMARY_LEGEND ? body.classList.add('baddonz-ii-summary') : body.classList.remove('baddonz-ii-summary');
+
+        currentSettings.SHOW_COMMON ? body.classList.add('baddonz-ii-common') : body.classList.remove('baddonz-ii-common');
+        currentSettings.SHOW_UPGRADED ? body.classList.add('baddonz-ii-upgraded') : body.classList.remove('baddonz-ii-upgraded');
+        currentSettings.SHOW_UNIQUE ? body.classList.add('baddonz-ii-unique') : body.classList.remove('baddonz-ii-unique');
+        currentSettings.SHOW_HEROIC ? body.classList.add('baddonz-ii-heroic') : body.classList.remove('baddonz-ii-heroic');
+        currentSettings.SHOW_LEGENDARY ? body.classList.add('baddonz-ii-legendary') : body.classList.remove('baddonz-ii-legendary');
+    }
+
+    function formatNumber(num) {
+        return num.toLocaleString('pl-PL', { maximumFractionDigits: 0 });
+    }
+
+    function formatBigNumber(num, isGold = false) {
+        if (num < 1000) return num;
+        if (num >= 1000000) {
+            const scaled = num / 1000000;
+            let formatted;
+            if (isGold) {
+                const rounded = Math.ceil(scaled * 100) / 100;
+                formatted = rounded.toFixed(rounded % 1 === 0 ? 0 : (rounded * 10) % 1 === 0 ? 1 : 2);
+            } else {
+                formatted = scaled.toFixed(scaled % 1 === 0 ? 0 : 1);
+            }
+            return formatted.replace(/\.0+$/, '') + 'm';
+        } else if (num >= 1000) {
+            const scaled = num / 1000;
+            let formatted;
+            if (isGold) {
+                const rounded = Math.ceil(scaled * 100) / 100;
+                formatted = rounded.toFixed(rounded % 1 === 0 ? 0 : (rounded * 10) % 1 === 0 ? 1 : 2);
+            } else {
+                formatted = scaled.toFixed(scaled % 1 === 0 ? 0 : 1);
+            }
+            return formatted.replace(/\.0+$/, '') + 'k';
+        }
+        return num.toString();
+    }
+
+    function calculateCosts(level, artisanBonus, rarity) {
+        const multipliers = [1.0, 1.1, 1.3, 1.6, 2.0];
+        let basePoints;
+        let totalGoldCost;
+
+        switch (rarity) {
+            case "common": basePoints = (Math.floor(level / 10) * 10) + 180; totalGoldCost = 10 * Math.pow(level, 2) + 1300 * level; break;
+            case "unique": basePoints = 10 * level + 1800; totalGoldCost = 100 * Math.pow(level, 2) + 13000 * level; break;
+            case "upgraded": basePoints = 150 * level + 27000; totalGoldCost = 400 * Math.pow(level, 2) + 52000 * level; break;
+            case "heroic": basePoints = 100 * level + 18000; totalGoldCost = 300 * Math.pow(level, 2) + 39000 * level; break;
+            case "legendary": basePoints = (180 + level) * 1000; totalGoldCost = 600 * Math.pow(level, 2) + 78000 * level; break;
+            default: return null;
+        }
+
+        const costs = multipliers.map(m => Math.round(basePoints * m));
+        const totalUpgradePoints = costs.reduce((a, b) => a + b, 0);
+
+        const baseEssenceValue = Math.round(level / 10 + 10);
+        let totalUpgradeEssence = baseEssenceValue * 3;
+        const lastDigit = level % 10;
+
+        if (lastDigit >= 2 && lastDigit <= 4) totalUpgradeEssence += 1;
+        else if (lastDigit >= 5 && lastDigit <= 8) totalUpgradeEssence -= 1;
+
+        let dismantleEssence = baseEssenceValue;
+        if (artisanBonus) {
+            const bonusPercentage = parseInt(artisanBonus, 10) / 100;
+            if (!isNaN(bonusPercentage)) {
+                dismantleEssence = Math.round(baseEssenceValue * bonusPercentage);
+            }
+        }
+
+        return { costs: costs, totalPoints: totalUpgradePoints, totalEssence: totalUpgradeEssence, totalGold: totalGoldCost, dismantleEssence: dismantleEssence };
+    }
+
     function parseStats(stats) {
         if (!stats || typeof stats !== "string") return {};
         const result = {};
         for (const pair of stats.split(";")) {
             const [key, value] = pair.split("=");
-            if (key && value !== undefined) {
-                result[key] = value;
-            }
+            if (key && value !== undefined) result[key] = value;
         }
         return result;
     }
 
-    function getItemTeleport(it) {
-        if (!it) return "";
-        const stats = it._cachedStats || parseStats(it.stat || it.stats || "");
-        let tp = "";
-        if (stats.teleport) tp = stats.teleport;
-        else if (stats.custom_teleport && stats.custom_teleport !== "true") tp = stats.custom_teleport;
-        return tp;
-    }
-
-    function getTpMap(tp) {
-        if (!tp || typeof tp !== "string") return "";
-        return tp.split(",")[0];
-    }
-
-    function getAutoLabel(tp, tpMap) {
-        return config[tp] || config[tpMap];
-    }
-
-    function _addSpanToElement(el, text) {
-        let tz = el.querySelector(".znacznik-teleport");
-        if (tz && tz.innerText === text) return;
+    // ==========================================
+    // GLOBALNY SYSTEM ZNACZNIKÓW BONUSÓW
+    // ==========================================
+    function _addSpanToElement(el, text, isBless) {
+        let tz = el.querySelector(".baddonz-legbon-marker");
+        if (tz && tz.innerText === text && tz.dataset.isBless === String(isBless)) return;
 
         if (!tz) {
             tz = document.createElement("span");
-            tz.className = "znacznik-teleport";
+            tz.className = "baddonz-legbon-marker";
             el.appendChild(tz);
         }
 
         tz.innerText = text;
+        tz.dataset.isBless = isBless;
+        
+        // Dopasowany wymiar tła, brak zbędnego paddingu, Arial Black
         Object.assign(tz.style, {
-            position: "absolute", top: "0", left: "0",
-            width: "100%", height: "100%", color: "#fff",
-            fontSize: `${text.replace(/\s/g, '').length < 5 ? 9 : 8}px`,
-            textAlign: "center", lineHeight: "1.5",
-            textShadow: `-2px -2px 0 black, -1px -2px 0 black, 0px -2px 0 black, 1px -2px 0 black, 2px -2px 0 black, -2px -1px 0 black, 2px -1px 0 black, -2px 0px 0 black, 2px 0px 0 black, -2px 1px 0 black, 2px 1px 0 black, -2px 2px 0 black, -1px 2px 0 black, 0px 2px 0 black, 1px 2px 0 black, 2px 2px 0 black`,
+            position: "absolute",
+            left: "0",
+            backgroundColor: "rgba(0, 0, 0, 0.75)",
+            color: "#fff",
+            fontSize: "9px",
+            padding: "0px 1px",
+            width: "fit-content",
+            height: "fit-content",
             fontFamily: "'Arial Black', Gadget, sans-serif",
-            userSelect: "none", pointerEvents: "none",
-            textRendering: "optimizeLegibility",
+            lineHeight: "1.1",
+            userSelect: "none",
+            pointerEvents: "none",
             zIndex: "2"
         });
+
+        // Weryfikacja czy to błogosławieństwo (cl: 25) żeby zmienić pozycje L-G
+        if (isBless) {
+            tz.style.top = "0";
+            tz.style.bottom = "auto";
+            tz.style.borderBottomRightRadius = "3px"; // Ładne zaokrąglenie p-d
+            tz.style.borderTopRightRadius = "0";
+        } else {
+            tz.style.bottom = "0";
+            tz.style.top = "auto";
+            tz.style.borderTopRightRadius = "3px"; // Ładne zaokrąglenie p-g
+            tz.style.borderBottomRightRadius = "0";
+        }
     }
 
-    function removeAllTxov() {
-        document.querySelectorAll('.znacznik-teleport').forEach(el => el.remove());
+    function removeAllLegbonMarkers() {
+        document.querySelectorAll('.baddonz-legbon-marker').forEach(el => el.remove());
     }
 
-    // GŁÓWNA ZMIANA: Lepsze radzenie sobie z tipami i wirtualnymi przedmiotami
     function applyMarkerToElement(el) {
-        if (!currentSettings.enabled) return;
         if (!el || el.nodeType !== 1) return;
-
+        
         let $el = $(el);
-        let itemData = $el.data('item');
-
-        // Wyciągamy ID. Zabezpieczenie na wypadek, gdyby ID było zaszyte w danych, a nie w klasie
-        let idMatch = el.className.match(/item-id-(\d+)/);
-        let id = idMatch ? idMatch[1] : (itemData ? itemData.id : null);
-
-        // Jeśli element nie ma danych w jQuery, a mamy ID z klasy - pytamy silnik gry (dla normalnych przedmiotów)
-        if (!itemData && id && window.Engine && window.Engine.items) {
-            itemData = window.Engine.items.getItemById(id);
+        let itemData = $el.data('item'); 
+        
+        if (!itemData) {
+            let idMatch = el.className.match(/item-id-(\d+)/);
+            if (idMatch && window.Engine && window.Engine.items) {
+                itemData = window.Engine.items.getItemById(idMatch[1]);
+            }
         }
 
-        // Usunięty ścisły warunek (!id) - teraz jeśli mamy itemData (nawet z dymku czatu bez własnego ID), idziemy dalej
         if (!itemData) return;
 
-        const tp = getItemTeleport(itemData);
-        if (!tp) {
-            let tz = el.querySelector(".znacznik-teleport");
-            if (tz) tz.remove();
-            return;
+        // POBIERAMY Z PAMIĘCI GRY ALBO PRZERABIAMY TYLKO LOKALNIE
+        // Absolutnie nic nie nadpisujemy do obiektu itemData!
+        let stats = itemData._cachedStats || parseStats(itemData.stat || itemData.stats);
+        
+        if (stats) {
+            // Szukamy któregokolwiek bonusu z tych 3 typów
+            let legbonStr = stats.legbon || stats.socket_injection_legbon || stats.socket_fleeting_legbon;
+            
+            if (legbonStr) {
+                let legbonName = legbonStr.split(',')[0];
+                if (LEGBON_SHORT[legbonName]) {
+                    // Sprawdzamy, czy przedmiot to "błogo" (cl = 25)
+                    let isBless = (parseInt(itemData.cl, 10) === 25);
+                    _addSpanToElement(el, LEGBON_SHORT[legbonName], isBless);
+                    return;
+                }
+            }
         }
-
-        const tpMap = getTpMap(tp);
-
-        const customLabel = id ? currentSettings.customLabels[id] : null;
-        const massLabelData = currentSettings.teleportmass[tpMap];
-        const autoLabel = getAutoLabel(tp, tpMap);
-        const isDefaultIgnored = id ? currentSettings.ignored_sign[id] : false;
-
-        let finalLabel = null;
-        if (isDefaultIgnored) {
-            finalLabel = null;
-        } else if (customLabel) {
-            finalLabel = customLabel;
-        } else if (massLabelData?.enabled) {
-            finalLabel = massLabelData.label || '';
-        } else if (autoLabel) {
-            finalLabel = autoLabel;
-        }
-
-        if (finalLabel) {
-            _addSpanToElement(el, finalLabel);
-        } else {
-            let tz = el.querySelector(".znacznik-teleport");
-            if (tz) tz.remove();
-        }
+        
+        let existingMarker = el.querySelector(".baddonz-legbon-marker");
+        if (existingMarker) existingMarker.remove();
     }
 
-    function applyLabelsToAllVisibleItems() {
-        if (!currentSettings.enabled) {
-            removeAllTxov();
+    function applyLegbonMarkersToAll() {
+        if (!currentSettings.enabled || !currentSettings.SHOW_LEGBON_MARKERS) {
+            removeAllLegbonMarkers();
             return;
         }
         document.querySelectorAll('.item').forEach(applyMarkerToElement);
     }
+    // ==========================================
 
-    const intercept = (obj, key, cb) => {
-        const _orig = obj[key];
-        obj[key] = function (...args) {
-            cb(...args);
-            return _orig.apply(this, args);
-        };
-    };
 
-    function validateLabelInput(newLabelInput) {
-        const MAX_CHARS_WITHOUT_SPACES = 8;
-        const MAX_SPACES = 2;
+    // Główny procesor HTML dymku
+    function injectCustomInfo(tipHtml, item) {
+        if (!tipHtml || typeof tipHtml !== 'string') return tipHtml;
+        if (tipHtml.includes('baddonz-item-info-injected')) return tipHtml;
 
-        newLabelInput = newLabelInput.toUpperCase();
-        const charsWithoutSpaces = newLabelInput.replace(/\s/g, '');
-        const spaceCount = (newLabelInput.match(/\s/g) || []).length;
-        if (charsWithoutSpaces.length > MAX_CHARS_WITHOUT_SPACES) return false;
-        if (spaceCount > MAX_SPACES) return false;
+        const stats = item._cachedStats || parseStats(item.stat);
+        
+        let $tip = $('<div>').html(tipHtml);
+        $tip.append('<div style="display:none;" class="baddonz-item-info-injected"></div>');
 
-        let finalLabel = newLabelInput;
-        let cleanLabelForBreak = newLabelInput.replace(/\s/g, '');
-        if (cleanLabelForBreak.length > 5 && newLabelInput.indexOf(' ') === -1) {
-            const projectedLength = newLabelInput.slice(0, 5).length + 1 + newLabelInput.slice(5).length;
-            if ((projectedLength - (spaceCount + 1)) <= MAX_CHARS_WITHOUT_SPACES) {
-                finalLabel = newLabelInput.slice(0, 5) + ' ' + newLabelInput.slice(5);
+        let itemLevel = parseInt(stats?.lvl, 10);
+        if (stats.lowreq) itemLevel += parseInt(stats.lowreq, 10);
+        const itemClass = item.cl;
+        const itemRarity = stats?.rarity;
+
+        let costs = null;
+        if (!isNaN(itemLevel) && UPGRADEABLE_CLASSES.includes(itemClass) && UPGRADEABLE_RARITIES.includes(itemRarity)) {
+            costs = calculateCosts(itemLevel, stats.artisanbon, itemRarity);
+        }
+
+        let dismantleEssence = item.salvageItems;
+        if (dismantleEssence === undefined && costs) {
+            dismantleEssence = costs.dismantleEssence;
+        }
+
+        if (dismantleEssence !== undefined && dismantleEssence !== null) {
+            const essenceHtml = ` <span class="c_green baddonz-essence-marker">[${dismantleEssence}]</span>`;
+            let $nameEl = $tip.find('.item-name, .tip-item-stat-item-name, .name').first();
+            if ($nameEl.length && !$nameEl.html().includes('baddonz-essence-marker')) {
+                $nameEl.append(essenceHtml);
             }
         }
-        return finalLabel;
+
+        if (stats?.loot) {
+            const parts = stats.loot.split(',');
+            if (parts.length >= 4) {
+                const groupSize = parts[2];
+                const timestamp = parts[3];
+                const date = new Date(Number(timestamp) * 1000);
+                const dateString = date.toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const timeString = date.toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+                
+                let $looterEl = $tip.find('.tip-item-stat-loot.looter, .looter').first();
+                if ($looterEl.length) {
+                    let looterText = $looterEl.html();
+                    if (!looterText.includes(timeString.substring(0, 5))) {
+                        looterText = looterText.replace(new RegExp(dateString.replace(/\./g, '\\.'), 'g'), `${dateString} ${timeString}`);
+                        looterText = looterText.replace(/wraz z drużyną/, `wraz z drużyną (<span class="c_orange">${groupSize}</span>)`);
+                        $looterEl.html(looterText);
+                    }
+                }
+            }
+        }
+
+        if (costs) {
+            const totalEssence = costs.totalEssence;
+            const totalGold = costs.totalGold;
+
+            let upgradeLines1_4 = [];
+            for (let i = 0; i < 4; i++) upgradeLines1_4.push(`+${i+1}: ${formatBigNumber(costs.costs[i])}`);
+            const levelsContent = `<div style="text-align: center;"><span class="c_blue">Koszt Poziomów Ulepszenia:</span></div>${upgradeLines1_4.join(' / ')}<br>+5: ${formatBigNumber(costs.costs[4])} | <span class="c_green">${totalEssence} esy</span> | <span class="c_yellow">${formatBigNumber(totalGold, true)} złota</span>`;
+            let insertionHtml = `<div class="item-tip-section baddonz-levels-marker baddonz-info-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center; font-size: 11px;">${levelsContent}</div></div>`;
+
+            let upgradeIcon = LEGEND_UPGRADE_ICON, essenceIcon = LEGEND_ESSENCE_ICON;
+            if (itemRarity === 'heroic') { upgradeIcon = HEROIC_UPGRADE_ICON; essenceIcon = HEROIC_ESSENCE_ICON; }
+            else if (itemRarity === 'unique') { upgradeIcon = UNIQUE_UPGRADE_ICON; essenceIcon = UNIQUE_ESSENCE_ICON; }
+            else if (itemRarity === 'upgraded') { upgradeIcon = UPGRADED_UPGRADE_ICON; essenceIcon = UPGRADED_ESSENCE_ICON; }
+            else if (itemRarity === 'common') { upgradeIcon = COMMON_UPGRADE_ICON; essenceIcon = COMMON_ESSENCE_ICON; }
+
+            const summaryContent = `${upgradeIcon} <span class="c_blue">${formatNumber(costs.totalPoints)}</span>&nbsp;&nbsp;&nbsp;&nbsp;${essenceIcon} <span class="c_green">${totalEssence}</span>&nbsp;&nbsp;&nbsp;&nbsp;${GOLD_ICON} <span class="c_yellow">${formatBigNumber(totalGold, true)}</span>`;
+            insertionHtml += `<div class="item-tip-section baddonz-summary-marker baddonz-info-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center;">${summaryContent}</div></div>`;
+            
+            let $s7 = $tip.find('.item-tip-section.s-7');
+            if ($s7.length) {
+                $s7.addClass(`baddonz-desc-rarity-${itemRarity}`);
+            }
+
+            let $s8 = $tip.find('.item-tip-section.s-8');
+            if ($s8.length) {
+                $s8.before(insertionHtml);
+            } else if ($s7.length) {
+                $s7.after(insertionHtml);
+            } else {
+                let $s5 = $tip.find('.item-tip-section.s-5');
+                if ($s5.length) $s5.after(insertionHtml);
+                else $tip.append(insertionHtml);
+            }
+        }
+
+        return $tip.html();
     }
 
-    function centerWindow(windowElement) {
-        const screenWidth = window.innerWidth;
-        const screenHeight = window.innerHeight;
-        const windowWidth = windowElement.offsetWidth || 200;
-        const windowHeight = windowElement.offsetHeight || 100;
-        windowElement.style.left = `${(screenWidth - windowWidth) / 2}px`;
-        windowElement.style.top = `${(screenHeight - windowHeight) / 2}px`;
+    function hookTipFunction() {
+        if (typeof $ !== 'undefined' && $.fn && $.fn.tip && !$.fn.tip._baddonzHooked) {
+            const originalTip = $.fn.tip;
+            $.fn.tip = function(content, t_type, i_type, params) {
+                if (typeof content === 'string' && content.length > 0) {
+                    const item = this.data('item');
+                    if (item) {
+                        try {
+                            content = injectCustomInfo(content, item);
+                        } catch (e) {}
+                    }
+                }
+                return originalTip.call(this, content, t_type, i_type, params);
+            };
+            $.fn.tip._baddonzHooked = true;
+        }
+    }
+
+    function applyToExistingTips() {
+        if (!window.TIPS || !window.TIPS.allTips) return;
+        
+        let modifiedAny = false;
+        $('[tip-id]').each(function() {
+            const $el = $(this);
+            const id = $el.attr('tip-id');
+            const item = $el.data('item');
+            if (item && window.TIPS.allTips[id]) {
+                const newHtml = injectCustomInfo(window.TIPS.allTips[id], item);
+                if (newHtml !== window.TIPS.allTips[id]) {
+                    window.TIPS.allTips[id] = newHtml;
+                    modifiedAny = true;
+                }
+            }
+        });
+
+        const $visibleTip = window.TIPS.$tip;
+        if (modifiedAny && $visibleTip && $visibleTip.is(':visible')) {
+            const visibleId = $visibleTip.attr('data-tip-id');
+            if (visibleId && window.TIPS.allTips[visibleId]) {
+                $visibleTip.html(window.TIPS.allTips[visibleId]);
+            }
+        }
     }
 
     function buildUI() {
-        const actionBodyHtml = `
-            <div class="baddonz-flex column centered" style="padding: 5px;">
-                <input type="text" class="baddonz-input zt-action-input" maxlength="8" style="width: 100%; text-align: center;" autocomplete="off">
-                <div class="baddonz-flex between" style="width: 100%; gap: 10px; margin-top: 10px;">
-                    <button class="baddonz-button zt-action-cancel-btn" style="flex: 1;">Anuluj</button>
-                    <button class="baddonz-button zt-action-ok-btn" style="flex: 1;">OK</button>
-                </div>
+        const bodyHtml = `
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-essence ${currentSettings.amount_essence ? 'active' : ''}"></div><span class="baddonz-text">Ilość Esencji</span></div>
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-legbon-markers ${currentSettings.SHOW_LEGBON_MARKERS ? 'active' : ''}"></div><span class="baddonz-text">Skróty bonusów leg.</span></div>
+            <hr style="width: 100%; border-color: #303030; margin: 3px 0;">
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-hide-opis ${currentSettings.HIDE_OPIS ? 'active' : ''}"></div><span class="baddonz-text">Ukrywaj opis</span></div>
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-levels ${currentSettings.UPGRADE_LEVEL ? 'active' : ''}"></div><span class="baddonz-text">Poziomy ulepszenia</span></div>
+            <div class="baddonz-setting-row"><div class="baddonz-checkbox ii-summary ${currentSettings.SHOW_SUMMARY_LEGEND ? 'active' : ''}"></div><span class="baddonz-text">Podsumowanie ulepszenia</span></div>
+            <div class="baddonz-grid-2col" style="margin-top: 2px;">
+                <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-common ${currentSettings.SHOW_COMMON ? 'active' : ''}"></div><span class="baddonz-text" style="color: #b0b0b0;">Zwykłe</span></div>
+                <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-upgraded ${currentSettings.SHOW_UPGRADED ? 'active' : ''}"></div><span class="baddonz-text" style="color: #cb50ff;">Ulepszone</span></div>
+                <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-unique ${currentSettings.SHOW_UNIQUE ? 'active' : ''}"></div><span class="baddonz-text" style="color: #f0d322;">Unikaty</span></div>
+                <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-heroic ${currentSettings.SHOW_HEROIC ? 'active' : ''}"></div><span class="baddonz-text" style="color: #0080ff;">Heroiki</span></div>
+                <div class="baddonz-label-wrapper"><div class="baddonz-checkbox ii-legendary ${currentSettings.SHOW_LEGENDARY ? 'active' : ''}"></div><span class="baddonz-text" style="color: #ff0000;">Legendy</span></div>
             </div>
         `;
 
-        uiAddWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Dodaj Znacznik", actionBodyHtml, { width: '200px', customId: 'baddonz-zt-wnd-add', hasSettings: false, hasCollapse: false, hasClose: true });
-        uiEditWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Edytuj Znacznik", actionBodyHtml, { width: '200px', customId: 'baddonz-zt-wnd-edit', hasSettings: false, hasCollapse: false, hasClose: true });
-        uiMassEditWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Edytuj Podpisy", actionBodyHtml, { width: '200px', customId: 'baddonz-zt-wnd-mass', hasSettings: false, hasCollapse: false, hasClose: true });
+        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Item Info", bodyHtml, {
+            width: '210px',
+            customId: 'baddonz-ii-wnd',
+            hasSettings: false,
+            hasCollapse: false,
+            hasClose: true
+        });
+        uiWindowElement.classList.add('baddonz-ii-wnd');
 
-        uiAddWindow.classList.add('baddonz-zt-wnd-add');
-        uiEditWindow.classList.add('baddonz-zt-wnd-edit');
-        uiMassEditWindow.classList.add('baddonz-zt-wnd-mass');
-
-        uiAddWindow.style.display = 'none';
-        uiEditWindow.style.display = 'none';
-        uiMassEditWindow.style.display = 'none';
-
-        const addInput = uiAddWindow.querySelector('.zt-action-input');
-        const editInput = uiEditWindow.querySelector('.zt-action-input');
-        const massEditInput = uiMassEditWindow.querySelector('.zt-action-input');
-
-        uiAddWindow.querySelector('.baddonz-close-button').addEventListener('click', () => uiAddWindow.style.display = 'none');
-        uiEditWindow.querySelector('.baddonz-close-button').addEventListener('click', () => uiEditWindow.style.display = 'none');
-        uiMassEditWindow.querySelector('.baddonz-close-button').addEventListener('click', () => uiMassEditWindow.style.display = 'none');
-
-        uiAddWindow.querySelector('.zt-action-cancel-btn').addEventListener('click', () => uiAddWindow.style.display = 'none');
-        uiEditWindow.querySelector('.zt-action-cancel-btn').addEventListener('click', () => uiEditWindow.style.display = 'none');
-        uiMassEditWindow.querySelector('.zt-action-cancel-btn').addEventListener('click', () => uiMassEditWindow.style.display = 'none');
-
-        const handleAdd = () => {
-            const finalLabel = validateLabelInput(addInput.value.trim());
-            if (finalLabel) {
-                currentSettings.customLabels[currentItemId] = finalLabel;
-                delete currentSettings.ignored_sign[currentItemId];
-                saveSettings(); applyLabelsToAllVisibleItems();
-                uiAddWindow.style.display = 'none';
-            } else if (addInput.value.trim() === '') uiAddWindow.style.display = 'none';
+        const bindToggle = (className, key, callback = null) => {
+            const cb = uiWindowElement.querySelector(`.${className}`);
+            cb.addEventListener('click', () => {
+                currentSettings[key] = cb.classList.toggle('active');
+                saveSettings();
+                updateBodyClasses();
+                if (callback) callback();
+            });
         };
 
-        const handleEdit = () => {
-            const finalLabel = validateLabelInput(editInput.value.trim());
-            if (finalLabel) {
-                currentSettings.customLabels[currentItemId] = finalLabel;
-                delete currentSettings.ignored_sign[currentItemId];
-                saveSettings(); applyLabelsToAllVisibleItems();
-                uiEditWindow.style.display = 'none';
-            } else if (editInput.value.trim() === '') {
-                delete currentSettings.customLabels[currentItemId];
-                currentSettings.ignored_sign[currentItemId] = true;
-                saveSettings(); applyLabelsToAllVisibleItems();
-                uiEditWindow.style.display = 'none';
-            }
-        };
-
-        const handleMassEdit = () => {
-            const finalLabel = validateLabelInput(massEditInput.value.trim());
-            
-            let el = document.querySelector(`.item-id-${currentItemId}`);
-            let item = el ? $(el).data('item') : null;
-            if (!item && window.Engine.items) item = window.Engine.items.getItemById(currentItemId);
-
-            const tp = getItemTeleport(item);
-            const tpMap = getTpMap(tp);
-
-            if (finalLabel) {
-                currentSettings.teleportmass[tpMap] = { enabled: true, label: finalLabel };
-                saveSettings(); applyLabelsToAllVisibleItems();
-                uiMassEditWindow.style.display = 'none';
-            } else if (massEditInput.value.trim() === '') {
-                delete currentSettings.teleportmass[tpMap];
-                saveSettings(); applyLabelsToAllVisibleItems();
-                uiMassEditWindow.style.display = 'none';
-            }
-        };
-
-        uiAddWindow.querySelector('.zt-action-ok-btn').addEventListener('click', handleAdd);
-        addInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAdd(); });
-
-        uiEditWindow.querySelector('.zt-action-ok-btn').addEventListener('click', handleEdit);
-        editInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleEdit(); });
-
-        uiMassEditWindow.querySelector('.zt-action-ok-btn').addEventListener('click', handleMassEdit);
-        massEditInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleMassEdit(); });
-    }
-
-    function showWindow(wnd, input, id, initialValue = '') {
-        currentItemId = id;
-        input.value = initialValue;
-        wnd.style.display = 'flex';
-        centerWindow(wnd);
-        wnd.dispatchEvent(new Event('mousedown'));
-        input.focus();
+        bindToggle('ii-essence', 'amount_essence');
+        bindToggle('ii-legbon-markers', 'SHOW_LEGBON_MARKERS', applyLegbonMarkersToAll);
+        bindToggle('ii-hide-opis', 'HIDE_OPIS');
+        bindToggle('ii-levels', 'UPGRADE_LEVEL');
+        bindToggle('ii-summary', 'SHOW_SUMMARY_LEGEND');
+        
+        bindToggle('ii-common', 'SHOW_COMMON');
+        bindToggle('ii-upgraded', 'SHOW_UPGRADED');
+        bindToggle('ii-unique', 'SHOW_UNIQUE');
+        bindToggle('ii-heroic', 'SHOW_HEROIC');
+        bindToggle('ii-legendary', 'SHOW_LEGENDARY');
     }
 
     function addonInit() {
         loadSettings();
-        if (!uiAddWindow) buildUI();
+        if (!uiWindowElement) buildUI();
+        updateBodyClasses();
 
+        hookTipFunction();
+        
         observer = new MutationObserver((mutations) => {
-            if (!currentSettings.enabled) return;
+            if (!currentSettings.enabled || !currentSettings.SHOW_LEGBON_MARKERS) return;
             
             mutations.forEach(mutation => {
                 mutation.addedNodes.forEach(node => {
@@ -381,193 +528,29 @@
 
         observer.observe(document.body, { childList: true, subtree: true });
 
-        if (!isMenuIntercepted) {
-            intercept(window.Engine.interface, 'showPopupMenu', (options, event) => {
-                if (!currentSettings.enabled) return;
-
-                let target = event.target;
-                let $itemEl = $(target).closest('.item');
-                if (!$itemEl.length && target.classList.contains('item')) {
-                    $itemEl = $(target);
-                }
-
-                const idMatch = $itemEl.attr('class')?.match(/item-id-(\d+)/);
-                const id = idMatch ? idMatch[1] : null;
-                if (!id) return;
-
-                let item = $itemEl.data('item');
-                if (!item && window.Engine.items) {
-                    item = window.Engine.items.getItemById(id);
-                }
-                
-                if (!item) return;
-
-                const tp = getItemTeleport(item);
-                if (!tp) return;
-
-                const tpMap = getTpMap(tp);
-                const autoLabel = getAutoLabel(tp, tpMap);
-                const hasCustomLabel = currentSettings.customLabels.hasOwnProperty(id);
-                const isMassLabeledGlobally = currentSettings.teleportmass[tpMap]?.enabled === true;
-                const currentMassLabel = currentSettings.teleportmass[tpMap]?.label;
-                const isIgnoredSingularly = currentSettings.ignored_sign.hasOwnProperty(id);
-                
-                let currentLabelSource = 'none';
-
-                if (isIgnoredSingularly) currentLabelSource = 'ignored';
-                else if (hasCustomLabel) currentLabelSource = 'custom';
-                else if (isMassLabeledGlobally) currentLabelSource = 'mass';
-                else if (autoLabel) currentLabelSource = 'config';
-
-                let menuOptionsToAdd = [];
-                let spliceIndex = options.length - 1;
-
-                const stats = item._cachedStats || parseStats(item.stat || item.stats || "");
-
-                if (tp && (stats.custom_teleport || stats.teleport)) {
-                    if (autoLabel) {
-                        if (currentLabelSource === 'config') {
-                            menuOptionsToAdd.push(['Edytuj Podpis', () => showWindow(uiEditWindow, uiEditWindow.querySelector('.zt-action-input'), id, autoLabel), { button: { cls: 'menu-item--green' } }]);
-                            menuOptionsToAdd.push(['Usuń Podpis', () => {
-                                delete currentSettings.customLabels[id];
-                                currentSettings.ignored_sign[id] = true;
-                                saveSettings(); applyLabelsToAllVisibleItems();
-                            }, { button: { cls: 'menu-item--red' } }]);
-                        }
-                        else if (currentLabelSource === 'ignored') {
-                            menuOptionsToAdd.push(['Przywróć Domyślny Podpis', () => {
-                                delete currentSettings.ignored_sign[id];
-                                delete currentSettings.customLabels[id];
-                                saveSettings(); applyLabelsToAllVisibleItems();
-                            }, { button: { cls: 'menu-item--green' } }]);
-                        }
-                        else if (currentLabelSource === 'custom') {
-                            menuOptionsToAdd.push(['Edytuj Podpis', () => showWindow(uiEditWindow, uiEditWindow.querySelector('.zt-action-input'), id, currentSettings.customLabels[id]), { button: { cls: 'menu-item--green' } }]);
-                            menuOptionsToAdd.push(['Podpisanie tych samych mapek teleportu', () => {
-                                let labelToApply = currentSettings.customLabels[id] || autoLabel;
-                                if (labelToApply) {
-                                    currentSettings.teleportmass[tpMap] = { enabled: true, label: labelToApply };
-                                    if (window.Engine && window.Engine.items && window.Engine.items.fetchLocationItems) {
-                                        window.Engine.items.fetchLocationItems("g").forEach(it => {
-                                            if (getTpMap(getItemTeleport(it)) === tpMap) {
-                                                delete currentSettings.customLabels[it.id];
-                                                delete currentSettings.ignored_sign[it.id];
-                                            }
-                                        });
-                                    }
-                                    saveSettings(); applyLabelsToAllVisibleItems();
-                                }
-                            }, { button: { cls: 'menu-item--green' } }]);
-                            menuOptionsToAdd.push(['Usuń Podpis', () => {
-                                delete currentSettings.customLabels[id];
-                                currentSettings.ignored_sign[id] = true;
-                                saveSettings(); applyLabelsToAllVisibleItems();
-                            }, { button: { cls: 'menu-item--red' } }]);
-                        }
-                        else if (currentLabelSource === 'mass') {
-                            menuOptionsToAdd.push(['Edytuj Podpisy', () => showWindow(uiMassEditWindow, uiMassEditWindow.querySelector('.zt-action-input'), id, currentMassLabel), { button: { cls: 'menu-item--green' } }]);
-                            menuOptionsToAdd.push(['Podpisywanie tych samych mapek teleportu', () => {
-                                const labelToPersist = currentMassLabel;
-                                delete currentSettings.teleportmass[tpMap];
-                                if (window.Engine && window.Engine.items && window.Engine.items.fetchLocationItems) {
-                                    window.Engine.items.fetchLocationItems("g").forEach(it => {
-                                        if (getTpMap(getItemTeleport(it)) === tpMap) {
-                                            if (it.id === id) {
-                                                currentSettings.customLabels[it.id] = labelToPersist;
-                                                delete currentSettings.ignored_sign[it.id];
-                                            } else {
-                                                delete currentSettings.customLabels[it.id];
-                                                delete currentSettings.ignored_sign[it.id];
-                                            }
-                                        }
-                                    });
-                                }
-                                saveSettings(); applyLabelsToAllVisibleItems();
-                            }, { button: { cls: 'menu-item--red' } }]);
-                            menuOptionsToAdd.push(['Usuń Podpis', () => {
-                                delete currentSettings.customLabels[id];
-                                currentSettings.ignored_sign[id] = true;
-                                saveSettings(); applyLabelsToAllVisibleItems();
-                            }, { button: { cls: 'menu-item--red' } }]);
-                        }
-                    } else {
-                        if (currentLabelSource === 'none' || currentLabelSource === 'ignored') {
-                            menuOptionsToAdd.push(['Dodaj Podpis', () => showWindow(uiAddWindow, uiAddWindow.querySelector('.zt-action-input'), id), { button: { cls: 'menu-item--green' } }]);
-                        }
-                        else if (currentLabelSource === 'custom') {
-                            menuOptionsToAdd.push(['Edytuj Podpis', () => showWindow(uiEditWindow, uiEditWindow.querySelector('.zt-action-input'), id, currentSettings.customLabels[id]), { button: { cls: 'menu-item--green' } }]);
-                            menuOptionsToAdd.push(['Podpisanie tych samych mapek teleportu', () => {
-                                let labelToApply = currentSettings.customLabels[id];
-                                if (labelToApply) {
-                                    currentSettings.teleportmass[tpMap] = { enabled: true, label: labelToApply };
-                                    if (window.Engine && window.Engine.items && window.Engine.items.fetchLocationItems) {
-                                        window.Engine.items.fetchLocationItems("g").forEach(it => {
-                                            if (getTpMap(getItemTeleport(it)) === tpMap) {
-                                                delete currentSettings.customLabels[it.id];
-                                                delete currentSettings.ignored_sign[it.id];
-                                            }
-                                        });
-                                    }
-                                    saveSettings(); applyLabelsToAllVisibleItems();
-                                }
-                            }, { button: { cls: 'menu-item--green' } }]);
-                            menuOptionsToAdd.push(['Usuń Podpis', () => {
-                                delete currentSettings.customLabels[id];
-                                saveSettings(); applyLabelsToAllVisibleItems();
-                            }, { button: { cls: 'menu-item--red' } }]);
-                        }
-                        else if (currentLabelSource === 'mass') {
-                             menuOptionsToAdd.push(['Edytuj Podpisy', () => showWindow(uiMassEditWindow, uiMassEditWindow.querySelector('.zt-action-input'), id, currentMassLabel), { button: { cls: 'menu-item--green' } }]);
-                             menuOptionsToAdd.push(['Podpisywanie tych samych mapek teleportu', () => {
-                                const labelToPersist = currentMassLabel;
-                                delete currentSettings.teleportmass[tpMap];
-                                if (window.Engine && window.Engine.items && window.Engine.items.fetchLocationItems) {
-                                    window.Engine.items.fetchLocationItems("g").forEach(it => {
-                                        if (getTpMap(getItemTeleport(it)) === tpMap) {
-                                            if (it.id === id) {
-                                                currentSettings.customLabels[it.id] = labelToPersist;
-                                                delete currentSettings.ignored_sign[it.id];
-                                            } else {
-                                                delete currentSettings.customLabels[it.id];
-                                                delete currentSettings.ignored_sign[it.id];
-                                            }
-                                        }
-                                    });
-                                }
-                                saveSettings(); applyLabelsToAllVisibleItems();
-                            }, { button: { cls: 'menu-item--red' } }]);
-                            menuOptionsToAdd.push(['Usuń Podpis', () => {
-                                delete currentSettings.customLabels[id];
-                                currentSettings.ignored_sign[id] = true;
-                                saveSettings(); applyLabelsToAllVisibleItems();
-                            }, { button: { cls: 'menu-item--red' } }]);
-                        }
-                    }
-                    if (menuOptionsToAdd.length > 0) options.splice(spliceIndex, 0, ...menuOptionsToAdd);
-                }
-            });
-            isMenuIntercepted = true;
-        }
-
-        setTimeout(applyLabelsToAllVisibleItems, 500);
+        setTimeout(() => {
+            applyLegbonMarkersToAll();
+            applyToExistingTips();
+        }, 500); 
     }
 
     function addonStop() {
-        removeAllTxov();
+        removeAllLegbonMarkers();
         if (observer) {
             observer.disconnect();
             observer = null;
         }
-        if (uiAddWindow) { uiAddWindow.remove(); uiAddWindow = null; }
-        if (uiEditWindow) { uiEditWindow.remove(); uiEditWindow = null; }
-        if (uiMassEditWindow) { uiMassEditWindow.remove(); uiMassEditWindow = null; }
+        if (uiWindowElement) {
+            uiWindowElement.remove();
+            uiWindowElement = null;
+        }
     }
 
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
-        if (isEnabled) applyLabelsToAllVisibleItems();
-        else removeAllTxov();
         saveSettings();
+        updateBodyClasses();
+        applyLegbonMarkersToAll();
     }
 
     const checkApi = () => {
