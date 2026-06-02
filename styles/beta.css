@@ -144,7 +144,7 @@ input.zap-nick-display { cursor: url("https://gordion.margonem.pl/img/gui/cursor
 .ap-remove-nick-x:hover, .zap-remove-nick-x:hover { color: #ff5555; }
 .ap-nick-display, input.zap-nick-display { flex-grow: 1; padding-right: 20px; height: 24px; padding: 2px 5px; font-size: 13px; }
 .baddon_set_button.RG { cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important; }
-.rg-keybind-input { border: 1px solid #777; border-radius: 3px; padding: 4px 6px; box-shadow: none; text-align: center; font-size: 13px; height: auto; line-height: normal; box-sizing: border-box; transition: none; }
+.rg-keybind-input { border: 1px solid #777; border-radius: 3px; padding: 4px 6px; text-align: center; font-size: 13px; height: auto; line-height: normal; box-sizing: border-box; transition: none; }
 .rg-keybind-input.active-keybind-mode { caret-color: transparent !important; cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important; border-color: #96f096; box-shadow: inset 0 0 6px 1px #000000bf, 0 0 8px 1px #96f09680; }
 .rg-wnd hr { display: none; }
 .baddonz-info-icon { width: 17px; height: 17px; background: url(../img/gui/buttony.png?v=1753438686037) no-repeat -497px -199px }
