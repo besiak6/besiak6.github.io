@@ -13,7 +13,7 @@
     const ADDON_ID = "ZT";
 
     const config = {
-        "610": "D.AUK", "1224": "KENDAL", "630": "PORT", "1297": "TRIST", "8116": "EVE",
+        "610": "D.AUK", "1224": "KENDAL", "630": "PORT", "1297": "TRIST",
         "3328": "SKAŁY", "1926": "MAHO", "3038": "K.LEG", "5858": "SK", "6773": "MARG",
         "2868": "RUIN", "2869": "CICH", "180": "ANDA", "580": "MUSH", "632": "K.TROP",
         "5738": "SHAE S1", "5740": "SHAE RED", "2532": "ZORG", "727": "WŁAD", "3149": "GOB",
@@ -156,7 +156,6 @@
         document.querySelectorAll('.znacznik-teleport').forEach(el => el.remove());
     }
 
-    // GŁÓWNA ZMIANA: Lepsze radzenie sobie z tipami i wirtualnymi przedmiotami
     function applyMarkerToElement(el) {
         if (!currentSettings.enabled) return;
         if (!el || el.nodeType !== 1) return;
@@ -164,17 +163,17 @@
         let $el = $(el);
         let itemData = $el.data('item');
 
-        // Wyciągamy ID. Zabezpieczenie na wypadek, gdyby ID było zaszyte w danych, a nie w klasie
+        // Wyciągamy ID z klasy - twardy wymóg
         let idMatch = el.className.match(/item-id-(\d+)/);
-        let id = idMatch ? idMatch[1] : (itemData ? itemData.id : null);
+        let id = idMatch ? idMatch[1] : null;
 
-        // Jeśli element nie ma danych w jQuery, a mamy ID z klasy - pytamy silnik gry (dla normalnych przedmiotów)
+        // Jeśli element nie ma danych w jQuery, a mamy ID z klasy - pytamy silnik gry
         if (!itemData && id && window.Engine && window.Engine.items) {
             itemData = window.Engine.items.getItemById(id);
         }
 
-        // Usunięty ścisły warunek (!id) - teraz jeśli mamy itemData (nawet z dymku czatu bez własnego ID), idziemy dalej
-        if (!itemData) return;
+        // Przywrócony twardy warunek odrzucający przedmioty bez ID (np. dymki z czatu)
+        if (!itemData || !id) return;
 
         const tp = getItemTeleport(itemData);
         if (!tp) {
@@ -185,10 +184,10 @@
 
         const tpMap = getTpMap(tp);
 
-        const customLabel = id ? currentSettings.customLabels[id] : null;
+        const customLabel = currentSettings.customLabels[id];
         const massLabelData = currentSettings.teleportmass[tpMap];
         const autoLabel = getAutoLabel(tp, tpMap);
-        const isDefaultIgnored = id ? currentSettings.ignored_sign[id] : false;
+        const isDefaultIgnored = currentSettings.ignored_sign[id];
 
         let finalLabel = null;
         if (isDefaultIgnored) {
