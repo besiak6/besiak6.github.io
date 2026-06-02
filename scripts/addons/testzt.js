@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Znacznik Teleportów baddonz
-// @version       28.05.2026
+// @version       02.06.2026
 // @description   Znacznik Teleportów
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -13,7 +13,7 @@
     const ADDON_ID = "ZT";
 
     const config = {
-        "610": "D.AUK", "1224": "KENDAL", "630": "PORT", "1297": "TRIST",
+        "610": "D.AUK", "1224": "KENDAL", "630": "PORT", "1297": "TRIST", "8116": "EVE",
         "3328": "SKAŁY", "1926": "MAHO", "3038": "K.LEG", "5858": "SK", "6773": "MARG",
         "2868": "RUIN", "2869": "CICH", "180": "ANDA", "580": "MUSH", "632": "K.TROP",
         "5738": "SHAE S1", "5740": "SHAE RED", "2532": "ZORG", "727": "WŁAD", "3149": "GOB",
@@ -112,7 +112,6 @@
 
     function getItemTeleport(it) {
         if (!it) return "";
-        // Używamy natywnych statystyk lub szybkiego parsowania bez modyfikacji oryginału (usunięto _znacznikParsedStats)
         const stats = it._cachedStats || parseStats(it.stat || it.stats || "");
         let tp = "";
         if (stats.teleport) tp = stats.teleport;
@@ -129,7 +128,6 @@
         return config[tp] || config[tpMap];
     }
 
-    // Dodaje napis teleportu jako DOM element bezpośrednio na .item
     function _addSpanToElement(el, text) {
         let tz = el.querySelector(".znacznik-teleport");
         if (tz && tz.innerText === text) return;
@@ -158,7 +156,7 @@
         document.querySelectorAll('.znacznik-teleport').forEach(el => el.remove());
     }
 
-    // Główna funkcja stemplująca przedmioty gdziekolwiek się znajdują
+    // GŁÓWNA ZMIANA: Lepsze radzenie sobie z tipami i wirtualnymi przedmiotami
     function applyMarkerToElement(el) {
         if (!currentSettings.enabled) return;
         if (!el || el.nodeType !== 1) return;
@@ -166,16 +164,17 @@
         let $el = $(el);
         let itemData = $el.data('item');
 
-        // Wyciągnij ID na wszelki wypadek
+        // Wyciągamy ID. Zabezpieczenie na wypadek, gdyby ID było zaszyte w danych, a nie w klasie
         let idMatch = el.className.match(/item-id-(\d+)/);
-        let id = idMatch ? idMatch[1] : null;
+        let id = idMatch ? idMatch[1] : (itemData ? itemData.id : null);
 
-        // Jeśli z jakiegoś powodu element nie ma jQuery data, ratujemy się silnikiem gry (dla plecaka)
+        // Jeśli element nie ma danych w jQuery, a mamy ID z klasy - pytamy silnik gry (dla normalnych przedmiotów)
         if (!itemData && id && window.Engine && window.Engine.items) {
             itemData = window.Engine.items.getItemById(id);
         }
 
-        if (!itemData || !id) return;
+        // Usunięty ścisły warunek (!id) - teraz jeśli mamy itemData (nawet z dymku czatu bez własnego ID), idziemy dalej
+        if (!itemData) return;
 
         const tp = getItemTeleport(itemData);
         if (!tp) {
@@ -186,10 +185,10 @@
 
         const tpMap = getTpMap(tp);
 
-        const customLabel = currentSettings.customLabels[id];
+        const customLabel = id ? currentSettings.customLabels[id] : null;
         const massLabelData = currentSettings.teleportmass[tpMap];
         const autoLabel = getAutoLabel(tp, tpMap);
-        const isDefaultIgnored = currentSettings.ignored_sign[id];
+        const isDefaultIgnored = id ? currentSettings.ignored_sign[id] : false;
 
         let finalLabel = null;
         if (isDefaultIgnored) {
@@ -319,7 +318,6 @@
         const handleMassEdit = () => {
             const finalLabel = validateLabelInput(massEditInput.value.trim());
             
-            // Pobieranie mapy z DOM aby uniknąć pomyłki
             let el = document.querySelector(`.item-id-${currentItemId}`);
             let item = el ? $(el).data('item') : null;
             if (!item && window.Engine.items) item = window.Engine.items.getItemById(currentItemId);
@@ -361,7 +359,6 @@
         loadSettings();
         if (!uiAddWindow) buildUI();
 
-        // Podpinamy globalnego obserwatora – działa w każdym oknie (torba, sklep, skrzynka, czat)
         observer = new MutationObserver((mutations) => {
             if (!currentSettings.enabled) return;
             
@@ -388,7 +385,6 @@
             intercept(window.Engine.interface, 'showPopupMenu', (options, event) => {
                 if (!currentSettings.enabled) return;
 
-                // Sprytne znalezienie odpowiedniego kontenera przedmiotu, by obsługiwał czat/sklep
                 let target = event.target;
                 let $itemEl = $(target).closest('.item');
                 if (!$itemEl.length && target.classList.contains('item')) {
