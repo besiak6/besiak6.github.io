@@ -1,76 +1,25 @@
 // ==UserScript==
-// @name          UPG baddonz
-// @version       1.0 (Baddonz 2.0.5)
-// @description   Automatyczne ulepszanie (Enhancement)
-// @author        besiak
-// @match         https://*.margonem.pl/*
+// @name          Ulepszara Baddonz 2.0
+// @version       2.0.0
+// @author        besiak & Gemini
+// @match         https://*.margonem.pl/
 // @grant         none
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    const ADDON_ID = "UPG";
+    const ADDON_ID = 'UPG';
     const MICC_BASE_URL = 'https://micc.garmory-cdn.cloud/obrazki/itemy/';
-    const PROGRESS_STORAGE_KEY = "baddonz-upg-progress";
-
-    const styleSheet = document.createElement("style");
-    styleSheet.type = "text/css";
-    styleSheet.className = "upg-custom-styles";
-    styleSheet.innerText = `
-        .baddonz-upg-wnd { width: 140px; min-width: 140px; }
-        .baddonz-upg-wnd-settings { width: 250px; min-width: 250px; height: auto !important; min-height: unset !important; max-height: unset !important; }
-        .baddonz-upg-wnd-settings .baddonz-window-body { height: auto !important; min-height: unset !important; display: flex; flex-direction: column; gap: 5px; }
-        .baddonz-upg-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
-        .upgrader-crafting-window { display: none !important; }
-        
-        .upg-typ-wrapper {
-            display: flex; align-items: center; justify-content: center;
-            cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
-            gap: 3px; padding: 3px; background: rgba(0, 0, 0, 0.3); border-radius: 3px; user-select: none;
-        }
-        .upg-typ-wrapper:hover { background: rgba(255, 255, 255, 0.1); }
-        .upg-item-cursor { cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, pointer !important; }
-        .upg-daily-limit { font-size: 11px; color: #fff; text-align: center; }
-        .baddonz-upg-wnd.collapsed #upg-item-details { display: none !important; }
-    `;
-    if (!document.querySelector(".upg-custom-styles")) document.head.appendChild(styleSheet);
-
-    const MAX_REAGENTS = 25;
+    const DAILY_COUNT_KEY = "baddonz-daily-upgrade-count";
+    const PROGRESS_STORAGE_KEY = "baddonz-enhancement-progress-char";
     const BAG_CHECK_INTERVAL = 5000;
-    const EVENT_KEYWORDS = ["Wakacje", "Urodziny Margonem", "Wielkanoc", "Noc Kupały", "Szabat Czarownic", "Halloween", "Gwiazdka", "Licytacja", "Licytacja eventowa"];
-    
-    const CL = {
-        ONE_HAND_WEAPON: 1, TWO_HAND_WEAPON: 2, ONE_AND_HALF_HAND_WEAPON: 3, DISTANCE_WEAPON: 4,
-        HELP_WEAPON: 5, WAND_WEAPON: 6, ORB_WEAPON: 7, ARMOR: 8, HELMET: 9, BOOTS: 10,
-        GLOVES: 11, RING: 12, NECKLACE: 13, SHIELD: 14, QUIVER: 29
-    };
+    const MAX_REAGENTS = 25;
 
-    const ITEM_TYPE_SETTINGS_MAP = {
-        [CL.ONE_HAND_WEAPON]: 'cl1', [CL.TWO_HAND_WEAPON]: 'cl2', [CL.ONE_AND_HALF_HAND_WEAPON]: 'cl3',
-        [CL.DISTANCE_WEAPON]: 'cl4', [CL.HELP_WEAPON]: 'cl5', [CL.WAND_WEAPON]: 'cl6',
-        [CL.ORB_WEAPON]: 'cl7', [CL.ARMOR]: 'cl8', [CL.HELMET]: 'cl9', [CL.BOOTS]: 'cl10',
-        [CL.GLOVES]: 'cl11', [CL.RING]: 'cl12', [CL.NECKLACE]: 'cl13', [CL.SHIELD]: 'cl14',
-        [CL.QUIVER]: 'cl29',
-    };
-
-    const ITEM_CL_NAMES = {
-        1: 'Jednoręczne', 2: 'Dwuręczne', 3: 'Półtoraręczne', 4: 'Łuki',
-        5: 'Pomocnicze', 6: 'Różdżki', 7: 'Orby', 8: 'Zbroje', 9: 'Hełmy',
-        10: 'Buty', 11: 'Rękawice', 12: 'Pierki', 13: 'Naszyjniki',
-        14: 'Tarcze', 29: 'Strzały',
-    };
-
-    let currentSettings = {
-        enabled: true,
-        windowOpacity: 2,
-        windowVisible: true,
-        settingsWindowVisible: false,
-        windowSettingsOpacity: 2,
-        
-        // Zmienne zapisywane do konta (wspólne)
-        hotkeyKey: "j",
+    const DEFAULT_SETTINGS = {
+        enabled: false,
         hotkeyEnabled: true,
+        hotkeyKey: "j",
         use_common: false,
         use_unique: false,
         allow_bound_items: false,
@@ -81,79 +30,86 @@
         cl1: true, cl2: true, cl3: true, cl4: true, cl5: true,
         cl6: true, cl7: true, cl8: true, cl9: true, cl10: true,
         cl11: true, cl12: true, cl13: true, cl14: true, cl29: true,
-        
-        // Zmienne dla konkretnej postaci
-        selectedItemId: ""
     };
 
-    let uiMainWindow = null;
-    let uiSettingsWindow = null;
+    let settings = {};
     let dailyUpgradeCount = 0;
     let dailyUpgradeLimit = 2000;
     let isUpgrading = false;
-    let windowEnabled = false;
-    let isMenuIntercepted = false;
-    let BADDONZ_BAG_INTERVAL = null;
+    let bagIntervalId = null;
 
-    class Emitter {
-        observe(obj, key, callback) {
-            const originalFunction = obj[key];
-            const originalContext = obj;
-            obj[key] = (...args) => {
-                callback.apply(this, args);
-                return originalFunction.apply(originalContext, args);
-            };
-        }
+    const EVENT_KEYWORDS = [
+        "Wakacje", "Urodziny Margonem", "Wielkanoc", "Noc Kupały",
+        "Szabat Czarownic", "Halloween", "Gwiazdka", "Licytacja",
+        "Licytacja eventowa"
+    ];
+
+    const ITEM_TYPE_SETTINGS_MAP = {
+        1: 'cl1', 2: 'cl2', 3: 'cl3', 4: 'cl4', 5: 'cl5', 6: 'cl6',
+        7: 'cl7', 8: 'cl8', 9: 'cl9', 10: 'cl10', 11: 'cl11', 12: 'cl12',
+        13: 'cl13', 14: 'cl14', 29: 'cl29'
+    };
+
+    const ITEM_CL_NAMES = {
+        1: 'Jednoręczne', 2: 'Dwuręczne', 3: 'Półtoraręczne', 4: 'Łuki',
+        5: 'Pomocnicze', 6: 'Różdżki', 7: 'Orby', 8: 'Zbroje', 9: 'Hełmy',
+        10: 'Buty', 11: 'Rękawice', 12: 'Pierścienie', 13: 'Naszyjniki',
+        14: 'Tarcze', 29: 'Strzały'
+    };
+
+    // Integracja z API Baddonz 2.0.5 - bezpieczne pobieranie instancji
+    function getAPI() {
+        return window.BaddonzAPI || null;
     }
-    const emitter = new Emitter();
+
+    function getCharId() {
+        const API = getAPI();
+        return API?.charId || window.Engine?.hero?.d?.id;
+    }
 
     function loadSettings() {
-        if (!window.BaddonzAPI) return;
-        const accId = window.BaddonzAPI.accountId;
-        let accSettings = {};
-        
-        try {
-            const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
-            if (data[accId] && data[accId].accountAddons) {
-                accSettings = data[accId].accountAddons[ADDON_ID] || {};
+        const API = getAPI();
+        if (API && typeof API.getAddonSettings === 'function') {
+            const stored = API.getAddonSettings(ADDON_ID, 'account');
+            settings = { ...DEFAULT_SETTINGS, ...stored };
+        } else {
+            try {
+                const stored = JSON.parse(localStorage.getItem(`baddonz-settings-${ADDON_ID}-account`));
+                settings = { ...DEFAULT_SETTINGS, ...stored };
+            } catch (e) {
+                settings = { ...DEFAULT_SETTINGS };
             }
-        } catch (e) {}
-
-        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
-        
-        // Wczytanie globalnego progresu limitu
-        const count = parseInt(localStorage.getItem("baddonz-daily-upgrade-count"));
-        dailyUpgradeCount = !isNaN(count) ? count : 0;
+        }
+        loadDailyUpgradeCount();
     }
 
     function saveSettings() {
-        if (!window.BaddonzAPI) return;
-        const accId = window.BaddonzAPI.accountId;
-        
-        // Rozdział na konto i postać
-        const charKeys = ['selectedItemId'];
-        let accSettings = {};
-        let charSettings = {};
+        const API = getAPI();
+        if (API && typeof API.saveAddonSettings === 'function') {
+            API.saveAddonSettings(ADDON_ID, 'account', settings);
+        } else {
+            localStorage.setItem(`baddonz-settings-${ADDON_ID}-account`, JSON.stringify(settings));
+        }
+    }
 
-        Object.keys(currentSettings).forEach(k => {
-            if (charKeys.includes(k)) charSettings[k] = currentSettings[k];
-            else accSettings[k] = currentSettings[k];
-        });
+    function getUpgradedItemId() {
+        const charId = getCharId();
+        if (!charId) return null;
+        return localStorage.getItem(`baddonz-upg-item-char-${charId}`);
+    }
 
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
-
-        try {
-            let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
-            if (!data[accId]) data[accId] = {};
-            if (!data[accId].accountAddons) data[accId].accountAddons = {};
-            data[accId].accountAddons[ADDON_ID] = accSettings;
-            localStorage.setItem('BaddonzData', JSON.stringify(data));
-        } catch (e) {}
+    function setUpgradedItemId(itemId) {
+        const charId = getCharId();
+        if (!charId) return;
+        if (itemId) {
+            localStorage.setItem(`baddonz-upg-item-char-${charId}`, itemId);
+        } else {
+            localStorage.removeItem(`baddonz-upg-item-char-${charId}`);
+        }
     }
 
     function loadProgress(itemId) {
-        const charId = window.Engine.hero?.d?.id;
+        const charId = getCharId();
         if (!charId) return null;
         try {
             const allProgress = JSON.parse(localStorage.getItem(`${PROGRESS_STORAGE_KEY}-${charId}`)) || {};
@@ -162,314 +118,511 @@
     }
 
     function saveProgress(itemId, progressText) {
-        const charId = window.Engine.hero?.d?.id;
+        const charId = getCharId();
         if (!itemId || !progressText || progressText === "Brak danych" || !charId) return;
-
-        const storageKey = `${PROGRESS_STORAGE_KEY}-${charId}`;
-        let allProgress = {};
-        try { allProgress = JSON.parse(localStorage.getItem(storageKey)) || {}; } catch (e) {}
-
-        allProgress[itemId] = progressText;
-
-        if (currentSettings.selectedItemId !== itemId) {
-            delete allProgress[itemId];
-        }
-
-        localStorage.setItem(storageKey, JSON.stringify(allProgress));
+        try {
+            const storageKey = `${PROGRESS_STORAGE_KEY}-${charId}`;
+            let allProgress = JSON.parse(localStorage.getItem(storageKey)) || {};
+            allProgress[itemId] = progressText;
+            
+            if (getUpgradedItemId() !== itemId) {
+                delete allProgress[itemId];
+            }
+            localStorage.setItem(storageKey, JSON.stringify(allProgress));
+        } catch (e) {}
     }
 
-    function updateItemDisplay() {
-        if (!uiMainWindow || typeof $ === 'undefined' || typeof window.Engine === 'undefined' || !window.Engine.items) return;
-        
-        const itemId = currentSettings.selectedItemId;
-        const item = window.Engine.items.getItemById(itemId);
-        
-        const $slotWrapper = $('#upg-item-slot-wrapper');
-        const nameEl = document.getElementById("upg-item-name");
-        const progressEl = document.getElementById("upg-item-progress");
+    function loadDailyUpgradeCount() {
+        const count = parseInt(localStorage.getItem(DAILY_COUNT_KEY));
+        dailyUpgradeCount = !isNaN(count) ? count : 0;
+    }
+
+    function saveDailyUpgradeCount(count) {
+        localStorage.setItem(DAILY_COUNT_KEY, count);
+    }
+
+    const updateItemDisplay = (itemId) => {
+        if (typeof $ === 'undefined' || typeof Engine === 'undefined' || !Engine.items) return;
+        const item = Engine.items.getItemById(itemId);
+        const $slotWrapper = $('#baddonz-upgrader-item-slot-wrapper');
+        const nameEl = document.getElementById("baddonz-upgrader-item-name");
+        const progressEl = document.getElementById("baddonz-upgrader-item-progress");
+
+        if (!$slotWrapper.length || !nameEl || !progressEl) return;
 
         $slotWrapper.empty();
-        if (!nameEl || !progressEl) return;
-        
         nameEl.textContent = "";
         progressEl.textContent = "";
 
         const $slotContainer = $(
-            `<div class="enhance__item enhance__item--current interface-element-one-item-slot-decor" style="margin:0;">
+            `<div class="enhance__item enhance__item--current interface-element-one-item-slot-decor" id="baddonz-upgrader-main-item-slot">
                 <div class="slot"></div>
-                <div class="lvl" data-lvl="0"><div class="cl-icon icon-star-0"></div></div>
-            </div>`
+                <div class="lvl" data-lvl="0">
+                    <div class="cl-icon icon-star-0"></div>
+                </div>
+              </div>`
         );
 
-        if (!item || !itemId) {
-            nameEl.textContent = "Brak przedmiotu";
-            nameEl.style.color = "#aaa";
+        if (!item) {
             $slotWrapper.append($slotContainer);
             return;
         }
 
         const upgradeLvl = item.upgrade_lvl || 0;
-        $slotContainer.find('.lvl').attr('data-lvl', upgradeLvl).html(`<div class="cl-icon icon-star-${upgradeLvl}"></div>`);
-        
+        $slotContainer.find('.lvl')
+            .attr('data-lvl', upgradeLvl)
+            .html(`<div class="cl-icon icon-star-${upgradeLvl}"></div>`);
         nameEl.textContent = item.name;
-        nameEl.style.color = "#ffcc00";
 
         const storedProgress = loadProgress(itemId);
-        if (storedProgress) progressEl.textContent = `Progres: ${storedProgress}`;
+        if (storedProgress) {
+            progressEl.textContent = `Progres: ${storedProgress}`;
+        }
 
         const $clonedItem = item.$.clone();
-        $clonedItem.addClass('upg-item-cursor');
-        
+        $clonedItem.addClass('baddonz-upgrader-item-cursor');
         $clonedItem.on('click', () => {
-            currentSettings.selectedItemId = "";
-            saveSettings();
-            if (window.message) message(`Anulowano ulepszanie przedmiotu ${item.name}`);
-            updateItemDisplay();
+            setUpgradedItemId("");
+            message(`Anulowano ulepszanie przedmiotu ${item.name}`);
+            updateUI();
         });
-
+        $clonedItem.data('item', item);
         $clonedItem.css({ 'position': 'relative', 'width': '32px', 'height': '32px', 'top': '0', 'left': '0' });
         $clonedItem.find('canvas.icon, canvas.canvas-notice').remove();
 
         const iconSource = item.icon || (`${item.id}.png`);
         const gifName = iconSource.replace(/\.[^/.]+$/, '.gif');
         const imgUrl = MICC_BASE_URL + gifName;
-        
-        const $img = $('<img>').attr('src', imgUrl).css({ width: '32px', height: '32px', position: 'absolute', top: '0', left: '0', zIndex: '0' });
-        $clonedItem.append($img);
+
+        $('<img>').attr('src', imgUrl).css({
+            width: '32px', height: '32px', position: 'absolute', top: '0', left: '0', zIndex: '0'
+        }).appendTo($clonedItem);
 
         $slotContainer.find('.slot').append($clonedItem);
         $slotWrapper.append($slotContainer);
+    };
+
+    function updateUI() {
+        const stateBtn = document.getElementById("baddonz-upgrader-state-button");
+        if (!stateBtn) return;
+
+        stateBtn.classList.toggle('baddonz-state-button--active', settings.enabled);
+        if (typeof $ === 'function' && $.fn.tip) {
+            $(stateBtn).tip(settings.enabled ? 'Wyłącz' : 'Włącz');
+        }
+
+        const upgradedItemId = getUpgradedItemId();
+        updateItemDisplay(upgradedItemId);
+
+        const dailyLimitEl = document.getElementById("baddonz-upgrader-daily-limit");
+        if (dailyLimitEl) dailyLimitEl.textContent = `Dzienny Limit: ${dailyUpgradeCount}/${dailyUpgradeLimit}`;
+
+        // Aktywacja checkboxów
+        document.getElementById("baddonz-upgrader-hotkey-enabled").classList.toggle('active', settings.hotkeyEnabled);
+        document.getElementById("baddonz-upgrader-use-common").classList.toggle('active', settings.use_common);
+        document.getElementById("baddonz-upgrader-use-unique").classList.toggle('active', settings.use_unique);
+        document.getElementById("baddonz-upgrader-allow-bound").classList.toggle('active', settings.allow_bound_items);
+        document.getElementById("baddonz-upgrader-upgrade-endbattle-check").classList.toggle('active', settings.upgrade_endbattle);
+        document.getElementById("baddonz-upgrader-bags-upgrade-check").classList.toggle('active', settings.bags_upgrade);
+
+        // Wartości liczbowe i tekstowe
+        document.getElementById("baddonz-upgrader-count-endbattle-input").value = settings.count_endbattle;
+        document.getElementById("baddonz-upgrader-count-bags-upgrade-input").value = settings.count_bags_upgrade;
+        
+        const hotkeyInput = document.getElementById("baddonz-upgrader-hotkey-input");
+        if (document.activeElement !== hotkeyInput) {
+            hotkeyInput.value = (settings.hotkeyKey === ' ' ? 'SPACJA' : settings.hotkeyKey.toUpperCase());
+        }
+
+        // Widoczność sekcji zależnych
+        document.getElementById("baddonz-upgrader-hotkey-options").style.display = settings.hotkeyEnabled ? 'flex' : 'none';
+        document.getElementById("baddonz-upgrader-endbattle-options").style.display = settings.upgrade_endbattle ? 'flex' : 'none';
+        document.getElementById("baddonz-upgrader-bags-options").style.display = settings.bags_upgrade ? 'flex' : 'none';
+
+        // Filtry klas przedmiotów
+        const typeFilters = document.getElementById("baddonz-upgrader-type-filters");
+        if (typeFilters) {
+            typeFilters.querySelectorAll('.baddonz-checkbox').forEach(cb => {
+                const cl = cb.id.replace('baddonz-upgrader-cl-', '');
+                cb.classList.toggle('active', settings[`cl${cl}`]);
+            });
+        }
     }
 
     function generateItemTypeFiltersHtml() {
-        const ITEM_CL_MAP = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 29];
-        let html = '';
-        ITEM_CL_MAP.forEach(cl => {
-            const key = `cl${cl}`;
-            html += `
-                <div class="upg-typ-wrapper" data-key="${key}" data-cl="${cl}">
-                    <div class="baddonz-checkbox" id="upg-cl-${cl}"></div>
-                    <div class="baddonz-type-icon cl-${cl}"></div>
+        return Object.keys(ITEM_TYPE_SETTINGS_MAP).map(cl => `
+            <div class="baddonz-typ-wrapper" data-key="cl${cl}" data-cl="${cl}" style="display:flex; align-items:center; justify-content:center; gap:3px; padding:3px; background:rgba(0,0,0,0.3); border-radius:3px; cursor:pointer;">
+                <div class="baddonz-checkbox" id="baddonz-upgrader-cl-${cl}"></div>
+                <div class="baddonz-type-icon cl-${cl}"></div>
+            </div>
+        `).join('');
+    }
+
+    function createUI() {
+        // Nowoczesna struktura HTML przygotowana pod wewnętrzną treść dla createAddonWindow
+        const contentHtml = `
+            <div class="baddonz-window-body baddonz-flex column" style="gap: 5px; width: 250px; padding: 5px; user-select: none;">
+                <!-- Panel kontrolny nagłówka dodatku -->
+                <div class="baddonz-flex" style="justify-content: space-between; align-items: center; border-bottom: 1px solid #303030; padding-bottom: 4px;">
+                    <div class="baddonz-text" style="font-weight: bold; color: #ffcc00; font-size: 11px;">Narzędzia:</div>
+                    <div class="baddonz-flex" style="gap: 6px;">
+                        <div class="baddonz-icon baddonz-state-button" id="baddonz-upgrader-state-button" style="cursor: pointer;"></div>
+                        <div class="baddonz-icon baddonz-settings-button" id="baddonz-upgrader-main-settings-btn" style="cursor: pointer;"></div>
+                        <div class="baddonz-icon baddonz-collapsed" id="baddonz-upgrader-main-collapse-btn" style="cursor: pointer;"></div>
+                    </div>
                 </div>
-            `;
-        });
-        return html;
-    }
 
-    function buildUI() {
-        const mainBodyHtml = `
-            <div class="baddonz-setting-row" style="margin-bottom: 5px !important; display: flex; align-items: center; justify-content: center;">
-                <div class="baddonz-checkbox upg-enabled-checkbox ${currentSettings.enabled ? 'active' : ''}"></div>
-                <span class="baddonz-text" style="padding: 0; margin-left: 5px;">Ulepszara</span>
+                <!-- Główny podgląd przedmiotu -->
+                <div id="baddonz-upgrader-main-area" class="baddonz-flex column" style="gap: 2px;">
+                    <div id="baddonz-upgrader-item-details" class="baddonz-flex column" style="align-items: center; border-bottom: 1px solid #303030; padding-bottom: 5px;">
+                        <div id="baddonz-upgrader-item-display-container" class="baddonz-flex column" style="align-items: center; gap: 2px; margin-top: 5px; justify-content: center;">
+                            <div id="baddonz-upgrader-item-slot-wrapper" class="baddonz-flex"></div>
+                            <div class="baddonz-text" id="baddonz-upgrader-item-name" style="padding: 0; font-size: 11px; font-weight: bold; color: #ffcc00; text-shadow: 1px 1px #000;"></div>
+                            <div class="baddonz-text" id="baddonz-upgrader-item-progress" style="padding: 0; font-size: 10px; color: #aaa; text-shadow: 1px 1px #000;"></div>
+                        </div>
+                    </div>
+                    <div class="baddonz-text baddonz-upgrader-daily-limit-wrapper" style="text-align: center; padding-top: 4px;">
+                        <div id="baddonz-upgrader-daily-limit" class="baddonz-upgrader-daily-limit-single-line" style="font-size: 11px; color:#fff;">Dzienny Limit: 0/2000</div>
+                    </div>
+                </div>
+
+                <!-- Wysuwany zintegrowany panel ustawień dodatku -->
+                <div id="baddonz-upgrader-settings-panel" class="baddonz-flex column" style="display: none; gap: 4px; border-top: 1px solid #303030; padding-top: 5px;">
+                    <div class="baddonz-label-wrapper" style="display:flex; align-items:center; gap:5px;">
+                        <div class="baddonz-checkbox" id="baddonz-upgrader-use-common"></div>
+                        <div class="baddonz-text" style="font-size:11px;">Ulepszaj Zwyklakami</div>
+                    </div>
+                    <div class="baddonz-label-wrapper" style="display:flex; align-items:center; gap:5px;">
+                        <div class="baddonz-checkbox" id="baddonz-upgrader-use-unique"></div>
+                        <div class="baddonz-text" style="font-size:11px;">Ulepszaj Unikatami</div>
+                    </div>
+                    <div class="baddonz-label-wrapper" style="display:flex; align-items:center; gap:5px;">
+                        <div class="baddonz-checkbox" id="baddonz-upgrader-allow-bound"></div>
+                        <div class="baddonz-text" style="font-size:11px;">Ulepszaj Związanymi</div>
+                    </div>
+                    
+                    <div style="border-bottom: 1px solid #303030; margin: 2px 0;"></div>
+                    <div class="baddonz-text" style="text-align: center; font-weight: bold; font-size:11px;">Typy Itemów:</div>
+                    <div id="baddonz-upgrader-type-filters" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px;">
+                        ${generateItemTypeFiltersHtml()}
+                    </div>
+                    
+                    <div style="border-bottom: 1px solid #303030; margin: 2px 0;"></div>
+                    <div class="baddonz-label-wrapper" style="display:flex; align-items:center; gap:5px;">
+                        <div class="baddonz-checkbox" id="baddonz-upgrader-hotkey-enabled"></div>
+                        <div class="baddonz-text" style="font-size:11px;">Ulepszanie Klawiszem</div>
+                    </div>
+                    <div id="baddonz-upgrader-hotkey-options" class="baddonz-flex column" style="gap: 2px; padding-left:15px;">
+                        <input type="text" class="baddonz-input" id="baddonz-upgrader-hotkey-input" maxlength="7" style="width: 100%; text-transform: uppercase; text-align: center; font-weight:bold;">
+                    </div>
+
+                    <div class="baddonz-label-wrapper" style="display:flex; align-items:center; gap:5px;">
+                        <div class="baddonz-checkbox" id="baddonz-upgrader-upgrade-endbattle-check"></div>
+                        <div class="baddonz-text" style="font-size:11px;">Ulepszaj po walce</div>
+                    </div>
+                    <div id="baddonz-upgrader-endbattle-options" class="baddonz-flex column" style="gap: 2px; padding-left:15px;">
+                        <div class="baddonz-text" style="font-size: 9px; color:#aaa;">Min. Liczba Reagentów:</div>
+                        <input type="number" class="baddonz-input" id="baddonz-upgrader-count-endbattle-input" min="1" max="50" style="text-align: center;">
+                    </div>
+
+                    <div class="baddonz-label-wrapper" style="display:flex; align-items:center; gap:5px;">
+                        <div class="baddonz-checkbox" id="baddonz-upgrader-bags-upgrade-check"></div>
+                        <div class="baddonz-text" style="font-size:11px;">Ulepszanie wolną torbą</div>
+                    </div>
+                    <div id="baddonz-upgrader-bags-options" class="baddonz-flex column" style="gap: 2px; padding-left:15px;">
+                        <div class="baddonz-text" style="font-size: 9px; color:#aaa;">Max. Wolnych Slotów:</div>
+                        <input type="number" class="baddonz-input" id="baddonz-upgrader-count-bags-upgrade-input" min="1" max="100" style="text-align: center;">
+                    </div>
+                </div>
             </div>
-            <div id="upg-item-details" class="baddonz-flex column" style="border-top: 1px solid #303030; border-bottom: 1px solid #303030; padding: 5px 0; align-items: center; margin-bottom: 2px;">
-                <div id="upg-item-slot-wrapper" class="baddonz-flex" style="min-height:32px;"></div>
-                <div class="baddonz-text" id="upg-item-name" style="padding: 0; font-size: 11px; font-weight: bold; color: #aaa;"></div>
-                <div class="baddonz-text" id="upg-item-progress" style="padding: 0; font-size: 10px; color: #aaa;"></div>
-            </div>
-            <div class="baddonz-text upg-daily-limit" id="upg-daily-limit-text">0/2000</div>
         `;
 
-        uiMainWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "UPG", mainBodyHtml, { 
-            width: '140px', 
-            customId: 'baddonz-upg-wnd',
-            hasSettings: true,
-            hasCollapse: true,
-            hasClose: false
-        });
-
-        const settingsBodyHtml = `
-            <div class="baddonz-label-wrapper"><div class="baddonz-checkbox upg-use-common-cb"></div><div class="baddonz-text">Ulepszaj Zwyklakami</div></div>
-            <div class="baddonz-label-wrapper"><div class="baddonz-checkbox upg-use-unique-cb"></div><div class="baddonz-text">Ulepszaj Unikatami</div></div>
-            <div class="baddonz-label-wrapper"><div class="baddonz-checkbox upg-allow-bound-cb"></div><div class="baddonz-text" style="color:#ff5555;">Ulepszaj Związanymi</div></div>
-            
-            <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
-            <div class="baddonz-text" style="text-align: center;">Typy Itemów:</div>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-left: 5px; margin-bottom: 5px;">
-                ${generateItemTypeFiltersHtml()}
-            </div>
-            
-            <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
-            <div class="baddonz-setting-row" style="margin-bottom:2px;">
-                <div class="baddonz-checkbox upg-hotkey-enabled-cb"></div><span class="baddonz-text">Klawisz Ulepszania</span>
-                <input type="text" class="baddonz-input upg-hotkey-input keybind" style="width:50px; height:20px; font-size:11px; text-align:center; padding:1px; margin-left:auto;" readonly>
-            </div>
-            
-            <div class="baddonz-setting-row" style="margin-bottom:2px;">
-                <div class="baddonz-checkbox upg-endbattle-cb"></div><span class="baddonz-text">Po Walce (min. ilość)</span>
-                <input type="number" class="baddonz-input upg-endbattle-input" min="1" max="50" style="width:40px; height:20px; font-size:11px; text-align:center; padding:1px; margin-left:auto;">
-            </div>
-            
-            <div class="baddonz-setting-row" style="margin-bottom:2px;">
-                <div class="baddonz-checkbox upg-bags-cb"></div><span class="baddonz-text">Torba (max. wolnych)</span>
-                <input type="number" class="baddonz-input upg-bags-input" min="1" max="100" style="width:40px; height:20px; font-size:11px; text-align:center; padding:1px; margin-left:auto;">
-            </div>
-        `;
-
-        uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "UPG Ustawienia", settingsBodyHtml, { width: '250px', customId: 'baddonz-upg-wnd-settings' });
-        uiSettingsWindow.classList.add('settings-window');
-        uiSettingsWindow.removeAttribute('data-addon-id');
-        uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
-
-        const isUnified = localStorage.getItem('BaddonzData') && JSON.parse(localStorage.getItem('BaddonzData'))[window.BaddonzAPI.accountId]?.manager?.unifiedOpacityEnabled;
-        if (!isUnified) {
-            uiSettingsWindow.className = uiSettingsWindow.className.replace(/opacity-\d/, `opacity-${currentSettings.windowSettingsOpacity}`);
+        const API = getAPI();
+        if (API && typeof API.createAddonWindow === 'function') {
+            // Wywołanie zunifikowanego kreatora z rdzenia Baddonz 2.0.5
+            API.createAddonWindow(ADDON_ID, {
+                title: 'Ulepszara',
+                html: contentHtml
+            });
+        } else {
+            // Awaryjny fallback (gdyby rdzeń jeszcze się nie załadował)
+            const fallbackWnd = document.createElement('div');
+            fallbackWnd.id = `wnd-addon-${ADDON_ID}`;
+            fallbackWnd.className = 'baddonz-window';
+            fallbackWnd.style.position = 'absolute';
+            fallbackWnd.style.top = '20%';
+            fallbackWnd.style.left = '20%';
+            fallbackWnd.innerHTML = `<div class="baddonz-window-header"><div class="baddonz-window-title">Ulepszara (Standalone)</div></div>` + contentHtml;
+            document.body.appendChild(fallbackWnd);
         }
 
-        // Bindowanie Główne
-        const enabledCb = uiMainWindow.querySelector('.upg-enabled-checkbox');
-        enabledCb.addEventListener('click', () => {
-            currentSettings.enabled = enabledCb.classList.toggle('active');
-            saveSettings();
-        });
+        updateUI();
+        setupListeners();
+    }
 
-        const settingsBtn = uiMainWindow.querySelector(".baddonz-settings-button");
-        if (settingsBtn) {
+    function setupListeners() {
+        const collapseBtn = document.getElementById("baddonz-upgrader-main-collapse-btn");
+        const settingsBtn = document.getElementById("baddonz-upgrader-main-settings-btn");
+        const stateBtn = document.getElementById("baddonz-upgrader-state-button");
+        const mainArea = document.getElementById("baddonz-upgrader-main-area");
+        const settingsPanel = document.getElementById("baddonz-upgrader-settings-panel");
+
+        if (collapseBtn && mainArea) {
+            collapseBtn.addEventListener('click', () => {
+                const isHidden = mainArea.style.display === 'none';
+                mainArea.style.display = isHidden ? 'block' : 'none';
+                collapseBtn.classList.toggle('baddonz-collapsed', !isHidden);
+                if (typeof $ === 'function' && $.fn.tip) $(collapseBtn).tip(isHidden ? 'Zwiń' : 'Rozwiń');
+            });
+        }
+
+        if (settingsBtn && settingsPanel) {
             settingsBtn.addEventListener('click', () => {
-                const isVisible = uiSettingsWindow.style.display !== 'none';
-                uiSettingsWindow.style.display = isVisible ? 'none' : 'flex';
-                currentSettings.settingsWindowVisible = !isVisible;
+                const isHidden = settingsPanel.style.display === 'none';
+                settingsPanel.style.display = isHidden ? 'flex' : 'none';
+            });
+        }
+
+        if (stateBtn) {
+            stateBtn.addEventListener('click', () => {
+                settings.enabled = !settings.enabled;
+                saveSettings();
+                updateUI();
+                manageBagLoop();
+            });
+        }
+
+        const checkboxes = [
+            { id: "baddonz-upgrader-hotkey-enabled", key: "hotkeyEnabled" },
+            { id: "baddonz-upgrader-use-common", key: "use_common" },
+            { id: "baddonz-upgrader-use-unique", key: "use_unique" },
+            { id: "baddonz-upgrader-allow-bound", key: "allow_bound_items" },
+            { id: "baddonz-upgrader-upgrade-endbattle-check", key: "upgrade_endbattle" },
+            { id: "baddonz-upgrader-bags-upgrade-check", key: "bags_upgrade" },
+        ];
+
+        checkboxes.forEach(item => {
+            const el = document.getElementById(item.id);
+            if (el) {
+                el.addEventListener('click', () => {
+                    settings[item.key] = !settings[item.key];
+                    saveSettings();
+                    updateUI();
+                    manageBagLoop();
+                });
+            }
+        });
+
+        const countEndbattleInput = document.getElementById("baddonz-upgrader-count-endbattle-input");
+        if (countEndbattleInput) {
+            countEndbattleInput.addEventListener('change', () => {
+                const val = Math.max(1, parseInt(countEndbattleInput.value) || 1);
+                settings.count_endbattle = val;
+                countEndbattleInput.value = val;
                 saveSettings();
             });
         }
 
-        // Ustawienia Okienka Ustawień
-        const bindCb = (selector, key) => {
-            const cb = uiSettingsWindow.querySelector(selector);
-            if(currentSettings[key]) cb.classList.add('active');
-            cb.addEventListener('click', () => { currentSettings[key] = cb.classList.toggle('active'); saveSettings(); });
-        };
-        
-        bindCb('.upg-use-common-cb', 'use_common');
-        bindCb('.upg-use-unique-cb', 'use_unique');
-        bindCb('.upg-allow-bound-cb', 'allow_bound_items');
-        bindCb('.upg-hotkey-enabled-cb', 'hotkeyEnabled');
-        bindCb('.upg-endbattle-cb', 'upgrade_endbattle');
-        bindCb('.upg-bags-cb', 'bags_upgrade');
-
-        // Bindowanie Typów
-        uiSettingsWindow.querySelectorAll('.upg-typ-wrapper').forEach(wrapper => {
-            const key = wrapper.getAttribute('data-key');
-            const cl = wrapper.getAttribute('data-cl');
-            const cb = wrapper.querySelector('.baddonz-checkbox');
-            if (currentSettings[key]) cb.classList.add('active');
-            
-            if (typeof $ === 'function' && typeof $.fn.tip === 'function') $(wrapper).tip(ITEM_CL_NAMES[cl]);
-
-            wrapper.addEventListener('click', () => {
-                currentSettings[key] = cb.classList.toggle('active');
+        const countBagsUpgradeInput = document.getElementById("baddonz-upgrader-count-bags-upgrade-input");
+        if (countBagsUpgradeInput) {
+            countBagsUpgradeInput.addEventListener('change', () => {
+                const val = Math.max(1, parseInt(countBagsUpgradeInput.value) || 1);
+                settings.count_bags_upgrade = val;
+                countBagsUpgradeInput.value = val;
                 saveSettings();
             });
-        });
+        }
 
-        // Bindowanie Hotkey
-        const hkInput = uiSettingsWindow.querySelector('.upg-hotkey-input');
-        hkInput.value = currentSettings.hotkeyKey.toUpperCase();
-        let hkActive = false;
-        
-        hkInput.addEventListener('click', () => {
-            hkActive = true;
-            hkInput.focus();
-            hkInput.classList.add('active-keybind-mode');
-        });
-        
-        hkInput.addEventListener('blur', () => {
-            hkActive = false;
-            hkInput.classList.remove('active-keybind-mode');
-            hkInput.value = currentSettings.hotkeyKey.toUpperCase();
-        });
-        
-        hkInput.addEventListener('keydown', (e) => {
-            if (!hkActive) return;
-            e.preventDefault();
-            const pressedKey = e.key.toLowerCase();
-            if (['escape', 'enter', 'tab'].includes(pressedKey)) { hkInput.blur(); return; }
-            if (window.BaddonzAPI && !window.BaddonzAPI.isValidHotkey(pressedKey)) return;
-            if (pressedKey.length !== 1) return;
-            
-            currentSettings.hotkeyKey = pressedKey;
-            hkInput.value = pressedKey.toUpperCase();
-            saveSettings();
-            hkInput.blur();
-        });
+        const hotkeyInput = document.getElementById("baddonz-upgrader-hotkey-input");
+        if (hotkeyInput) {
+            const handleHotkeySetting = (e) => {
+                if (['Tab', 'Enter', 'Escape', 'Shift', 'Control', 'Alt', 'Meta'].includes(e.key) || (e.key.length > 1 && e.key !== ' ')) {
+                    return;
+                }
+                e.preventDefault();
+                e.stopPropagation();
 
-        // Bindowanie Inputów Liczbowych
-        const bindInput = (selector, key) => {
-            const input = uiSettingsWindow.querySelector(selector);
-            input.value = currentSettings[key];
-            input.addEventListener('change', () => {
-                let val = parseInt(input.value);
-                if(isNaN(val) || val < 1) val = 1;
-                currentSettings[key] = val;
-                input.value = val;
+                let newKey = e.key.toLowerCase().slice(0, 1);
+                settings.hotkeyKey = newKey || ' ';
+
+                hotkeyInput.removeEventListener('keydown', handleHotkeySetting);
+                hotkeyInput.blur();
                 saveSettings();
+                updateUI();
+            };
+
+            hotkeyInput.addEventListener('focus', () => {
+                hotkeyInput.addEventListener('keydown', handleHotkeySetting);
             });
-        };
-        bindInput('.upg-endbattle-input', 'count_endbattle');
-        bindInput('.upg-bags-input', 'count_bags_upgrade');
+            hotkeyInput.addEventListener('blur', () => {
+                hotkeyInput.removeEventListener('keydown', handleHotkeySetting);
+                updateUI();
+            });
+        }
 
-        // Zamknięcie
-        uiSettingsWindow.querySelector('.baddonz-close-button').addEventListener('click', () => {
-            currentSettings.settingsWindowVisible = false;
-            saveSettings();
-        });
+        const itemTypeFiltersContainer = document.getElementById("baddonz-upgrader-type-filters");
+        if (itemTypeFiltersContainer && typeof $ === 'function' && $.fn.tip) {
+            itemTypeFiltersContainer.querySelectorAll('.baddonz-typ-wrapper').forEach(wrapper => {
+                const cl = parseInt(wrapper.getAttribute('data-cl'));
+                if (cl && ITEM_CL_NAMES[cl]) $(wrapper).tip(ITEM_CL_NAMES[cl]);
 
-        uiSettingsWindow.querySelector('.baddonz-opacity-button').addEventListener('click', () => {
-            if (isUnified) return; 
-            uiSettingsWindow.classList.remove(`opacity-${currentSettings.windowSettingsOpacity}`);
-            currentSettings.windowSettingsOpacity = (currentSettings.windowSettingsOpacity + 1) % 5;
-            uiSettingsWindow.classList.add(`opacity-${currentSettings.windowSettingsOpacity}`);
-            saveSettings();
-        });
+                wrapper.addEventListener('click', () => {
+                    const key = wrapper.getAttribute('data-key');
+                    if (key) {
+                        settings[key] = !settings[key];
+                        saveSettings();
+                        updateUI();
+                    }
+                });
+            });
 
-        updateLimitDisplay();
-        updateItemDisplay();
+            $(settingsBtn).tip('Ustawienia');
+            $(document.getElementById("baddonz-upgrader-allow-bound")).tip('Używasz na własną odpowiedzialność! Uwaga na itemy z kolosów');
+            $(document.getElementById("baddonz-upgrader-upgrade-endbattle-check")).tip('Automatyczne ulepszanie po walce');
+        }
     }
 
-    function updateLimitDisplay() {
-        if (!uiMainWindow) return;
-        const limitEl = uiMainWindow.querySelector("#upg-daily-limit-text");
-        if (limitEl) limitEl.textContent = `Limit: ${dailyUpgradeCount}/${dailyUpgradeLimit}`;
-    }
-
-    // LOGIKA MARGONEM
     function isEventItem(item) {
         if (!item || !item.getTipContent) return false;
         const tip = item.getTipContent();
         if (!tip) return false;
-        const plainText = tip.replace(/<[^>]+>/g, '');
-        return EVENT_KEYWORDS.some(keyword => plainText.includes(keyword));
+        return EVENT_KEYWORDS.some(keyword => tip.replace(/<[^>]+>/g, '').includes(keyword));
     }
 
     const getFreeSlots = () => {
         let totalFreeSlots = 0;
-        if (typeof window.Engine !== 'undefined' && window.Engine.bags && Array.isArray(window.Engine.bags)) {
-            const bagsToCount = window.Engine.bags.length > 0 ? window.Engine.bags.slice(0, window.Engine.bags.length - 1) : window.Engine.bags;
+        if (typeof Engine !== 'undefined' && Engine.bags && Array.isArray(Engine.bags)) {
+            const bagsToCount = Engine.bags.length > 0 ? Engine.bags.slice(0, Engine.bags.length - 1) : Engine.bags;
             bagsToCount.forEach(bag => {
-                if (Array.isArray(bag) && bag.length >= 2) totalFreeSlots += Math.max(0, bag[0] - bag[1]);
+                if (Array.isArray(bag) && bag.length >= 2) {
+                    totalFreeSlots += Math.max(0, bag[0] - bag[1]);
+                }
             });
         }
         return totalFreeSlots;
     };
 
+    const checkDailyLimit = () => dailyUpgradeCount < dailyUpgradeLimit;
+
+    function getEnhancementProgressText() {
+        try {
+            const currentProgressTextEl = Engine.crafting.window.wnd.$[0].querySelector('.enhance__progress-text--current');
+            if (currentProgressTextEl) return currentProgressTextEl.textContent.trim();
+        } catch (e) {}
+        return "Brak danych";
+    }
+
+    const manageBagLoop = () => {
+        if (settings.bags_upgrade && settings.enabled) {
+            if (!bagIntervalId) {
+                bagIntervalId = setInterval(handleBagCheck, BAG_CHECK_INTERVAL);
+            }
+        } else {
+            if (bagIntervalId) {
+                clearInterval(bagIntervalId);
+                bagIntervalId = null;
+            }
+        }
+    };
+
+    const handleBagCheck = async () => {
+        if (!settings.enabled || !settings.bags_upgrade || !checkDailyLimit() || isUpgrading) return;
+        const upgradedItemId = getUpgradedItemId();
+        const upgradedItem = Engine.items.getItemById(upgradedItemId);
+        if (!upgradedItem) return;
+
+        const reagents = getReagents();
+        const freeSlots = getFreeSlots();
+        if (reagents.length >= 1 && freeSlots <= settings.count_bags_upgrade) {
+            isUpgrading = true;
+            message(`Wolne sloty: ${freeSlots}. Automatyczne ulepszanie przedmiotu: ${upgradedItem.name}.`);
+            await performUpgradeProcess(upgradedItemId, reagents);
+            isUpgrading = false;
+        }
+    };
+
+    const handleEndBattle = async () => {
+        if (!settings.enabled || !settings.upgrade_endbattle || !checkDailyLimit() || isUpgrading) return;
+        const upgradedItemId = getUpgradedItemId();
+        const upgradedItem = Engine.items.getItemById(upgradedItemId);
+        if (!upgradedItem) return;
+
+        const reagents = getReagents();
+        if (reagents.length < settings.count_endbattle) return;
+
+        isUpgrading = true;
+        message(`Ulepszam po walce przedmiotu: ${upgradedItem.name}.`);
+        await performUpgradeProcess(upgradedItemId, reagents);
+        isUpgrading = false;
+    };
+
+    const performUpgradeProcess = async (upgradedItemId, reagents) => {
+        let windowEnabled = false;
+        const toggleEnhancementWindow = () => {
+            if (windowEnabled) {
+                Engine.crafting.window.wnd.$.removeClass("upgrader-crafting-window");
+                Engine.interface.clickCrafting();
+                windowEnabled = false;
+            } else {
+                Engine.crafting.window.wnd.$.addClass("upgrader-crafting-window");
+                Engine.interface.clickCrafting();
+                windowEnabled = true;
+            }
+        };
+
+        try {
+            toggleEnhancementWindow();
+            const progressInfo = await setEnhancedItem(upgradedItemId);
+            if (progressInfo.isCompleted) {
+                message(`Maksymalny postęp ulepszania został już osiągnięty.`);
+                return;
+            }
+
+            const chunks = chunkReagents(reagents);
+            for (const chunk of chunks) {
+                if (!checkDailyLimit()) {
+                    message(`Przerwano ulepszanie. Osiągnięto dzienny limit ${dailyUpgradeLimit}.`);
+                    break;
+                }
+
+                await setReagents(upgradedItemId, chunk);
+                await enhanceItem(upgradedItemId, chunk);
+                await sleep(200);
+
+                const nextProgress = await setEnhancedItem(upgradedItemId);
+                await sleep(100);
+
+                const progressText = getEnhancementProgressText();
+                if (nextProgress.isCompleted) {
+                    message(`Ulepszono! Progres: ${progressText}. (MAX)`);
+                    break;
+                }
+                message(`Ulepszono! Progres: ${progressText}`);
+                await sleep(300);
+            }
+        } finally {
+            if (windowEnabled) toggleEnhancementWindow();
+        }
+    };
+
     const getReagents = () => {
-        if (!window.Engine || !window.Engine.items) return [];
-        return window.Engine.items.fetchLocationItems("g").reduce((acc, item) => {
+        return Engine.items.fetchLocationItems("g").reduce((acc, item) => {
             if (!item) return acc;
 
             const cached = item._cachedStats || {};
             const rarity = cached.rarity || item.rarity;
-            const enhancement_upgrade_lvl = cached.enhancement_upgrade_lvl !== undefined ? cached.enhancement_upgrade_lvl : (item.enhancement_upgrade_lvl ?? undefined);
-            
-            const isWorthless = ((cached && Object.prototype.hasOwnProperty.call(cached, 'artisan_worthless')) || Object.prototype.hasOwnProperty.call(item, 'artisan_worthless'));
-            const cursed_flag = (cached.cursed !== undefined ? cached.cursed : (item.cursed !== undefined ? item.cursed : false));
-            const itemLevel = (item.lvl ?? item.level ?? cached.lvl ?? 0);
+            const enhancement_upgrade_lvl = cached.enhancement_upgrade_lvl !== undefined ? cached.enhancement_upgrade_lvl : item.enhancement_upgrade_lvl;
+
+            const isWorthless = Object.prototype.hasOwnProperty.call(cached, 'artisan_worthless') || Object.prototype.hasOwnProperty.call(item, 'artisan_worthless');
+            const cursed_flag = cached.cursed !== undefined ? cached.cursed : (item.cursed !== undefined ? item.cursed : false);
+            const itemLevel = item.lvl ?? item.level ?? cached.lvl ?? 0;
             const itemClass = item.cl;
 
-            const isAllowedRarity = (currentSettings.use_common && rarity === 'common') || (currentSettings.use_unique && rarity === 'unique');
-            const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
-            const isAllowedType = itemSettingKey ? currentSettings[itemSettingKey] : false;
+            if (itemLevel < 20 || cursed_flag || isWorthless) return acc;
 
+            const isAllowedRarity = (settings.use_common && rarity === 'common') || (settings.use_unique && rarity === 'unique');
+            const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
+            const isAllowedType = itemSettingKey ? settings[itemSettingKey] : false;
             const isUpgraded = enhancement_upgrade_lvl !== undefined && enhancement_upgrade_lvl !== null;
             const isBound = (item.checkSoulbound && item.checkSoulbound()) || (item.checkPermbound && item.checkPermbound());
 
@@ -479,19 +632,10 @@
                     const builds = item.getBuildsWithThisItem();
                     if (builds && builds.length > 0) isPartOfBuild = true;
                 }
-            } catch (e) { isPartOfBuild = false; }
+            } catch (e) {}
 
-            if (itemLevel < 20 || cursed_flag || isWorthless) return acc;
-
-            if (isAllowedType && isAllowedRarity && !isEventItem(item) && !isUpgraded && !isWorthless && (currentSettings.allow_bound_items || !isBound) && !isPartOfBuild) {
-                let isPartOfBuildExtra = false;
-                if (typeof window.Engine.buildsManager !== 'undefined' && item.getBuildsWithThisItem) {
-                    try {
-                        const builds = item.getBuildsWithThisItem();
-                        if (builds && builds.length > 0) isPartOfBuildExtra = true;
-                    } catch (e) { isPartOfBuildExtra = false; }
-                }
-                if (!isPartOfBuildExtra) acc.push(item.id);
+            if (isAllowedType && isAllowedRarity && !isEventItem(item) && !isUpgraded && (settings.allow_bound_items || !isBound) && !isPartOfBuild) {
+                acc.push(item.id);
             }
             return acc;
         }, []);
@@ -499,48 +643,30 @@
 
     const chunkReagents = (reagents) => {
         const chunks = [];
-        for (let i = 0; i < reagents.length; i += MAX_REAGENTS) chunks.push(reagents.slice(i, i + MAX_REAGENTS));
+        for (let i = 0; i < reagents.length; i += MAX_REAGENTS) {
+            chunks.push(reagents.slice(i, i + MAX_REAGENTS));
+        }
         return chunks;
     };
 
-    function getEnhancementProgressText() {
-        try {
-            const currentProgressTextEl = window.Engine.crafting.window.wnd.$[0].querySelector('.enhance__progress-text--current');
-            if (currentProgressTextEl) return currentProgressTextEl.textContent.trim();
-        } catch (e) {}
-        return "Brak danych";
-    }
-
-    const checkDailyLimit = () => dailyUpgradeCount < dailyUpgradeLimit;
-
-    const toggleEnhancementWindow = () => {
-        if (windowEnabled) {
-            window.Engine.crafting.window.wnd.$.removeClass("upgrader-crafting-window");
-            window.Engine.interface.clickCrafting();
-            windowEnabled = false;
-            return;
-        }
-        window.Engine.crafting.window.wnd.$.addClass("upgrader-crafting-window");
-        window.Engine.interface.clickCrafting();
-        windowEnabled = true;
-    };
-
-    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
     const setEnhancedItem = (itemId) => {
         return new Promise((resolve) => {
-            window._g(`enhancement&action=status&item=${itemId}`, (data) => {
+            _g(`enhancement&action=status&item=${itemId}`, (data) => {
                 let current = 0, max = 0, isCompleted = false;
                 if (data?.enhancement?.progress) {
-                    const progress = data.enhancement.progress;
-                    current = progress.current; max = progress.max;
+                    current = data.enhancement.progress.current;
+                    max = data.enhancement.progress.max;
                     if (current > 0 && current === max) isCompleted = true;
                 }
+
                 setTimeout(() => {
                     const progressText = getEnhancementProgressText();
-                    if (progressText !== "Brak danych") saveProgress(itemId, progressText);
-                    else if (isCompleted) saveProgress(itemId, `${max}/${max}`);
-                    updateItemDisplay();
+                    if (progressText !== "Brak danych") {
+                        saveProgress(itemId, progressText);
+                    } else if (isCompleted) {
+                        saveProgress(itemId, `${max}/${max}`);
+                    }
+                    updateUI();
                     resolve({ current, max, isCompleted });
                 }, 300);
             });
@@ -548,202 +674,146 @@
     };
 
     const setReagents = (itemId, reagentIds) => {
-        const reagents = reagentIds.join(",");
-        return new Promise((resolve) => window._g(`enhancement&action=progress_preview&item=${itemId}&ingredients=${reagents}`, resolve));
+        return new Promise((resolve) => {
+            _g(`enhancement&action=progress_preview&item=${itemId}&ingredients=${reagentIds.join(",")}`, (data) => resolve(data));
+        });
     };
 
     const enhanceItem = (itemId, reagentIds) => {
-        if (!itemId || !reagentIds) return;
-        const reagents = reagentIds.join(",");
-        return new Promise((resolve) => window._g(`enhancement&action=progress&item=${itemId}&ingredients=${reagents}`, resolve));
+        return new Promise((resolve) => {
+            _g(`enhancement&action=progress&item=${itemId}&ingredients=${reagentIds.join(",")}`, (data) => resolve(data));
+        });
     };
 
-    const processChunks = async (upgradedItemId, chunks) => {
-        for (const chunk of chunks) {
-            if (!checkDailyLimit()) {
-                if (window.message) message(`Przerwano ulepszanie. Limit osiągnięty.`);
-                return true;
-            }
-            await setReagents(upgradedItemId, chunk);
-            await enhanceItem(upgradedItemId, chunk);
-            await sleep(200);
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-            const progressInfo = await setEnhancedItem(upgradedItemId);
-            await sleep(100);
+    const setupKeydownHandler = () => {
+        window.document.addEventListener("keydown", async (event) => {
+            const hotkey = settings.hotkeyKey.toLowerCase();
+            const isInputActive = ["TEXTAREA", "MAGIC_INPUT", "INPUT"].includes(document.activeElement.tagName);
 
-            const progressText = getEnhancementProgressText();
-            if (progressInfo.isCompleted) {
-                if (window.message) message(`Ulepszono! Progres: ${progressText}. (MAX)`);
-                return true;
-            }
-            if (window.message) message(`Ulepszono! Progres: ${progressText}`);
-            await sleep(300);
-        }
-        return false;
-    };
+            if (event.key.toLowerCase() !== hotkey || isInputActive || isUpgrading) return;
 
-    const runEnhancementCycle = async (triggerMessage) => {
-        if (!currentSettings.enabled || !checkDailyLimit() || isUpgrading) return;
-        
-        const upgradedItemId = currentSettings.selectedItemId;
-        const upgradedItem = window.Engine.items.getItemById(upgradedItemId);
-        if (!upgradedItem) return;
-
-        const reagents = getReagents();
-        if (reagents.length === 0) return;
-
-        isUpgrading = true;
-        if (window.message) message(triggerMessage.replace('{name}', upgradedItem.name));
-
-        try {
-            toggleEnhancementWindow();
-            const progressInfo = await setEnhancedItem(upgradedItemId);
-
-            if (progressInfo.isCompleted) {
-                if (window.message) message(`Maksymalny progres osiągnięty.`);
-                return;
-            }
-            const chunks = chunkReagents(reagents);
-            await processChunks(upgradedItemId, chunks);
-        } finally {
-            toggleEnhancementWindow();
-            isUpgrading = false;
-        }
-    };
-
-    const handleBagCheck = async () => {
-        if (!currentSettings.bags_upgrade) return;
-        const freeSlots = getFreeSlots();
-        const reagents = getReagents();
-        if (reagents.length >= 1 && freeSlots <= currentSettings.count_bags_upgrade) {
-            await runEnhancementCycle(`Wolne sloty: ${freeSlots}. Ulepszam! {name}.`);
-        }
-    };
-
-    const handleEndBattle = async () => {
-        if (!currentSettings.upgrade_endbattle) return;
-        const reagents = getReagents();
-        if (reagents.length >= currentSettings.count_endbattle) {
-            await runEnhancementCycle(`Ulepszam! {name}.`);
-        }
-    };
-
-    const handleKeyDown = async (e) => {
-        if (!currentSettings.enabled || !currentSettings.hotkeyEnabled) return;
-        const isInputActive = ["TEXTAREA", "MAGIC_INPUT", "INPUT"].includes(document.activeElement.tagName);
-        if (isInputActive) return;
-
-        if (e.key.toLowerCase() === currentSettings.hotkeyKey) {
-            if (isUpgrading) { e.preventDefault(); return; }
-            if (typeof window.Engine.battle.d !== 'undefined' && window.Engine.battle.d.id !== 0) {
-                if (window.message) message("Nie można ręcznie ulepszać podczas walki.");
-                return;
-            }
-            if (!checkDailyLimit()) {
-                if (window.message) message(`Osiągnięto dzienny limit ulepszeń.`);
-                return;
-            }
-            e.preventDefault();
-            await runEnhancementCycle(`Start ulepszania z klawisza: {name}`);
-        }
-    };
-
-    // INIT
-    function addonInit() {
-        loadSettings();
-        if (!uiMainWindow) buildUI();
-
-        // Podpięcie parsowania limitów
-        if (window.Engine && window.Engine.communication) {
-            emitter.observe(window.Engine.communication, 'parseJSON', data => {
-                if (data?.enhancement?.usages_preview?.count !== undefined) {
-                    dailyUpgradeCount = data.enhancement.usages_preview.count;
-                    dailyUpgradeLimit = data.enhancement.usages_preview.limit || dailyUpgradeLimit;
-                    localStorage.setItem("baddonz-daily-upgrade-count", dailyUpgradeCount);
-                    updateLimitDisplay();
+            if (settings.enabled && settings.hotkeyEnabled) {
+                if (typeof Engine.battle.d !== 'undefined' && Engine.battle.d.id !== 0) {
+                    message("Nie można ręcznie ulepszać podczas walki.");
+                    return;
                 }
-            });
-        }
-
-        // Podpięcie walki
-        if (window.Engine && window.Engine.battle && typeof window.Engine.battle.setEndBattle === 'function') {
-            emitter.observe(window.Engine.battle, 'setEndBattle', () => {
-                handleEndBattle();
-            });
-        }
-
-        // Menu kontekstowe
-        if (window.Engine && window.Engine.interface && !isMenuIntercepted) {
-            const ogShowPopupMenu = window.Engine.interface.showPopupMenu;
-            window.Engine.interface.showPopupMenu = function (menu, e) {
-                const className = e.currentTarget?.className || "";
-                const match = className.match(/item-id-(\d+)/);
-                const itemId = match ? match[1] : null;
-                const item = window.Engine.items.getItemById(itemId);
-
-                if (!itemId || !ITEM_TYPE_SETTINGS_MAP.hasOwnProperty(item?.cl)) {
-                    return ogShowPopupMenu.call(this, menu, e);
+                if (!checkDailyLimit()) {
+                    message(`Osiągnięto dzienny limit ulepszeń.`);
+                    return;
                 }
 
-                let menuItem;
-                if (itemId === currentSettings.selectedItemId) {
-                    menuItem = ["Anuluj ulepszanie", () => {
-                        currentSettings.selectedItemId = "";
-                        saveSettings();
-                        if (window.message) message(`Anulowano ulepszanie przedmiotu ${item.name}`);
-                        updateItemDisplay();
-                    }, { button: { cls: "menu-item--red" } }];
-                } else {
-                    menuItem = ["Ulepsz ten przedmiot", async () => {
-                        currentSettings.selectedItemId = itemId;
-                        saveSettings();
-                        if (window.message) message(`Wybrano do ulepszania: ${item.name}`);
-                        updateItemDisplay();
-                    }, { button: { cls: "menu-item--green" } }];
-                }
+                const upgradedItemId = getUpgradedItemId();
+                const reagents = getReagents();
 
-                const updatedMenu = [menuItem, ...menu];
-                return ogShowPopupMenu.call(this, updatedMenu, e);
-            };
-            isMenuIntercepted = true;
-        }
+                if (!upgradedItemId) { message("Nie wybrano przedmiotu do ulepszania."); return; }
+                if (reagents.length === 0) { message("Brak odpowiednich reagentów w plecaku."); return; }
 
-        document.addEventListener("keydown", handleKeyDown);
-
-        if (!BADDONZ_BAG_INTERVAL) {
-            BADDONZ_BAG_INTERVAL = setInterval(handleBagCheck, BAG_CHECK_INTERVAL);
-        }
-    }
-
-    function addonStop() {
-        document.removeEventListener("keydown", handleKeyDown);
-        if (BADDONZ_BAG_INTERVAL) {
-            clearInterval(BADDONZ_BAG_INTERVAL);
-            BADDONZ_BAG_INTERVAL = null;
-        }
-        if (uiMainWindow) { uiMainWindow.remove(); uiMainWindow = null; }
-        if (uiSettingsWindow) { uiSettingsWindow.remove(); uiSettingsWindow = null; }
-    }
-
-    function onStateToggle(isEnabled) {
-        currentSettings.enabled = isEnabled;
-        if (uiMainWindow) {
-            const enabledCb = uiMainWindow.querySelector(".upg-enabled-checkbox");
-            if (enabledCb) {
-                if (isEnabled) enabledCb.classList.add('active');
-                else enabledCb.classList.remove('active');
+                event.preventDefault();
+                isUpgrading = true;
+                await performUpgradeProcess(upgradedItemId, reagents);
+                isUpgrading = false;
             }
-        }
-        saveSettings();
-    }
+        });
+    };
 
-    const checkApi = () => {
-        if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon) {
-            setTimeout(checkApi, 500);
+    const initItemContextMenu = () => {
+        const ogShowPopupMenu = Engine.interface.showPopupMenu;
+        Engine.interface.showPopupMenu = function (menu, e) {
+            if (!e.currentTarget?.className) return ogShowPopupMenu.call(this, menu, e);
+            const match = e.currentTarget.className.match(/item-id-(\d+)/);
+            const itemId = match ? match[1] : null;
+            const item = Engine.items.getItemById(itemId);
+            const currentSelectedItemId = getUpgradedItemId();
+
+            if (!itemId || !ITEM_TYPE_SETTINGS_MAP.hasOwnProperty(item?.cl)) {
+                return ogShowPopupMenu.call(this, menu, e);
+            }
+
+            let menuItem;
+            if (itemId === currentSelectedItemId) {
+                menuItem = ["Anuluj ulepszanie", () => {
+                    setUpgradedItemId("");
+                    message(`Anulowano ulepszanie przedmiotu ${item.name}`);
+                    updateUI();
+                }, { button: { cls: "menu-item--red" } }];
+            } else {
+                menuItem = ["Ulepsz ten przedmiot", async () => {
+                    setUpgradedItemId(itemId);
+                    message(`Wybrano przedmiot do ulepszania: ${item.name}`);
+                    updateUI();
+                }, { button: { cls: "menu-item--green" } }];
+            }
+
+            ogShowPopupMenu.call(this, [menuItem, ...menu], e);
+        };
+    };
+
+    const setupCommunicationHook = () => {
+        if (typeof Engine.communication.parseJSON !== 'function') {
+            setTimeout(setupCommunicationHook, 500);
             return;
         }
-        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle: onStateToggle });
+        const originalParseJSON = Engine.communication.parseJSON;
+        Engine.communication.parseJSON = function (data) {
+            if (data?.enhancement?.usages_preview?.count !== undefined) {
+                dailyUpgradeCount = data.enhancement.usages_preview.count;
+                dailyUpgradeLimit = data.enhancement.usages_preview.limit || dailyUpgradeLimit;
+                saveDailyUpgradeCount(dailyUpgradeCount);
+                updateUI();
+            }
+            return originalParseJSON.call(this, data);
+        };
     };
 
-    checkApi();
+    const setupCSS = () => {
+        const css = `
+            .upgrader-crafting-window { display: none !important; }
+            .menu-item--yellow { background: rgb(57, 100, 17) !important; color: #fff !important; border-radius: 5px !important; padding: 5px !important; }
+            .baddonz-typ-wrapper:hover { background: rgba(255, 255, 255, 0.1) !important; }
+            .baddonz-upgrader-item-cursor { cursor: pointer !important; }
+            #baddonz-upgrader-main-item-slot { margin: 0 auto; }
+        `;
+        const style = document.createElement("style");
+        style.appendChild(document.createTextNode(css));
+        document.head.appendChild(style);
+    };
+
+    const initializeScript = () => {
+        if (!window.Engine?.allInit) {
+            setTimeout(initializeScript, 500);
+            return;
+        }
+
+        loadSettings();
+        setupCSS();
+        createUI();
+        setupKeydownHandler();
+        initItemContextMenu();
+        setupCommunicationHook();
+        manageBagLoop();
+
+        // Podpięcie pod wydarzenie końca walki w silniku
+        if (typeof Engine.battle.setEndBattle === 'function') {
+            const originalSetEndBattle = Engine.battle.setEndBattle.bind(Engine.battle);
+            Engine.battle.setEndBattle = function() {
+                originalSetEndBattle();
+                handleEndBattle();
+            };
+        }
+    };
+
+    // Cykl życia i rejestracja w API Baddonz 2.0.5
+    const apiInstance = getAPI();
+    if (apiInstance && typeof apiInstance.registerAddon === 'function') {
+        apiInstance.registerAddon(ADDON_ID, {
+            init: initializeScript,
+            stop: () => {
+                if (bagIntervalId) clearInterval(bagIntervalId);
+            }
+        });
+    } else {
+        initializeScript();
+    }
 })();
