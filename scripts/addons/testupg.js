@@ -38,13 +38,22 @@
     styleSheet.innerText = `
         .baddonz-upg-wnd { width: 150px; min-width: 150px; }
         .baddonz-upg-wnd .baddonz-window-body { padding: 5px 8px 8px 8px !important; gap: 4px !important; }
+        
+        /* Brak scrollbara - dynamiczna wysokość */
         .baddonz-upg-settings-wnd { width: 260px; min-width: 260px; }
-        .baddonz-upg-settings-wnd .baddonz-window-body { padding: 5px 8px 8px 8px !important; gap: 3px !important; }
+        .baddonz-upg-settings-wnd .baddonz-window-body { 
+            padding: 5px 8px 8px 8px !important; 
+            gap: 3px !important; 
+            height: auto !important; 
+            max-height: none !important; 
+            overflow: visible !important; 
+        }
+
         .upg-item-slot-wrapper { display: flex; justify-content: center; align-items: center; min-height: 42px; }
         .upg-item-name { font-size: 11px; font-weight: bold; color: #ffcc00; text-shadow: 1px 1px #000; text-align: center; padding: 0; }
         .upg-item-progress { font-size: 10px; color: #aaa; text-align: center; padding: 0; }
         .upg-daily-limit { font-size: 10px; color: #ccc; text-align: center; border-top: 1px solid #303030; padding-top: 4px; margin-top: 2px; }
-        .upg-state-row { display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .upg-state-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 4px; }
         .upg-typ-wrapper { display: flex; align-items: center; justify-content: center; gap: 3px; padding: 3px; background: rgba(0,0,0,0.3); border-radius: 3px; cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer; user-select: none; }
         .upg-typ-wrapper:hover { background: rgba(255,255,255,0.1); }
         #baddonz-upg-type-filters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
@@ -248,8 +257,7 @@
     function buildUI() {
         const mainBodyHtml = `
             <div class="upg-state-row">
-                <div class="baddonz-checkbox upg-enabled-cb ${currentSettings.enabled ? 'active' : ''}"></div>
-                <span class="baddonz-text" style="font-size:11px; padding:0;">Ulepszara</span>
+                <button class="baddonz-state-button upg-enabled-btn ${currentSettings.enabled ? 'active' : ''}"></button>
             </div>
             <div class="upg-item-slot-wrapper"></div>
             <div class="upg-item-name baddonz-text"></div>
@@ -260,7 +268,7 @@
         uiMainWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Ulepszara", mainBodyHtml, {
             customId: 'baddonz-ulepszara-wnd',
             hasSettings: true,
-            hasCollapse: false,
+            hasCollapse: true,
             hasClose: true,
             width: '150px'
         });
@@ -268,13 +276,7 @@
         const settingsBodyHtml = `
             <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox upg-hotkey-enabled-cb ${currentSettings.hotkeyEnabled ? 'active' : ''}"></div>
-                <span class="baddonz-text">Klawisz ulepszania</span>
-            </div>
-            <div class="upg-hotkey-options baddonz-flex column" style="margin-left:5px; display:${currentSettings.hotkeyEnabled ? 'flex' : 'none'};">
-                <span class="baddonz-text" style="font-size:10px; padding:0; margin-bottom:3px;">Klawisz:</span>
-                <input type="text" class="baddonz-input upg-hotkey-input keybind" maxlength="1" readonly
-                    value="${(currentSettings.hotkeyKey || 'j').toUpperCase()}"
-                    style="width:100%; text-transform:uppercase; text-align:center;">
+                <span class="baddonz-text upg-hotkey-text" style="cursor:pointer;" title="Kliknij, aby przypisać inny klawisz">Klawisz ulepszania [ ${(currentSettings.hotkeyKey || 'j').toUpperCase()} ]</span>
             </div>
             <hr class="upg-section-divider">
             <div class="baddonz-setting-row">
@@ -344,45 +346,58 @@
 
     function setupUIListeners() {
         // ── Główne okno ──────────────────────────────────────────────────────
-        const enabledCb = uiMainWindow.querySelector('.upg-enabled-cb');
-        enabledCb.addEventListener('click', () => {
-            currentSettings.enabled = enabledCb.classList.toggle('active');
-            saveSettings();
-        });
+        const enabledBtn = uiMainWindow.querySelector('.upg-enabled-btn');
+        if (enabledBtn) {
+            enabledBtn.addEventListener('click', () => {
+                const isActive = enabledBtn.classList.toggle('active');
+                currentSettings.enabled = isActive;
+                if (window.BaddonzAPI?.toggleAddonState) {
+                    window.BaddonzAPI.toggleAddonState(ADDON_ID, isActive);
+                }
+                saveSettings();
+                if (isActive) restartBagLoop();
+                else if (bagLoopTimer) { clearInterval(bagLoopTimer); bagLoopTimer = null; }
+            });
+        }
 
         // ── Okno ustawień ────────────────────────────────────────────────────
+        
+        // Zmieniony wariant klawisza przypominający typową opcję checkboxową
         const hotkeyCb  = uiSettingsWindow.querySelector('.upg-hotkey-enabled-cb');
-        const hotkeyOpt = uiSettingsWindow.querySelector('.upg-hotkey-options');
-        hotkeyCb.addEventListener('click', () => {
-            currentSettings.hotkeyEnabled = hotkeyCb.classList.toggle('active');
-            hotkeyOpt.style.display = currentSettings.hotkeyEnabled ? 'flex' : 'none';
-            saveSettings();
-        });
+        const hotkeyText = uiSettingsWindow.querySelector('.upg-hotkey-text');
+        
+        if (hotkeyCb) {
+            hotkeyCb.addEventListener('click', () => {
+                currentSettings.hotkeyEnabled = hotkeyCb.classList.toggle('active');
+                saveSettings();
+            });
+        }
 
-        // Klawisz hotkey — ustawianie jak w innych dodatkach (kliknij i naciśnij klawisz)
-        const hotkeyInput = uiSettingsWindow.querySelector('.upg-hotkey-input');
         let hotkeyActive = false;
-        hotkeyInput.addEventListener('click', () => {
-            hotkeyActive = true;
-            hotkeyInput.classList.add('active-keybind-mode');
-            hotkeyInput.focus();
-        });
-        hotkeyInput.addEventListener('focusout', () => {
-            hotkeyActive = false;
-            hotkeyInput.classList.remove('active-keybind-mode');
-            hotkeyInput.value = (currentSettings.hotkeyKey || 'j').toUpperCase();
-        });
+        if (hotkeyText) {
+            hotkeyText.addEventListener('click', () => {
+                hotkeyActive = true;
+                hotkeyText.textContent = "Naciśnij klawisz...";
+                hotkeyText.style.color = "#ffcc00";
+            });
+        }
+
         document.addEventListener('keydown', (e) => {
             if (!hotkeyActive) return;
             const key = e.key.toLowerCase();
-            if (['escape','enter','tab'].includes(key)) { hotkeyInput.blur(); return; }
+            if (['escape','enter','tab'].includes(key)) { 
+                hotkeyActive = false;
+                hotkeyText.textContent = `Klawisz ulepszania [ ${(currentSettings.hotkeyKey || 'j').toUpperCase()} ]`;
+                hotkeyText.style.color = "";
+                return; 
+            }
             if (key.length !== 1) return;
             e.preventDefault();
             currentSettings.hotkeyKey = key;
-            hotkeyInput.value = key.toUpperCase();
+            hotkeyText.textContent = `Klawisz ulepszania [ ${key.toUpperCase()} ]`;
+            hotkeyText.style.color = "";
             saveSettings();
             hotkeyActive = false;
-            hotkeyInput.blur();
         });
 
         // Checkboxy rzadkości i zbrojenia
@@ -770,8 +785,8 @@
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
         if (uiMainWindow) {
-            const cb = uiMainWindow.querySelector('.upg-enabled-cb');
-            if (cb) cb.classList.toggle('active', isEnabled);
+            const btn = uiMainWindow.querySelector('.upg-enabled-btn');
+            if (btn) btn.classList.toggle('active', isEnabled);
         }
         if (isEnabled) restartBagLoop();
         else if (bagLoopTimer) { clearInterval(bagLoopTimer); bagLoopTimer = null; }
