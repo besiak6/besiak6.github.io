@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Ulepszara baddonz
-// @version       1.3
-// @description   Automatyczne ulepszanie (Drag & Drop Native Fix + Error Animation)
+// @version       1.2
+// @description   Automatyczne ulepszanie
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -62,8 +62,8 @@
         count_endbattle: 10,
         bags_upgrade: false,
         count_bags_upgrade: 3,
-        cl1: true, cl2: true, cl3: true, cl4: true, cl5: true,
-        cl6: true, cl7: true, cl8: true, cl9: true, cl10: true,
+        cl1: true, cl2: true, cl3: true, cl4: true, 
+        cl5: true, cl6: true, cl7: true, cl8: true, cl9: true, cl10: true,
         cl11: true, cl12: true, cl13: true, cl14: true, cl29: true,
     };
 
@@ -111,7 +111,6 @@
         charKeys.forEach(k => charSettings[k] = currentSettings[k]);
 
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
-
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
@@ -125,7 +124,8 @@
     function getCharId() { return window.Engine?.hero?.d?.id; }
 
     function loadProgress(itemId) {
-        const charId = getCharId(); if (!charId) return null;
+        const charId = getCharId();
+        if (!charId) return null;
         try {
             const all = JSON.parse(localStorage.getItem(`baddonz-enhancement-progress-char-${charId}`)) || {};
             return all[itemId] || null;
@@ -182,11 +182,13 @@
             const cached = item._cachedStats || {};
             const rarity = cached.rarity || item.rarity;
             const enhancement_upgrade_lvl = cached.enhancement_upgrade_lvl !== undefined ? cached.enhancement_upgrade_lvl : (item.enhancement_upgrade_lvl ?? undefined);
+           
             const isWorthless = (cached && Object.prototype.hasOwnProperty.call(cached, 'artisan_worthless')) || Object.prototype.hasOwnProperty.call(item, 'artisan_worthless');
             const cursed_flag = cached.cursed !== undefined ? cached.cursed : (item.cursed !== undefined ? item.cursed : false);
             const itemLevel = item.lvl ?? item.level ?? cached.lvl ?? 0;
             const itemClass = item.cl;
             const isAllowedRarity = (currentSettings.use_common && rarity === 'common') || (currentSettings.use_unique && rarity === 'unique');
+  
             const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
             const isAllowedType = itemSettingKey ? currentSettings[itemSettingKey] : false;
             const isUpgraded = enhancement_upgrade_lvl !== undefined && enhancement_upgrade_lvl !== null;
@@ -239,11 +241,13 @@
             if (data?.enhancement?.progress) {
                 const p = data.enhancement.progress;
                 current = p.current; max = p.max;
+      
                 if (current > 0 && current === max) isCompleted = true;
             }
             setTimeout(() => {
                 const progressText = getEnhancementProgressText();
                 if (progressText !== "Brak danych") saveProgress(itemId, progressText);
+             
                 else if (isCompleted) saveProgress(itemId, `${max}/${max}`);
                 updateMainUI();
                 resolve({ current, max, isCompleted });
@@ -295,30 +299,54 @@
             .wnd-ulepszara { width: 175px; min-width: 175px; }
             .wnd-ulepszara .baddonz-window-body { padding: 5px 8px 8px 8px !important; gap: 4px !important; }
 
-            /* ── Okno ustawień ───────────────────────────────── */
+            /* ── Okno ustawień – dopasowane do zawartości ────── */
             .wnd-ulepszara-settings { width: 255px; min-width: 255px; height: auto !important; min-height: unset !important; max-height: unset !important; }
             .wnd-ulepszara-settings .baddonz-window-body { height: auto !important; min-height: unset !important; padding: 5px 8px 8px 8px !important; gap: 3px !important; display:flex; flex-direction:column; }
 
             /* ── Podgląd itemu ───────────────────────────────── */
             .upg-item-box {
-                display: flex; flex-direction: column; align-items: center;
+                display: flex;
+                flex-direction: column; align-items: center;
                 gap: 3px; padding: 5px 0 6px 0;
                 border-bottom: 1px solid #303030;
-                transition: outline 0.15s, background-color 0.15s, background 0.15s;
-                position: relative;
+                transition: outline 0.15s, background-color 0.15s;
             }
-            .upg-item-box.drag-over {
-                outline: 2px dashed #ffcc00 !important;
+
+            /* Styl podczas przeciągania POPRAWNEGO itemu (biegająca żółta ramka) */
+            .upg-item-box.drag-over-valid {
                 background-color: rgba(255, 204, 0, 0.15) !important;
+                background-image: 
+                    linear-gradient(90deg, #ffcc00 50%, transparent 50%),
+                    linear-gradient(90deg, #ffcc00 50%, transparent 50%),
+                    linear-gradient(0, #ffcc00 50%, transparent 50%),
+                    linear-gradient(0, #ffcc00 50%, transparent 50%) !important;
+                background-repeat: repeat-x, repeat-x, repeat-y, repeat-y !important;
+                background-size: 15px 2px, 15px 2px, 2px 15px, 2px 15px !important;
+                background-position: left top, right bottom, left bottom, right top !important;
+                animation: upg-border-dance-valid 0.5s infinite linear;
             }
-            
-            /* Czerwony krzyżyk (X od rogu do rogu) i tło podczas błędu */
-            .upg-item-box.drop-error {
-                outline: 2px dashed #ff3333 !important;
-                background: 
-                    linear-gradient(to bottom right, transparent calc(50% - 2px), rgba(255, 0, 0, 0.7) calc(50% - 2px), rgba(255, 0, 0, 0.7) calc(50% + 2px), transparent calc(50% + 2px)),
-                    linear-gradient(to bottom left, transparent calc(50% - 2px), rgba(255, 0, 0, 0.7) calc(50% - 2px), rgba(255, 0, 0, 0.7) calc(50% + 2px), transparent calc(50% + 2px)),
-                    rgba(255, 51, 51, 0.15) !important;
+
+            /* Styl podczas przeciągania ZŁEGO itemu (czerwony X + biegająca czerwona ramka) */
+            .upg-item-box.drag-over-invalid {
+                background-color: rgba(255, 0, 0, 0.15) !important;
+                background-image: 
+                    linear-gradient(to top right, transparent calc(50% - 1px), rgba(255,0,0,0.6) calc(50%), transparent calc(50% + 1px)),
+                    linear-gradient(to bottom right, transparent calc(50% - 1px), rgba(255,0,0,0.6) calc(50%), transparent calc(50% + 1px)),
+                    linear-gradient(90deg, #ff0000 50%, transparent 50%),
+                    linear-gradient(90deg, #ff0000 50%, transparent 50%),
+                    linear-gradient(0, #ff0000 50%, transparent 50%),
+                    linear-gradient(0, #ff0000 50%, transparent 50%) !important;
+                background-repeat: no-repeat, no-repeat, repeat-x, repeat-x, repeat-y, repeat-y !important;
+                background-size: auto, auto, 15px 2px, 15px 2px, 2px 15px, 2px 15px !important;
+                background-position: center, center, left top, right bottom, left bottom, right top !important;
+                animation: upg-border-dance-invalid 0.5s infinite linear;
+            }
+
+            @keyframes upg-border-dance-valid {
+                100% { background-position: left 15px top, right 15px bottom, left bottom 15px, right top 15px; }
+            }
+            @keyframes upg-border-dance-invalid {
+                100% { background-position: center, center, left 15px top, right 15px bottom, left bottom 15px, right top 15px; }
             }
 
             .upg-item-slot-wrapper { display:flex; justify-content:center; }
@@ -338,7 +366,8 @@
                 padding: 3px 0;
             }
             .baddonz-typ-wrapper {
-                display:flex; flex-direction:column; align-items:center; justify-content:center;
+                display:flex;
+                flex-direction:column; align-items:center; justify-content:center;
                 cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
                 gap: 2px; padding: 4px 2px;
                 background: rgba(0,0,0,0.35);
@@ -394,7 +423,6 @@
                 <div class="lvl" data-lvl="0"><div class="cl-icon icon-star-0"></div></div>
             </div>`
         );
-
         if (!item) { $slotWrapper.append($slotContainer); return; }
 
         const upgradeLvl = item.upgrade_lvl || 0;
@@ -421,7 +449,6 @@
     // ─── UI update ────────────────────────────────────────────────────────────
     function updateMainUI() {
         if (!uiMainWindow) return;
-
         const stateBtn = uiMainWindow.querySelector('.upg-state-button');
         if (stateBtn) {
             stateBtn.classList.toggle('baddonz-state-button--active', currentSettings.enabled);
@@ -447,7 +474,6 @@
 
     function updateSettingsUI() {
         if (!uiSettingsWindow) return;
-
         const toggleCb = (id, value) => {
             const el = uiSettingsWindow.querySelector(`#${id}`);
             if (el) el.classList.toggle('active', value);
@@ -461,7 +487,6 @@
 
         const endbattleInput = uiSettingsWindow.querySelector('#upg-count-endbattle-input');
         if (endbattleInput) endbattleInput.value = currentSettings.count_endbattle;
-
         const bagsInput = uiSettingsWindow.querySelector('#upg-count-bags-upgrade-input');
         if (bagsInput) bagsInput.value = currentSettings.count_bags_upgrade;
 
@@ -505,18 +530,17 @@
                 <div class="upg-item-name" id="baddonz-upgrader-item-name"></div>
                 <div class="upg-item-progress" id="baddonz-upgrader-item-progress"></div>
             </div>
+    
             <div class="upg-daily-row">
                 <span class="upg-daily-text">Dzienny Limit: 0/2000</span>
             </div>
         `;
-
         uiMainWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Ulepszara", mainBodyHtml, {
             customId: 'wnd-ulepszara',
             hasSettings: true,
             hasCollapse: true,
             hasClose: true
         });
-
         const leftControls = uiMainWindow.querySelector('.baddonz-window-controls.left');
         if (leftControls) {
             const stateBtn = document.createElement('div');
@@ -541,11 +565,13 @@
                     <div class="baddonz-checkbox" id="upg-use-common"></div>
                     <span class="upg-text">Ulepszaj Zwyklakami</span>
                 </div>
+    
                 <div class="upg-setting-row">
                     <div class="baddonz-checkbox" id="upg-use-unique"></div>
                     <span class="upg-text">Ulepszaj Unikatami</span>
                 </div>
                 <div class="upg-setting-row">
+          
                     <div class="baddonz-checkbox" id="upg-allow-bound"></div>
                     <span class="upg-text">Ulepszaj Związanymi</span>
                 </div>
@@ -553,6 +579,7 @@
 
             <div class="upg-settings-label">Typy Itemów:</div>
             <div id="baddonz-upgrader-type-filters">
+           
                 ${generateItemTypeFiltersHtml()}
             </div>
 
@@ -560,11 +587,13 @@
                 <div class="upg-setting-row">
                     <div class="baddonz-checkbox" id="upg-hotkey-enabled"></div>
                     <span class="upg-text">Ulepszanie Klawiszem</span>
+        
                 </div>
                 <div id="upg-hotkey-options" class="upg-input-row" style="display:none;">
                     <span class="upg-settings-label">Klawisz:</span>
                     <input type="text" class="baddonz-input upg-hotkey-input" id="upg-hotkey-input" maxlength="7">
                 </div>
+           
             </div>
 
             <div class="upg-settings-section">
@@ -572,6 +601,7 @@
                     <div class="baddonz-checkbox" id="upg-upgrade-endbattle"></div>
                     <span class="upg-text">Ulepszaj po walce</span>
                 </div>
+        
                 <div id="upg-endbattle-options" class="upg-input-row" style="display:none;">
                     <span class="upg-settings-label">Min. Liczba składników:</span>
                     <input type="number" class="baddonz-input upg-number-input" id="upg-count-endbattle-input" min="1" max="50">
@@ -580,6 +610,7 @@
 
             <div>
                 <div class="upg-setting-row">
+                
                     <div class="baddonz-checkbox" id="upg-bags-upgrade"></div>
                     <span class="upg-text">Ulepszaj po wolnych slotach</span>
                 </div>
@@ -589,7 +620,6 @@
                 </div>
             </div>
         `;
-
         uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Ulepszara Ustawienia", settingsBodyHtml, {
             customId: 'wnd-ulepszara-settings',
             width: '255px'
@@ -618,13 +648,11 @@
 
     function setupListeners() {
         if (!uiMainWindow || !uiSettingsWindow) return;
-
         const stateBtn    = uiMainWindow.querySelector('.upg-state-button');
         const settingsBtn = uiMainWindow.querySelector('.baddonz-settings-button');
         const collapseBtn = uiMainWindow.querySelector('.upg-collapse-btn');
         const closeBtn    = uiMainWindow.querySelector('.baddonz-close-button');
         const opacityBtn  = uiMainWindow.querySelector('.baddonz-opacity-button');
-
         if (stateBtn) {
             stateBtn.addEventListener('click', () => {
                 currentSettings.enabled = !currentSettings.enabled;
@@ -637,6 +665,7 @@
                 const visible = uiSettingsWindow.style.display !== 'none';
                 uiSettingsWindow.style.display = visible ? 'none' : 'flex';
                 currentSettings.settingsWindowVisible = !visible;
+              
                 saveSettings();
             });
         }
@@ -662,11 +691,13 @@
                 const baddonzData = JSON.parse(localStorage.getItem('BaddonzData') || '{}');
                 const accId = window.BaddonzAPI?.accountId;
                 const unified = baddonzData[accId]?.manager?.unifiedOpacityEnabled;
+                
                 if (unified && window.setBaddonzGlobalOpacity) {
                     const cur = baddonzData[accId]?.manager?.currentOpacity ?? 2;
                     window.setBaddonzGlobalOpacity((cur + 1) % 5);
                 } else {
                     currentSettings.windowOpacity = (currentSettings.windowOpacity + 1) % 5;
+   
                     applyOpacityClass(uiMainWindow, currentSettings.windowOpacity);
                     saveSettings();
                 }
@@ -675,7 +706,6 @@
 
         const settingsCloseBtn   = uiSettingsWindow.querySelector('.baddonz-close-button');
         const settingsOpacityBtn = uiSettingsWindow.querySelector('.baddonz-opacity-button');
-
         if (settingsCloseBtn) {
             settingsCloseBtn.addEventListener('click', () => {
                 uiSettingsWindow.style.display = 'none';
@@ -689,11 +719,13 @@
                 const baddonzData = JSON.parse(localStorage.getItem('BaddonzData') || '{}');
                 const accId = window.BaddonzAPI?.accountId;
                 const unified = baddonzData[accId]?.manager?.unifiedOpacityEnabled;
+                
                 if (unified && window.setBaddonzGlobalOpacity) {
                     const cur = baddonzData[accId]?.manager?.currentOpacity ?? 2;
                     window.setBaddonzGlobalOpacity((cur + 1) % 5);
                 } else {
                     currentSettings.windowSettingsOpacity = (currentSettings.windowSettingsOpacity + 1) % 5;
+   
                     applyOpacityClass(uiSettingsWindow, currentSettings.windowSettingsOpacity);
                     saveSettings();
                 }
@@ -705,10 +737,10 @@
             { id: 'upg-use-common',       key: 'use_common' },
             { id: 'upg-use-unique',       key: 'use_unique' },
             { id: 'upg-allow-bound',      key: 'allow_bound_items' },
+  
             { id: 'upg-upgrade-endbattle',key: 'upgrade_endbattle' },
             { id: 'upg-bags-upgrade',     key: 'bags_upgrade' },
         ];
-
         checkboxMap.forEach(({ id, key }) => {
             const el = uiSettingsWindow.querySelector(`#${id}`);
             if (el) el.addEventListener('click', () => {
@@ -716,7 +748,6 @@
                 saveSettings(); updateSettingsUI();
             });
         });
-
         const endbattleInput = uiSettingsWindow.querySelector('#upg-count-endbattle-input');
         if (endbattleInput) {
             endbattleInput.addEventListener('change', () => {
@@ -762,6 +793,7 @@
                 const cl = parseInt(wrapper.dataset.cl);
                 if (cl && ITEM_CL_NAMES[cl] && typeof $ === 'function' && typeof $.fn.tip === 'function') {
                     $(wrapper).tip(ITEM_CL_NAMES[cl]);
+               
                 }
                 wrapper.addEventListener('click', () => {
                     const key = wrapper.dataset.key;
@@ -770,55 +802,52 @@
             });
         }
 
-        // ─── ZMIANA: Zaawansowana tarcza i oszukiwanie Drag & Drop gry ───
+        // ZMIANA: Implementacja Drag & Drop dla ulepszanego itemu (naprawiona z greedy i animacjami walidacji)
         const itemBox = uiMainWindow.querySelector('.upg-item-box');
         if (itemBox && typeof $ === 'function' && typeof $.fn.droppable === 'function') {
             $(itemBox).droppable({
                 accept: '.item',
                 tolerance: 'pointer',
-                greedy: true,
+                greedy: true, // ZABEZPIECZENIE: Zapobiega propagacji upuszczenia itemu do elementów gry pod oknem!
                 over: function(event, ui) {
-                    $(this).removeClass('drop-error');
-                    $(this).addClass('drag-over');
+                    const draggedItem = ui.draggable;
+                    const itemId = getItemIdFromClassName(draggedItem.attr('class'));
+                    
+                    if (itemId) {
+                        const item = Engine.items.getItemById(itemId);
+                        // Walidacja na żywo - jeśli dobry dajemy żółty, jeśli zły dajemy X
+                        if (item && ITEM_TYPE_SETTINGS_MAP.hasOwnProperty(item.cl)) {
+                            $(this).addClass('drag-over-valid');
+                        } else {
+                            $(this).addClass('drag-over-invalid');
+                        }
+                    }
                 },
                 out: function(event, ui) {
-                    $(this).removeClass('drag-over');
+                    // Usuwamy oba możliwe stany po wyjechaniu kursorem z okna
+                    $(this).removeClass('drag-over-valid drag-over-invalid');
                 },
                 drop: async function(event, ui) {
-                    $(this).removeClass('drag-over');
+                    $(this).removeClass('drag-over-valid drag-over-invalid');
                     
-                    // KROK 1: Podmieniamy koordynaty eventu drop. Gra pomyśli, że przedmiot
-                    // został puszczony w bezpiecznej strefie (0,0), więc naturalnie przerwie procedurę rzucania na ziemię.
-                    event.pageX = 0;
-                    event.pageY = 0;
-                    if (event.originalEvent) {
-                        event.originalEvent.pageX = 0;
-                        event.originalEvent.pageY = 0;
-                    }
-
                     const draggedItem = ui.draggable;
                     const className = draggedItem.attr('class');
                     const itemId = getItemIdFromClassName(className);
-                    let isValid = false;
 
                     if (itemId) {
                         const item = Engine.items.getItemById(itemId);
+                        
+                        // Przepuszczamy akcję ulepszania TYLKO jeśli item spełnia wymagania
                         if (item && ITEM_TYPE_SETTINGS_MAP.hasOwnProperty(item.cl)) {
-                            isValid = true;
                             setUpgradedItemId(itemId);
                             message(`Ulepszanie przedmiotu ${item.name}`);
                             toggleEnhancementWindow();
                             await setEnhancedItem(itemId);
                             toggleEnhancementWindow();
+                        } else {
+                            message('Tego przedmiotu nie można ulepszać w Ulepszarce.');
+                            // Ponieważ daliśmy greedy: true, zignorowany, błędny item po prostu wróci na miejsce w ekwipunku, a gra nie wyświetli promptu o usunięciu.
                         }
-                    }
-
-                    // KROK 2: Jeżeli przedmiot jest nieprawidłowy, wyzwalamy animację błędu (czerwona ramka + X)
-                    if (!isValid) {
-                        const $box = $(this);
-                        $box.addClass('drop-error');
-                        setTimeout(() => { $box.removeClass('drop-error'); }, 1000);
-                        message('Tego przedmiotu nie można ulepszać w Ulepszarce.');
                     }
                 }
             });
@@ -908,6 +937,7 @@
             try {
                 if (typeof Engine.battle.d !== 'undefined' && Engine.battle.d.id !== 0) { message("Nie można ręcznie ulepszać podczas walki."); return; }
                 if (!checkDailyLimit()) { message(`Osiągnięto dzienny limit ${dailyUpgradeLimit} ulepszeń.`); return; }
+               
                 const upgradedItemId = getUpgradedItemId();
                 const upgradedItem   = Engine.items.getItemById(upgradedItemId);
                 if (!upgradedItem) { message("Nie znaleziono wybranego przedmiotu."); return; }
@@ -995,5 +1025,4 @@
         window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle: onStateToggle });
     };
     checkApi();
-
 })();
