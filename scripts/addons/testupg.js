@@ -306,7 +306,6 @@
                 gap: 3px; padding: 5px 0 6px 0;
                 border-bottom: 1px solid #303030;
                 transition: outline 0.15s, background-color 0.15s;
-                position: relative;
             }
             /* Styl podczas przeciągania na pole ulepszania */
             .upg-item-box.drag-over {
@@ -364,42 +363,42 @@
             .wnd-ulepszara.wnd-clp .baddonz-window-body { display:flex !important; padding: 2px 8px 5px 8px !important; gap: 0 !important; }
             .wnd-ulepszara.wnd-clp .upg-item-box { display:none !important; }
 
-            /* ── Animacja odrzucenia itemu (X + czerwona ramka) ── */
-            @keyframes upg-dash-move {
-                to { stroke-dashoffset: -20; }
+            /* ── Odrzucony drop (czerwona ramka + X) ─────────── */
+            .upg-item-box.drop-rejected {
+                outline: 2px solid #cc0000 !important;
+                background-color: rgba(200, 0, 0, 0.12) !important;
+                animation: upg-shake 0.35s ease;
             }
-            @keyframes upg-reject-pulse {
-                0%   { box-shadow: 0 0 0 0 rgba(220,50,50,0.0); outline-color: rgba(220,50,50,1); }
-                40%  { box-shadow: 0 0 8px 3px rgba(220,50,50,0.55); outline-color: rgba(255,80,80,1); }
-                100% { box-shadow: 0 0 0 0 rgba(220,50,50,0.0); outline-color: rgba(220,50,50,1); }
+            @keyframes upg-shake {
+                0%   { transform: translateX(0); }
+                20%  { transform: translateX(-4px); }
+                40%  { transform: translateX(4px); }
+                60%  { transform: translateX(-3px); }
+                80%  { transform: translateX(3px); }
+                100% { transform: translateX(0); }
             }
-            .upg-item-box.upg-reject {
-                outline: 2px solid rgba(220,50,50,1) !important;
-                animation: upg-reject-pulse 0.4s ease 3 !important;
-                position: relative;
-            }
-            .upg-item-box.upg-reject .upg-reject-x {
-                display: block !important;
-            }
+            .upg-item-box { position: relative; overflow: hidden; }
             .upg-reject-x {
-                display: none;
-                position: absolute;
-                top: 0; left: 0;
-                width: 100%; height: 100%;
                 pointer-events: none;
+                position: absolute;
+                inset: 0;
                 z-index: 10;
+                display: none;
             }
+            .upg-item-box.drop-rejected .upg-reject-x { display: block; }
             .upg-reject-x line {
-                stroke: #dc3232;
-                stroke-width: 2;
-                stroke-dasharray: 10 5;
+                stroke: #cc0000;
+                stroke-width: 2.5;
                 stroke-linecap: round;
-                animation: upg-dash-move 0.25s linear infinite;
+                stroke-dasharray: 80;
+                stroke-dashoffset: 80;
+                animation: upg-draw-line 0.4s ease forwards;
             }
-            .upg-reject-x line:nth-child(2) {
-                animation-direction: reverse;
+            .upg-reject-x line:nth-child(2) { animation-delay: 0.05s; }
+            @keyframes upg-draw-line {
+                to { stroke-dashoffset: 0; }
             }
-        
+        `;
         document.head.appendChild(styleSheet);
     };
 
@@ -530,9 +529,9 @@
     function buildUI() {
         const mainBodyHtml = `
             <div class="upg-item-box">
-                <svg class="upg-reject-x" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-                    <line x1="0%" y1="100%" x2="100%" y2="0%"/>
-                    <line x1="0%" y1="0%"  x2="100%" y2="100%"/>
+                <svg class="upg-reject-x" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="5" y1="5" x2="95" y2="95"/>
+                    <line x1="95" y1="5" x2="5" y2="95"/>
                 </svg>
                 <div id="baddonz-upgrader-item-slot-wrapper" class="upg-item-slot-wrapper"></div>
                 <div class="upg-item-name" id="baddonz-upgrader-item-name"></div>
@@ -816,12 +815,15 @@
                     $(this).removeClass('drag-over');
                 },
                 drop: async function(event, ui) {
-                    // Zatrzymaj event żeby gra nie widziała upuszczenia i nie pokazywała menu wyrzuć/zniszcz
+                    // Zatrzymaj propagację – gra nie wykryje dropu (brak okna wyrzuć/zniszcz)
                     event.stopPropagation();
                     event.stopImmediatePropagation();
+                    if (event.originalEvent) {
+                        event.originalEvent.stopPropagation();
+                        event.originalEvent.stopImmediatePropagation();
+                    }
 
                     $(this).removeClass('drag-over');
-                    const $box = $(this);
                     const draggedItem = ui.draggable;
                     const className = draggedItem.attr('class');
                     const itemId = getItemIdFromClassName(className);
@@ -829,19 +831,33 @@
                     if (itemId) {
                         const item = Engine.items.getItemById(itemId);
                         if (item && ITEM_TYPE_SETTINGS_MAP.hasOwnProperty(item.cl)) {
+                            // Poprawny item – ustaw go
                             setUpgradedItemId(itemId);
                             message(`Ulepszanie przedmiotu ${item.name}`);
                             toggleEnhancementWindow();
                             await setEnhancedItem(itemId);
                             toggleEnhancementWindow();
                         } else {
-                            // Item nie może być ulepszany – animacja odrzucenia
+                            // Niepoprawny item – animacja odrzucenia (czerwona ramka + X)
                             message('Tego przedmiotu nie można ulepszać w Ulepszarce.');
-                            $box.addClass('upg-reject');
-                            setTimeout(() => $box.removeClass('upg-reject'), 1200);
+                            const box = this;
+                            $(box).addClass('drop-rejected');
+                            // Odśwież animację SVG re-inserując element
+                            const svg = box.querySelector('.upg-reject-x');
+                            if (svg) {
+                                const clone = svg.cloneNode(true);
+                                svg.replaceWith(clone);
+                            }
+                            setTimeout(() => { $(box).removeClass('drop-rejected'); }, 700);
                         }
                     }
                 }
+            });
+
+            // Blokada propagacji mouseupu nad oknem – gra nie dostaje eventu gdy kursor jest nad naszym elementem
+            $(itemBox).on('mouseup', function(event) {
+                event.stopPropagation();
+                event.stopImmediatePropagation();
             });
         }
 
