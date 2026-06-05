@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Ulepszara baddonz
 // @version       1.3
-// @description   Automatyczne ulepszanie (Zabezpieczenie przed wyrzucaniem przedmiotów + X Error Fix)
+// @description   Automatyczne ulepszanie (Drag & Drop Native Fix + Error Animation)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -312,12 +312,12 @@
                 background-color: rgba(255, 204, 0, 0.15) !important;
             }
             
-            /* Precyzyjne ukośne linie tworzące czerwony "X" na całym obszarze elementu */
+            /* Czerwony krzyżyk (X od rogu do rogu) i tło podczas błędu */
             .upg-item-box.drop-error {
                 outline: 2px dashed #ff3333 !important;
                 background: 
-                    linear-gradient(to bottom right, transparent calc(50% - 2px), rgba(255, 0, 0, 0.8) calc(50% - 2px), rgba(255, 0, 0, 0.8) calc(50% + 2px), transparent calc(50% + 2px)),
-                    linear-gradient(to bottom left, transparent calc(50% - 2px), rgba(255, 0, 0, 0.8) calc(50% - 2px), rgba(255, 0, 0, 0.8) calc(50% + 2px), transparent calc(50% + 2px)),
+                    linear-gradient(to bottom right, transparent calc(50% - 2px), rgba(255, 0, 0, 0.7) calc(50% - 2px), rgba(255, 0, 0, 0.7) calc(50% + 2px), transparent calc(50% + 2px)),
+                    linear-gradient(to bottom left, transparent calc(50% - 2px), rgba(255, 0, 0, 0.7) calc(50% - 2px), rgba(255, 0, 0, 0.7) calc(50% + 2px), transparent calc(50% + 2px)),
                     rgba(255, 51, 51, 0.15) !important;
             }
 
@@ -770,7 +770,7 @@
             });
         }
 
-        // ─── OBSŁUGA DRAG & DROP (CAŁKOWITE ODCIĘCIE EVENTÓW GRY) ───
+        // ─── ZMIANA: Zaawansowana tarcza i oszukiwanie Drag & Drop gry ───
         const itemBox = uiMainWindow.querySelector('.upg-item-box');
         if (itemBox && typeof $ === 'function' && typeof $.fn.droppable === 'function') {
             $(itemBox).droppable({
@@ -785,33 +785,21 @@
                     $(this).removeClass('drag-over');
                 },
                 drop: async function(event, ui) {
-                    event.stopPropagation();
                     $(this).removeClass('drag-over');
                     
+                    // KROK 1: Podmieniamy koordynaty eventu drop. Gra pomyśli, że przedmiot
+                    // został puszczony w bezpiecznej strefie (0,0), więc naturalnie przerwie procedurę rzucania na ziemię.
+                    event.pageX = 0;
+                    event.pageY = 0;
+                    if (event.originalEvent) {
+                        event.originalEvent.pageX = 0;
+                        event.originalEvent.pageY = 0;
+                    }
+
                     const draggedItem = ui.draggable;
                     const className = draggedItem.attr('class');
                     const itemId = getItemIdFromClassName(className);
                     let isValid = false;
-
-                    // KLUCZOWA NAPRAWA: Przejmujemy instancję przeciągania jQuery UI przed wykonaniem kodu gry
-                    const dragInstance = draggedItem.data("ui-draggable") || draggedItem.draggable("instance");
-                    if (dragInstance) {
-                        const originalStop = dragInstance.options.stop;
-                        // Nadpisujemy funkcję stop dla tego jednego zakończenia ruchu
-                        dragInstance.options.stop = function(e, u) {
-                            // Natychmiast przywracamy oryginalną funkcję, żeby item działał normalnie w torbie
-                            dragInstance.options.stop = originalStop;
-                            
-                            // Czyścimy wewnętrzny tracker przeciągania w silniku Margonem
-                            if (window.Engine && window.Engine.items) {
-                                window.Engine.items.dragged = null;
-                            }
-                            
-                            // Wymuszamy płynny powrót ikony na swoje pierwotne miejsce w torbie
-                            dragInstance.options.revert = true;
-                            return false; // Blokujemy dalsze bąbelkowanie i skrypty gry
-                        };
-                    }
 
                     if (itemId) {
                         const item = Engine.items.getItemById(itemId);
@@ -825,13 +813,11 @@
                         }
                     }
 
-                    // Obsługa animacji błędu (Czerwona ramka + Krzyżyk X od rogu do rogu)
+                    // KROK 2: Jeżeli przedmiot jest nieprawidłowy, wyzwalamy animację błędu (czerwona ramka + X)
                     if (!isValid) {
                         const $box = $(this);
                         $box.addClass('drop-error');
-                        // Resetujemy stan błędu równo po 1 sekundzie
                         setTimeout(() => { $box.removeClass('drop-error'); }, 1000);
-                        
                         message('Tego przedmiotu nie można ulepszać w Ulepszarce.');
                     }
                 }
