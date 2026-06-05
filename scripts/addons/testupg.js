@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Ulepszara baddonz
-// @version       1.1
-// @description   Automatyczne ulepszanie (Drag & Drop + Event Fix)
+// @version       1.2
+// @description   Automatyczne ulepszanie (Drag & Drop + Event Fix + Drop Fix)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -155,7 +155,6 @@
     function checkDailyLimit() { return dailyUpgradeCount < dailyUpgradeLimit; }
 
     function isEventItem(item) {
-        // ZMIANA 1: Sprawdzenie statystyki etiquette
         const cached = item._cachedStats || {};
         if (cached.hasOwnProperty('etiquette') || (typeof item.stat === 'string' && item.stat.includes('etiquette'))) {
             return true;
@@ -307,7 +306,6 @@
                 border-bottom: 1px solid #303030;
                 transition: outline 0.15s, background-color 0.15s;
             }
-            /* Styl podczas przeciągania na pole ulepszania */
             .upg-item-box.drag-over {
                 outline: 2px dashed #ffcc00 !important;
                 background-color: rgba(255, 204, 0, 0.15) !important;
@@ -762,12 +760,12 @@
             });
         }
 
-        // ZMIANA 3: Implementacja Drag & Drop dla ulepszanego itemu
         const itemBox = uiMainWindow.querySelector('.upg-item-box');
         if (itemBox && typeof $ === 'function' && typeof $.fn.droppable === 'function') {
             $(itemBox).droppable({
                 accept: '.item',
                 tolerance: 'pointer',
+                greedy: true, // ZAPOBIEGA BUBBLINGOWI DO GRY (BLOKUJE WYRZUCANIE)
                 over: function(event, ui) {
                     $(this).addClass('drag-over');
                 },
@@ -775,6 +773,9 @@
                     $(this).removeClass('drag-over');
                 },
                 drop: async function(event, ui) {
+                    event.stopPropagation(); // Blokuje zdarzenia DOM
+                    event.preventDefault();  // Blokuje domyślną akcję gry
+                    
                     $(this).removeClass('drag-over');
                     const draggedItem = ui.draggable;
                     const className = draggedItem.attr('class');
@@ -792,6 +793,7 @@
                             message('Tego przedmiotu nie można ulepszać w Ulepszarce.');
                         }
                     }
+                    return false; // Dodatkowe zabezpieczenie dla jQuery UI
                 }
             });
         }
@@ -811,7 +813,6 @@
             const endbattleEl = uiSettingsWindow.querySelector('#upg-upgrade-endbattle');
             if (endbattleEl) $(endbattleEl).tip('Automatyczne ulepszanie po walce gdy mamy odpowiednią ilość składników');
             
-            // ZMIANA 2: Przypisanie tooltipa ulepszania z torby do opcji checkboxa
             const bagsUpgradeEl = uiSettingsWindow.querySelector('#upg-bags-upgrade');
             if (bagsUpgradeEl) $(bagsUpgradeEl).tip('Ilość miejsc potrzebna do uruchomienia ulepszania');
         }
