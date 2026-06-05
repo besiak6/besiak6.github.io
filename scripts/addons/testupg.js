@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Ulepszara baddonz
-// @version       1.2
-// @description   Automatyczne ulepszanie (Drag & Drop + Event Fix + Block Drop Window)
+// @version       1.3
+// @description   Automatyczne ulepszanie (Bezwzględny Drag & Drop Fix + Idealny Red X)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -295,16 +295,16 @@
             .wnd-ulepszara { width: 175px; min-width: 175px; }
             .wnd-ulepszara .baddonz-window-body { padding: 5px 8px 8px 8px !important; gap: 4px !important; }
 
-            /* ── Okno ustawień – dopasowane do zawartości ────── */
+            /* ── Okno ustawień ───────────────────────────────── */
             .wnd-ulepszara-settings { width: 255px; min-width: 255px; height: auto !important; min-height: unset !important; max-height: unset !important; }
             .wnd-ulepszara-settings .baddonz-window-body { height: auto !important; min-height: unset !important; padding: 5px 8px 8px 8px !important; gap: 3px !important; display:flex; flex-direction:column; }
 
-            /* ── Podgląd itemu i Drag & Drop ─────────────────── */
+            /* ── Podgląd itemu ───────────────────────────────── */
             .upg-item-box {
                 display: flex; flex-direction: column; align-items: center;
                 gap: 3px; padding: 5px 0 6px 0;
                 border-bottom: 1px solid #303030;
-                transition: outline 0.15s, background-color 0.15s;
+                transition: outline 0.15s, background-color 0.15s, background-image 0.15s;
                 position: relative;
             }
             .upg-item-box.drag-over {
@@ -312,20 +312,12 @@
                 background-color: rgba(255, 204, 0, 0.15) !important;
             }
             
-            /* Niepoprawny przedmiot - czerwona ramka i krzyżyk X od rogu do rogu */
-            .upg-item-box.drag-invalid {
+            /* Bezbłędny, wektorowy czerwony X z idealnymi liniami od rogu do rogu */
+            .upg-item-box.drop-error {
                 outline: 2px dashed #ff3333 !important;
                 background-color: rgba(255, 51, 51, 0.15) !important;
-            }
-            .upg-item-box.drag-invalid::after {
-                content: "";
-                position: absolute;
-                top: 0; left: 0; right: 0; bottom: 0;
-                pointer-events: none;
-                z-index: 999;
-                background: 
-                    linear-gradient(to top right, transparent 47%, #ff3333 49%, #ff3333 51%, transparent 53%),
-                    linear-gradient(to bottom right, transparent 47%, #ff3333 49%, #ff3333 51%, transparent 53%);
+                background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'><line x1='0' y1='0' x2='100' y2='100' stroke='rgba(255,51,51,0.8)' stroke-width='2'/><line x1='0' y1='100' x2='100' y2='0' stroke='rgba(255,51,51,0.8)' stroke-width='2'/></svg>") !important;
+                background-size: 100% 100% !important;
             }
 
             .upg-item-slot-wrapper { display:flex; justify-content:center; }
@@ -623,14 +615,41 @@
         }
     }
 
+    // Funkcja przetwarzająca upuszczony element
+    const processDroppedItem = async (draggedItem, boxElement) => {
+        const className = draggedItem.attr('class');
+        const itemId = getItemIdFromClassName(className);
+        let isValid = false;
+
+        if (itemId) {
+            const item = Engine.items.getItemById(itemId);
+            if (item && ITEM_TYPE_SETTINGS_MAP.hasOwnProperty(item.cl)) {
+                isValid = true;
+                setUpgradedItemId(itemId);
+                message(`Ulepszanie przedmiotu ${item.name}`);
+                toggleEnhancementWindow();
+                await setEnhancedItem(itemId);
+                toggleEnhancementWindow();
+            }
+        }
+
+        if (!isValid) {
+            const $box = $(boxElement);
+            $box.addClass('drop-error');
+            setTimeout(() => { $box.removeClass('drop-error'); }, 1000);
+            message('Tego przedmiotu nie można ulepszać w Ulepszarce.');
+        }
+        updateMainUI();
+    };
+
     function setupListeners() {
         if (!uiMainWindow || !uiSettingsWindow) return;
 
-        const stateBtn    = uiMainWindow.querySelector('.upg-state-button');
+        const stateBtn = uiMainWindow.querySelector('.upg-state-button');
         const settingsBtn = uiMainWindow.querySelector('.baddonz-settings-button');
         const collapseBtn = uiMainWindow.querySelector('.upg-collapse-btn');
-        const closeBtn    = uiMainWindow.querySelector('.baddonz-close-button');
-        const opacityBtn  = uiMainWindow.querySelector('.baddonz-opacity-button');
+        const closeBtn = uiMainWindow.querySelector('.baddonz-close-button');
+        const opacityBtn = uiMainWindow.querySelector('.baddonz-opacity-button');
 
         if (stateBtn) {
             stateBtn.addEventListener('click', () => {
@@ -777,54 +796,54 @@
             });
         }
 
-        // ─── Drag & Drop (Ulepszany item) + Blokada Wyrzucania + Walidacja (Czerwony X) ───
+        // ─── CAŁKOWICIE NOWA OBSŁUGA DRAG & DROP ───
+        // Całkowite przechwycenie zdarzenia "stop" w silniku gry, aby zablokować okno wyrzucania na ziemię
         const itemBox = uiMainWindow.querySelector('.upg-item-box');
         if (itemBox && typeof $ === 'function' && typeof $.fn.droppable === 'function') {
             $(itemBox).droppable({
                 accept: '.item',
                 tolerance: 'pointer',
+                greedy: true,
                 over: function(event, ui) {
-                    const itemId = getItemIdFromClassName(ui.draggable.attr('class'));
-                    const item = itemId ? Engine.items.getItemById(itemId) : null;
-                    const isValid = item && ITEM_TYPE_SETTINGS_MAP.hasOwnProperty(item.cl);
+                    $(this).removeClass('drop-error');
+                    $(this).addClass('drag-over');
+                    ui.draggable.data("is-over-upg", true);
 
-                    if (isValid) {
-                        $(this).addClass('drag-over').removeClass('drag-invalid');
-                    } else {
-                        $(this).addClass('drag-invalid').removeClass('drag-over');
+                    // Dynamicznie podmieniamy opcję 'stop' w obiekcie draggable gry w locie!
+                    const dragInst = ui.draggable.data("ui-draggable") || ui.draggable.data("draggable");
+                    if (dragInst && !ui.draggable.data("baddonz-hooked")) {
+                        ui.draggable.data("baddonz-hooked", true);
+                        ui.draggable.data("baddonz-old-stop", dragInst.options.stop);
+
+                        // Nadpisujemy oryginalny "stop" Margonem własną blokadą
+                        dragInst.options.stop = function(e, u) {
+                            const isOver = ui.draggable.data("is-over-upg");
+                            const oldStop = ui.draggable.data("baddonz-old-stop");
+
+                            // Błyskawicznie przywracamy oryginalną metodę, by gra się nie zepsuła przy następnym przeciąganiu
+                            dragInst.options.stop = oldStop;
+                            ui.draggable.data("baddonz-hooked", false);
+
+                            if (isOver) {
+                                // Odpalamy naszą procedurę sprawdzania i dodawania przedmiotu
+                                processDroppedItem(ui.draggable, itemBox);
+                                // Wymuszamy natychmiastowe zresetowanie koordynatów CSS przedmiotu (wraca do plecaka)
+                                ui.draggable.css({ top: 0, left: 0 });
+                                return false; // Blokuje bubblujący trigger w silniku gry
+                            } else {
+                                // Jeśli gracz wyjechał jednak myszką poza okno dodatku, pozwól grze odpalić jej akcję
+                                if (typeof oldStop === "function") oldStop.call(this, e, u);
+                            }
+                        };
                     }
                 },
                 out: function(event, ui) {
-                    $(this).removeClass('drag-over drag-invalid');
+                    $(this).removeClass('drag-over');
+                    ui.draggable.data("is-over-upg", false);
                 },
-                drop: async function(event, ui) {
-                    // BLOKADA: Przechwytujemy natywne zdarzenie, aby gra nie otworzyła okna niszczenia/wyrzucania przedmiotu
-                    if (event.originalEvent) {
-                        event.originalEvent.stopPropagation();
-                        event.originalEvent.preventDefault();
-                        if (event.originalEvent.stopImmediatePropagation) event.originalEvent.stopImmediatePropagation();
-                    }
-                    event.preventDefault();
+                drop: function(event, ui) {
+                    // Blokada na wypadek gdyby event droppable jakimś cudem przeszedł niżej
                     event.stopPropagation();
-
-                    $(this).removeClass('drag-over drag-invalid');
-                    const draggedItem = ui.draggable;
-                    const className = draggedItem.attr('class');
-                    const itemId = getItemIdFromClassName(className);
-
-                    if (itemId) {
-                        const item = Engine.items.getItemById(itemId);
-                        if (item && ITEM_TYPE_SETTINGS_MAP.hasOwnProperty(item.cl)) {
-                            setUpgradedItemId(itemId);
-                            message(`Ulepszanie przedmiotu ${item.name}`);
-                            toggleEnhancementWindow();
-                            await setEnhancedItem(itemId);
-                            toggleEnhancementWindow();
-                        } else {
-                            message('Tego przedmiotu nie można ulepszać w Ulepszarce.');
-                        }
-                    }
-                    return false;
                 }
             });
         }
