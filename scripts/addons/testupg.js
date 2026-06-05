@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Ulepszara baddonz
 // @version       1.2
-// @description   Automatyczne ulepszanie (Drag & Drop + Event Fix + Drop Fix)
+// @description   Automatyczne ulepszanie (Drag & Drop + Event Fix + Block Drop Window)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -299,16 +299,33 @@
             .wnd-ulepszara-settings { width: 255px; min-width: 255px; height: auto !important; min-height: unset !important; max-height: unset !important; }
             .wnd-ulepszara-settings .baddonz-window-body { height: auto !important; min-height: unset !important; padding: 5px 8px 8px 8px !important; gap: 3px !important; display:flex; flex-direction:column; }
 
-            /* ── Podgląd itemu ───────────────────────────────── */
+            /* ── Podgląd itemu i Drag & Drop ─────────────────── */
             .upg-item-box {
                 display: flex; flex-direction: column; align-items: center;
                 gap: 3px; padding: 5px 0 6px 0;
                 border-bottom: 1px solid #303030;
                 transition: outline 0.15s, background-color 0.15s;
+                position: relative;
             }
             .upg-item-box.drag-over {
                 outline: 2px dashed #ffcc00 !important;
                 background-color: rgba(255, 204, 0, 0.15) !important;
+            }
+            
+            /* Niepoprawny przedmiot - czerwona ramka i krzyżyk X od rogu do rogu */
+            .upg-item-box.drag-invalid {
+                outline: 2px dashed #ff3333 !important;
+                background-color: rgba(255, 51, 51, 0.15) !important;
+            }
+            .upg-item-box.drag-invalid::after {
+                content: "";
+                position: absolute;
+                top: 0; left: 0; right: 0; bottom: 0;
+                pointer-events: none;
+                z-index: 999;
+                background: 
+                    linear-gradient(to top right, transparent 47%, #ff3333 49%, #ff3333 51%, transparent 53%),
+                    linear-gradient(to bottom right, transparent 47%, #ff3333 49%, #ff3333 51%, transparent 53%);
             }
 
             .upg-item-slot-wrapper { display:flex; justify-content:center; }
@@ -760,23 +777,37 @@
             });
         }
 
+        // ─── Drag & Drop (Ulepszany item) + Blokada Wyrzucania + Walidacja (Czerwony X) ───
         const itemBox = uiMainWindow.querySelector('.upg-item-box');
         if (itemBox && typeof $ === 'function' && typeof $.fn.droppable === 'function') {
             $(itemBox).droppable({
                 accept: '.item',
                 tolerance: 'pointer',
-                greedy: true, // ZAPOBIEGA BUBBLINGOWI DO GRY (BLOKUJE WYRZUCANIE)
                 over: function(event, ui) {
-                    $(this).addClass('drag-over');
+                    const itemId = getItemIdFromClassName(ui.draggable.attr('class'));
+                    const item = itemId ? Engine.items.getItemById(itemId) : null;
+                    const isValid = item && ITEM_TYPE_SETTINGS_MAP.hasOwnProperty(item.cl);
+
+                    if (isValid) {
+                        $(this).addClass('drag-over').removeClass('drag-invalid');
+                    } else {
+                        $(this).addClass('drag-invalid').removeClass('drag-over');
+                    }
                 },
                 out: function(event, ui) {
-                    $(this).removeClass('drag-over');
+                    $(this).removeClass('drag-over drag-invalid');
                 },
                 drop: async function(event, ui) {
-                    event.stopPropagation(); // Blokuje zdarzenia DOM
-                    event.preventDefault();  // Blokuje domyślną akcję gry
-                    
-                    $(this).removeClass('drag-over');
+                    // BLOKADA: Przechwytujemy natywne zdarzenie, aby gra nie otworzyła okna niszczenia/wyrzucania przedmiotu
+                    if (event.originalEvent) {
+                        event.originalEvent.stopPropagation();
+                        event.originalEvent.preventDefault();
+                        if (event.originalEvent.stopImmediatePropagation) event.originalEvent.stopImmediatePropagation();
+                    }
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    $(this).removeClass('drag-over drag-invalid');
                     const draggedItem = ui.draggable;
                     const className = draggedItem.attr('class');
                     const itemId = getItemIdFromClassName(className);
@@ -793,7 +824,7 @@
                             message('Tego przedmiotu nie można ulepszać w Ulepszarce.');
                         }
                     }
-                    return false; // Dodatkowe zabezpieczenie dla jQuery UI
+                    return false;
                 }
             });
         }
