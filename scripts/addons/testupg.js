@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Ulepszara baddonz
 // @version       1.1
-// @description   Automatyczne ulepszanie
+// @description   Automatyczne ulepszanie (Drag & Drop + Event Fix)
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -76,7 +76,6 @@
     let dailyUpgradeCount = 0;
     let dailyUpgradeLimit = 2000;
     let bagLoopTimeout = null;
-    let lastDraggedItemId = null;
 
     // ─── Storage helpers ──────────────────────────────────────────────────────
     function loadSettings() {
@@ -156,17 +155,13 @@
     function checkDailyLimit() { return dailyUpgradeCount < dailyUpgradeLimit; }
 
     function isEventItem(item) {
-        if (!item) return false;
-        
-        // Zmiana: Sprawdzenie nowej statystyki etiquette (zarówno w obiekcie jak i tekście statystyk)
+        // ZMIANA 1: Sprawdzenie statystyki etiquette
         const cached = item._cachedStats || {};
-        const hasEtiquette = cached.etiquette !== undefined || item.etiquette !== undefined || 
-            (typeof item.stat === 'string' && item.stat.includes('etiquette')) || 
-            (typeof item.stats === 'string' && item.stats.includes('etiquette'));
+        if (cached.hasOwnProperty('etiquette') || (typeof item.stat === 'string' && item.stat.includes('etiquette'))) {
+            return true;
+        }
 
-        if (hasEtiquette) return true;
-
-        if (!item.getTipContent) return false;
+        if (!item?.getTipContent) return false;
         const tip = item.getTipContent();
         if (!tip) return false;
         const plainText = tip.replace(/<[^>]+>/g, '');
@@ -301,22 +296,23 @@
             .wnd-ulepszara { width: 175px; min-width: 175px; }
             .wnd-ulepszara .baddonz-window-body { padding: 5px 8px 8px 8px !important; gap: 4px !important; }
 
-            /* ── Okno ustawień ───────────────────────────────── */
+            /* ── Okno ustawień – dopasowane do zawartości ────── */
             .wnd-ulepszara-settings { width: 255px; min-width: 255px; height: auto !important; min-height: unset !important; max-height: unset !important; }
             .wnd-ulepszara-settings .baddonz-window-body { height: auto !important; min-height: unset !important; padding: 5px 8px 8px 8px !important; gap: 3px !important; display:flex; flex-direction:column; }
 
-            /* ── Podgląd itemu + efekt Drag & Drop ───────────── */
+            /* ── Podgląd itemu ───────────────────────────────── */
             .upg-item-box {
                 display: flex; flex-direction: column; align-items: center;
                 gap: 3px; padding: 5px 0 6px 0;
                 border-bottom: 1px solid #303030;
-                transition: border-color 0.2s, background-color 0.2s;
+                transition: outline 0.15s, background-color 0.15s;
             }
+            /* Styl podczas przeciągania na pole ulepszania */
             .upg-item-box.drag-over {
-                border: 2px dashed #ffcc00 !important;
-                background-color: rgba(255, 204, 0, 0.1) !important;
-                box-sizing: border-box;
+                outline: 2px dashed #ffcc00 !important;
+                background-color: rgba(255, 204, 0, 0.15) !important;
             }
+
             .upg-item-slot-wrapper { display:flex; justify-content:center; }
             .upg-item-name { font-size:11px; font-weight:bold; color:#ffcc00; text-shadow:1px 1px #000; text-align:center; padding:0; margin:0; }
             .upg-item-progress { font-size:10px; color:#aaa; text-align:center; padding:0; margin:0; }
@@ -766,41 +762,40 @@
             });
         }
 
-        // Zmiana: Dodanie obsługi Drag & Drop na kontenerze upg-item-box
+        // ZMIANA 3: Implementacja Drag & Drop dla ulepszanego itemu
         const itemBox = uiMainWindow.querySelector('.upg-item-box');
-        if (itemBox) {
-            itemBox.addEventListener('dragenter', (e) => {
-                e.preventDefault();
-                itemBox.classList.add('drag-over');
-            });
-            itemBox.addEventListener('dragover', (e) => {
-                e.preventDefault();
-            });
-            itemBox.addEventListener('dragleave', () => {
-                itemBox.classList.remove('drag-over');
-            });
-            itemBox.addEventListener('drop', async (e) => {
-                e.preventDefault();
-                itemBox.classList.remove('drag-over');
-                if (!lastDraggedItemId) return;
+        if (itemBox && typeof $ === 'function' && typeof $.fn.droppable === 'function') {
+            $(itemBox).droppable({
+                accept: '.item',
+                tolerance: 'pointer',
+                over: function(event, ui) {
+                    $(this).addClass('drag-over');
+                },
+                out: function(event, ui) {
+                    $(this).removeClass('drag-over');
+                },
+                drop: async function(event, ui) {
+                    $(this).removeClass('drag-over');
+                    const draggedItem = ui.draggable;
+                    const className = draggedItem.attr('class');
+                    const itemId = getItemIdFromClassName(className);
 
-                const item = Engine.items.getItemById(lastDraggedItemId);
-                if (item) {
-                    if (ITEM_TYPE_SETTINGS_MAP.hasOwnProperty(item.cl)) {
-                        setUpgradedItemId(lastDraggedItemId);
-                        message(`Ulepszanie przedmiotu ${item.name}`);
-                        toggleEnhancementWindow();
-                        await setEnhancedItem(lastDraggedItemId);
-                        toggleEnhancementWindow();
-                        updateMainUI();
-                    } else {
-                        message("Tego przedmiotu nie da się ulepszyć!");
+                    if (itemId) {
+                        const item = Engine.items.getItemById(itemId);
+                        if (item && ITEM_TYPE_SETTINGS_MAP.hasOwnProperty(item.cl)) {
+                            setUpgradedItemId(itemId);
+                            message(`Ulepszanie przedmiotu ${item.name}`);
+                            toggleEnhancementWindow();
+                            await setEnhancedItem(itemId);
+                            toggleEnhancementWindow();
+                        } else {
+                            message('Tego przedmiotu nie można ulepszać w Ulepszarce.');
+                        }
                     }
                 }
             });
         }
 
-        // ── Tooltips ──────────────────────────────────────────────────────────
         if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
             if (stateBtn) $(stateBtn).tip(currentSettings.enabled ? 'Wyłącz ulepszanie' : 'Włącz ulepszanie');
             if (settingsBtn) $(settingsBtn).tip('Ustawienia');
@@ -812,12 +807,13 @@
 
             const allowBoundEl = uiSettingsWindow.querySelector('#upg-allow-bound');
             if (allowBoundEl) $(allowBoundEl).tip('Używasz na własną odpowiedzialność! Uwaga na itemy z kolosów');
+            
             const endbattleEl = uiSettingsWindow.querySelector('#upg-upgrade-endbattle');
             if (endbattleEl) $(endbattleEl).tip('Automatyczne ulepszanie po walce gdy mamy odpowiednią ilość składników');
             
-            // Zmiana: Przypisanie podpowiedzi do checkboxa, a nie do inputa liczbowego
-            const bagsEl = uiSettingsWindow.querySelector('#upg-bags-upgrade');
-            if (bagsEl) $(bagsEl).tip('Ilość miejsc potrzebna do uruchomienia ulepszania');
+            // ZMIANA 2: Przypisanie tooltipa ulepszania z torby do opcji checkboxa
+            const bagsUpgradeEl = uiSettingsWindow.querySelector('#upg-bags-upgrade');
+            if (bagsUpgradeEl) $(bagsUpgradeEl).tip('Ilość miejsc potrzebna do uruchomienia ulepszania');
         }
     }
 
@@ -941,15 +937,6 @@
         setupCommunicationHook();
         setupKeydownHandler();
         initItemContextMenu();
-
-        // Zmiana: Globalny nasłuch na rozpoczęcie przeciągania dowolnego przedmiotu, aby wyciągnąć jego ID
-        document.addEventListener("dragstart", (e) => {
-            const itemEl = e.target.closest?.(".item");
-            if (itemEl) {
-                const idMatch = itemEl.className.match(/item-id-(\d+)/);
-                if (idMatch) lastDraggedItemId = idMatch[1];
-            }
-        });
 
         if (typeof Engine.battle.setEndBattle === 'function') {
             const origEndBattle = Engine.battle.setEndBattle.bind(Engine.battle);
