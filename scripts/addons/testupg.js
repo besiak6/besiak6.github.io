@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Ulepszara baddonz
-// @version       1.0
+// @version       1.1
 // @description   Automatyczne ulepszanie
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -43,7 +43,6 @@
     };
 
     // ─── Ustawienia domyślne ───────────────────────────────────────────────────
-    // Klucze konta (wspólne dla wszystkich postaci)
     const DEFAULT_ACC_SETTINGS = {
         windowOpacity: 2,
         windowVisible: true,
@@ -53,7 +52,6 @@
         hotkeyKey: "j",
     };
 
-    // Klucze postaci
     const DEFAULT_CHAR_SETTINGS = {
         enabled: true,
         hotkeyEnabled: true,
@@ -78,6 +76,7 @@
     let dailyUpgradeCount = 0;
     let dailyUpgradeLimit = 2000;
     let bagLoopTimeout = null;
+    let lastDraggedItemId = null;
 
     // ─── Storage helpers ──────────────────────────────────────────────────────
     function loadSettings() {
@@ -96,7 +95,6 @@
 
         currentSettings = { ...DEFAULT_ACC_SETTINGS, ...DEFAULT_CHAR_SETTINGS, ...accSettings, ...charSettings };
 
-        // Wczytaj dzienny licznik
         const count = parseInt(localStorage.getItem('baddonz-daily-upgrade-count'));
         dailyUpgradeCount = !isNaN(count) ? count : 0;
     }
@@ -158,7 +156,17 @@
     function checkDailyLimit() { return dailyUpgradeCount < dailyUpgradeLimit; }
 
     function isEventItem(item) {
-        if (!item?.getTipContent) return false;
+        if (!item) return false;
+        
+        // Zmiana: Sprawdzenie nowej statystyki etiquette (zarówno w obiekcie jak i tekście statystyk)
+        const cached = item._cachedStats || {};
+        const hasEtiquette = cached.etiquette !== undefined || item.etiquette !== undefined || 
+            (typeof item.stat === 'string' && item.stat.includes('etiquette')) || 
+            (typeof item.stats === 'string' && item.stats.includes('etiquette'));
+
+        if (hasEtiquette) return true;
+
+        if (!item.getTipContent) return false;
         const tip = item.getTipContent();
         if (!tip) return false;
         const plainText = tip.replace(/<[^>]+>/g, '');
@@ -293,15 +301,21 @@
             .wnd-ulepszara { width: 175px; min-width: 175px; }
             .wnd-ulepszara .baddonz-window-body { padding: 5px 8px 8px 8px !important; gap: 4px !important; }
 
-            /* ── Okno ustawień – dopasowane do zawartości ────── */
+            /* ── Okno ustawień ───────────────────────────────── */
             .wnd-ulepszara-settings { width: 255px; min-width: 255px; height: auto !important; min-height: unset !important; max-height: unset !important; }
             .wnd-ulepszara-settings .baddonz-window-body { height: auto !important; min-height: unset !important; padding: 5px 8px 8px 8px !important; gap: 3px !important; display:flex; flex-direction:column; }
 
-            /* ── Podgląd itemu ───────────────────────────────── */
+            /* ── Podgląd itemu + efekt Drag & Drop ───────────── */
             .upg-item-box {
                 display: flex; flex-direction: column; align-items: center;
                 gap: 3px; padding: 5px 0 6px 0;
                 border-bottom: 1px solid #303030;
+                transition: border-color 0.2s, background-color 0.2s;
+            }
+            .upg-item-box.drag-over {
+                border: 2px dashed #ffcc00 !important;
+                background-color: rgba(255, 204, 0, 0.1) !important;
+                box-sizing: border-box;
             }
             .upg-item-slot-wrapper { display:flex; justify-content:center; }
             .upg-item-name { font-size:11px; font-weight:bold; color:#ffcc00; text-shadow:1px 1px #000; text-align:center; padding:0; margin:0; }
@@ -310,7 +324,6 @@
             /* ── Dzienny limit ───────────────────────────────── */
             .upg-daily-row { display:flex; justify-content:center; padding-top:4px; }
             .upg-daily-text { font-size:11px; color:#ccc; }
-            /* Gdy zwinięte – limit tuż pod tytułem bez dużej luki */
             .wnd-ulepszara.wnd-clp .upg-daily-row { padding-top:1px; }
 
             /* ── Kafelki typów itemów ────────────────────────── */
@@ -349,7 +362,7 @@
             }
             #baddonz-upgrader-main-item-slot { margin:0; }
 
-            /* ── Collapsed state – ten sam rozmiar co rozwinięte ─ */
+            /* ── Collapsed state ─────────────────────────────── */
             .wnd-ulepszara.wnd-clp { height: auto !important; width: 175px !important; }
             .wnd-ulepszara.wnd-clp .baddonz-window-body { display:flex !important; padding: 2px 8px 5px 8px !important; gap: 0 !important; }
             .wnd-ulepszara.wnd-clp .upg-item-box { display:none !important; }
@@ -405,7 +418,6 @@
     function updateMainUI() {
         if (!uiMainWindow) return;
 
-        // State button
         const stateBtn = uiMainWindow.querySelector('.upg-state-button');
         if (stateBtn) {
             stateBtn.classList.toggle('baddonz-state-button--active', currentSettings.enabled);
@@ -414,22 +426,18 @@
             }
         }
 
-        // Collapse
         const collapseBtn = uiMainWindow.querySelector('.upg-collapse-btn');
         if (collapseBtn && typeof $ === 'function' && typeof $.fn.tip === 'function') {
             $(collapseBtn).tip(currentSettings.isCollapsed ? 'Rozwiń' : 'Zwiń');
         }
         uiMainWindow.classList.toggle('wnd-clp', currentSettings.isCollapsed);
 
-        // Item display
         const upgradedItemId = getUpgradedItemId();
         updateItemDisplay(upgradedItemId);
 
-        // Daily limit
         const dailyEl = uiMainWindow.querySelector('.upg-daily-text');
         if (dailyEl) dailyEl.textContent = `Dzienny Limit: ${dailyUpgradeCount}/${dailyUpgradeLimit}`;
 
-        // Settings window
         updateSettingsUI();
     }
 
@@ -467,7 +475,6 @@
         const bagsOptions = uiSettingsWindow.querySelector('#upg-bags-options');
         if (bagsOptions) bagsOptions.style.display = currentSettings.bags_upgrade ? 'flex' : 'none';
 
-        // Item type filter tiles
         const filtersContainer = uiSettingsWindow.querySelector('#baddonz-upgrader-type-filters');
         if (filtersContainer) {
             filtersContainer.querySelectorAll('.baddonz-typ-wrapper').forEach(wrapper => {
@@ -488,8 +495,6 @@
     }
 
     function buildUI() {
-        // ── Okno główne ───────────────────────────────────────────────────────
-        // Nagłówek: [opacity | settings | state] ─── Ulepszara ─── [collapse | close]
         const mainBodyHtml = `
             <div class="upg-item-box">
                 <div id="baddonz-upgrader-item-slot-wrapper" class="upg-item-slot-wrapper"></div>
@@ -508,7 +513,6 @@
             hasClose: true
         });
 
-        // Dodajemy state button do lewego panelu kontrolek
         const leftControls = uiMainWindow.querySelector('.baddonz-window-controls.left');
         if (leftControls) {
             const stateBtn = document.createElement('div');
@@ -517,19 +521,16 @@
             leftControls.appendChild(stateBtn);
         }
 
-        // Oznaczamy collapse btn i close btn
         const rightControls = uiMainWindow.querySelector('.baddonz-window-controls.right');
         if (rightControls) {
             const collBtn = rightControls.querySelector('.baddonz-collapsed');
             if (collBtn) collBtn.classList.add('upg-collapse-btn');
         }
 
-        // Ustaw widoczność i opacity
         uiMainWindow.style.display = currentSettings.windowVisible ? 'flex' : 'none';
         applyOpacityClass(uiMainWindow, currentSettings.windowOpacity);
         if (currentSettings.isCollapsed) uiMainWindow.classList.add('wnd-clp');
 
-        // ── Okno ustawień ─────────────────────────────────────────────────────
         const settingsBodyHtml = `
             <div class="upg-settings-section">
                 <div class="upg-setting-row">
@@ -594,7 +595,6 @@
         uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
         applyOpacityClass(uiSettingsWindow, currentSettings.windowSettingsOpacity);
 
-        // ── Listeners ─────────────────────────────────────────────────────────
         setupListeners();
         updateMainUI();
     }
@@ -615,7 +615,6 @@
     function setupListeners() {
         if (!uiMainWindow || !uiSettingsWindow) return;
 
-        // ── Przyciski w nagłówku okna głównego ───────────────────────────────
         const stateBtn    = uiMainWindow.querySelector('.upg-state-button');
         const settingsBtn = uiMainWindow.querySelector('.baddonz-settings-button');
         const collapseBtn = uiMainWindow.querySelector('.upg-collapse-btn');
@@ -670,7 +669,6 @@
             });
         }
 
-        // ── Przyciski w nagłówku okna ustawień ───────────────────────────────
         const settingsCloseBtn   = uiSettingsWindow.querySelector('.baddonz-close-button');
         const settingsOpacityBtn = uiSettingsWindow.querySelector('.baddonz-opacity-button');
 
@@ -698,7 +696,6 @@
             });
         }
 
-        // ── Checkboxy ustawień ────────────────────────────────────────────────
         const checkboxMap = [
             { id: 'upg-hotkey-enabled',   key: 'hotkeyEnabled' },
             { id: 'upg-use-common',       key: 'use_common' },
@@ -716,7 +713,6 @@
             });
         });
 
-        // ── Inputy liczbowe ───────────────────────────────────────────────────
         const endbattleInput = uiSettingsWindow.querySelector('#upg-count-endbattle-input');
         if (endbattleInput) {
             endbattleInput.addEventListener('change', () => {
@@ -735,7 +731,6 @@
             });
         }
 
-        // ── Hotkey input ──────────────────────────────────────────────────────
         const hotkeyInput = uiSettingsWindow.querySelector('#upg-hotkey-input');
         if (hotkeyInput) {
             const handleHotkeySetting = (e) => {
@@ -757,7 +752,6 @@
             });
         }
 
-        // ── Kafelki typów itemów ──────────────────────────────────────────────
         const filtersContainer = uiSettingsWindow.querySelector('#baddonz-upgrader-type-filters');
         if (filtersContainer) {
             filtersContainer.querySelectorAll('.baddonz-typ-wrapper').forEach(wrapper => {
@@ -769,6 +763,40 @@
                     const key = wrapper.dataset.key;
                     if (key) { currentSettings[key] = !currentSettings[key]; saveSettings(); updateSettingsUI(); }
                 });
+            });
+        }
+
+        // Zmiana: Dodanie obsługi Drag & Drop na kontenerze upg-item-box
+        const itemBox = uiMainWindow.querySelector('.upg-item-box');
+        if (itemBox) {
+            itemBox.addEventListener('dragenter', (e) => {
+                e.preventDefault();
+                itemBox.classList.add('drag-over');
+            });
+            itemBox.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+            itemBox.addEventListener('dragleave', () => {
+                itemBox.classList.remove('drag-over');
+            });
+            itemBox.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                itemBox.classList.remove('drag-over');
+                if (!lastDraggedItemId) return;
+
+                const item = Engine.items.getItemById(lastDraggedItemId);
+                if (item) {
+                    if (ITEM_TYPE_SETTINGS_MAP.hasOwnProperty(item.cl)) {
+                        setUpgradedItemId(lastDraggedItemId);
+                        message(`Ulepszanie przedmiotu ${item.name}`);
+                        toggleEnhancementWindow();
+                        await setEnhancedItem(lastDraggedItemId);
+                        toggleEnhancementWindow();
+                        updateMainUI();
+                    } else {
+                        message("Tego przedmiotu nie da się ulepszyć!");
+                    }
+                }
             });
         }
 
@@ -786,7 +814,10 @@
             if (allowBoundEl) $(allowBoundEl).tip('Używasz na własną odpowiedzialność! Uwaga na itemy z kolosów');
             const endbattleEl = uiSettingsWindow.querySelector('#upg-upgrade-endbattle');
             if (endbattleEl) $(endbattleEl).tip('Automatyczne ulepszanie po walce gdy mamy odpowiednią ilość składników');
-            if (bagsInput) $(bagsInput).tip('Ilość miejsc potrzebna do uruchomienia ulepszania');
+            
+            // Zmiana: Przypisanie podpowiedzi do checkboxa, a nie do inputa liczbowego
+            const bagsEl = uiSettingsWindow.querySelector('#upg-bags-upgrade');
+            if (bagsEl) $(bagsEl).tip('Ilość miejsc potrzebna do uruchomienia ulepszania');
         }
     }
 
@@ -910,6 +941,15 @@
         setupCommunicationHook();
         setupKeydownHandler();
         initItemContextMenu();
+
+        // Zmiana: Globalny nasłuch na rozpoczęcie przeciągania dowolnego przedmiotu, aby wyciągnąć jego ID
+        document.addEventListener("dragstart", (e) => {
+            const itemEl = e.target.closest?.(".item");
+            if (itemEl) {
+                const idMatch = itemEl.className.match(/item-id-(\d+)/);
+                if (idMatch) lastDraggedItemId = idMatch[1];
+            }
+        });
 
         if (typeof Engine.battle.setEndBattle === 'function') {
             const origEndBattle = Engine.battle.setEndBattle.bind(Engine.battle);
