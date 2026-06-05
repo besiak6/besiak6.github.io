@@ -941,5 +941,5 @@
         window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle: onStateToggle });
     };
     checkApi();
-
+///okej inny dodatek i tu potrzebuje pomocy:  mała zmiana bo mamy itemki eventowe i to jest poprawne ale od tego roku zaczeli inaczej oznaczac itemki eventowe i np stare itemy dalej w opisie maja wiec zostwiamy to co mamy ale trzeba dodac sprawdzenie statystyki "etiquette" i w sumie już nie trzeba po nazwie sprawdzać tylko jak item ma tą statystyke to po prsotu tez jest oznazcany jako eventowy co nie oraz mala zmiana bo w opcji ulepszania po miejsach w torbie tip jest przypisany do inputa a nie do checkboxa tej opcji tak jak jest to np w ulepszaniu po walce i tyle proste zmiany oraz ważna zmiana to tam gdzie jest item ten klon sie pojawia to w tym elemencie jak bede przeciągać obiekt ".item" to po prsotu jakby mi pokazuje wtedy taką ramke dla tego elementu upg-item-box i jest taka np zółta kreskowana ramka i jak upuszcze w tym elemencie ten obiekt ".item" to po prsotu mi go jakby przechwytuje i wtedy wybiera mi ten konkretny upuszcony item o ile spełnia wymagania co nie ze np da się go ulepszać. czyli musisz zrobic zeby wykrwało ze wgl taki obiekt jest przecieagany tak samo w znaczniku teleproów było ze znajdywalismy po obiekcie item co nie
 })();
