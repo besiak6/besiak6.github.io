@@ -158,7 +158,12 @@
     function checkDailyLimit() { return dailyUpgradeCount < dailyUpgradeLimit; }
 
     function isEventItem(item) {
-        if (!item?.getTipContent) return false;
+        if (!item) return false;
+        // Nowe oznaczenie eventowe – statystyka "etiquette"
+        const cached = item._cachedStats || {};
+        if (Object.prototype.hasOwnProperty.call(cached, 'etiquette') || Object.prototype.hasOwnProperty.call(item, 'etiquette')) return true;
+        // Stare oznaczenie – słowa kluczowe w opisie
+        if (!item.getTipContent) return false;
         const tip = item.getTipContent();
         if (!tip) return false;
         const plainText = tip.replace(/<[^>]+>/g, '');
@@ -353,6 +358,54 @@
             .wnd-ulepszara.wnd-clp { height: auto !important; width: 175px !important; }
             .wnd-ulepszara.wnd-clp .baddonz-window-body { display:flex !important; padding: 2px 8px 5px 8px !important; gap: 0 !important; }
             .wnd-ulepszara.wnd-clp .upg-item-box { display:none !important; }
+
+            /* ── Drag over na item-box ───────────────────────────── */
+            @keyframes upg-march-valid {
+                0%   { background-position: 0 0, 100% 0, 100% 100%, 0 100%; }
+                100% { background-position: 30px 0, 100% 30px, calc(100% - 30px) 100%, 0 calc(100% - 30px); }
+            }
+            @keyframes upg-march-invalid {
+                0%   { background-position: 0 0, 100% 0, 100% 100%, 0 100%; }
+                100% { background-position: 30px 0, 100% 30px, calc(100% - 30px) 100%, 0 calc(100% - 30px); }
+            }
+            .upg-item-box.upg-drag-valid {
+                background-image:
+                    linear-gradient(90deg,  #ffcc00 50%, transparent 50%),
+                    linear-gradient(180deg, #ffcc00 50%, transparent 50%),
+                    linear-gradient(90deg,  #ffcc00 50%, transparent 50%),
+                    linear-gradient(180deg, #ffcc00 50%, transparent 50%);
+                background-size: 10px 2px, 2px 10px, 10px 2px, 2px 10px;
+                background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
+                background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+                animation: upg-march-valid 0.5s linear infinite;
+                border-bottom-color: transparent !important;
+            }
+            .upg-item-box.upg-drag-invalid {
+                background-image:
+                    linear-gradient(90deg,  #cc2222 50%, transparent 50%),
+                    linear-gradient(180deg, #cc2222 50%, transparent 50%),
+                    linear-gradient(90deg,  #cc2222 50%, transparent 50%),
+                    linear-gradient(180deg, #cc2222 50%, transparent 50%);
+                background-size: 10px 2px, 2px 10px, 10px 2px, 2px 10px;
+                background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
+                background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+                animation: upg-march-invalid 0.5s linear infinite;
+                border-bottom-color: transparent !important;
+                position: relative;
+            }
+            .upg-item-box.upg-drag-invalid::before,
+            .upg-item-box.upg-drag-invalid::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                pointer-events: none;
+            }
+            .upg-item-box.upg-drag-invalid::before {
+                background: linear-gradient(to top right, transparent calc(50% - 1px), #cc2222 50%, transparent calc(50% + 1px));
+            }
+            .upg-item-box.upg-drag-invalid::after {
+                background: linear-gradient(to bottom right, transparent calc(50% - 1px), #cc2222 50%, transparent calc(50% + 1px));
+            }
         `;
         document.head.appendChild(styleSheet);
     };
@@ -597,6 +650,7 @@
         // ── Listeners ─────────────────────────────────────────────────────────
         setupListeners();
         updateMainUI();
+        setupItemBoxDroppable();
     }
 
     function applyOpacityClass(wnd, opacity) {
@@ -786,7 +840,8 @@
             if (allowBoundEl) $(allowBoundEl).tip('Używasz na własną odpowiedzialność! Uwaga na itemy z kolosów');
             const endbattleEl = uiSettingsWindow.querySelector('#upg-upgrade-endbattle');
             if (endbattleEl) $(endbattleEl).tip('Automatyczne ulepszanie po walce gdy mamy odpowiednią ilość składników');
-            if (bagsInput) $(bagsInput).tip('Ilość miejsc potrzebna do uruchomienia ulepszania');
+            const bagsCheckboxEl = uiSettingsWindow.querySelector('#upg-bags-upgrade');
+            if (bagsCheckboxEl) $(bagsCheckboxEl).tip('Ilość miejsc potrzebna do uruchomienia ulepszania');
         }
     }
 
@@ -900,6 +955,54 @@
         return match ? match[1] : null;
     };
 
+    // ─── Drag & drop na upg-item-box ─────────────────────────────────────────
+    function isItemUpgradable(item) {
+        if (!item) return false;
+        if (!ITEM_TYPE_SETTINGS_MAP.hasOwnProperty(item.cl)) return false;
+        const cached = item._cachedStats || {};
+        const isBound = (item.checkSoulbound && item.checkSoulbound()) || (item.checkPermbound && item.checkPermbound());
+        const enhancement_upgrade_lvl = cached.enhancement_upgrade_lvl !== undefined ? cached.enhancement_upgrade_lvl : (item.enhancement_upgrade_lvl ?? undefined);
+        const isUpgraded = enhancement_upgrade_lvl !== undefined && enhancement_upgrade_lvl !== null;
+        const itemLevel = item.lvl ?? item.level ?? cached.lvl ?? 0;
+        if (itemLevel < 20) return false;
+        if (isUpgraded) return false;
+        if (isEventItem(item)) return false;
+        if (isBound && !currentSettings.allow_bound_items) return false;
+        return true;
+    }
+
+    function setupItemBoxDroppable() {
+        if (typeof $ === 'undefined' || !uiMainWindow) return;
+        const $box = $(uiMainWindow).find('.upg-item-box');
+        if (!$box.length) return;
+
+        $box.droppable({
+            accept: '.item:not(.shop-item)',
+            tolerance: 'pointer',
+            over: function(e, ui) {
+                const item = ui.draggable.data('item');
+                $box.removeClass('upg-drag-valid upg-drag-invalid');
+                if (isItemUpgradable(item)) {
+                    $box.addClass('upg-drag-valid');
+                } else {
+                    $box.addClass('upg-drag-invalid');
+                }
+            },
+            out: function() {
+                $box.removeClass('upg-drag-valid upg-drag-invalid');
+            },
+            drop: function(e, ui) {
+                $box.removeClass('upg-drag-valid upg-drag-invalid');
+                const item = ui.draggable.data('item');
+                if (!isItemUpgradable(item)) return;
+                setUpgradedItemId(item.id);
+                message(`Ulepszanie przedmiotu ${item.name}`);
+                toggleEnhancementWindow();
+                setEnhancedItem(item.id).then(() => toggleEnhancementWindow());
+            }
+        });
+    }
+
     // ─── Init / Stop ──────────────────────────────────────────────────────────
     function addonInit() {
         loadSettings();
@@ -941,5 +1044,4 @@
         window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle: onStateToggle });
     };
     checkApi();
-///okej inny dodatek i tu potrzebuje pomocy:  mała zmiana bo mamy itemki eventowe i to jest poprawne ale od tego roku zaczeli inaczej oznaczac itemki eventowe i np stare itemy dalej w opisie maja wiec zostwiamy to co mamy ale trzeba dodac sprawdzenie statystyki "etiquette" i w sumie już nie trzeba po nazwie sprawdzać tylko jak item ma tą statystyke to po prsotu tez jest oznazcany jako eventowy co nie oraz mala zmiana bo w opcji ulepszania po miejsach w torbie tip jest przypisany do inputa a nie do checkboxa tej opcji tak jak jest to np w ulepszaniu po walce i tyle proste zmiany oraz ważna zmiana to tam gdzie jest item ten klon sie pojawia to w tym elemencie jak bede przeciągać obiekt ".item" to po prsotu jakby mi pokazuje wtedy taką ramke dla tego elementu upg-item-box i jest taka np zółta kreskowana ramka i jak upuszcze w tym elemencie ten obiekt ".item" to po prsotu mi go jakby przechwytuje i wtedy wybiera mi ten konkretny upuszcony item o ile spełnia wymagania co nie ze np da się go ulepszać. czyli musisz zrobic zeby wykrwało ze wgl taki obiekt jest przecieagany tak samo w znaczniku teleproów było ze znajdywalismy po obiekcie item co nie
 })();
