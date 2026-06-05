@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Ulepszara baddonz
-// @version       2.0.5
-// @description   Automatyczne ulepszanie wybranego itemu z konfiguracją
+// @version       1.0
+// @description   Automatyczne ulepszanie
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -310,6 +310,8 @@
             /* ── Dzienny limit ───────────────────────────────── */
             .upg-daily-row { display:flex; justify-content:center; padding-top:4px; }
             .upg-daily-text { font-size:11px; color:#ccc; }
+            /* Gdy zwinięte – limit tuż pod tytułem bez dużej luki */
+            .wnd-ulepszara.wnd-clp .upg-daily-row { padding-top:1px; }
 
             /* ── Kafelki typów itemów ────────────────────────── */
             #baddonz-upgrader-type-filters {
@@ -338,7 +340,7 @@
             .upg-input-row { display:flex; flex-direction:column; gap:2px; padding:2px 0 2px 8px; }
             .upg-input-row .baddonz-input { width:100%; height:24px !important; line-height:22px; text-align:center; padding:1px 4px; font-size:11px; box-sizing:border-box; }
             .upg-hotkey-input { font-weight:bold; text-transform:uppercase; }
-            .upg-number-input { width:100% !important; }
+            .upg-number-input { width:100% !important; text-align:center !important; }
             .upg-text { font-size:11px; color:#ddd; }
 
             /* ── Cursor na przedmiot w slocie ────────────────── */
@@ -347,8 +349,9 @@
             }
             #baddonz-upgrader-main-item-slot { margin:0; }
 
-            /* ── Collapsed state ─────────────────────────────── */
-            .wnd-ulepszara.wnd-clp { height: auto !important; }
+            /* ── Collapsed state – ten sam rozmiar co rozwinięte ─ */
+            .wnd-ulepszara.wnd-clp { height: auto !important; width: 175px !important; }
+            .wnd-ulepszara.wnd-clp .baddonz-window-body { display:flex !important; padding: 2px 8px 5px 8px !important; gap: 0 !important; }
             .wnd-ulepszara.wnd-clp .upg-item-box { display:none !important; }
         `;
         document.head.appendChild(styleSheet);
@@ -565,7 +568,7 @@
                     <span class="upg-text">Ulepszaj po walce</span>
                 </div>
                 <div id="upg-endbattle-options" class="upg-input-row" style="display:none;">
-                    <span class="upg-settings-label">Min. Liczba Reagentów:</span>
+                    <span class="upg-settings-label">Min. Liczba składników:</span>
                     <input type="number" class="baddonz-input upg-number-input" id="upg-count-endbattle-input" min="1" max="50">
                 </div>
             </div>
@@ -582,7 +585,7 @@
             </div>
         `;
 
-        uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Ulepszara — Ustawienia", settingsBodyHtml, {
+        uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Ulepszara Ustawienia", settingsBodyHtml, {
             customId: 'wnd-ulepszara-settings',
             width: '255px'
         });
