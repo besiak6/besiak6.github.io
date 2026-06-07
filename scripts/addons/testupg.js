@@ -357,34 +357,32 @@
             .wnd-ulepszara.wnd-clp .upg-item-box { display:none !important; }
 
             /* ── Drag & Drop ────────────────────────────────────── */
-            @keyframes upg-border-march-green {
-                0%   { background-position: 0 0,       100% 0,    100% 100%, 0 100%; }
-                100% { background-position: 30px 0,    100% 30px, calc(100% - 30px) 100%, 0 calc(100% - 30px); }
-            }
-            @keyframes upg-border-march-red {
-                0%   { background-position: 0 0,       100% 0,    100% 100%, 0 100%; }
-                100% { background-position: 30px 0,    100% 30px, calc(100% - 30px) 100%, 0 calc(100% - 30px); }
+            @keyframes upg-march {
+                from { background-position: 0 0, 100% 0, 100% 100%, 0 100%; }
+                to   { background-position: 20px 0, 100% 20px, calc(100% - 20px) 100%, 0 calc(100% - 20px); }
             }
             .upg-item-box.upg-drop-valid {
-                background-image: repeating-linear-gradient(90deg,  #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
-                                  repeating-linear-gradient(180deg, #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
-                                  repeating-linear-gradient(90deg,  #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
-                                  repeating-linear-gradient(180deg, #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px);
+                background-image:
+                    repeating-linear-gradient(90deg,  #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
+                    repeating-linear-gradient(180deg, #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
+                    repeating-linear-gradient(90deg,  #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
+                    repeating-linear-gradient(180deg, #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px);
                 background-size: 20px 2px, 2px 20px, 20px 2px, 2px 20px;
                 background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
                 background-position: 0 0, 100% 0, 100% 100%, 0 100%;
-                animation: upg-border-march-green 0.4s linear infinite;
+                animation: upg-march 0.4s linear infinite;
                 border-radius: 4px;
             }
             .upg-item-box.upg-drop-invalid {
-                background-image: repeating-linear-gradient(90deg,  #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
-                                  repeating-linear-gradient(180deg, #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
-                                  repeating-linear-gradient(90deg,  #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
-                                  repeating-linear-gradient(180deg, #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px);
+                background-image:
+                    repeating-linear-gradient(90deg,  #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
+                    repeating-linear-gradient(180deg, #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
+                    repeating-linear-gradient(90deg,  #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
+                    repeating-linear-gradient(180deg, #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px);
                 background-size: 20px 2px, 2px 20px, 20px 2px, 2px 20px;
                 background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
                 background-position: 0 0, 100% 0, 100% 100%, 0 100%;
-                animation: upg-border-march-red 0.4s linear infinite;
+                animation: upg-march 0.4s linear infinite;
                 border-radius: 4px;
             }
         `;
@@ -974,21 +972,22 @@
             greedy: true,
             tolerance: 'pointer',
             over: function(e, ui) {
-                const itemData = ui.draggable.data('item');
-                if (!itemData) return;
-                const item = Engine.items.getItemById(itemData.id || itemData);
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                const item = ui.draggable.data('item');
                 const valid = isItemValidForUpgrade(item);
                 $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
                 $itemBox.addClass(valid ? 'upg-drop-valid' : 'upg-drop-invalid');
             },
             out: function(e, ui) {
+                e.stopPropagation();
                 $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
             },
             drop: function(e, ui) {
+                e.stopPropagation();
+                e.stopImmediatePropagation();
                 $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
-                const itemData = ui.draggable.data('item');
-                if (!itemData) return;
-                const item = Engine.items.getItemById(itemData.id || itemData);
+                const item = ui.draggable.data('item');
                 if (!item) return;
                 if (isItemValidForUpgrade(item)) {
                     setUpgradedItemId(item.id);
