@@ -355,36 +355,6 @@
             .wnd-ulepszara.wnd-clp { height: auto !important; width: 175px !important; }
             .wnd-ulepszara.wnd-clp .baddonz-window-body { display:flex !important; padding: 2px 8px 5px 8px !important; gap: 0 !important; }
             .wnd-ulepszara.wnd-clp .upg-item-box { display:none !important; }
-
-            /* ── Drag & Drop ────────────────────────────────────── */
-            @keyframes upg-march {
-                from { background-position: 0 0, 100% 0, 100% 100%, 0 100%; }
-                to   { background-position: 20px 0, 100% 20px, calc(100% - 20px) 100%, 0 calc(100% - 20px); }
-            }
-            .upg-item-box.upg-drop-valid {
-                background-image:
-                    repeating-linear-gradient(90deg,  #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
-                    repeating-linear-gradient(180deg, #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
-                    repeating-linear-gradient(90deg,  #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
-                    repeating-linear-gradient(180deg, #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px);
-                background-size: 20px 2px, 2px 20px, 20px 2px, 2px 20px;
-                background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
-                background-position: 0 0, 100% 0, 100% 100%, 0 100%;
-                animation: upg-march 0.4s linear infinite;
-                border-radius: 4px;
-            }
-            .upg-item-box.upg-drop-invalid {
-                background-image:
-                    repeating-linear-gradient(90deg,  #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
-                    repeating-linear-gradient(180deg, #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
-                    repeating-linear-gradient(90deg,  #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
-                    repeating-linear-gradient(180deg, #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px);
-                background-size: 20px 2px, 2px 20px, 20px 2px, 2px 20px;
-                background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
-                background-position: 0 0, 100% 0, 100% 100%, 0 100%;
-                animation: upg-march 0.4s linear infinite;
-                border-radius: 4px;
-            }
         `;
         document.head.appendChild(styleSheet);
     };
@@ -932,109 +902,6 @@
         return match ? match[1] : null;
     };
 
-    // ─── Drag & Drop na upg-item-box ─────────────────────────────────────────
-    function isItemValidForUpgrade(item) {
-        if (!item) return false;
-        const cached = item._cachedStats || {};
-        const rarity = cached.rarity || item.rarity;
-        const enhancement_upgrade_lvl = cached.enhancement_upgrade_lvl !== undefined ? cached.enhancement_upgrade_lvl : (item.enhancement_upgrade_lvl ?? undefined);
-        const isWorthless = Object.prototype.hasOwnProperty.call(cached, 'artisan_worthless') || Object.prototype.hasOwnProperty.call(item, 'artisan_worthless');
-        const cursed_flag = cached.cursed !== undefined ? cached.cursed : (item.cursed !== undefined ? item.cursed : false);
-        const itemLevel = item.lvl ?? item.level ?? cached.lvl ?? 0;
-        const itemClass = item.cl;
-        const isAllowedRarity = (currentSettings.use_common && rarity === 'common') || (currentSettings.use_unique && rarity === 'unique') || rarity === 'heroic' || rarity === 'legendary' || rarity === 'upgraded';
-        const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
-        const isAllowedType = itemSettingKey ? currentSettings[itemSettingKey] : false;
-        const isUpgraded = enhancement_upgrade_lvl !== undefined && enhancement_upgrade_lvl !== null;
-        const isBound = (item.checkSoulbound && item.checkSoulbound()) || (item.checkPermbound && item.checkPermbound());
-        let isPartOfBuild = false;
-        try { if (typeof item.getBuildsWithThisItem === 'function') { const builds = item.getBuildsWithThisItem(); if (builds && builds.length > 0) isPartOfBuild = true; } } catch(e) {}
-        if (itemLevel < 20) return false;
-        if (cursed_flag) return false;
-        if (isWorthless) return false;
-        if (isUpgraded) return false;
-        if (isEventItem(item)) return false;
-        if (!currentSettings.allow_bound_items && isBound) return false;
-        if (isPartOfBuild) return false;
-        if (!isAllowedType) return false;
-        if (!isAllowedRarity) return false;
-        return true;
-    }
-
-    function initDroppable() {
-        if (!uiMainWindow) return;
-        const $itemBox = $(uiMainWindow).find('.upg-item-box');
-        if (!$itemBox.length) return;
-        if ($itemBox.data('ui-droppable')) return; // już zainicjowane
-
-        $itemBox.droppable({
-            accept: '.item:not(.shop-item)',
-            greedy: true,
-            tolerance: 'pointer',
-            over: function(e, ui) {
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                const item = ui.draggable.data('item');
-                const valid = isItemValidForUpgrade(item);
-                $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
-                $itemBox.addClass(valid ? 'upg-drop-valid' : 'upg-drop-invalid');
-            },
-            out: function(e, ui) {
-                e.stopPropagation();
-                $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
-            },
-            drop: function(e, ui) {
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
-
-                const item = ui.draggable.data('item');
-                if (!item) return false;
-
-                // ── Pochłoń drop: gra nie dostaje tego eventu ────────────────
-                // Ustaw flagę dropped na managerze – jQuery UI nie wywoła już
-                // innych drop-handlerów dla tego przeciągania.
-                if ($.ui.ddmanager.current) {
-                    $.ui.ddmanager.current.dropped = true;
-                }
-                // Wyłącz revert i usuń helper ręcznie, żeby draggable nie
-                // "wróciło" i nie wyzwoliło logiki gry po mouseup.
-                try {
-                    ui.draggable.draggable('option', 'revert', false);
-                } catch(err) {}
-                if (ui.helper && ui.helper[0] !== ui.draggable[0]) {
-                    ui.helper.remove();
-                }
-                // Symuluj mouseup na draggable, żeby jQuery UI posprzątało stan
-                // bez przekazywania zdarzenia do handlerów gry.
-                try {
-                    ui.draggable.trigger('mouseup');
-                } catch(err) {}
-
-                if (isItemValidForUpgrade(item)) {
-                    setUpgradedItemId(item.id);
-                    message(`Ulepszanie przedmiotu ${item.name}`);
-                    toggleEnhancementWindow();
-                    setEnhancedItem(item.id).then(() => toggleEnhancementWindow());
-                    updateMainUI();
-                } else {
-                    message('Ten item nie może być wybrany.');
-                }
-
-                return false;
-            }
-        });
-
-        // Dodatkowo: blokuj mouseup/mousedown na samym oknie, żeby gra
-        // nie interpretowała kliknięcia w okno jako upuszczenia itemu na mapę.
-        $(uiMainWindow).on('mouseup.upgdrop mousedown.upgdrop', function(e) {
-            if ($.ui.ddmanager.current) {
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-            }
-        });
-    }
-
     // ─── Init / Stop ──────────────────────────────────────────────────────────
     function addonInit() {
         loadSettings();
@@ -1045,7 +912,6 @@
         setupCommunicationHook();
         setupKeydownHandler();
         initItemContextMenu();
-        initDroppable();
 
         if (typeof Engine.battle.setEndBattle === 'function') {
             const origEndBattle = Engine.battle.setEndBattle.bind(Engine.battle);
