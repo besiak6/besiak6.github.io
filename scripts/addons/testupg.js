@@ -961,56 +961,55 @@
         return true;
     }
 
+    // Wyłącz wszystkie droppable gry (.game-layer i .usable-slot) żeby item nie
+    // trafił do gry gdy upuszczamy go na nasz upg-item-box
+    function disableGameDroppables() {
+        try {
+            const $gl = $('.game-layer');
+            if ($gl.data('ui-droppable')) $gl.droppable('disable');
+            $('.usable-slot').each(function() {
+                const $s = $(this);
+                if ($s.data('ui-droppable')) $s.droppable('disable');
+            });
+        } catch(err) {}
+    }
+
+    function enableGameDroppables() {
+        try {
+            const $gl = $('.game-layer');
+            if ($gl.data('ui-droppable')) $gl.droppable('enable');
+            $('.usable-slot').each(function() {
+                const $s = $(this);
+                if ($s.data('ui-droppable')) $s.droppable('enable');
+            });
+        } catch(err) {}
+    }
+
     function initDroppable() {
         if (!uiMainWindow) return;
         const $itemBox = $(uiMainWindow).find('.upg-item-box');
         if (!$itemBox.length) return;
-        if ($itemBox.data('ui-droppable')) return; // już zainicjowane
+        if ($itemBox.data('ui-droppable')) return;
 
         $itemBox.droppable({
             accept: '.item:not(.shop-item)',
-            greedy: true,
             tolerance: 'pointer',
             over: function(e, ui) {
-                e.stopPropagation();
-                e.stopImmediatePropagation();
                 const item = ui.draggable.data('item');
                 const valid = isItemValidForUpgrade(item);
                 $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
                 $itemBox.addClass(valid ? 'upg-drop-valid' : 'upg-drop-invalid');
+                disableGameDroppables();
             },
             out: function(e, ui) {
-                e.stopPropagation();
                 $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
+                enableGameDroppables();
             },
             drop: function(e, ui) {
-                e.stopPropagation();
-                e.stopImmediatePropagation();
                 $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
-
+                enableGameDroppables();
                 const item = ui.draggable.data('item');
-                if (!item) return false;
-
-                // ── Pochłoń drop: gra nie dostaje tego eventu ────────────────
-                // Ustaw flagę dropped na managerze – jQuery UI nie wywoła już
-                // innych drop-handlerów dla tego przeciągania.
-                if ($.ui.ddmanager.current) {
-                    $.ui.ddmanager.current.dropped = true;
-                }
-                // Wyłącz revert i usuń helper ręcznie, żeby draggable nie
-                // "wróciło" i nie wyzwoliło logiki gry po mouseup.
-                try {
-                    ui.draggable.draggable('option', 'revert', false);
-                } catch(err) {}
-                if (ui.helper && ui.helper[0] !== ui.draggable[0]) {
-                    ui.helper.remove();
-                }
-                // Symuluj mouseup na draggable, żeby jQuery UI posprzątało stan
-                // bez przekazywania zdarzenia do handlerów gry.
-                try {
-                    ui.draggable.trigger('mouseup');
-                } catch(err) {}
-
+                if (!item) return;
                 if (isItemValidForUpgrade(item)) {
                     setUpgradedItemId(item.id);
                     message(`Ulepszanie przedmiotu ${item.name}`);
@@ -1020,17 +1019,6 @@
                 } else {
                     message('Ten item nie może być wybrany.');
                 }
-
-                return false;
-            }
-        });
-
-        // Dodatkowo: blokuj mouseup/mousedown na samym oknie, żeby gra
-        // nie interpretowała kliknięcia w okno jako upuszczenia itemu na mapę.
-        $(uiMainWindow).on('mouseup.upgdrop mousedown.upgdrop', function(e) {
-            if ($.ui.ddmanager.current) {
-                e.stopPropagation();
-                e.stopImmediatePropagation();
             }
         });
     }
