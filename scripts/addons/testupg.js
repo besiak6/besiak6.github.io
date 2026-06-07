@@ -1,12 +1,11 @@
 // ==UserScript==
 // @name          Ulepszara baddonz
-// @version       1.0
+// @version       2.0
 // @description   Automatyczne ulepszanie
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
 // ==/UserScript==
-
 (function() {
     'use strict';
 
@@ -92,9 +91,7 @@
             }
         } catch(e) {}
 
-        const charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-
-        currentSettings = { ...DEFAULT_ACC_SETTINGS, ...DEFAULT_CHAR_SETTINGS, ...accSettings, ...charSettings };
+        currentSettings = { ...DEFAULT_ACC_SETTINGS, ...DEFAULT_CHAR_SETTINGS, ...accSettings };
 
         // Wczytaj dzienny licznik
         const count = parseInt(localStorage.getItem('baddonz-daily-upgrade-count'));
@@ -105,15 +102,14 @@
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
 
-        const accKeys = ['windowOpacity','windowVisible','settingsWindowVisible','windowSettingsOpacity','isCollapsed','hotkeyKey'];
-        const charKeys = ['enabled','hotkeyEnabled','use_common','use_unique','allow_bound_items','upgrade_endbattle','count_endbattle','bags_upgrade','count_bags_upgrade','cl1','cl2','cl3','cl4','cl5','cl6','cl7','cl8','cl9','cl10','cl11','cl12','cl13','cl14','cl29'];
+        const accKeys = ['windowOpacity','windowVisible','settingsWindowVisible','windowSettingsOpacity','isCollapsed','hotkeyKey',
+                         'enabled','hotkeyEnabled','use_common','use_unique','allow_bound_items','upgrade_endbattle','count_endbattle',
+                         'bags_upgrade','count_bags_upgrade','cl1','cl2','cl3','cl4','cl5','cl6','cl7','cl8','cl9','cl10','cl11','cl12','cl13','cl14','cl29'];
 
-        const accSettings  = {};
-        const charSettings = {};
-        accKeys.forEach(k  => accSettings[k]  = currentSettings[k]);
-        charKeys.forEach(k => charSettings[k] = currentSettings[k]);
+        const accSettings = {};
+        accKeys.forEach(k => accSettings[k] = currentSettings[k]);
 
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
 
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
@@ -159,10 +155,11 @@
 
     function isEventItem(item) {
         if (!item) return false;
-        // Nowe oznaczenie eventowe – statystyka "etiquette"
-        const cached = item._cachedStats || {};
-        if (Object.prototype.hasOwnProperty.call(cached, 'etiquette') || Object.prototype.hasOwnProperty.call(item, 'etiquette')) return true;
-        // Stare oznaczenie – słowa kluczowe w opisie
+        // Sprawdź statystykę etiquette (itemy eventowe od 2025+)
+        try {
+            if (item.issetItemStat(Engine.itemStatsData.etiquette)) return true;
+        } catch(e) {}
+        // Sprawdź słowa kluczowe w opisie tooltipa
         if (!item.getTipContent) return false;
         const tip = item.getTipContent();
         if (!tip) return false;
@@ -182,31 +179,41 @@
     const getReagents = () => {
         return Engine.items.fetchLocationItems("g").reduce((acc, item) => {
             if (!item) return acc;
-            const cached = item._cachedStats || {};
-            const rarity = cached.rarity || item.rarity;
-            const enhancement_upgrade_lvl = cached.enhancement_upgrade_lvl !== undefined ? cached.enhancement_upgrade_lvl : (item.enhancement_upgrade_lvl ?? undefined);
-            const isWorthless = (cached && Object.prototype.hasOwnProperty.call(cached, 'artisan_worthless')) || Object.prototype.hasOwnProperty.call(item, 'artisan_worthless');
-            const cursed_flag = cached.cursed !== undefined ? cached.cursed : (item.cursed !== undefined ? item.cursed : false);
-            const itemLevel = item.lvl ?? item.level ?? cached.lvl ?? 0;
-            const itemClass = item.cl;
-            const isAllowedRarity = (currentSettings.use_common && rarity === 'common') || (currentSettings.use_unique && rarity === 'unique');
-            const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
-            const isAllowedType = itemSettingKey ? currentSettings[itemSettingKey] : false;
-            const isUpgraded = enhancement_upgrade_lvl !== undefined && enhancement_upgrade_lvl !== null;
-            const isBound = (item.checkSoulbound && item.checkSoulbound()) || (item.checkPermbound && item.checkPermbound());
-            let isPartOfBuild = false;
-            try { if (typeof item.getBuildsWithThisItem === 'function') { const builds = item.getBuildsWithThisItem(); if (builds && builds.length > 0) isPartOfBuild = true; } } catch(e) {}
-            if (itemLevel < 20) return acc;
-            if (cursed_flag) return acc;
-            if (isWorthless) return acc;
-            if (isAllowedType && isAllowedRarity && !isEventItem(item) && !isUpgraded && (currentSettings.allow_bound_items || !isBound) && !isPartOfBuild) {
-                let extra = false;
-                try { if (typeof Engine.buildsManager !== 'undefined' && item.getBuildsWithThisItem) { const b = item.getBuildsWithThisItem(); if (b && b.length > 0) extra = true; } } catch(e) {}
-                if (!extra) acc.push(item.id);
-            }
+            try {
+                const sd = Engine.itemStatsData;
+
+                if (!item.issetItemStat(sd.rarity)) return acc;
+                const rarity = item.getItemStat(sd.rarity);
+                const isAllowedRarity = (currentSettings.use_common && rarity === 'common')
+                    || (currentSettings.use_unique && rarity === 'unique');
+                if (!isAllowedRarity) return acc;
+
+                const itemClass    = item.cl;
+                const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
+                if (!itemSettingKey || !currentSettings[itemSettingKey]) return acc;
+
+                const itemLevel = item.issetLvlStat() ? parseInt(item.getLvlStat()) : 0;
+                if (itemLevel < 20) return acc;
+
+                if (item.issetItemStat(sd.enhancement_upgrade_lvl)) return acc;
+                if (item.issetItemStat(sd.cursed)) return acc;
+                if (item.issetItemStat(sd.artisan_worthless)) return acc;
+                if (isEventItem(item)) return acc;
+
+                if (!currentSettings.allow_bound_items) {
+                    if (item.issetSoulboundStat() || item.issetPermboundStat()) return acc;
+                }
+
+                try {
+                    const builds = item.getBuildsWithThisItem();
+                    if (builds && builds.length > 0) return acc;
+                } catch(e) {}
+
+                acc.push(item.id);
+            } catch(err) {}
             return acc;
         }, []);
-    };
+    };;
 
     const chunkReagents = (reagents) => {
         const chunks = [];
@@ -359,52 +366,34 @@
             .wnd-ulepszara.wnd-clp .baddonz-window-body { display:flex !important; padding: 2px 8px 5px 8px !important; gap: 0 !important; }
             .wnd-ulepszara.wnd-clp .upg-item-box { display:none !important; }
 
-            /* ── Drag over na item-box ───────────────────────────── */
-            @keyframes upg-march-valid {
-                0%   { background-position: 0 0, 100% 0, 100% 100%, 0 100%; }
-                100% { background-position: 30px 0, 100% 30px, calc(100% - 30px) 100%, 0 calc(100% - 30px); }
+            /* ── Drag & Drop ────────────────────────────────────── */
+            @keyframes upg-march {
+                from { background-position: 0 0, 100% 0, 100% 100%, 0 100%; }
+                to   { background-position: 20px 0, 100% 20px, calc(100% - 20px) 100%, 0 calc(100% - 20px); }
             }
-            @keyframes upg-march-invalid {
-                0%   { background-position: 0 0, 100% 0, 100% 100%, 0 100%; }
-                100% { background-position: 30px 0, 100% 30px, calc(100% - 30px) 100%, 0 calc(100% - 30px); }
-            }
-            .upg-item-box.upg-drag-valid {
+            .upg-item-box.upg-drop-valid {
                 background-image:
-                    linear-gradient(90deg,  #ffcc00 50%, transparent 50%),
-                    linear-gradient(180deg, #ffcc00 50%, transparent 50%),
-                    linear-gradient(90deg,  #ffcc00 50%, transparent 50%),
-                    linear-gradient(180deg, #ffcc00 50%, transparent 50%);
-                background-size: 10px 2px, 2px 10px, 10px 2px, 2px 10px;
+                    repeating-linear-gradient(90deg,  #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
+                    repeating-linear-gradient(180deg, #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
+                    repeating-linear-gradient(90deg,  #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
+                    repeating-linear-gradient(180deg, #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px);
+                background-size: 20px 2px, 2px 20px, 20px 2px, 2px 20px;
                 background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
                 background-position: 0 0, 100% 0, 100% 100%, 0 100%;
-                animation: upg-march-valid 0.5s linear infinite;
-                border-bottom-color: transparent !important;
+                animation: upg-march 0.4s linear infinite;
+                border-radius: 4px;
             }
-            .upg-item-box.upg-drag-invalid {
+            .upg-item-box.upg-drop-invalid {
                 background-image:
-                    linear-gradient(90deg,  #cc2222 50%, transparent 50%),
-                    linear-gradient(180deg, #cc2222 50%, transparent 50%),
-                    linear-gradient(90deg,  #cc2222 50%, transparent 50%),
-                    linear-gradient(180deg, #cc2222 50%, transparent 50%);
-                background-size: 10px 2px, 2px 10px, 10px 2px, 2px 10px;
+                    repeating-linear-gradient(90deg,  #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
+                    repeating-linear-gradient(180deg, #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
+                    repeating-linear-gradient(90deg,  #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
+                    repeating-linear-gradient(180deg, #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px);
+                background-size: 20px 2px, 2px 20px, 20px 2px, 2px 20px;
                 background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
                 background-position: 0 0, 100% 0, 100% 100%, 0 100%;
-                animation: upg-march-invalid 0.5s linear infinite;
-                border-bottom-color: transparent !important;
-                position: relative;
-            }
-            .upg-item-box.upg-drag-invalid::before,
-            .upg-item-box.upg-drag-invalid::after {
-                content: '';
-                position: absolute;
-                inset: 0;
-                pointer-events: none;
-            }
-            .upg-item-box.upg-drag-invalid::before {
-                background: linear-gradient(to top right, transparent calc(50% - 1px), #cc2222 50%, transparent calc(50% + 1px));
-            }
-            .upg-item-box.upg-drag-invalid::after {
-                background: linear-gradient(to bottom right, transparent calc(50% - 1px), #cc2222 50%, transparent calc(50% + 1px));
+                animation: upg-march 0.4s linear infinite;
+                border-radius: 4px;
             }
         `;
         document.head.appendChild(styleSheet);
@@ -650,7 +639,6 @@
         // ── Listeners ─────────────────────────────────────────────────────────
         setupListeners();
         updateMainUI();
-        setupItemBoxDroppable();
     }
 
     function applyOpacityClass(wnd, opacity) {
@@ -840,8 +828,7 @@
             if (allowBoundEl) $(allowBoundEl).tip('Używasz na własną odpowiedzialność! Uwaga na itemy z kolosów');
             const endbattleEl = uiSettingsWindow.querySelector('#upg-upgrade-endbattle');
             if (endbattleEl) $(endbattleEl).tip('Automatyczne ulepszanie po walce gdy mamy odpowiednią ilość składników');
-            const bagsCheckboxEl = uiSettingsWindow.querySelector('#upg-bags-upgrade');
-            if (bagsCheckboxEl) $(bagsCheckboxEl).tip('Ilość miejsc potrzebna do uruchomienia ulepszania');
+            if (bagsInput) $(bagsInput).tip('Ilość miejsc potrzebna do uruchomienia ulepszania');
         }
     }
 
@@ -955,52 +942,197 @@
         return match ? match[1] : null;
     };
 
-    // ─── Drag & drop na upg-item-box ─────────────────────────────────────────
-    function isItemUpgradable(item) {
+    // ─── Drag & Drop na upg-item-box ─────────────────────────────────────────
+    function isItemValidForUpgrade(item) {
         if (!item) return false;
-        if (!ITEM_TYPE_SETTINGS_MAP.hasOwnProperty(item.cl)) return false;
-        const cached = item._cachedStats || {};
-        const isBound = (item.checkSoulbound && item.checkSoulbound()) || (item.checkPermbound && item.checkPermbound());
-        const enhancement_upgrade_lvl = cached.enhancement_upgrade_lvl !== undefined ? cached.enhancement_upgrade_lvl : (item.enhancement_upgrade_lvl ?? undefined);
-        const isUpgraded = enhancement_upgrade_lvl !== undefined && enhancement_upgrade_lvl !== null;
-        const itemLevel = item.lvl ?? item.level ?? cached.lvl ?? 0;
-        if (itemLevel < 20) return false;
-        if (isUpgraded) return false;
-        if (isEventItem(item)) return false;
-        if (isBound && !currentSettings.allow_bound_items) return false;
-        return true;
+        try {
+            const sd  = Engine.itemStatsData;
+
+            // Rarity
+            if (!item.issetItemStat(sd.rarity)) return false;
+            const rarity = item.getItemStat(sd.rarity);
+            const isAllowedRarity = (currentSettings.use_common && rarity === 'common')
+                || (currentSettings.use_unique  && rarity === 'unique')
+                || rarity === 'heroic'
+                || rarity === 'legendary'
+                || rarity === 'upgraded';
+            if (!isAllowedRarity) return false;
+
+            // Typ itemu (cl)
+            const itemClass    = item.cl;
+            const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
+            if (!itemSettingKey || !currentSettings[itemSettingKey]) return false;
+
+            // Poziom
+            const itemLevel = item.issetLvlStat() ? parseInt(item.getLvlStat()) : 0;
+            if (itemLevel < 20) return false;
+
+            // Już ulepszony (enhancement_upgrade_lvl)
+            if (item.issetItemStat(sd.enhancement_upgrade_lvl)) return false;
+
+            // Przeklęty
+            if (item.issetItemStat(sd.cursed)) return false;
+
+            // Bezwartościowy (artisan_worthless)
+            if (item.issetItemStat(sd.artisan_worthless)) return false;
+
+            // Eventowy (etiquette lub słowa kluczowe w opisie)
+            if (isEventItem(item)) return false;
+
+            // Przywiązany
+            if (!currentSettings.allow_bound_items) {
+                if (item.issetSoulboundStat() || item.issetPermboundStat()) return false;
+            }
+
+            // Część buildu
+            try {
+                const builds = item.getBuildsWithThisItem();
+                if (builds && builds.length > 0) return false;
+            } catch(e) {}
+
+            return true;
+        } catch(err) {
+            return false;
+        }
     }
 
-    function setupItemBoxDroppable() {
-        if (typeof $ === 'undefined' || !uiMainWindow) return;
-        const $box = $(uiMainWindow).find('.upg-item-box');
-        if (!$box.length) return;
+    // Wyłącz wszystkie droppable gry (.game-layer i .usable-slot) żeby item nie
+    // trafił do gry gdy upuszczamy go na nasz upg-item-box
+    function disableGameDroppables() {
+        try {
+            const $gl = $('.game-layer');
+            if ($gl.data('ui-droppable')) $gl.droppable('disable');
+            $('.usable-slot').each(function() {
+                const $s = $(this);
+                if ($s.data('ui-droppable')) $s.droppable('disable');
+            });
+        } catch(err) {}
+    }
 
-        $box.droppable({
+    function enableGameDroppables() {
+        try {
+            const $gl = $('.game-layer');
+            if ($gl.data('ui-droppable')) $gl.droppable('enable');
+            $('.usable-slot').each(function() {
+                const $s = $(this);
+                if ($s.data('ui-droppable')) $s.droppable('enable');
+            });
+        } catch(err) {}
+    }
+
+    // Pobiera obiekt item z przeciąganego elementu jQuery UI.
+    // jQuery UI podczas draggowania używa helpera (klona elementu), który NIE
+    // ma danych jQuery (.data('item')). Dlatego używamy kilku fallbacków:
+    // 1) .data('item') bezpośrednio na elemencie (gdy brak helpera)
+    // 2) szukamy oryginalnego elementu w DOM po klasie item-id-* i bierzemy jego dane
+    // 3) pobieramy item przez Engine.items.getItemById(id) – zawsze niezawodne
+    // 4) próbujemy dostać się do oryginału przez wewnętrzne dane jQuery UI
+    function getItemFromDraggable($draggable) {
+        // Metoda 1: dane bezpośrednio na elemencie
+        let item = $draggable.data('item');
+        if (item) return item;
+
+        // Wyciągnij ID itemu z klasy CSS (np. "item item-id-12345 ...")
+        const className = $draggable.attr('class') || '';
+        const match = className.match(/item-id-(\d+)/);
+        if (match) {
+            const itemId = match[1];
+
+            // Metoda 2: oryginalny element w DOM (helper to klon, oryginał zostaje)
+            const $original = $(`.item.item-id-${itemId}`).not($draggable[0]);
+            if ($original.length) {
+                item = $original.first().data('item');
+                if (item) return item;
+            }
+
+            // Metoda 3: pobierz przez Engine – najbardziej niezawodna
+            if (typeof Engine !== 'undefined' && Engine.items) {
+                item = Engine.items.getItemById(itemId);
+                if (item) return item;
+            }
+        }
+
+        // Metoda 4: przez wewnętrzne dane instancji jQuery UI Draggable
+        try {
+            const dd = $draggable.data('ui-draggable');
+            if (dd && dd.element) {
+                item = $(dd.element).data('item');
+                if (item) return item;
+            }
+        } catch(e) {}
+
+        return null;
+    }
+
+    // Globalny guard – blokuje droppable gry natychmiast po mousedown na itemu,
+    // zanim kursor dotrze do jakiegokolwiek elementu. Dzięki temu item nie
+    // "przelatuje" do gry gdy przeciągamy go przez okno dodatku.
+    let _upgDragActive = false;
+    function initGlobalDragGuard() {
+        $(document).off('mousedown.upg').on('mousedown.upg', '.item:not(.shop-item)', function() {
+            const $el = $(this);
+            $el.one('dragstart', function() {
+                if (_upgDragActive) return;
+                _upgDragActive = true;
+                disableGameDroppables();
+            });
+        });
+
+        // Re-aktywacja po zakończeniu draggowania (mouseup gdziekolwiek na stronie)
+        $(document).off('mouseup.upg').on('mouseup.upg', function() {
+            if (!_upgDragActive) return;
+            _upgDragActive = false;
+            // Małe opóźnienie – dajemy czas na obsłużenie drop() przed reaktywacją
+            setTimeout(enableGameDroppables, 50);
+        });
+    }
+
+    function initDroppable() {
+        if (!uiMainWindow) return;
+        const $itemBox = $(uiMainWindow).find('.upg-item-box');
+        if (!$itemBox.length) return;
+        if ($itemBox.data('ui-droppable')) return;
+
+        $itemBox.droppable({
             accept: '.item:not(.shop-item)',
             tolerance: 'pointer',
+            greedy: true,
             over: function(e, ui) {
-                const item = ui.draggable.data('item');
-                $box.removeClass('upg-drag-valid upg-drag-invalid');
-                if (isItemUpgradable(item)) {
-                    $box.addClass('upg-drag-valid');
-                } else {
-                    $box.addClass('upg-drag-invalid');
-                }
+                const item = getItemFromDraggable(ui.draggable);
+                const valid = isItemValidForUpgrade(item);
+                $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
+                $itemBox.addClass(valid ? 'upg-drop-valid' : 'upg-drop-invalid');
+                // Na wszelki wypadek – upewnij się że gra jest zablokowana
+                disableGameDroppables();
             },
-            out: function() {
-                $box.removeClass('upg-drag-valid upg-drag-invalid');
+            out: function(e, ui) {
+                $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
+                // NIE wznawiamy droppable gry tutaj – obsługuje to mouseup guard.
+                // Gdybyśmy wznawialy tutaj, item mógłby trafić do gry
+                // jeśli kursor opuści box przed upuszczeniem.
             },
             drop: function(e, ui) {
-                $box.removeClass('upg-drag-valid upg-drag-invalid');
-                const item = ui.draggable.data('item');
-                if (!isItemUpgradable(item)) return;
-                setUpgradedItemId(item.id);
-                message(`Ulepszanie przedmiotu ${item.name}`);
-                toggleEnhancementWindow();
-                setEnhancedItem(item.id).then(() => toggleEnhancementWindow());
+                $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
+                _upgDragActive = false;
+                enableGameDroppables();
+                const item = getItemFromDraggable(ui.draggable);
+                if (!item) {
+                    message('Nie udało się odczytać danych przedmiotu.');
+                    return;
+                }
+                if (isItemValidForUpgrade(item)) {
+                    setUpgradedItemId(item.id);
+                    message(`Ulepszanie przedmiotu ${item.name}`);
+                    toggleEnhancementWindow();
+                    setEnhancedItem(item.id).then(() => toggleEnhancementWindow());
+                    updateMainUI();
+                } else {
+                    message('Ten item nie może być wybrany do ulepszania.');
+                }
             }
         });
+
+        initGlobalDragGuard();
     }
 
     // ─── Init / Stop ──────────────────────────────────────────────────────────
@@ -1013,6 +1145,7 @@
         setupCommunicationHook();
         setupKeydownHandler();
         initItemContextMenu();
+        initDroppable();
 
         if (typeof Engine.battle.setEndBattle === 'function') {
             const origEndBattle = Engine.battle.setEndBattle.bind(Engine.battle);
