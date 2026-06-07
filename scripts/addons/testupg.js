@@ -355,6 +355,38 @@
             .wnd-ulepszara.wnd-clp { height: auto !important; width: 175px !important; }
             .wnd-ulepszara.wnd-clp .baddonz-window-body { display:flex !important; padding: 2px 8px 5px 8px !important; gap: 0 !important; }
             .wnd-ulepszara.wnd-clp .upg-item-box { display:none !important; }
+
+            /* ── Drag & Drop ────────────────────────────────────── */
+            @keyframes upg-border-march-green {
+                0%   { background-position: 0 0,       100% 0,    100% 100%, 0 100%; }
+                100% { background-position: 30px 0,    100% 30px, calc(100% - 30px) 100%, 0 calc(100% - 30px); }
+            }
+            @keyframes upg-border-march-red {
+                0%   { background-position: 0 0,       100% 0,    100% 100%, 0 100%; }
+                100% { background-position: 30px 0,    100% 30px, calc(100% - 30px) 100%, 0 calc(100% - 30px); }
+            }
+            .upg-item-box.upg-drop-valid {
+                background-image: repeating-linear-gradient(90deg,  #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
+                                  repeating-linear-gradient(180deg, #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
+                                  repeating-linear-gradient(90deg,  #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
+                                  repeating-linear-gradient(180deg, #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px);
+                background-size: 20px 2px, 2px 20px, 20px 2px, 2px 20px;
+                background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
+                background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+                animation: upg-border-march-green 0.4s linear infinite;
+                border-radius: 4px;
+            }
+            .upg-item-box.upg-drop-invalid {
+                background-image: repeating-linear-gradient(90deg,  #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
+                                  repeating-linear-gradient(180deg, #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
+                                  repeating-linear-gradient(90deg,  #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
+                                  repeating-linear-gradient(180deg, #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px);
+                background-size: 20px 2px, 2px 20px, 20px 2px, 2px 20px;
+                background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
+                background-position: 0 0, 100% 0, 100% 100%, 0 100%;
+                animation: upg-border-march-red 0.4s linear infinite;
+                border-radius: 4px;
+            }
         `;
         document.head.appendChild(styleSheet);
     };
@@ -902,6 +934,75 @@
         return match ? match[1] : null;
     };
 
+    // ─── Drag & Drop na upg-item-box ─────────────────────────────────────────
+    function isItemValidForUpgrade(item) {
+        if (!item) return false;
+        const cached = item._cachedStats || {};
+        const rarity = cached.rarity || item.rarity;
+        const enhancement_upgrade_lvl = cached.enhancement_upgrade_lvl !== undefined ? cached.enhancement_upgrade_lvl : (item.enhancement_upgrade_lvl ?? undefined);
+        const isWorthless = Object.prototype.hasOwnProperty.call(cached, 'artisan_worthless') || Object.prototype.hasOwnProperty.call(item, 'artisan_worthless');
+        const cursed_flag = cached.cursed !== undefined ? cached.cursed : (item.cursed !== undefined ? item.cursed : false);
+        const itemLevel = item.lvl ?? item.level ?? cached.lvl ?? 0;
+        const itemClass = item.cl;
+        const isAllowedRarity = (currentSettings.use_common && rarity === 'common') || (currentSettings.use_unique && rarity === 'unique') || rarity === 'heroic' || rarity === 'legendary' || rarity === 'upgraded';
+        const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
+        const isAllowedType = itemSettingKey ? currentSettings[itemSettingKey] : false;
+        const isUpgraded = enhancement_upgrade_lvl !== undefined && enhancement_upgrade_lvl !== null;
+        const isBound = (item.checkSoulbound && item.checkSoulbound()) || (item.checkPermbound && item.checkPermbound());
+        let isPartOfBuild = false;
+        try { if (typeof item.getBuildsWithThisItem === 'function') { const builds = item.getBuildsWithThisItem(); if (builds && builds.length > 0) isPartOfBuild = true; } } catch(e) {}
+        if (itemLevel < 20) return false;
+        if (cursed_flag) return false;
+        if (isWorthless) return false;
+        if (isUpgraded) return false;
+        if (isEventItem(item)) return false;
+        if (!currentSettings.allow_bound_items && isBound) return false;
+        if (isPartOfBuild) return false;
+        if (!isAllowedType) return false;
+        if (!isAllowedRarity) return false;
+        return true;
+    }
+
+    function initDroppable() {
+        if (!uiMainWindow) return;
+        const $itemBox = $(uiMainWindow).find('.upg-item-box');
+        if (!$itemBox.length) return;
+        if ($itemBox.data('ui-droppable')) return; // już zainicjowane
+
+        $itemBox.droppable({
+            accept: '.item:not(.shop-item)',
+            greedy: true,
+            tolerance: 'pointer',
+            over: function(e, ui) {
+                const itemData = ui.draggable.data('item');
+                if (!itemData) return;
+                const item = Engine.items.getItemById(itemData.id || itemData);
+                const valid = isItemValidForUpgrade(item);
+                $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
+                $itemBox.addClass(valid ? 'upg-drop-valid' : 'upg-drop-invalid');
+            },
+            out: function(e, ui) {
+                $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
+            },
+            drop: function(e, ui) {
+                $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
+                const itemData = ui.draggable.data('item');
+                if (!itemData) return;
+                const item = Engine.items.getItemById(itemData.id || itemData);
+                if (!item) return;
+                if (isItemValidForUpgrade(item)) {
+                    setUpgradedItemId(item.id);
+                    message(`Ulepszanie przedmiotu ${item.name}`);
+                    toggleEnhancementWindow();
+                    setEnhancedItem(item.id).then(() => toggleEnhancementWindow());
+                    updateMainUI();
+                } else {
+                    message('Ten item nie może być wybrany.');
+                }
+            }
+        });
+    }
+
     // ─── Init / Stop ──────────────────────────────────────────────────────────
     function addonInit() {
         loadSettings();
@@ -912,6 +1013,7 @@
         setupCommunicationHook();
         setupKeydownHandler();
         initItemContextMenu();
+        initDroppable();
 
         if (typeof Engine.battle.setEndBattle === 'function') {
             const origEndBattle = Engine.battle.setEndBattle.bind(Engine.battle);
