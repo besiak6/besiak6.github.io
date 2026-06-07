@@ -156,9 +156,9 @@
     function isEventItem(item) {
         if (!item) return false;
         // Sprawdź statystykę etiquette (itemy eventowe od 2025+)
-        const cached = item._cachedStats || {};
-        const hasEtiquette = cached.etiquette !== undefined || item.etiquette !== undefined;
-        if (hasEtiquette) return true;
+        try {
+            if (item.issetItemStat(Engine.itemStatsData.etiquette)) return true;
+        } catch(e) {}
         // Sprawdź słowa kluczowe w opisie tooltipa
         if (!item.getTipContent) return false;
         const tip = item.getTipContent();
@@ -179,31 +179,41 @@
     const getReagents = () => {
         return Engine.items.fetchLocationItems("g").reduce((acc, item) => {
             if (!item) return acc;
-            const cached = item._cachedStats || {};
-            const rarity = cached.rarity || item.rarity;
-            const enhancement_upgrade_lvl = cached.enhancement_upgrade_lvl !== undefined ? cached.enhancement_upgrade_lvl : (item.enhancement_upgrade_lvl ?? undefined);
-            const isWorthless = (cached && Object.prototype.hasOwnProperty.call(cached, 'artisan_worthless')) || Object.prototype.hasOwnProperty.call(item, 'artisan_worthless');
-            const cursed_flag = cached.cursed !== undefined ? cached.cursed : (item.cursed !== undefined ? item.cursed : false);
-            const itemLevel = item.lvl ?? item.level ?? cached.lvl ?? 0;
-            const itemClass = item.cl;
-            const isAllowedRarity = (currentSettings.use_common && rarity === 'common') || (currentSettings.use_unique && rarity === 'unique');
-            const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
-            const isAllowedType = itemSettingKey ? currentSettings[itemSettingKey] : false;
-            const isUpgraded = enhancement_upgrade_lvl !== undefined && enhancement_upgrade_lvl !== null;
-            const isBound = (item.checkSoulbound && item.checkSoulbound()) || (item.checkPermbound && item.checkPermbound());
-            let isPartOfBuild = false;
-            try { if (typeof item.getBuildsWithThisItem === 'function') { const builds = item.getBuildsWithThisItem(); if (builds && builds.length > 0) isPartOfBuild = true; } } catch(e) {}
-            if (itemLevel < 20) return acc;
-            if (cursed_flag) return acc;
-            if (isWorthless) return acc;
-            if (isAllowedType && isAllowedRarity && !isEventItem(item) && !isUpgraded && (currentSettings.allow_bound_items || !isBound) && !isPartOfBuild) {
-                let extra = false;
-                try { if (typeof Engine.buildsManager !== 'undefined' && item.getBuildsWithThisItem) { const b = item.getBuildsWithThisItem(); if (b && b.length > 0) extra = true; } } catch(e) {}
-                if (!extra) acc.push(item.id);
-            }
+            try {
+                const sd = Engine.itemStatsData;
+
+                if (!item.issetItemStat(sd.rarity)) return acc;
+                const rarity = item.getItemStat(sd.rarity);
+                const isAllowedRarity = (currentSettings.use_common && rarity === 'common')
+                    || (currentSettings.use_unique && rarity === 'unique');
+                if (!isAllowedRarity) return acc;
+
+                const itemClass    = item.cl;
+                const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
+                if (!itemSettingKey || !currentSettings[itemSettingKey]) return acc;
+
+                const itemLevel = item.issetLvlStat() ? parseInt(item.getLvlStat()) : 0;
+                if (itemLevel < 20) return acc;
+
+                if (item.issetItemStat(sd.enhancement_upgrade_lvl)) return acc;
+                if (item.issetItemStat(sd.cursed)) return acc;
+                if (item.issetItemStat(sd.artisan_worthless)) return acc;
+                if (isEventItem(item)) return acc;
+
+                if (!currentSettings.allow_bound_items) {
+                    if (item.issetSoulboundStat() || item.issetPermboundStat()) return acc;
+                }
+
+                try {
+                    const builds = item.getBuildsWithThisItem();
+                    if (builds && builds.length > 0) return acc;
+                } catch(e) {}
+
+                acc.push(item.id);
+            } catch(err) {}
             return acc;
         }, []);
-    };
+    };;
 
     const chunkReagents = (reagents) => {
         const chunks = [];
@@ -935,30 +945,55 @@
     // ─── Drag & Drop na upg-item-box ─────────────────────────────────────────
     function isItemValidForUpgrade(item) {
         if (!item) return false;
-        const cached = item._cachedStats || {};
-        const rarity = cached.rarity || item.rarity;
-        const enhancement_upgrade_lvl = cached.enhancement_upgrade_lvl !== undefined ? cached.enhancement_upgrade_lvl : (item.enhancement_upgrade_lvl ?? undefined);
-        const isWorthless = Object.prototype.hasOwnProperty.call(cached, 'artisan_worthless') || Object.prototype.hasOwnProperty.call(item, 'artisan_worthless');
-        const cursed_flag = cached.cursed !== undefined ? cached.cursed : (item.cursed !== undefined ? item.cursed : false);
-        const itemLevel = item.lvl ?? item.level ?? cached.lvl ?? 0;
-        const itemClass = item.cl;
-        const isAllowedRarity = (currentSettings.use_common && rarity === 'common') || (currentSettings.use_unique && rarity === 'unique') || rarity === 'heroic' || rarity === 'legendary' || rarity === 'upgraded';
-        const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
-        const isAllowedType = itemSettingKey ? currentSettings[itemSettingKey] : false;
-        const isUpgraded = enhancement_upgrade_lvl !== undefined && enhancement_upgrade_lvl !== null;
-        const isBound = (item.checkSoulbound && item.checkSoulbound()) || (item.checkPermbound && item.checkPermbound());
-        let isPartOfBuild = false;
-        try { if (typeof item.getBuildsWithThisItem === 'function') { const builds = item.getBuildsWithThisItem(); if (builds && builds.length > 0) isPartOfBuild = true; } } catch(e) {}
-        if (itemLevel < 20) return false;
-        if (cursed_flag) return false;
-        if (isWorthless) return false;
-        if (isUpgraded) return false;
-        if (isEventItem(item)) return false;
-        if (!currentSettings.allow_bound_items && isBound) return false;
-        if (isPartOfBuild) return false;
-        if (!isAllowedType) return false;
-        if (!isAllowedRarity) return false;
-        return true;
+        try {
+            const sd  = Engine.itemStatsData;
+
+            // Rarity
+            if (!item.issetItemStat(sd.rarity)) return false;
+            const rarity = item.getItemStat(sd.rarity);
+            const isAllowedRarity = (currentSettings.use_common && rarity === 'common')
+                || (currentSettings.use_unique  && rarity === 'unique')
+                || rarity === 'heroic'
+                || rarity === 'legendary'
+                || rarity === 'upgraded';
+            if (!isAllowedRarity) return false;
+
+            // Typ itemu (cl)
+            const itemClass    = item.cl;
+            const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
+            if (!itemSettingKey || !currentSettings[itemSettingKey]) return false;
+
+            // Poziom
+            const itemLevel = item.issetLvlStat() ? parseInt(item.getLvlStat()) : 0;
+            if (itemLevel < 20) return false;
+
+            // Już ulepszony (enhancement_upgrade_lvl)
+            if (item.issetItemStat(sd.enhancement_upgrade_lvl)) return false;
+
+            // Przeklęty
+            if (item.issetItemStat(sd.cursed)) return false;
+
+            // Bezwartościowy (artisan_worthless)
+            if (item.issetItemStat(sd.artisan_worthless)) return false;
+
+            // Eventowy (etiquette lub słowa kluczowe w opisie)
+            if (isEventItem(item)) return false;
+
+            // Przywiązany
+            if (!currentSettings.allow_bound_items) {
+                if (item.issetSoulboundStat() || item.issetPermboundStat()) return false;
+            }
+
+            // Część buildu
+            try {
+                const builds = item.getBuildsWithThisItem();
+                if (builds && builds.length > 0) return false;
+            } catch(e) {}
+
+            return true;
+        } catch(err) {
+            return false;
+        }
     }
 
     // Wyłącz wszystkie droppable gry (.game-layer i .usable-slot) żeby item nie
