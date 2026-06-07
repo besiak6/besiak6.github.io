@@ -987,6 +987,21 @@
                 e.stopPropagation();
                 e.stopImmediatePropagation();
                 $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
+
+                // ── Wyzeruj proporcje wszystkich pozostałych droppable w tym samym
+                // scope – jQuery UI nie wywoła ich drop(), gra nie dostanie eventu ──
+                try {
+                    const draggableInst = ui.draggable.data('ui-draggable');
+                    const scope = draggableInst?.options?.scope ?? 'default';
+                    const drops = $.ui.ddmanager.droppables[scope] || [];
+                    drops.forEach(d => {
+                        if (d.element[0] !== $itemBox[0]) {
+                            d.proportions({ width: 0, height: 0 });
+                        }
+                    });
+                } catch(err) {}
+                // ─────────────────────────────────────────────────────────────────
+
                 const item = ui.draggable.data('item');
                 if (!item) return;
                 if (isItemValidForUpgrade(item)) {
