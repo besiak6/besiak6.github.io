@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name          Ulepszara baddonz
-// @version       1.1
-// @description   Automatyczne ulepszanie (Naprawione Drag&Drop)
-// @author        besiak (Fix)
+// @version       1.2
+// @description   Automatyczne ulepszanie
+// @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
 // ==/UserScript==
@@ -75,6 +75,17 @@
     let dailyUpgradeCount = 0;
     let dailyUpgradeLimit = 2000;
     let bagLoopTimeout = null;
+
+    // ─── BEZPIECZNY PARSER STATYSTYK ──────────────────────────────────────────
+    function parseStats(statsStr) {
+        if (!statsStr || typeof statsStr !== "string") return {};
+        const result = {};
+        for (const pair of statsStr.split(";")) {
+            const [key, value] = pair.split("=");
+            if (key) result[key] = value !== undefined ? value : true;
+        }
+        return result;
+    }
 
     // ─── Storage helpers ──────────────────────────────────────────────────────
     function loadSettings() {
@@ -153,14 +164,17 @@
     function isEventItem(item) {
         if (!item) return false;
         try {
-            if (item.issetItemStat(Engine.itemStatsData.etiquette)) return true;
+            const stats = item._cachedStats || parseStats(item.stat || item.stats || "");
+            if (stats.etiquette) return true;
         } catch(e) {}
         
-        if (!item.getTipContent) return false;
-        const tip = item.getTipContent();
-        if (!tip) return false;
-        const plainText = tip.replace(/<[^>]+>/g, '');
-        return EVENT_KEYWORDS.some(kw => plainText.includes(kw));
+        if (typeof item.getTipContent === 'function') {
+            const tip = item.getTipContent();
+            if (!tip) return false;
+            const plainText = tip.replace(/<[^>]+>/g, '');
+            return EVENT_KEYWORDS.some(kw => plainText.includes(kw));
+        }
+        return false;
     }
 
     const getFreeSlots = () => {
@@ -176,33 +190,36 @@
         return Engine.items.fetchLocationItems("g").reduce((acc, item) => {
             if (!item) return acc;
             try {
-                const sd = Engine.itemStatsData;
+                const stats = item._cachedStats || parseStats(item.stat || item.stats || "");
+                const rarity = stats.rarity;
+                
+                if (!rarity) return acc;
 
-                if (!item.issetItemStat(sd.rarity)) return acc;
-                const rarity = item.getItemStat(sd.rarity);
                 const isAllowedRarity = (currentSettings.use_common && rarity === 'common')
                     || (currentSettings.use_unique && rarity === 'unique');
                 if (!isAllowedRarity) return acc;
 
-                const itemClass    = item.cl;
+                const itemClass = parseInt(item.cl);
                 const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
                 if (!itemSettingKey || !currentSettings[itemSettingKey]) return acc;
 
-                const itemLevel = item.issetLvlStat() ? parseInt(item.getLvlStat()) : 0;
+                const itemLevel = parseInt(stats.lvl) || 0;
                 if (itemLevel < 20) return acc;
 
-                if (item.issetItemStat(sd.enhancement_upgrade_lvl)) return acc;
-                if (item.issetItemStat(sd.cursed)) return acc;
-                if (item.issetItemStat(sd.artisan_worthless)) return acc;
+                if (stats.enhancement_upgrade_lvl) return acc;
+                if (stats.cursed) return acc;
+                if (stats.artisan_worthless) return acc;
                 if (isEventItem(item)) return acc;
 
                 if (!currentSettings.allow_bound_items) {
-                    if (item.issetSoulboundStat() || item.issetPermboundStat()) return acc;
+                    if (stats.soulbound || stats.permbound) return acc;
                 }
 
                 try {
-                    const builds = item.getBuildsWithThisItem();
-                    if (builds && builds.length > 0) return acc;
+                    if (typeof item.getBuildsWithThisItem === 'function') {
+                        const builds = item.getBuildsWithThisItem();
+                        if (builds && builds.length > 0) return acc;
+                    }
                 } catch(e) {}
 
                 acc.push(item.id);
@@ -353,7 +370,9 @@
         );
         if (!item) { $slotWrapper.append($slotContainer); return; }
 
-        const upgradeLvl = item.upgrade_lvl || 0;
+        const stats = item._cachedStats || parseStats(item.stat || item.stats || "");
+        const upgradeLvl = item.upgrade_lvl || stats.enhancement_upgrade_lvl || 0;
+        
         $slotContainer.find('.lvl').attr('data-lvl', upgradeLvl).html(`<div class="cl-icon icon-star-${upgradeLvl}"></div>`);
         nameEl.textContent    = item.name;
         const storedProgress  = loadProgress(itemId);
@@ -856,10 +875,11 @@
     function isItemValidForUpgrade(item) {
         if (!item) return false;
         try {
-            const sd  = Engine.itemStatsData;
+            const stats = item._cachedStats || parseStats(item.stat || item.stats || "");
 
-            if (!item.issetItemStat(sd.rarity)) return false;
-            const rarity = item.getItemStat(sd.rarity);
+            const rarity = stats.rarity;
+            if (!rarity) return false;
+
             const isAllowedRarity = (currentSettings.use_common && rarity === 'common')
                 || (currentSettings.use_unique  && rarity === 'unique')
                 || rarity === 'heroic'
@@ -867,25 +887,27 @@
                 || rarity === 'upgraded';
             if (!isAllowedRarity) return false;
 
-            const itemClass    = item.cl;
+            const itemClass    = parseInt(item.cl);
             const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
             if (!itemSettingKey || !currentSettings[itemSettingKey]) return false;
 
-            const itemLevel = item.issetLvlStat() ? parseInt(item.getLvlStat()) : 0;
+            const itemLevel = parseInt(stats.lvl) || 0;
             if (itemLevel < 20) return false;
 
-            if (item.issetItemStat(sd.enhancement_upgrade_lvl)) return false;
-            if (item.issetItemStat(sd.cursed)) return false;
-            if (item.issetItemStat(sd.artisan_worthless)) return false;
+            if (stats.enhancement_upgrade_lvl) return false;
+            if (stats.cursed) return false;
+            if (stats.artisan_worthless) return false;
             if (isEventItem(item)) return false;
 
             if (!currentSettings.allow_bound_items) {
-                if (item.issetSoulboundStat() || item.issetPermboundStat()) return false;
+                if (stats.soulbound || stats.permbound) return false;
             }
 
             try {
-                const builds = item.getBuildsWithThisItem();
-                if (builds && builds.length > 0) return false;
+                if (typeof item.getBuildsWithThisItem === 'function') {
+                    const builds = item.getBuildsWithThisItem();
+                    if (builds && builds.length > 0) return false;
+                }
             } catch(e) {}
 
             return true;
@@ -925,9 +947,8 @@
         $itemBox.droppable({
             accept: '.item:not(.shop-item)',
             tolerance: 'pointer',
-            greedy: true, // <-- To zatrzymuje przedmiot przed upadkiem "przez okno" w grze
+            greedy: true, // Zatrzymuje przedmiot na oknie
             over: function(e, ui) {
-                // Gdy Margonem zgubi referencję do .data('item'), łapiemy item bezpośrednio po jego ID z klas
                 let item = ui.draggable.data('item');
                 if (!item) {
                     const id = getItemIdFromClassName(ui.draggable.attr('class'));
@@ -944,6 +965,8 @@
                 enableGameDroppables();
             },
             drop: function(e, ui) {
+                e.stopPropagation();
+                e.preventDefault();
                 $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
                 enableGameDroppables();
                 
