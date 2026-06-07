@@ -988,22 +988,29 @@
                 e.stopImmediatePropagation();
                 $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
 
-                // ── Wyzeruj proporcje wszystkich pozostałych droppable w tym samym
-                // scope – jQuery UI nie wywoła ich drop(), gra nie dostanie eventu ──
-                try {
-                    const draggableInst = ui.draggable.data('ui-draggable');
-                    const scope = draggableInst?.options?.scope ?? 'default';
-                    const drops = $.ui.ddmanager.droppables[scope] || [];
-                    drops.forEach(d => {
-                        if (d.element[0] !== $itemBox[0]) {
-                            d.proportions({ width: 0, height: 0 });
-                        }
-                    });
-                } catch(err) {}
-                // ─────────────────────────────────────────────────────────────────
-
                 const item = ui.draggable.data('item');
-                if (!item) return;
+                if (!item) return false;
+
+                // ── Pochłoń drop: gra nie dostaje tego eventu ────────────────
+                // Ustaw flagę dropped na managerze – jQuery UI nie wywoła już
+                // innych drop-handlerów dla tego przeciągania.
+                if ($.ui.ddmanager.current) {
+                    $.ui.ddmanager.current.dropped = true;
+                }
+                // Wyłącz revert i usuń helper ręcznie, żeby draggable nie
+                // "wróciło" i nie wyzwoliło logiki gry po mouseup.
+                try {
+                    ui.draggable.draggable('option', 'revert', false);
+                } catch(err) {}
+                if (ui.helper && ui.helper[0] !== ui.draggable[0]) {
+                    ui.helper.remove();
+                }
+                // Symuluj mouseup na draggable, żeby jQuery UI posprzątało stan
+                // bez przekazywania zdarzenia do handlerów gry.
+                try {
+                    ui.draggable.trigger('mouseup');
+                } catch(err) {}
+
                 if (isItemValidForUpgrade(item)) {
                     setUpgradedItemId(item.id);
                     message(`Ulepszanie przedmiotu ${item.name}`);
@@ -1013,6 +1020,17 @@
                 } else {
                     message('Ten item nie może być wybrany.');
                 }
+
+                return false;
+            }
+        });
+
+        // Dodatkowo: blokuj mouseup/mousedown na samym oknie, żeby gra
+        // nie interpretowała kliknięcia w okno jako upuszczenia itemu na mapę.
+        $(uiMainWindow).on('mouseup.upgdrop mousedown.upgdrop', function(e) {
+            if ($.ui.ddmanager.current) {
+                e.stopPropagation();
+                e.stopImmediatePropagation();
             }
         });
     }
