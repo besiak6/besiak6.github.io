@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name          Ulepszara baddonz zd
+// @name          Ulepszara baddonz
 // @version       1.0
 // @description   Automatyczne ulepszanie
 // @author        besiak
@@ -157,14 +157,17 @@
         if (!item) return false;
         // Sprawdź statystykę etiquette (itemy eventowe od 2025+)
         try {
-            if (item.issetItemStat(Engine.itemStatsData.etiquette)) return true;
+            const sd = Engine.itemStatsData;
+            if (sd && sd.etiquette && item.issetItemStat(sd.etiquette)) return true;
         } catch(e) {}
         // Sprawdź słowa kluczowe w opisie tooltipa
-        if (!item.getTipContent) return false;
-        const tip = item.getTipContent();
-        if (!tip) return false;
-        const plainText = tip.replace(/<[^>]+>/g, '');
-        return EVENT_KEYWORDS.some(kw => plainText.includes(kw));
+        try {
+            if (!item.getTipContent) return false;
+            const tip = item.getTipContent();
+            if (!tip) return false;
+            const plainText = tip.replace(/<[^>]+>/g, '');
+            return EVENT_KEYWORDS.some(kw => plainText.includes(kw));
+        } catch(e) { return false; }
     }
 
     const getFreeSlots = () => {
@@ -314,6 +317,7 @@
                 display: flex; flex-direction: column; align-items: center;
                 gap: 3px; padding: 5px 0 6px 0;
                 border-bottom: 1px solid #303030;
+                min-height: 60px;
             }
             .upg-item-slot-wrapper { display:flex; justify-content:center; }
             .upg-item-name { font-size:11px; font-weight:bold; color:#ffcc00; text-shadow:1px 1px #000; text-align:center; padding:0; margin:0; }
@@ -354,35 +358,6 @@
             .upg-hotkey-input { font-weight:bold; text-transform:uppercase; }
             .upg-number-input { width:100% !important; text-align:center !important; }
             .upg-text { font-size:11px; color:#ddd; }
-
-            /* ── Drag & Drop na upg-item-box ────────────────── */
-            @keyframes upg-border-march {
-                0%   { background-position: 0 0,        100% 0,      100% 100%,   0 100%; }
-                100% { background-position: 20px 0,     100% 20px,   calc(100% - 20px) 100%, 0 calc(100% - 20px); }
-            }
-            .upg-item-box.upg-drop-valid,
-            .upg-item-box.upg-drop-invalid {
-                background-size: 10px 2px, 2px 10px, 10px 2px, 2px 10px;
-                background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
-                animation: upg-border-march 0.4s linear infinite;
-                border-bottom: none;
-                padding-bottom: 7px;
-            }
-            .upg-item-box.upg-drop-valid {
-                background-image:
-                    linear-gradient(90deg,  #ffe000 50%, transparent 50%),
-                    linear-gradient(180deg, #ffe000 50%, transparent 50%),
-                    linear-gradient(90deg,  #ffe000 50%, transparent 50%),
-                    linear-gradient(180deg, #ffe000 50%, transparent 50%);
-            }
-            .upg-item-box.upg-drop-invalid {
-                background-image:
-                    linear-gradient(90deg,  #ff4040 50%, transparent 50%),
-                    linear-gradient(180deg, #ff4040 50%, transparent 50%),
-                    linear-gradient(90deg,  #ff4040 50%, transparent 50%),
-                    linear-gradient(180deg, #ff4040 50%, transparent 50%);
-            }
-
 
             .baddonz-upgrader-item-cursor {
                 cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, pointer !important;
@@ -975,10 +950,11 @@
     function isItemValidForUpgrade(item) {
         if (!item) return false;
         try {
-            const cached = item._cachedStats || {};
+            const sd = Engine.itemStatsData;
 
             // Rarity
-            const rarity = cached.rarity || item.rarity;
+            if (!item.issetItemStat(sd.rarity)) return false;
+            const rarity = item.getItemStat(sd.rarity);
             const isAllowedRarity = (currentSettings.use_common && rarity === 'common')
                 || (currentSettings.use_unique  && rarity === 'unique')
                 || rarity === 'heroic'
@@ -991,39 +967,30 @@
             if (!itemSettingKey || !currentSettings[itemSettingKey]) return false;
 
             // Poziom
-            const itemLevel = item.lvl ?? item.level ?? cached.lvl ?? 0;
+            const itemLevel = item.issetLvlStat() ? parseInt(item.getLvlStat()) : 0;
             if (itemLevel < 20) return false;
 
             // Już ulepszony (enhancement_upgrade_lvl)
-            const enhancement_upgrade_lvl = cached.enhancement_upgrade_lvl !== undefined
-                ? cached.enhancement_upgrade_lvl : item.enhancement_upgrade_lvl;
-            if (enhancement_upgrade_lvl !== undefined && enhancement_upgrade_lvl !== null) return false;
+            if (item.issetItemStat(sd.enhancement_upgrade_lvl)) return false;
 
             // Przeklęty
-            const cursed = cached.cursed !== undefined ? cached.cursed : item.cursed;
-            if (cursed) return false;
+            if (item.issetItemStat(sd.cursed)) return false;
 
-            // Bezwartościowy (artisan_worthless)
-            const isWorthless = Object.prototype.hasOwnProperty.call(cached, 'artisan_worthless')
-                || Object.prototype.hasOwnProperty.call(item, 'artisan_worthless');
-            if (isWorthless) return false;
+            // Bezwartościowy
+            if (item.issetItemStat(sd.artisan_worthless)) return false;
 
             // Eventowy (etiquette lub słowa kluczowe w opisie)
             if (isEventItem(item)) return false;
 
             // Przywiązany
             if (!currentSettings.allow_bound_items) {
-                const isBound = (item.checkSoulbound && item.checkSoulbound())
-                    || (item.checkPermbound && item.checkPermbound());
-                if (isBound) return false;
+                if (item.issetSoulboundStat() || item.issetPermboundStat()) return false;
             }
 
             // Część buildu
             try {
-                if (typeof item.getBuildsWithThisItem === 'function') {
-                    const builds = item.getBuildsWithThisItem();
-                    if (builds && builds.length > 0) return false;
-                }
+                const builds = item.getBuildsWithThisItem();
+                if (builds && builds.length > 0) return false;
             } catch(e) {}
 
             return true;
@@ -1091,10 +1058,8 @@
                 if (!item) return;
                 if (isItemValidForUpgrade(item)) {
                     setUpgradedItemId(item.id);
-                    message(`Ulepszanie przedmiotu ${item.name}`);
-                    toggleEnhancementWindow();
-                    setEnhancedItem(item.id).then(() => toggleEnhancementWindow());
-                    updateMainUI();
+                    message(`Wybrano do ulepszania: ${item.name}`);
+                    setEnhancedItem(item.id).then(() => updateMainUI());
                 } else {
                     message('Ten item nie może być wybrany.');
                 }
