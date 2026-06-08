@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Ulepszara baddonz
-// @version       1.1
+// @version       2.1
 // @description   Automatyczne ulepszanie
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -157,17 +157,14 @@
         if (!item) return false;
         // Sprawdź statystykę etiquette (itemy eventowe od 2025+)
         try {
-            const sd = Engine.itemStatsData;
-            if (sd && sd.etiquette && item.issetItemStat(sd.etiquette)) return true;
+            if (item.issetItemStat(Engine.itemStatsData.etiquette)) return true;
         } catch(e) {}
         // Sprawdź słowa kluczowe w opisie tooltipa
-        try {
-            if (!item.getTipContent) return false;
-            const tip = item.getTipContent();
-            if (!tip) return false;
-            const plainText = tip.replace(/<[^>]+>/g, '');
-            return EVENT_KEYWORDS.some(kw => plainText.includes(kw));
-        } catch(e) { return false; }
+        if (!item.getTipContent) return false;
+        const tip = item.getTipContent();
+        if (!tip) return false;
+        const plainText = tip.replace(/<[^>]+>/g, '');
+        return EVENT_KEYWORDS.some(kw => plainText.includes(kw));
     }
 
     const getFreeSlots = () => {
@@ -198,7 +195,7 @@
                 const itemLevel = item.issetLvlStat() ? parseInt(item.getLvlStat()) : 0;
                 if (itemLevel < 20) return acc;
 
-                if (item.issetItemStat(sd.enhancement_upgrade_lvl)) return acc;
+                if (hasEnhancementLevel(item)) return acc;
                 if (item.issetItemStat(sd.cursed)) return acc;
                 if (item.issetItemStat(sd.artisan_worthless)) return acc;
                 if (isEventItem(item)) return acc;
@@ -317,7 +314,6 @@
                 display: flex; flex-direction: column; align-items: center;
                 gap: 3px; padding: 5px 0 6px 0;
                 border-bottom: 1px solid #303030;
-                min-height: 60px;
             }
             .upg-item-slot-wrapper { display:flex; justify-content:center; }
             .upg-item-name { font-size:11px; font-weight:bold; color:#ffcc00; text-shadow:1px 1px #000; text-align:center; padding:0; margin:0; }
@@ -359,6 +355,7 @@
             .upg-number-input { width:100% !important; text-align:center !important; }
             .upg-text { font-size:11px; color:#ddd; }
 
+            /* ── Cursor na przedmiot w slocie ────────────────── */
             .baddonz-upgrader-item-cursor {
                 cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, pointer !important;
             }
@@ -642,7 +639,6 @@
         // ── Listeners ─────────────────────────────────────────────────────────
         setupListeners();
         updateMainUI();
-        initDroppable();
     }
 
     function applyOpacityClass(wnd, opacity) {
@@ -947,44 +943,90 @@
     };
 
     // ─── Drag & Drop na upg-item-box ─────────────────────────────────────────
+
+    // Sprawdza czy item jest ulepszony na MAX (enhancement_upgrade_lvl >= max)
+    // Używa getItemStat zamiast issetItemStat - issetItemStat zwraca true jeśli
+    // stat ISTNIEJE W DEFINICJI (dla każdego upgrejowalnego itemu), nie czy item go MA.
+    function isEnhancedToMax(item) {
+        try {
+            const sd = Engine.itemStatsData;
+            if (!sd || !sd.enhancement_upgrade_lvl) return false;
+            // Pobieramy wartość statu – jeśli item nie ma go ustawionego, getItemStat
+            // zwróci undefined/null/0. Sprawdzamy postęp przez API enhancement.
+            const enhLvl = item.getItemStat(sd.enhancement_upgrade_lvl);
+            if (enhLvl === undefined || enhLvl === null || enhLvl === 0 || enhLvl === '') return false;
+            // Wartość > 0 oznacza że item MA ulepszenie – sprawdzamy czy to MAX
+            // przez porównanie z maksymalnym poziomem (zwykle 5)
+            const maxLvl = item.getItemStat(sd.enhancement_max_lvl);
+            if (maxLvl !== undefined && maxLvl !== null && maxLvl > 0) {
+                return parseInt(enhLvl) >= parseInt(maxLvl);
+            }
+            // Fallback: jeśli enhLvl >= 5 to zakładamy max (standardowe max to 5)
+            return parseInt(enhLvl) >= 5;
+        } catch(e) {
+            return false;
+        }
+    }
+
+    // Sprawdza czy item w ogóle MA jakikolwiek poziom ulepszenia (>0)
+    function hasEnhancementLevel(item) {
+        try {
+            const sd = Engine.itemStatsData;
+            if (!sd || !sd.enhancement_upgrade_lvl) return false;
+            const enhLvl = item.getItemStat(sd.enhancement_upgrade_lvl);
+            return enhLvl !== undefined && enhLvl !== null && enhLvl !== 0 && enhLvl !== '';
+        } catch(e) {
+            return false;
+        }
+    }
+
     function isItemValidForUpgrade(item) {
         if (!item) return false;
         try {
             const sd = Engine.itemStatsData;
 
-            // Rarity
+            // ── Rarity ──────────────────────────────────────────────────────────
+            // 'upgraded' = item który już był ulepszany (rarity zmienia się po ulepszeniu)
+            // Takie itemy MOŻNA jeszcze ulepszać o ile nie są na MAX.
+            // 'heroic' i 'legendary' zawsze dopuszczamy (bez względu na ustawienia use_common/use_unique).
+            // 'common' i 'unique' tylko gdy użytkownik je włączy w ustawieniach.
             if (!item.issetItemStat(sd.rarity)) return false;
             const rarity = item.getItemStat(sd.rarity);
-            const isAllowedRarity = (currentSettings.use_common && rarity === 'common')
-                || (currentSettings.use_unique  && rarity === 'unique')
-                || rarity === 'heroic'
+            const isAllowedRarity = rarity === 'heroic'
                 || rarity === 'legendary'
-                || rarity === 'upgraded';
+                || rarity === 'upgraded'
+                || (currentSettings.use_common && rarity === 'common')
+                || (currentSettings.use_unique  && rarity === 'unique');
             if (!isAllowedRarity) return false;
 
-            // Typ itemu (cl)
+            // ── Typ itemu (cl) ───────────────────────────────────────────────────
             const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[item.cl];
             if (!itemSettingKey || !currentSettings[itemSettingKey]) return false;
 
-            // Poziom
+            // ── Poziom ───────────────────────────────────────────────────────────
             const itemLevel = item.issetLvlStat() ? parseInt(item.getLvlStat()) : 0;
             if (itemLevel < 20) return false;
 
-            // Przeklęty
+            // ── Ulepszony na MAX – odrzucamy ─────────────────────────────────────
+            // Itemy z częściowym ulepszeniem (1-4) są OK.
+            // Tylko itemy na MAX (5/5) są odrzucane.
+            if (isEnhancedToMax(item)) return false;
+
+            // ── Przeklęty ────────────────────────────────────────────────────────
             if (item.issetItemStat(sd.cursed)) return false;
 
-            // Bezwartościowy
+            // ── Bezwartościowy ───────────────────────────────────────────────────
             if (item.issetItemStat(sd.artisan_worthless)) return false;
 
-            // Eventowy (etiquette lub słowa kluczowe w opisie)
+            // ── Eventowy (etiquette lub słowa kluczowe w opisie) ─────────────────
             if (isEventItem(item)) return false;
 
-            // Przywiązany
+            // ── Przywiązany ──────────────────────────────────────────────────────
             if (!currentSettings.allow_bound_items) {
                 if (item.issetSoulboundStat() || item.issetPermboundStat()) return false;
             }
 
-            // Część buildu
+            // ── Część buildu ─────────────────────────────────────────────────────
             try {
                 const builds = item.getBuildsWithThisItem();
                 if (builds && builds.length > 0) return false;
@@ -996,8 +1038,8 @@
         }
     }
 
-    // Wyłącz droppable gry (.game-layer i .usable-slot) żeby item nie trafił do gry
-    // gdy upuszczamy go na nasz upg-item-box
+    // Wyłącz wszystkie droppable gry (.game-layer i .usable-slot) żeby item nie
+    // trafił do gry gdy upuszczamy go na nasz upg-item-box
     function disableGameDroppables() {
         try {
             const $gl = $('.game-layer');
@@ -1022,7 +1064,11 @@
 
     // Pobiera obiekt item z przeciąganego elementu jQuery UI.
     // jQuery UI podczas draggowania używa helpera (klona elementu), który NIE
-    // ma danych jQuery (.data('item')). Dlatego używamy kilku fallbacków.
+    // ma danych jQuery (.data('item')). Dlatego używamy kilku fallbacków:
+    // 1) .data('item') bezpośrednio na elemencie (gdy brak helpera)
+    // 2) szukamy oryginalnego elementu w DOM po klasie item-id-* i bierzemy jego dane
+    // 3) pobieramy item przez Engine.items.getItemById(id) – zawsze niezawodne
+    // 4) próbujemy dostać się do oryginału przez wewnętrzne dane jQuery UI
     function getItemFromDraggable($draggable) {
         // Metoda 1: dane bezpośrednio na elemencie
         let item = $draggable.data('item');
@@ -1087,7 +1133,7 @@
         if (!uiMainWindow) return;
         const $itemBox = $(uiMainWindow).find('.upg-item-box');
         if (!$itemBox.length) return;
-        if ($itemBox.data('ui-droppable')) $itemBox.droppable('destroy');
+        if ($itemBox.data('ui-droppable')) return;
 
         $itemBox.droppable({
             accept: '.item:not(.shop-item)',
@@ -1098,11 +1144,14 @@
                 const valid = isItemValidForUpgrade(item);
                 $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
                 $itemBox.addClass(valid ? 'upg-drop-valid' : 'upg-drop-invalid');
+                // Na wszelki wypadek – upewnij się że gra jest zablokowana
                 disableGameDroppables();
             },
             out: function(e, ui) {
                 $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
                 // NIE wznawiamy droppable gry tutaj – obsługuje to mouseup guard.
+                // Gdybyśmy wznawialy tutaj, item mógłby trafić do gry
+                // jeśli kursor opuści box przed upuszczeniem.
             },
             drop: function(e, ui) {
                 $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
@@ -1115,10 +1164,12 @@
                 }
                 if (isItemValidForUpgrade(item)) {
                     setUpgradedItemId(item.id);
-                    message(`Wybrano do ulepszania: ${item.name}`);
-                    setEnhancedItem(item.id).then(() => updateMainUI());
+                    message(`Ulepszanie przedmiotu ${item.name}`);
+                    toggleEnhancementWindow();
+                    setEnhancedItem(item.id).then(() => toggleEnhancementWindow());
+                    updateMainUI();
                 } else {
-                    message('Ten item nie może być wybrany.');
+                    message('Ten item nie może być wybrany do ulepszania.');
                 }
             }
         });
@@ -1132,6 +1183,14 @@
         injectCSS();
 
         if (!uiMainWindow) buildUI();
+
+        // Zawsze pokazuj okno po inicjalizacji (F5 / reload) – tak jak inne dodatki.
+        // windowVisible=false jest zapisywane gdy użytkownik ręcznie zamknie okno,
+        // ale przy każdym starcie gry okno powinno być widoczne.
+        if (uiMainWindow) {
+            uiMainWindow.style.display = 'flex';
+            currentSettings.windowVisible = true;
+        }
 
         setupCommunicationHook();
         setupKeydownHandler();
