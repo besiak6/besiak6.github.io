@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Ulepszara baddonz
-// @version       2.0
+// @version       1.0
 // @description   Automatyczne ulepszanie
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -1020,73 +1020,6 @@
         } catch(err) {}
     }
 
-    // Pobiera obiekt item z przeciąganego elementu jQuery UI.
-    // jQuery UI podczas draggowania używa helpera (klona elementu), który NIE
-    // ma danych jQuery (.data('item')). Dlatego używamy kilku fallbacków:
-    // 1) .data('item') bezpośrednio na elemencie (gdy brak helpera)
-    // 2) szukamy oryginalnego elementu w DOM po klasie item-id-* i bierzemy jego dane
-    // 3) pobieramy item przez Engine.items.getItemById(id) – zawsze niezawodne
-    // 4) próbujemy dostać się do oryginału przez wewnętrzne dane jQuery UI
-    function getItemFromDraggable($draggable) {
-        // Metoda 1: dane bezpośrednio na elemencie
-        let item = $draggable.data('item');
-        if (item) return item;
-
-        // Wyciągnij ID itemu z klasy CSS (np. "item item-id-12345 ...")
-        const className = $draggable.attr('class') || '';
-        const match = className.match(/item-id-(\d+)/);
-        if (match) {
-            const itemId = match[1];
-
-            // Metoda 2: oryginalny element w DOM (helper to klon, oryginał zostaje)
-            const $original = $(`.item.item-id-${itemId}`).not($draggable[0]);
-            if ($original.length) {
-                item = $original.first().data('item');
-                if (item) return item;
-            }
-
-            // Metoda 3: pobierz przez Engine – najbardziej niezawodna
-            if (typeof Engine !== 'undefined' && Engine.items) {
-                item = Engine.items.getItemById(itemId);
-                if (item) return item;
-            }
-        }
-
-        // Metoda 4: przez wewnętrzne dane instancji jQuery UI Draggable
-        try {
-            const dd = $draggable.data('ui-draggable');
-            if (dd && dd.element) {
-                item = $(dd.element).data('item');
-                if (item) return item;
-            }
-        } catch(e) {}
-
-        return null;
-    }
-
-    // Globalny guard – blokuje droppable gry natychmiast po mousedown na itemu,
-    // zanim kursor dotrze do jakiegokolwiek elementu. Dzięki temu item nie
-    // "przelatuje" do gry gdy przeciągamy go przez okno dodatku.
-    let _upgDragActive = false;
-    function initGlobalDragGuard() {
-        $(document).off('mousedown.upg').on('mousedown.upg', '.item:not(.shop-item)', function() {
-            const $el = $(this);
-            $el.one('dragstart', function() {
-                if (_upgDragActive) return;
-                _upgDragActive = true;
-                disableGameDroppables();
-            });
-        });
-
-        // Re-aktywacja po zakończeniu draggowania (mouseup gdziekolwiek na stronie)
-        $(document).off('mouseup.upg').on('mouseup.upg', function() {
-            if (!_upgDragActive) return;
-            _upgDragActive = false;
-            // Małe opóźnienie – dajemy czas na obsłużenie drop() przed reaktywacją
-            setTimeout(enableGameDroppables, 50);
-        });
-    }
-
     function initDroppable() {
         if (!uiMainWindow) return;
         const $itemBox = $(uiMainWindow).find('.upg-item-box');
@@ -1096,30 +1029,22 @@
         $itemBox.droppable({
             accept: '.item:not(.shop-item)',
             tolerance: 'pointer',
-            greedy: true,
             over: function(e, ui) {
-                const item = getItemFromDraggable(ui.draggable);
+                const item = ui.draggable.data('item');
                 const valid = isItemValidForUpgrade(item);
                 $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
                 $itemBox.addClass(valid ? 'upg-drop-valid' : 'upg-drop-invalid');
-                // Na wszelki wypadek – upewnij się że gra jest zablokowana
                 disableGameDroppables();
             },
             out: function(e, ui) {
                 $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
-                // NIE wznawiamy droppable gry tutaj – obsługuje to mouseup guard.
-                // Gdybyśmy wznawialy tutaj, item mógłby trafić do gry
-                // jeśli kursor opuści box przed upuszczeniem.
+                enableGameDroppables();
             },
             drop: function(e, ui) {
                 $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
-                _upgDragActive = false;
                 enableGameDroppables();
-                const item = getItemFromDraggable(ui.draggable);
-                if (!item) {
-                    message('Nie udało się odczytać danych przedmiotu.');
-                    return;
-                }
+                const item = ui.draggable.data('item');
+                if (!item) return;
                 if (isItemValidForUpgrade(item)) {
                     setUpgradedItemId(item.id);
                     message(`Ulepszanie przedmiotu ${item.name}`);
@@ -1127,12 +1052,10 @@
                     setEnhancedItem(item.id).then(() => toggleEnhancementWindow());
                     updateMainUI();
                 } else {
-                    message('Ten item nie może być wybrany do ulepszania.');
+                    message('Ten item nie może być wybrany.');
                 }
             }
         });
-
-        initGlobalDragGuard();
     }
 
     // ─── Init / Stop ──────────────────────────────────────────────────────────
