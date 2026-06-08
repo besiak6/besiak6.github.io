@@ -79,15 +79,11 @@
     // ─── Storage helpers ──────────────────────────────────────────────────────
     function loadSettings() {
         if (!window.BaddonzAPI) return;
-        const accId = window.BaddonzAPI.accountId;
-
+        
         let accSettings = {};
-        try {
-            const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
-            if (data[accId] && data[accId].accountAddons) {
-                accSettings = data[accId].accountAddons[ADDON_ID] || {};
-            }
-        } catch(e) {}
+        if (typeof window.BaddonzAPI.getAddonSettings === 'function') {
+            accSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        }
 
         currentSettings = { ...DEFAULT_ACC_SETTINGS, ...DEFAULT_CHAR_SETTINGS, ...accSettings };
         const count = parseInt(localStorage.getItem('baddonz-daily-upgrade-count'));
@@ -96,7 +92,15 @@
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
-        const accId = window.BaddonzAPI.accountId;
+
+        // KULOODPORNA POPRAWKA: Przed zapisem aktualizujemy widoczność bezpośrednio z DOM!
+        // Dzięki temu RAM nigdy nie nadpisze ustawień z docka / menedżera.
+        if (uiMainWindow) {
+            currentSettings.windowVisible = uiMainWindow.style.display !== 'none';
+        }
+        if (uiSettingsWindow) {
+            currentSettings.settingsWindowVisible = uiSettingsWindow.style.display !== 'none';
+        }
 
         const accKeys = ['windowOpacity','windowVisible','settingsWindowVisible','windowSettingsOpacity','isCollapsed','hotkeyKey',
                          'enabled','hotkeyEnabled','use_common','use_unique','allow_bound_items','upgrade_endbattle','count_endbattle',
@@ -104,17 +108,9 @@
         const accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
 
-        // POPRAWKA: Przekazujemy pełny obiekt ustawień do API Baddonza, zamiast pustego {}
-        if (window.BaddonzAPI.saveAddonSettings) {
+        if (typeof window.BaddonzAPI.saveAddonSettings === 'function') {
             window.BaddonzAPI.saveAddonSettings(ADDON_ID, accSettings);
         }
-        try {
-            let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
-            if (!data[accId]) data[accId] = {};
-            if (!data[accId].accountAddons) data[accId].accountAddons = {};
-            data[accId].accountAddons[ADDON_ID] = accSettings;
-            localStorage.setItem('BaddonzData', JSON.stringify(data));
-        } catch(e) {}
     }
 
     // ─── Progress / item helpers ──────────────────────────────────────────────
@@ -439,8 +435,6 @@
         applyOpacityClass(uiMainWindow, currentSettings.windowOpacity);
         if (currentSettings.isCollapsed) uiMainWindow.classList.add('wnd-clp');
 
-        // POPRAWKA: Usunęliśmy stąd nadpisywanie widoczności głównego okna, żeby Baddonz API zarządzało nim bez konfliktów (tak jak w Item Info)
-
         const settingsBodyHtml = `
             <div class="upg-settings-section">
                 <div class="upg-setting-row">
@@ -507,9 +501,10 @@
             width: '255px'
         });
         uiSettingsWindow.classList.add('settings-window', 'wnd-ulepszara-settings');
+        // Usuwamy ID, żeby manager Baddonza nie porywał przycisku zamykania
         uiSettingsWindow.removeAttribute('data-addon-id');
         
-        // Ustawiamy startowy stan widoczności okna ustawień
+        // Zmuszamy okno do czytania z ustawień przy starcie
         uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
         applyOpacityClass(uiSettingsWindow, currentSettings.windowSettingsOpacity);
         
@@ -536,6 +531,9 @@
         const settingsBtn = uiMainWindow.querySelector('.baddonz-settings-button');
         const collapseBtn = uiMainWindow.querySelector('.upg-collapse-btn');
         const opacityBtn  = uiMainWindow.querySelector('.baddonz-opacity-button');
+        const closeBtn    = uiMainWindow.querySelector('.baddonz-close-button');
+        const settingsCloseBtn   = uiSettingsWindow.querySelector('.baddonz-close-button');
+        const settingsOpacityBtn = uiSettingsWindow.querySelector('.baddonz-opacity-button');
         
         if (stateBtn) {
             stateBtn.addEventListener('click', () => {
@@ -546,10 +544,9 @@
 
         if (settingsBtn) {
             settingsBtn.addEventListener('click', () => {
-                const visible = uiSettingsWindow.style.display !== 'none';
-                uiSettingsWindow.style.display = visible ? 'none' : 'flex';
-                currentSettings.settingsWindowVisible = !visible;
-                saveSettings();
+                const isHidden = uiSettingsWindow.style.display === 'none';
+                uiSettingsWindow.style.display = isHidden ? 'flex' : 'none';
+                saveSettings(); // Wymusi zapis poprawnego stanu
             });
         }
 
@@ -578,13 +575,18 @@
             });
         }
 
-        const settingsCloseBtn   = uiSettingsWindow.querySelector('.baddonz-close-button');
-        const settingsOpacityBtn = uiSettingsWindow.querySelector('.baddonz-opacity-button');
-        
+        // Dodany Event do wymuszenia zapisu kiedy użyty zostaje przycisk X na oknie głównym
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                uiMainWindow.style.display = 'none';
+                saveSettings(); 
+            });
+        }
+
+        // Wymuszenie zapisu ustawień dla panelu ustawień
         if (settingsCloseBtn) {
             settingsCloseBtn.addEventListener('click', () => {
                 uiSettingsWindow.style.display = 'none';
-                currentSettings.settingsWindowVisible = false;
                 saveSettings();
             });
         }
@@ -681,6 +683,7 @@
             if (settingsBtn) $(settingsBtn).tip('Ustawienia');
             if (opacityBtn)  $(opacityBtn).tip('Zmień przezroczystość');
             if (collapseBtn) $(collapseBtn).tip(currentSettings.isCollapsed ? 'Rozwiń' : 'Zwiń');
+            if (closeBtn) $(closeBtn).tip('Zamknij');
             if (settingsCloseBtn)   $(settingsCloseBtn).tip('Zamknij');
             if (settingsOpacityBtn) $(settingsOpacityBtn).tip('Zmień przezroczystość');
 
@@ -826,14 +829,6 @@
         }
 
         updateMainUI();
-
-        // POPRAWKA: Wymuszamy stan widoczności okna ustawień dopiero po krótkim czasie od startu,
-        // tak aby nadpisać domyślne zachowanie menedżera Baddonza po załadowaniu skryptu.
-        setTimeout(() => {
-            if (uiSettingsWindow) {
-                uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
-            }
-        }, 100);
     }
 
     function addonStop() {
