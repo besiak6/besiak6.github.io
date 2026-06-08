@@ -195,7 +195,7 @@
                 const itemLevel = item.issetLvlStat() ? parseInt(item.getLvlStat()) : 0;
                 if (itemLevel < 20) return acc;
 
-                if (hasEnhancementLevel(item)) return acc;
+                if (item.issetItemStat(sd.enhancement_upgrade_lvl)) return acc;
                 if (item.issetItemStat(sd.cursed)) return acc;
                 if (item.issetItemStat(sd.artisan_worthless)) return acc;
                 if (isEventItem(item)) return acc;
@@ -943,53 +943,13 @@
     };
 
     // ─── Drag & Drop na upg-item-box ─────────────────────────────────────────
-
-    // Sprawdza czy item jest ulepszony na MAX (enhancement_upgrade_lvl >= max)
-    // Używa getItemStat zamiast issetItemStat - issetItemStat zwraca true jeśli
-    // stat ISTNIEJE W DEFINICJI (dla każdego upgrejowalnego itemu), nie czy item go MA.
-    function isEnhancedToMax(item) {
-        try {
-            const sd = Engine.itemStatsData;
-            if (!sd || !sd.enhancement_upgrade_lvl) return false;
-            // Pobieramy wartość statu – jeśli item nie ma go ustawionego, getItemStat
-            // zwróci undefined/null/0. Sprawdzamy postęp przez API enhancement.
-            const enhLvl = item.getItemStat(sd.enhancement_upgrade_lvl);
-            if (enhLvl === undefined || enhLvl === null || enhLvl === 0 || enhLvl === '') return false;
-            // Wartość > 0 oznacza że item MA ulepszenie – sprawdzamy czy to MAX
-            // przez porównanie z maksymalnym poziomem (zwykle 5)
-            const maxLvl = item.getItemStat(sd.enhancement_max_lvl);
-            if (maxLvl !== undefined && maxLvl !== null && maxLvl > 0) {
-                return parseInt(enhLvl) >= parseInt(maxLvl);
-            }
-            // Fallback: jeśli enhLvl >= 5 to zakładamy max (standardowe max to 5)
-            return parseInt(enhLvl) >= 5;
-        } catch(e) {
-            return false;
-        }
-    }
-
-    // Sprawdza czy item w ogóle MA jakikolwiek poziom ulepszenia (>0)
-    function hasEnhancementLevel(item) {
-        try {
-            const sd = Engine.itemStatsData;
-            if (!sd || !sd.enhancement_upgrade_lvl) return false;
-            const enhLvl = item.getItemStat(sd.enhancement_upgrade_lvl);
-            return enhLvl !== undefined && enhLvl !== null && enhLvl !== 0 && enhLvl !== '';
-        } catch(e) {
-            return false;
-        }
-    }
-
     function isItemValidForUpgrade(item) {
         if (!item) return false;
         try {
             const sd = Engine.itemStatsData;
 
-            // ── Rarity ──────────────────────────────────────────────────────────
-            // 'upgraded' = item który już był ulepszany (rarity zmienia się po ulepszeniu)
-            // Takie itemy MOŻNA jeszcze ulepszać o ile nie są na MAX.
-            // 'heroic' i 'legendary' zawsze dopuszczamy (bez względu na ustawienia use_common/use_unique).
-            // 'common' i 'unique' tylko gdy użytkownik je włączy w ustawieniach.
+            // Rarity – heroic/legendary/upgraded zawsze OK
+            // common/unique tylko gdy włączone w ustawieniach
             if (!item.issetItemStat(sd.rarity)) return false;
             const rarity = item.getItemStat(sd.rarity);
             const isAllowedRarity = rarity === 'heroic'
@@ -999,34 +959,45 @@
                 || (currentSettings.use_unique  && rarity === 'unique');
             if (!isAllowedRarity) return false;
 
-            // ── Typ itemu (cl) ───────────────────────────────────────────────────
+            // Typ itemu (cl)
             const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[item.cl];
             if (!itemSettingKey || !currentSettings[itemSettingKey]) return false;
 
-            // ── Poziom ───────────────────────────────────────────────────────────
+            // Poziom
             const itemLevel = item.issetLvlStat() ? parseInt(item.getLvlStat()) : 0;
             if (itemLevel < 20) return false;
 
-            // ── Ulepszony na MAX – odrzucamy ─────────────────────────────────────
-            // Itemy z częściowym ulepszeniem (1-4) są OK.
-            // Tylko itemy na MAX (5/5) są odrzucane.
-            if (isEnhancedToMax(item)) return false;
+            // Ulepszenie na MAX – odrzucamy tylko gdy poziom ulepszenia = max (zwykle 5)
+            // issetItemStat zwraca true gdy item MA stat (poziom 1-5)
+            // Item bez żadnego ulepszenia (poziom 0) ma issetItemStat = false – przechodzi
+            if (item.issetItemStat(sd.enhancement_upgrade_lvl)) {
+                const enhLvl = parseInt(item.getItemStat(sd.enhancement_upgrade_lvl)) || 0;
+                // Sprawdź max przez enhancement_max_lvl jeśli istnieje, fallback = 5
+                let maxLvl = 5;
+                try {
+                    if (sd.enhancement_max_lvl && item.issetItemStat(sd.enhancement_max_lvl)) {
+                        maxLvl = parseInt(item.getItemStat(sd.enhancement_max_lvl)) || 5;
+                    }
+                } catch(e) {}
+                if (enhLvl >= maxLvl) return false; // na MAX – odrzuć
+                // poziom 1-4 = można jeszcze ulepszać – przepuszczamy dalej
+            }
 
-            // ── Przeklęty ────────────────────────────────────────────────────────
+            // Przeklęty
             if (item.issetItemStat(sd.cursed)) return false;
 
-            // ── Bezwartościowy ───────────────────────────────────────────────────
+            // Bezwartościowy
             if (item.issetItemStat(sd.artisan_worthless)) return false;
 
-            // ── Eventowy (etiquette lub słowa kluczowe w opisie) ─────────────────
+            // Eventowy
             if (isEventItem(item)) return false;
 
-            // ── Przywiązany ──────────────────────────────────────────────────────
+            // Przywiązany
             if (!currentSettings.allow_bound_items) {
                 if (item.issetSoulboundStat() || item.issetPermboundStat()) return false;
             }
 
-            // ── Część buildu ─────────────────────────────────────────────────────
+            // Część buildu
             try {
                 const builds = item.getBuildsWithThisItem();
                 if (builds && builds.length > 0) return false;
@@ -1184,9 +1155,7 @@
 
         if (!uiMainWindow) buildUI();
 
-        // Zawsze pokazuj okno po inicjalizacji (F5 / reload) – tak jak inne dodatki.
-        // windowVisible=false jest zapisywane gdy użytkownik ręcznie zamknie okno,
-        // ale przy każdym starcie gry okno powinno być widoczne.
+        // Zawsze pokazuj okno przy starcie gry/F5 – tak jak inne dodatki
         if (uiMainWindow) {
             uiMainWindow.style.display = 'flex';
             currentSettings.windowVisible = true;
