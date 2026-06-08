@@ -207,3 +207,34 @@ input.zap-nick-display { cursor: url("https://gordion.margonem.pl/img/gui/cursor
 .baddonz-type-icon.cl-13 { background-position: -241px -100px; }
 .baddonz-type-icon.cl-14 { background-position: -261px -100px; }
 .baddonz-type-icon.cl-29 { background-position: -401px -100px; }
+
+.upgrader-crafting-window { display: none !important; }
+.menu-item--yellow { background: rgb(57,100,17) !important; color:#fff !important; border-radius:5px !important; padding:5px !important; }
+.wnd-ulepszara { width: 175px; min-width: 175px; }
+.wnd-ulepszara .baddonz-window-body { padding: 5px 8px 8px 8px !important; gap: 4px !important; }
+.wnd-ulepszara-settings { width: 255px; min-width: 255px; height: auto !important; min-height: unset !important; max-height: unset !important; }
+.wnd-ulepszara-settings .baddonz-window-body { height: auto !important; min-height: unset !important; padding: 5px 8px 8px 8px !important; gap: 3px !important; display:flex; flex-direction:column; }
+.upg-item-box { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 5px 0 6px 0; border-bottom: 1px solid #303030; }
+.upg-item-slot-wrapper { display:flex; justify-content:center; }
+.upg-item-name { font-size:11px; font-weight:bold; color:#ffcc00; text-shadow:1px 1px #000; text-align:center; padding:0; margin:0; }
+.upg-item-progress { font-size:10px; color:#aaa; text-align:center; padding:0; margin:0; }
+.upg-daily-row { display:flex; justify-content:center; padding-top:4px; }
+.upg-daily-text { font-size:11px; color:#ccc; }
+.wnd-ulepszara.wnd-clp .upg-daily-row { padding-top:1px; }
+#baddonz-upgrader-type-filters { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; padding: 3px 0; }
+.baddonz-typ-wrapper { display:flex; flex-direction:column; align-items:center; justify-content:center; cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer; gap: 2px; padding: 4px 2px; background: rgba(0,0,0,0.35); border-radius: 4px; user-select: none; border: 1px solid transparent; transition: background 0.15s, border-color 0.15s; }
+.baddonz-typ-wrapper:hover { background: rgba(255,255,255,0.08); }
+.baddonz-typ-wrapper.typ-active { background: rgba(80,180,80,0.18); border-color: rgba(80,200,80,0.4); }
+.upg-settings-section { border-bottom:1px solid #303030; padding-bottom:4px; margin-bottom:2px; }
+.upg-settings-label { font-size:10px; color:#aaa; margin:2px 0 3px 0; }
+.upg-setting-row { display:flex; flex-direction:row; align-items:center; gap:8px; padding:2px 0; }
+.upg-input-row { display:flex; flex-direction:column; gap:2px; padding:2px 0 2px 8px; }
+.upg-input-row .baddonz-input { width:100%; height:24px !important; line-height:22px; text-align:center; padding:1px 4px; font-size:11px; box-sizing:border-box; }
+.upg-hotkey-input { font-weight:bold; text-transform:uppercase; }
+.upg-number-input { width:100% !important; text-align:center !important; }
+.upg-text { font-size:11px; color:#ddd; }
+.baddonz-upgrader-item-cursor { cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, pointer !important; }
+#baddonz-upgrader-main-item-slot { margin:0; }
+.wnd-ulepszara.wnd-clp { height: auto !important; width: 175px !important; }
+.wnd-ulepszara.wnd-clp .baddonz-window-body { display:flex !important; padding: 2px 8px 5px 8px !important; gap: 0 !important; }
+.wnd-ulepszara.wnd-clp .upg-item-box { display:none !important; }
