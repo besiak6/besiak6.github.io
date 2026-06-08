@@ -236,7 +236,7 @@
             position: "absolute",
             left: "0",
             backgroundColor: "rgba(0, 0, 0, 0.75)",
-            color: "#fff",
+            color: "#ff6200",
             fontSize: "9px",
             padding: "0px 1px",
             width: "fit-content",
