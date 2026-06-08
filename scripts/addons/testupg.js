@@ -44,8 +44,6 @@
     // ─── Ustawienia domyślne ───────────────────────────────────────────────────
     const DEFAULT_ACC_SETTINGS = {
         windowOpacity: 2,
-        windowVisible: true,
-        settingsWindowVisible: false,
         windowSettingsOpacity: 2,
         isCollapsed: false,
         hotkeyKey: "j",
@@ -96,22 +94,15 @@
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
-        const accId = window.BaddonzAPI.accountId;
 
-        const accKeys = ['windowOpacity','windowVisible','settingsWindowVisible','windowSettingsOpacity','isCollapsed','hotkeyKey',
+        const accKeys = ['windowOpacity','windowSettingsOpacity','isCollapsed','hotkeyKey',
                          'enabled','hotkeyEnabled','use_common','use_unique','allow_bound_items','upgrade_endbattle','count_endbattle',
                          'bags_upgrade','count_bags_upgrade','cl1','cl2','cl3','cl4','cl5','cl6','cl7','cl8','cl9','cl10','cl11','cl12','cl13','cl14','cl29'];
         const accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
 
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
-        try {
-            let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
-            if (!data[accId]) data[accId] = {};
-            if (!data[accId].accountAddons) data[accId].accountAddons = {};
-            data[accId].accountAddons[ADDON_ID] = accSettings;
-            localStorage.setItem('BaddonzData', JSON.stringify(data));
-        } catch(e) {}
+        // Bezpieczny zapis przez oficjalne API Baddonza, który nie niszczy stanów widoczności okien
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, accSettings);
     }
 
     // ─── Progress / item helpers ──────────────────────────────────────────────
@@ -499,11 +490,13 @@
         `;
         uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Ulepszara Ustawienia", settingsBodyHtml, {
             customId: 'wnd-ulepszara-settings',
-            width: '255px'
+            width: '255px',
+            hasClose: true // Pozwalamy Baddonzowi stworzyć i zarządzać krzyżykiem zamknięcia
         });
         uiSettingsWindow.classList.add('settings-window', 'wnd-ulepszara-settings');
         uiSettingsWindow.removeAttribute('data-addon-id');
-        uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
+        
+        // USUNIĘTO: Ręczne wymuszanie display dla obu okien. Teraz Baddonz sam nakłada poprawny stan z pamięci.
         applyOpacityClass(uiSettingsWindow, currentSettings.windowSettingsOpacity);
         
         setupListeners();
@@ -541,8 +534,7 @@
             settingsBtn.addEventListener('click', () => {
                 const visible = uiSettingsWindow.style.display !== 'none';
                 uiSettingsWindow.style.display = visible ? 'none' : 'flex';
-                currentSettings.settingsWindowVisible = !visible;
-                saveSettings();
+                // Usunięto stary, wadliwy zapis ręczny – Baddonz sam to przechwyci i zapamięta
             });
         }
 
@@ -577,8 +569,7 @@
         if (settingsCloseBtn) {
             settingsCloseBtn.addEventListener('click', () => {
                 uiSettingsWindow.style.display = 'none';
-                currentSettings.settingsWindowVisible = false;
-                saveSettings();
+                // Usunięto stary zapis ręczny – schowanie okna zostanie wykryte przez MutationObserver menedżera
             });
         }
 
