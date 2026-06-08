@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name          Ulepszara baddonz
+// @name          Ulepszara baddonz zd
 // @version       1.0
 // @description   Automatyczne ulepszanie
 // @author        besiak
@@ -355,7 +355,35 @@
             .upg-number-input { width:100% !important; text-align:center !important; }
             .upg-text { font-size:11px; color:#ddd; }
 
-            /* ── Cursor na przedmiot w slocie ────────────────── */
+            /* ── Drag & Drop na upg-item-box ────────────────── */
+            @keyframes upg-border-march {
+                0%   { background-position: 0 0,        100% 0,      100% 100%,   0 100%; }
+                100% { background-position: 20px 0,     100% 20px,   calc(100% - 20px) 100%, 0 calc(100% - 20px); }
+            }
+            .upg-item-box.upg-drop-valid,
+            .upg-item-box.upg-drop-invalid {
+                background-size: 10px 2px, 2px 10px, 10px 2px, 2px 10px;
+                background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
+                animation: upg-border-march 0.4s linear infinite;
+                border-bottom: none;
+                padding-bottom: 7px;
+            }
+            .upg-item-box.upg-drop-valid {
+                background-image:
+                    linear-gradient(90deg,  #ffe000 50%, transparent 50%),
+                    linear-gradient(180deg, #ffe000 50%, transparent 50%),
+                    linear-gradient(90deg,  #ffe000 50%, transparent 50%),
+                    linear-gradient(180deg, #ffe000 50%, transparent 50%);
+            }
+            .upg-item-box.upg-drop-invalid {
+                background-image:
+                    linear-gradient(90deg,  #ff4040 50%, transparent 50%),
+                    linear-gradient(180deg, #ff4040 50%, transparent 50%),
+                    linear-gradient(90deg,  #ff4040 50%, transparent 50%),
+                    linear-gradient(180deg, #ff4040 50%, transparent 50%);
+            }
+
+
             .baddonz-upgrader-item-cursor {
                 cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, pointer !important;
             }
@@ -639,6 +667,7 @@
         // ── Listeners ─────────────────────────────────────────────────────────
         setupListeners();
         updateMainUI();
+        initDroppable();
     }
 
     function applyOpacityClass(wnd, opacity) {
@@ -946,11 +975,10 @@
     function isItemValidForUpgrade(item) {
         if (!item) return false;
         try {
-            const sd  = Engine.itemStatsData;
+            const cached = item._cachedStats || {};
 
             // Rarity
-            if (!item.issetItemStat(sd.rarity)) return false;
-            const rarity = item.getItemStat(sd.rarity);
+            const rarity = cached.rarity || item.rarity;
             const isAllowedRarity = (currentSettings.use_common && rarity === 'common')
                 || (currentSettings.use_unique  && rarity === 'unique')
                 || rarity === 'heroic'
@@ -959,35 +987,43 @@
             if (!isAllowedRarity) return false;
 
             // Typ itemu (cl)
-            const itemClass    = item.cl;
-            const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
+            const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[item.cl];
             if (!itemSettingKey || !currentSettings[itemSettingKey]) return false;
 
             // Poziom
-            const itemLevel = item.issetLvlStat() ? parseInt(item.getLvlStat()) : 0;
+            const itemLevel = item.lvl ?? item.level ?? cached.lvl ?? 0;
             if (itemLevel < 20) return false;
 
             // Już ulepszony (enhancement_upgrade_lvl)
-            if (item.issetItemStat(sd.enhancement_upgrade_lvl)) return false;
+            const enhancement_upgrade_lvl = cached.enhancement_upgrade_lvl !== undefined
+                ? cached.enhancement_upgrade_lvl : item.enhancement_upgrade_lvl;
+            if (enhancement_upgrade_lvl !== undefined && enhancement_upgrade_lvl !== null) return false;
 
             // Przeklęty
-            if (item.issetItemStat(sd.cursed)) return false;
+            const cursed = cached.cursed !== undefined ? cached.cursed : item.cursed;
+            if (cursed) return false;
 
             // Bezwartościowy (artisan_worthless)
-            if (item.issetItemStat(sd.artisan_worthless)) return false;
+            const isWorthless = Object.prototype.hasOwnProperty.call(cached, 'artisan_worthless')
+                || Object.prototype.hasOwnProperty.call(item, 'artisan_worthless');
+            if (isWorthless) return false;
 
             // Eventowy (etiquette lub słowa kluczowe w opisie)
             if (isEventItem(item)) return false;
 
             // Przywiązany
             if (!currentSettings.allow_bound_items) {
-                if (item.issetSoulboundStat() || item.issetPermboundStat()) return false;
+                const isBound = (item.checkSoulbound && item.checkSoulbound())
+                    || (item.checkPermbound && item.checkPermbound());
+                if (isBound) return false;
             }
 
             // Część buildu
             try {
-                const builds = item.getBuildsWithThisItem();
-                if (builds && builds.length > 0) return false;
+                if (typeof item.getBuildsWithThisItem === 'function') {
+                    const builds = item.getBuildsWithThisItem();
+                    if (builds && builds.length > 0) return false;
+                }
             } catch(e) {}
 
             return true;
@@ -996,26 +1032,34 @@
         }
     }
 
-    // Wyłącz wszystkie droppable gry (.game-layer i .usable-slot) żeby item nie
-    // trafił do gry gdy upuszczamy go na nasz upg-item-box
+    // Wyłącz droppable gry żeby item nie trafił do niej gdy jesteśmy nad naszym boxem.
+    // Technika z DraggableFix.js: ustawiamy proportions().height = 0 żeby jQuery UI
+    // nie wykrywał game-layer jako aktywnego droppable podczas over.
     function disableGameDroppables() {
         try {
-            const $gl = $('.game-layer');
-            if ($gl.data('ui-droppable')) $gl.droppable('disable');
-            $('.usable-slot').each(function() {
-                const $s = $(this);
-                if ($s.data('ui-droppable')) $s.droppable('disable');
+            const scope = 'default';
+            const droppables = $.ui.ddmanager.droppables[scope] || [];
+            droppables.forEach(d => {
+                const el = d.element && d.element[0];
+                if (!el) return;
+                // blokuj game-layer i usable-slot
+                if (el.classList.contains('game-layer') || el.classList.contains('usable-slot')) {
+                    d._upg_savedHeight = d.proportions().height;
+                    d.proportions({ width: d.proportions().width, height: 0 });
+                }
             });
         } catch(err) {}
     }
 
     function enableGameDroppables() {
         try {
-            const $gl = $('.game-layer');
-            if ($gl.data('ui-droppable')) $gl.droppable('enable');
-            $('.usable-slot').each(function() {
-                const $s = $(this);
-                if ($s.data('ui-droppable')) $s.droppable('enable');
+            const scope = 'default';
+            const droppables = $.ui.ddmanager.droppables[scope] || [];
+            droppables.forEach(d => {
+                if (d._upg_savedHeight !== undefined) {
+                    d.proportions({ width: d.proportions().width, height: d._upg_savedHeight });
+                    delete d._upg_savedHeight;
+                }
             });
         } catch(err) {}
     }
@@ -1024,7 +1068,7 @@
         if (!uiMainWindow) return;
         const $itemBox = $(uiMainWindow).find('.upg-item-box');
         if (!$itemBox.length) return;
-        if ($itemBox.data('ui-droppable')) return;
+        if ($itemBox.data('ui-droppable')) $itemBox.droppable('destroy');
 
         $itemBox.droppable({
             accept: '.item:not(.shop-item)',
