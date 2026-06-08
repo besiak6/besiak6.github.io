@@ -6,6 +6,7 @@
 // @match         https://*.margonem.pl/*
 // @grant         none
 // ==/UserScript==
+///do poprawy: gdy sie zamyka okna to sie nie zapisuje widocznosc a po f5 wracaja nawet jak były ukryte
 (function() {
     'use strict';
 
