@@ -104,8 +104,10 @@
         const accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
 
-        // NAPRAWIONE: Przekazujemy zapisane ustawienia do Baddonza zamiast pustego obiektu {}
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, accSettings);
+        // POPRAWKA: Przekazujemy pełny obiekt ustawień do API Baddonza, zamiast pustego {}
+        if (window.BaddonzAPI.saveAddonSettings) {
+            window.BaddonzAPI.saveAddonSettings(ADDON_ID, accSettings);
+        }
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
@@ -437,8 +439,7 @@
         applyOpacityClass(uiMainWindow, currentSettings.windowOpacity);
         if (currentSettings.isCollapsed) uiMainWindow.classList.add('wnd-clp');
 
-        // WYMUSZENIE WIDOCZNOŚCI ZGODNIE Z ZAPISANYM STANEM:
-        uiMainWindow.style.display = currentSettings.windowVisible ? 'flex' : 'none';
+        // POPRAWKA: Usunęliśmy stąd nadpisywanie widoczności głównego okna, żeby Baddonz API zarządzało nim bez konfliktów (tak jak w Item Info)
 
         const settingsBodyHtml = `
             <div class="upg-settings-section">
@@ -508,7 +509,7 @@
         uiSettingsWindow.classList.add('settings-window', 'wnd-ulepszara-settings');
         uiSettingsWindow.removeAttribute('data-addon-id');
         
-        // WYMUSZENIE WIDOCZNOŚCI ZGODNIE Z ZAPISANYM STANEM:
+        // Ustawiamy startowy stan widoczności okna ustawień
         uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
         applyOpacityClass(uiSettingsWindow, currentSettings.windowSettingsOpacity);
         
@@ -535,7 +536,6 @@
         const settingsBtn = uiMainWindow.querySelector('.baddonz-settings-button');
         const collapseBtn = uiMainWindow.querySelector('.upg-collapse-btn');
         const opacityBtn  = uiMainWindow.querySelector('.baddonz-opacity-button');
-        const mainCloseBtn = uiMainWindow.querySelector('.baddonz-close-button'); // Systemowy krzyżyk głównego okna
         
         if (stateBtn) {
             stateBtn.addEventListener('click', () => {
@@ -575,14 +575,6 @@
                     applyOpacityClass(uiMainWindow, currentSettings.windowOpacity);
                     saveSettings();
                 }
-            });
-        }
-
-        // NAPRAWIONE: Zapisywanie zamknięcia głównego okna krzyżykiem "X"
-        if (mainCloseBtn) {
-            mainCloseBtn.addEventListener('click', () => {
-                currentSettings.windowVisible = false;
-                saveSettings();
             });
         }
 
@@ -834,6 +826,14 @@
         }
 
         updateMainUI();
+
+        // POPRAWKA: Wymuszamy stan widoczności okna ustawień dopiero po krótkim czasie od startu,
+        // tak aby nadpisać domyślne zachowanie menedżera Baddonza po załadowaniu skryptu.
+        setTimeout(() => {
+            if (uiSettingsWindow) {
+                uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
+            }
+        }, 100);
     }
 
     function addonStop() {
@@ -842,14 +842,9 @@
         if (uiMainWindow)    { uiMainWindow.style.display = 'none'; }
         if (uiSettingsWindow){ uiSettingsWindow.style.display = 'none'; }
     }
+
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
-        currentSettings.windowVisible = isEnabled;
-        if (!isEnabled) {
-            currentSettings.settingsWindowVisible = false;
-        }
-        if (uiMainWindow) uiMainWindow.style.display = isEnabled ? 'flex' : 'none';
-        if (uiSettingsWindow) uiSettingsWindow.style.display = (isEnabled && currentSettings.settingsWindowVisible) ? 'flex' : 'none';
         saveSettings();
         updateMainUI();
     }
