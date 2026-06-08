@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Ulepszara baddonz
-// @version       2.1
+// @version       08.06.2026
 // @description   Automatyczne ulepszanie
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -42,7 +42,6 @@
     };
 
     // ─── Ustawienia domyślne ───────────────────────────────────────────────────
-    // Klucze konta (wspólne dla wszystkich postaci)
     const DEFAULT_ACC_SETTINGS = {
         windowOpacity: 2,
         windowVisible: true,
@@ -52,7 +51,6 @@
         hotkeyKey: "j",
     };
 
-    // Klucze postaci
     const DEFAULT_CHAR_SETTINGS = {
         enabled: true,
         hotkeyEnabled: true,
@@ -92,8 +90,6 @@
         } catch(e) {}
 
         currentSettings = { ...DEFAULT_ACC_SETTINGS, ...DEFAULT_CHAR_SETTINGS, ...accSettings };
-
-        // Wczytaj dzienny licznik
         const count = parseInt(localStorage.getItem('baddonz-daily-upgrade-count'));
         dailyUpgradeCount = !isNaN(count) ? count : 0;
     }
@@ -105,12 +101,10 @@
         const accKeys = ['windowOpacity','windowVisible','settingsWindowVisible','windowSettingsOpacity','isCollapsed','hotkeyKey',
                          'enabled','hotkeyEnabled','use_common','use_unique','allow_bound_items','upgrade_endbattle','count_endbattle',
                          'bags_upgrade','count_bags_upgrade','cl1','cl2','cl3','cl4','cl5','cl6','cl7','cl8','cl9','cl10','cl11','cl12','cl13','cl14','cl29'];
-
         const accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
 
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
-
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
@@ -124,7 +118,8 @@
     function getCharId() { return window.Engine?.hero?.d?.id; }
 
     function loadProgress(itemId) {
-        const charId = getCharId(); if (!charId) return null;
+        const charId = getCharId();
+        if (!charId) return null;
         try {
             const all = JSON.parse(localStorage.getItem(`baddonz-enhancement-progress-char-${charId}`)) || {};
             return all[itemId] || null;
@@ -155,11 +150,9 @@
 
     function isEventItem(item) {
         if (!item) return false;
-        // Sprawdź statystykę etiquette (itemy eventowe od 2025+)
-        try {
-            if (item.issetItemStat(Engine.itemStatsData.etiquette)) return true;
-        } catch(e) {}
-        // Sprawdź słowa kluczowe w opisie tooltipa
+        const cached = item._cachedStats || {};
+        const hasEtiquette = cached.etiquette !== undefined || item.etiquette !== undefined;
+        if (hasEtiquette) return true;
         if (!item.getTipContent) return false;
         const tip = item.getTipContent();
         if (!tip) return false;
@@ -179,41 +172,31 @@
     const getReagents = () => {
         return Engine.items.fetchLocationItems("g").reduce((acc, item) => {
             if (!item) return acc;
-            try {
-                const sd = Engine.itemStatsData;
-
-                if (!item.issetItemStat(sd.rarity)) return acc;
-                const rarity = item.getItemStat(sd.rarity);
-                const isAllowedRarity = (currentSettings.use_common && rarity === 'common')
-                    || (currentSettings.use_unique && rarity === 'unique');
-                if (!isAllowedRarity) return acc;
-
-                const itemClass    = item.cl;
-                const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
-                if (!itemSettingKey || !currentSettings[itemSettingKey]) return acc;
-
-                const itemLevel = item.issetLvlStat() ? parseInt(item.getLvlStat()) : 0;
-                if (itemLevel < 20) return acc;
-
-                if (item.issetItemStat(sd.enhancement_upgrade_lvl)) return acc;
-                if (item.issetItemStat(sd.cursed)) return acc;
-                if (item.issetItemStat(sd.artisan_worthless)) return acc;
-                if (isEventItem(item)) return acc;
-
-                if (!currentSettings.allow_bound_items) {
-                    if (item.issetSoulboundStat() || item.issetPermboundStat()) return acc;
-                }
-
-                try {
-                    const builds = item.getBuildsWithThisItem();
-                    if (builds && builds.length > 0) return acc;
-                } catch(e) {}
-
-                acc.push(item.id);
-            } catch(err) {}
+            const cached = item._cachedStats || {};
+            const rarity = cached.rarity || item.rarity;
+            const enhancement_upgrade_lvl = cached.enhancement_upgrade_lvl !== undefined ? cached.enhancement_upgrade_lvl : (item.enhancement_upgrade_lvl ?? undefined);
+            const isWorthless = (cached && Object.prototype.hasOwnProperty.call(cached, 'artisan_worthless')) || Object.prototype.hasOwnProperty.call(item, 'artisan_worthless');
+            const cursed_flag = cached.cursed !== undefined ? cached.cursed : (item.cursed !== undefined ? item.cursed : false);
+            const itemLevel = item.lvl ?? item.level ?? cached.lvl ?? 0;
+            const itemClass = item.cl;
+            const isAllowedRarity = (currentSettings.use_common && rarity === 'common') || (currentSettings.use_unique && rarity === 'unique');
+            const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[itemClass];
+            const isAllowedType = itemSettingKey ? currentSettings[itemSettingKey] : false;
+            const isUpgraded = enhancement_upgrade_lvl !== undefined && enhancement_upgrade_lvl !== null;
+            const isBound = (item.checkSoulbound && item.checkSoulbound()) || (item.checkPermbound && item.checkPermbound());
+            let isPartOfBuild = false;
+            try { if (typeof item.getBuildsWithThisItem === 'function') { const builds = item.getBuildsWithThisItem(); if (builds && builds.length > 0) isPartOfBuild = true; } } catch(e) {}
+            if (itemLevel < 20) return acc;
+            if (cursed_flag) return acc;
+            if (isWorthless) return acc;
+            if (isAllowedType && isAllowedRarity && !isEventItem(item) && !isUpgraded && (currentSettings.allow_bound_items || !isBound) && !isPartOfBuild) {
+                let extra = false;
+                try { if (typeof Engine.buildsManager !== 'undefined' && item.getBuildsWithThisItem) { const b = item.getBuildsWithThisItem(); if (b && b.length > 0) extra = true; } } catch(e) {}
+                if (!extra) acc.push(item.id);
+            }
             return acc;
         }, []);
-    };;
+    };
 
     const chunkReagents = (reagents) => {
         const chunks = [];
@@ -292,113 +275,6 @@
         return false;
     };
 
-    // ─── CSS ──────────────────────────────────────────────────────────────────
-    const injectCSS = () => {
-        if (document.querySelector('.upg-custom-styles')) return;
-        const styleSheet = document.createElement("style");
-        styleSheet.className = "upg-custom-styles";
-        styleSheet.textContent = `
-            .upgrader-crafting-window { display: none !important; }
-            .menu-item--yellow { background: rgb(57,100,17) !important; color:#fff !important; border-radius:5px !important; padding:5px !important; }
-
-            /* ── Okno główne ─────────────────────────────────── */
-            .wnd-ulepszara { width: 175px; min-width: 175px; }
-            .wnd-ulepszara .baddonz-window-body { padding: 5px 8px 8px 8px !important; gap: 4px !important; }
-
-            /* ── Okno ustawień – dopasowane do zawartości ────── */
-            .wnd-ulepszara-settings { width: 255px; min-width: 255px; height: auto !important; min-height: unset !important; max-height: unset !important; }
-            .wnd-ulepszara-settings .baddonz-window-body { height: auto !important; min-height: unset !important; padding: 5px 8px 8px 8px !important; gap: 3px !important; display:flex; flex-direction:column; }
-
-            /* ── Podgląd itemu ───────────────────────────────── */
-            .upg-item-box {
-                display: flex; flex-direction: column; align-items: center;
-                gap: 3px; padding: 5px 0 6px 0;
-                border-bottom: 1px solid #303030;
-            }
-            .upg-item-slot-wrapper { display:flex; justify-content:center; }
-            .upg-item-name { font-size:11px; font-weight:bold; color:#ffcc00; text-shadow:1px 1px #000; text-align:center; padding:0; margin:0; }
-            .upg-item-progress { font-size:10px; color:#aaa; text-align:center; padding:0; margin:0; }
-
-            /* ── Dzienny limit ───────────────────────────────── */
-            .upg-daily-row { display:flex; justify-content:center; padding-top:4px; }
-            .upg-daily-text { font-size:11px; color:#ccc; }
-            /* Gdy zwinięte – limit tuż pod tytułem bez dużej luki */
-            .wnd-ulepszara.wnd-clp .upg-daily-row { padding-top:1px; }
-
-            /* ── Kafelki typów itemów ────────────────────────── */
-            #baddonz-upgrader-type-filters {
-                display: grid;
-                grid-template-columns: repeat(5, 1fr);
-                gap: 3px;
-                padding: 3px 0;
-            }
-            .baddonz-typ-wrapper {
-                display:flex; flex-direction:column; align-items:center; justify-content:center;
-                cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
-                gap: 2px; padding: 4px 2px;
-                background: rgba(0,0,0,0.35);
-                border-radius: 4px;
-                user-select: none;
-                border: 1px solid transparent;
-                transition: background 0.15s, border-color 0.15s;
-            }
-            .baddonz-typ-wrapper:hover { background: rgba(255,255,255,0.08); }
-            .baddonz-typ-wrapper.typ-active { background: rgba(80,180,80,0.18); border-color: rgba(80,200,80,0.4); }
-
-            /* ── Inputy i sekcje ustawień ────────────────────── */
-            .upg-settings-section { border-bottom:1px solid #303030; padding-bottom:4px; margin-bottom:2px; }
-            .upg-settings-label { font-size:10px; color:#aaa; margin:2px 0 3px 0; }
-            .upg-setting-row { display:flex; flex-direction:row; align-items:center; gap:8px; padding:2px 0; }
-            .upg-input-row { display:flex; flex-direction:column; gap:2px; padding:2px 0 2px 8px; }
-            .upg-input-row .baddonz-input { width:100%; height:24px !important; line-height:22px; text-align:center; padding:1px 4px; font-size:11px; box-sizing:border-box; }
-            .upg-hotkey-input { font-weight:bold; text-transform:uppercase; }
-            .upg-number-input { width:100% !important; text-align:center !important; }
-            .upg-text { font-size:11px; color:#ddd; }
-
-            /* ── Cursor na przedmiot w slocie ────────────────── */
-            .baddonz-upgrader-item-cursor {
-                cursor: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, pointer !important;
-            }
-            #baddonz-upgrader-main-item-slot { margin:0; }
-
-            /* ── Collapsed state – ten sam rozmiar co rozwinięte ─ */
-            .wnd-ulepszara.wnd-clp { height: auto !important; width: 175px !important; }
-            .wnd-ulepszara.wnd-clp .baddonz-window-body { display:flex !important; padding: 2px 8px 5px 8px !important; gap: 0 !important; }
-            .wnd-ulepszara.wnd-clp .upg-item-box { display:none !important; }
-
-            /* ── Drag & Drop ────────────────────────────────────── */
-            @keyframes upg-march {
-                from { background-position: 0 0, 100% 0, 100% 100%, 0 100%; }
-                to   { background-position: 20px 0, 100% 20px, calc(100% - 20px) 100%, 0 calc(100% - 20px); }
-            }
-            .upg-item-box.upg-drop-valid {
-                background-image:
-                    repeating-linear-gradient(90deg,  #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
-                    repeating-linear-gradient(180deg, #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
-                    repeating-linear-gradient(90deg,  #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px),
-                    repeating-linear-gradient(180deg, #ffcc00 0, #ffcc00 10px, transparent 10px, transparent 20px);
-                background-size: 20px 2px, 2px 20px, 20px 2px, 2px 20px;
-                background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
-                background-position: 0 0, 100% 0, 100% 100%, 0 100%;
-                animation: upg-march 0.4s linear infinite;
-                border-radius: 4px;
-            }
-            .upg-item-box.upg-drop-invalid {
-                background-image:
-                    repeating-linear-gradient(90deg,  #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
-                    repeating-linear-gradient(180deg, #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
-                    repeating-linear-gradient(90deg,  #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px),
-                    repeating-linear-gradient(180deg, #cc3333 0, #cc3333 10px, transparent 10px, transparent 20px);
-                background-size: 20px 2px, 2px 20px, 20px 2px, 2px 20px;
-                background-repeat: repeat-x, repeat-y, repeat-x, repeat-y;
-                background-position: 0 0, 100% 0, 100% 100%, 0 100%;
-                animation: upg-march 0.4s linear infinite;
-                border-radius: 4px;
-            }
-        `;
-        document.head.appendChild(styleSheet);
-    };
-
     // ─── Item display ─────────────────────────────────────────────────────────
     const updateItemDisplay = (itemId) => {
         if (typeof $ === 'undefined' || typeof Engine === 'undefined' || !Engine.items) return;
@@ -419,7 +295,6 @@
                 <div class="lvl" data-lvl="0"><div class="cl-icon icon-star-0"></div></div>
             </div>`
         );
-
         if (!item) { $slotWrapper.append($slotContainer); return; }
 
         const upgradeLvl = item.upgrade_lvl || 0;
@@ -446,8 +321,6 @@
     // ─── UI update ────────────────────────────────────────────────────────────
     function updateMainUI() {
         if (!uiMainWindow) return;
-
-        // State button
         const stateBtn = uiMainWindow.querySelector('.upg-state-button');
         if (stateBtn) {
             stateBtn.classList.toggle('baddonz-state-button--active', currentSettings.enabled);
@@ -456,28 +329,23 @@
             }
         }
 
-        // Collapse
         const collapseBtn = uiMainWindow.querySelector('.upg-collapse-btn');
         if (collapseBtn && typeof $ === 'function' && typeof $.fn.tip === 'function') {
             $(collapseBtn).tip(currentSettings.isCollapsed ? 'Rozwiń' : 'Zwiń');
         }
         uiMainWindow.classList.toggle('wnd-clp', currentSettings.isCollapsed);
-
-        // Item display
+        
         const upgradedItemId = getUpgradedItemId();
         updateItemDisplay(upgradedItemId);
-
-        // Daily limit
+        
         const dailyEl = uiMainWindow.querySelector('.upg-daily-text');
         if (dailyEl) dailyEl.textContent = `Dzienny Limit: ${dailyUpgradeCount}/${dailyUpgradeLimit}`;
 
-        // Settings window
         updateSettingsUI();
     }
 
     function updateSettingsUI() {
         if (!uiSettingsWindow) return;
-
         const toggleCb = (id, value) => {
             const el = uiSettingsWindow.querySelector(`#${id}`);
             if (el) el.classList.toggle('active', value);
@@ -491,7 +359,6 @@
 
         const endbattleInput = uiSettingsWindow.querySelector('#upg-count-endbattle-input');
         if (endbattleInput) endbattleInput.value = currentSettings.count_endbattle;
-
         const bagsInput = uiSettingsWindow.querySelector('#upg-count-bags-upgrade-input');
         if (bagsInput) bagsInput.value = currentSettings.count_bags_upgrade;
 
@@ -508,8 +375,7 @@
 
         const bagsOptions = uiSettingsWindow.querySelector('#upg-bags-options');
         if (bagsOptions) bagsOptions.style.display = currentSettings.bags_upgrade ? 'flex' : 'none';
-
-        // Item type filter tiles
+        
         const filtersContainer = uiSettingsWindow.querySelector('#baddonz-upgrader-type-filters');
         if (filtersContainer) {
             filtersContainer.querySelectorAll('.baddonz-typ-wrapper').forEach(wrapper => {
@@ -530,8 +396,6 @@
     }
 
     function buildUI() {
-        // ── Okno główne ───────────────────────────────────────────────────────
-        // Nagłówek: [opacity | settings | state] ─── Ulepszara ─── [collapse | close]
         const mainBodyHtml = `
             <div class="upg-item-box">
                 <div id="baddonz-upgrader-item-slot-wrapper" class="upg-item-slot-wrapper"></div>
@@ -542,15 +406,13 @@
                 <span class="upg-daily-text">Dzienny Limit: 0/2000</span>
             </div>
         `;
-
         uiMainWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Ulepszara", mainBodyHtml, {
             customId: 'wnd-ulepszara',
             hasSettings: true,
             hasCollapse: true,
             hasClose: true
         });
-
-        // Dodajemy state button do lewego panelu kontrolek
+        
         const leftControls = uiMainWindow.querySelector('.baddonz-window-controls.left');
         if (leftControls) {
             const stateBtn = document.createElement('div');
@@ -559,19 +421,16 @@
             leftControls.appendChild(stateBtn);
         }
 
-        // Oznaczamy collapse btn i close btn
         const rightControls = uiMainWindow.querySelector('.baddonz-window-controls.right');
         if (rightControls) {
             const collBtn = rightControls.querySelector('.baddonz-collapsed');
             if (collBtn) collBtn.classList.add('upg-collapse-btn');
         }
 
-        // Ustaw widoczność i opacity
         uiMainWindow.style.display = currentSettings.windowVisible ? 'flex' : 'none';
         applyOpacityClass(uiMainWindow, currentSettings.windowOpacity);
         if (currentSettings.isCollapsed) uiMainWindow.classList.add('wnd-clp');
 
-        // ── Okno ustawień ─────────────────────────────────────────────────────
         const settingsBodyHtml = `
             <div class="upg-settings-section">
                 <div class="upg-setting-row">
@@ -626,7 +485,6 @@
                 </div>
             </div>
         `;
-
         uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Ulepszara Ustawienia", settingsBodyHtml, {
             customId: 'wnd-ulepszara-settings',
             width: '255px'
@@ -635,8 +493,7 @@
         uiSettingsWindow.removeAttribute('data-addon-id');
         uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
         applyOpacityClass(uiSettingsWindow, currentSettings.windowSettingsOpacity);
-
-        // ── Listeners ─────────────────────────────────────────────────────────
+        
         setupListeners();
         updateMainUI();
     }
@@ -656,14 +513,12 @@
 
     function setupListeners() {
         if (!uiMainWindow || !uiSettingsWindow) return;
-
-        // ── Przyciski w nagłówku okna głównego ───────────────────────────────
         const stateBtn    = uiMainWindow.querySelector('.upg-state-button');
         const settingsBtn = uiMainWindow.querySelector('.baddonz-settings-button');
         const collapseBtn = uiMainWindow.querySelector('.upg-collapse-btn');
         const closeBtn    = uiMainWindow.querySelector('.baddonz-close-button');
         const opacityBtn  = uiMainWindow.querySelector('.baddonz-opacity-button');
-
+        
         if (stateBtn) {
             stateBtn.addEventListener('click', () => {
                 currentSettings.enabled = !currentSettings.enabled;
@@ -712,7 +567,6 @@
             });
         }
 
-        // ── Przyciski w nagłówku okna ustawień ───────────────────────────────
         const settingsCloseBtn   = uiSettingsWindow.querySelector('.baddonz-close-button');
         const settingsOpacityBtn = uiSettingsWindow.querySelector('.baddonz-opacity-button');
 
@@ -740,7 +594,6 @@
             });
         }
 
-        // ── Checkboxy ustawień ────────────────────────────────────────────────
         const checkboxMap = [
             { id: 'upg-hotkey-enabled',   key: 'hotkeyEnabled' },
             { id: 'upg-use-common',       key: 'use_common' },
@@ -749,7 +602,6 @@
             { id: 'upg-upgrade-endbattle',key: 'upgrade_endbattle' },
             { id: 'upg-bags-upgrade',     key: 'bags_upgrade' },
         ];
-
         checkboxMap.forEach(({ id, key }) => {
             const el = uiSettingsWindow.querySelector(`#${id}`);
             if (el) el.addEventListener('click', () => {
@@ -757,8 +609,7 @@
                 saveSettings(); updateSettingsUI();
             });
         });
-
-        // ── Inputy liczbowe ───────────────────────────────────────────────────
+        
         const endbattleInput = uiSettingsWindow.querySelector('#upg-count-endbattle-input');
         if (endbattleInput) {
             endbattleInput.addEventListener('change', () => {
@@ -777,7 +628,6 @@
             });
         }
 
-        // ── Hotkey input ──────────────────────────────────────────────────────
         const hotkeyInput = uiSettingsWindow.querySelector('#upg-hotkey-input');
         if (hotkeyInput) {
             const handleHotkeySetting = (e) => {
@@ -799,7 +649,6 @@
             });
         }
 
-        // ── Kafelki typów itemów ──────────────────────────────────────────────
         const filtersContainer = uiSettingsWindow.querySelector('#baddonz-upgrader-type-filters');
         if (filtersContainer) {
             filtersContainer.querySelectorAll('.baddonz-typ-wrapper').forEach(wrapper => {
@@ -814,7 +663,6 @@
             });
         }
 
-        // ── Tooltips ──────────────────────────────────────────────────────────
         if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
             if (stateBtn) $(stateBtn).tip(currentSettings.enabled ? 'Wyłącz ulepszanie' : 'Włącz ulepszanie');
             if (settingsBtn) $(settingsBtn).tip('Ustawienia');
@@ -850,7 +698,7 @@
             await processChunks(upgradedItemId, chunks);
         } finally { toggleEnhancementWindow(); isUpgrading = false; }
     };
-
+    
     const handleBagCheck = async () => {
         if (!currentSettings.enabled || !currentSettings.bags_upgrade || !checkDailyLimit() || isUpgrading) return;
         const upgradedItemId = getUpgradedItemId();
@@ -870,7 +718,7 @@
             } finally { toggleEnhancementWindow(); isUpgrading = false; }
         }
     };
-
+    
     const setupCommunicationHook = () => {
         if (typeof Engine.communication.parseJSON !== 'function') { setTimeout(setupCommunicationHook, 500); return; }
         const originalParseJSON = Engine.communication.parseJSON;
@@ -911,7 +759,7 @@
             } finally { isUpgrading = false; }
         });
     };
-
+    
     const initItemContextMenu = () => {
         const ogShowPopupMenu = Engine.interface.showPopupMenu;
         Engine.interface.showPopupMenu = function(menu, e) {
@@ -935,236 +783,21 @@
             ogShowPopupMenu.call(this, [menuItem, ...menu], e);
         };
     };
-
+    
     const getItemIdFromClassName = (className) => {
         if (!className) return null;
         const match = className.match(/item-id-(\d+)/);
         return match ? match[1] : null;
     };
-
-    // ─── Drag & Drop na upg-item-box ─────────────────────────────────────────
-    function isItemValidForUpgrade(item) {
-        if (!item) return false;
-        try {
-            const sd = Engine.itemStatsData;
-
-            // Rarity – heroic/legendary/upgraded zawsze OK
-            // common/unique tylko gdy włączone w ustawieniach
-            if (!item.issetItemStat(sd.rarity)) return false;
-            const rarity = item.getItemStat(sd.rarity);
-            const isAllowedRarity = rarity === 'heroic'
-                || rarity === 'legendary'
-                || rarity === 'upgraded'
-                || (currentSettings.use_common && rarity === 'common')
-                || (currentSettings.use_unique  && rarity === 'unique');
-            if (!isAllowedRarity) return false;
-
-            // Typ itemu (cl)
-            const itemSettingKey = ITEM_TYPE_SETTINGS_MAP[item.cl];
-            if (!itemSettingKey || !currentSettings[itemSettingKey]) return false;
-
-            // Poziom
-            const itemLevel = item.issetLvlStat() ? parseInt(item.getLvlStat()) : 0;
-            if (itemLevel < 20) return false;
-
-            // Ulepszenie na MAX – odrzucamy tylko gdy poziom ulepszenia = max (zwykle 5)
-            // issetItemStat zwraca true gdy item MA stat (poziom 1-5)
-            // Item bez żadnego ulepszenia (poziom 0) ma issetItemStat = false – przechodzi
-            if (item.issetItemStat(sd.enhancement_upgrade_lvl)) {
-                const enhLvl = parseInt(item.getItemStat(sd.enhancement_upgrade_lvl)) || 0;
-                // Sprawdź max przez enhancement_max_lvl jeśli istnieje, fallback = 5
-                let maxLvl = 5;
-                try {
-                    if (sd.enhancement_max_lvl && item.issetItemStat(sd.enhancement_max_lvl)) {
-                        maxLvl = parseInt(item.getItemStat(sd.enhancement_max_lvl)) || 5;
-                    }
-                } catch(e) {}
-                if (enhLvl >= maxLvl) return false; // na MAX – odrzuć
-                // poziom 1-4 = można jeszcze ulepszać – przepuszczamy dalej
-            }
-
-            // Przeklęty
-            if (item.issetItemStat(sd.cursed)) return false;
-
-            // Bezwartościowy
-            if (item.issetItemStat(sd.artisan_worthless)) return false;
-
-            // Eventowy
-            if (isEventItem(item)) return false;
-
-            // Przywiązany
-            if (!currentSettings.allow_bound_items) {
-                if (item.issetSoulboundStat() || item.issetPermboundStat()) return false;
-            }
-
-            // Część buildu
-            try {
-                const builds = item.getBuildsWithThisItem();
-                if (builds && builds.length > 0) return false;
-            } catch(e) {}
-
-            return true;
-        } catch(err) {
-            return false;
-        }
-    }
-
-    // Wyłącz wszystkie droppable gry (.game-layer i .usable-slot) żeby item nie
-    // trafił do gry gdy upuszczamy go na nasz upg-item-box
-    function disableGameDroppables() {
-        try {
-            const $gl = $('.game-layer');
-            if ($gl.data('ui-droppable')) $gl.droppable('disable');
-            $('.usable-slot').each(function() {
-                const $s = $(this);
-                if ($s.data('ui-droppable')) $s.droppable('disable');
-            });
-        } catch(err) {}
-    }
-
-    function enableGameDroppables() {
-        try {
-            const $gl = $('.game-layer');
-            if ($gl.data('ui-droppable')) $gl.droppable('enable');
-            $('.usable-slot').each(function() {
-                const $s = $(this);
-                if ($s.data('ui-droppable')) $s.droppable('enable');
-            });
-        } catch(err) {}
-    }
-
-    // Pobiera obiekt item z przeciąganego elementu jQuery UI.
-    // jQuery UI podczas draggowania używa helpera (klona elementu), który NIE
-    // ma danych jQuery (.data('item')). Dlatego używamy kilku fallbacków:
-    // 1) .data('item') bezpośrednio na elemencie (gdy brak helpera)
-    // 2) szukamy oryginalnego elementu w DOM po klasie item-id-* i bierzemy jego dane
-    // 3) pobieramy item przez Engine.items.getItemById(id) – zawsze niezawodne
-    // 4) próbujemy dostać się do oryginału przez wewnętrzne dane jQuery UI
-    function getItemFromDraggable($draggable) {
-        // Metoda 1: dane bezpośrednio na elemencie
-        let item = $draggable.data('item');
-        if (item) return item;
-
-        // Wyciągnij ID itemu z klasy CSS (np. "item item-id-12345 ...")
-        const className = $draggable.attr('class') || '';
-        const match = className.match(/item-id-(\d+)/);
-        if (match) {
-            const itemId = match[1];
-
-            // Metoda 2: oryginalny element w DOM (helper to klon, oryginał zostaje)
-            const $original = $(`.item.item-id-${itemId}`).not($draggable[0]);
-            if ($original.length) {
-                item = $original.first().data('item');
-                if (item) return item;
-            }
-
-            // Metoda 3: pobierz przez Engine – najbardziej niezawodna
-            if (typeof Engine !== 'undefined' && Engine.items) {
-                item = Engine.items.getItemById(itemId);
-                if (item) return item;
-            }
-        }
-
-        // Metoda 4: przez wewnętrzne dane instancji jQuery UI Draggable
-        try {
-            const dd = $draggable.data('ui-draggable');
-            if (dd && dd.element) {
-                item = $(dd.element).data('item');
-                if (item) return item;
-            }
-        } catch(e) {}
-
-        return null;
-    }
-
-    // Globalny guard – blokuje droppable gry natychmiast po mousedown na itemu,
-    // zanim kursor dotrze do jakiegokolwiek elementu. Dzięki temu item nie
-    // "przelatuje" do gry gdy przeciągamy go przez okno dodatku.
-    let _upgDragActive = false;
-    function initGlobalDragGuard() {
-        $(document).off('mousedown.upg').on('mousedown.upg', '.item:not(.shop-item)', function() {
-            const $el = $(this);
-            $el.one('dragstart', function() {
-                if (_upgDragActive) return;
-                _upgDragActive = true;
-                disableGameDroppables();
-            });
-        });
-
-        // Re-aktywacja po zakończeniu draggowania (mouseup gdziekolwiek na stronie)
-        $(document).off('mouseup.upg').on('mouseup.upg', function() {
-            if (!_upgDragActive) return;
-            _upgDragActive = false;
-            // Małe opóźnienie – dajemy czas na obsłużenie drop() przed reaktywacją
-            setTimeout(enableGameDroppables, 50);
-        });
-    }
-
-    function initDroppable() {
-        if (!uiMainWindow) return;
-        const $itemBox = $(uiMainWindow).find('.upg-item-box');
-        if (!$itemBox.length) return;
-        if ($itemBox.data('ui-droppable')) return;
-
-        $itemBox.droppable({
-            accept: '.item:not(.shop-item)',
-            tolerance: 'pointer',
-            greedy: true,
-            over: function(e, ui) {
-                const item = getItemFromDraggable(ui.draggable);
-                const valid = isItemValidForUpgrade(item);
-                $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
-                $itemBox.addClass(valid ? 'upg-drop-valid' : 'upg-drop-invalid');
-                // Na wszelki wypadek – upewnij się że gra jest zablokowana
-                disableGameDroppables();
-            },
-            out: function(e, ui) {
-                $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
-                // NIE wznawiamy droppable gry tutaj – obsługuje to mouseup guard.
-                // Gdybyśmy wznawialy tutaj, item mógłby trafić do gry
-                // jeśli kursor opuści box przed upuszczeniem.
-            },
-            drop: function(e, ui) {
-                $itemBox.removeClass('upg-drop-valid upg-drop-invalid');
-                _upgDragActive = false;
-                enableGameDroppables();
-                const item = getItemFromDraggable(ui.draggable);
-                if (!item) {
-                    message('Nie udało się odczytać danych przedmiotu.');
-                    return;
-                }
-                if (isItemValidForUpgrade(item)) {
-                    setUpgradedItemId(item.id);
-                    message(`Ulepszanie przedmiotu ${item.name}`);
-                    toggleEnhancementWindow();
-                    setEnhancedItem(item.id).then(() => toggleEnhancementWindow());
-                    updateMainUI();
-                } else {
-                    message('Ten item nie może być wybrany do ulepszania.');
-                }
-            }
-        });
-
-        initGlobalDragGuard();
-    }
-
+    
     // ─── Init / Stop ──────────────────────────────────────────────────────────
     function addonInit() {
         loadSettings();
-        injectCSS();
-
         if (!uiMainWindow) buildUI();
-
-        // Zawsze pokazuj okno przy starcie gry/F5 – tak jak inne dodatki
-        if (uiMainWindow) {
-            uiMainWindow.style.display = 'flex';
-            currentSettings.windowVisible = true;
-        }
 
         setupCommunicationHook();
         setupKeydownHandler();
         initItemContextMenu();
-        initDroppable();
 
         if (typeof Engine.battle.setEndBattle === 'function') {
             const origEndBattle = Engine.battle.setEndBattle.bind(Engine.battle);
