@@ -61,7 +61,6 @@
         } catch (e) {}
 
         let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-
         currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
         parsedLevelRange = parseLevelRange(currentSettings.levelRange) || { min: 0, max: 500 };
     }
@@ -167,6 +166,7 @@
         const alwaysAttackClansList = currentSettings.alwaysAttackClans.split(',').map(s => s.trim()).filter(Boolean);
         const isClanIgnored = (id, name) => (id && ignoreClansList.includes(id.toString())) || (name && ignoreClansList.includes(name));
         const isClanAlwaysAttacked = (id, name) => (id && alwaysAttackClansList.includes(id.toString())) || (name && alwaysAttackClansList.includes(name));
+        
         if (currentSettings.enableClanOptions) {
             if ((otherClanId || otherClanName) && isClanAlwaysAttacked(otherClanId, otherClanName)) return true;
             if ((otherClanId || otherClanName) && isClanIgnored(otherClanId, otherClanName)) return false;
@@ -246,6 +246,7 @@
                 <button class="baddonz-button ax-s-walka-btn ${currentSettings.fastFight ? 'active' : ''}">S.WALKA</button>
             </div>
         `;
+        
         uiMainWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "autox", mainBodyHtml, { 
             width: '110px', 
             customId: 'baddonz-ax-wnd',
@@ -253,7 +254,7 @@
             hasCollapse: true,
             hasClose: false
         });
-
+        
         const settingsBodyHtml = `
             <button class="baddonz-button ax-reset-pos-btn" style="width:100%; margin-bottom: 5px;">Resetuj pozycje okienka</button>
             
@@ -265,6 +266,7 @@
             <div class="ax-clan-options" style="display: ${currentSettings.enableClanOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
                 <span class="baddonz-text" style="padding:0;">Nigdy nie atakuj klanów:</span>
                 <textarea class="baddonz-textarea baddonz-scroll ax-ignore-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.ignoreClans}</textarea>
+        
                 <span class="baddonz-text" style="padding:0;">Zawsze atakuj klany:</span>
                 <textarea class="baddonz-textarea baddonz-scroll ax-always-attack-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.alwaysAttackClans}</textarea>
             </div>
@@ -279,14 +281,9 @@
             </div>
         `;
         
-        // Zmiana tutaj: Dodana flaga hasClose: true naprawiająca kontener nagłówka!
-        uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "AutoX Ustawienia", settingsBodyHtml, { 
-            width: '250px', 
-            customId: 'baddonz-ax-wnd-settings',
-            hasClose: true 
-        });
+        uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "AutoX Ustawienia", settingsBodyHtml, { width: '250px', customId: 'baddonz-ax-wnd-settings' });
         
-        uiSettingsWindow.classList.add('settings-window');
+        // ZMODYFIKOWANO: Usunięto kolidującą klasę '.settings-window' i wymuszono centrowanie.
         uiSettingsWindow.removeAttribute('data-addon-id');
         uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
         
@@ -301,12 +298,12 @@
         const axSettingsBtn = uiMainWindow.querySelector(".baddonz-settings-button");
         const axSWalkaBtn = uiMainWindow.querySelector(".ax-s-walka-btn");
         const axExpandedControls = uiMainWindow.querySelector(".ax-expanded-controls");
-        
+
         axEnabledCheckbox.addEventListener('click', () => {
             currentSettings.enabled = axEnabledCheckbox.classList.toggle('active');
             saveSettings();
         });
-        
+
         axLevelRangeInput.addEventListener('change', () => {
             const parsed = parseLevelRange(axLevelRangeInput.value);
             if (parsed) {
@@ -319,7 +316,7 @@
                 else if (window._g) window._g('message|Błędna wartość lvl. Format: min-max');
             }
         });
-        
+
         if (axCollapsedBtn) {
             if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
                 $(axCollapsedBtn).tip(currentSettings.isExpanded ? "Zwiń" : "Rozwiń");
@@ -350,13 +347,12 @@
             currentSettings.fastFight = axSWalkaBtn.classList.toggle('active');
             saveSettings();
         });
-        
+
         uiSettingsWindow.querySelector('.baddonz-close-button').addEventListener('click', () => {
             currentSettings.settingsWindowVisible = false;
-            uiSettingsWindow.style.display = 'none';
             saveSettings();
         });
-        
+
         uiSettingsWindow.querySelector('.baddonz-opacity-button').addEventListener('click', () => {
             if (isUnified) return; 
             uiSettingsWindow.classList.remove(`opacity-${currentSettings.windowSettingsOpacity}`);
@@ -364,7 +360,7 @@
             uiSettingsWindow.classList.add(`opacity-${currentSettings.windowSettingsOpacity}`);
             saveSettings();
         });
-        
+
         uiSettingsWindow.querySelector(".ax-reset-pos-btn").addEventListener('click', () => {
             if (uiMainWindow) {
                 uiMainWindow.style.left = '0px'; 
@@ -376,7 +372,7 @@
                 localStorage.setItem('BaddonzData', JSON.stringify(data));
             }
         });
-        
+
         const chbAttFriends = uiSettingsWindow.querySelector(".ax-attack-friends-checkbox");
         chbAttFriends.addEventListener('click', () => { currentSettings.attackFriends = chbAttFriends.classList.toggle('active'); saveSettings(); });
 
@@ -386,12 +382,14 @@
         const chbClanOpt = uiSettingsWindow.querySelector(".ax-enable-clan-options-checkbox");
         const divClanOpt = uiSettingsWindow.querySelector(".ax-clan-options");
         chbClanOpt.addEventListener('click', () => { currentSettings.enableClanOptions = chbClanOpt.classList.toggle('active'); divClanOpt.style.display = currentSettings.enableClanOptions ? 'flex' : 'none'; saveSettings(); });
+
         uiSettingsWindow.querySelector(".ax-ignore-clans-textarea").addEventListener('change', (e) => { currentSettings.ignoreClans = e.target.value; saveSettings(); });
         uiSettingsWindow.querySelector(".ax-always-attack-clans-textarea").addEventListener('change', (e) => { currentSettings.alwaysAttackClans = e.target.value; saveSettings(); });
-        
+
         const chbNickOpt = uiSettingsWindow.querySelector(".ax-enable-nick-options-checkbox");
         const divNickOpt = uiSettingsWindow.querySelector(".ax-nick-options");
         chbNickOpt.addEventListener('click', () => { currentSettings.enableNickOptions = chbNickOpt.classList.toggle('active'); divNickOpt.style.display = currentSettings.enableNickOptions ? 'flex' : 'none'; saveSettings(); });
+
         uiSettingsWindow.querySelector(".ax-ignore-nicks-textarea").addEventListener('change', (e) => { currentSettings.ignoreNicks = e.target.value; saveSettings(); });
         uiSettingsWindow.querySelector(".ax-always-attack-nicks-textarea").addEventListener('change', (e) => { currentSettings.alwaysAttackNicks = e.target.value; saveSettings(); });
     }
@@ -399,6 +397,7 @@
     function addonInit() {
         loadSettings();
         if (!uiMainWindow) buildUI();
+
         if (!isEngineObserved) {
             if (window.Engine && window.Engine.communication) {
                 emitter.observe(window.Engine.communication, 'parseJSON', data => {
@@ -419,6 +418,7 @@
         BADDONZ_TRACK_INTERVAL = setInterval(() => { 
             if (currentSettings.enabled && notInBattle()) handleAutoXLogic(); 
         }, 100);
+
         BADDONZ_FAST_FIGHT_INTERVAL = setInterval(() => { 
             if (currentSettings.fastFight) handleFastFight(); 
         }, 200);
@@ -427,6 +427,7 @@
     function addonStop() {
         if (BADDONZ_FAST_FIGHT_INTERVAL) clearInterval(BADDONZ_FAST_FIGHT_INTERVAL);
         if (BADDONZ_TRACK_INTERVAL) clearInterval(BADDONZ_TRACK_INTERVAL);
+
         BADDONZ_FAST_FIGHT_INTERVAL = null;
         BADDONZ_TRACK_INTERVAL = null;
 
@@ -453,4 +454,5 @@
         window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle: onStateToggle });
     };
     checkApi();
+
 })();
