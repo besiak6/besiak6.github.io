@@ -12,17 +12,6 @@
 
     const ADDON_ID = "RG";
 
-    const styleSheet = document.createElement("style");
-    styleSheet.type = "text/css";
-    styleSheet.className = "rg-custom-styles";
-    styleSheet.innerText = `
-        .baddonz-rg-wnd { width:180px; min-width:180px; }
-        .baddonz-rg-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
-        .baddonz-rg-wnd .baddonz-setting-row { margin-bottom: 2px !important; }
-        .baddonz-rg-wnd .baddonz-text { font-size: 11px; }
-    `;
-    if (!document.querySelector(".rg-custom-styles")) document.head.appendChild(styleSheet);
-
     let currentSettings = {
         enabled: true,
         windowOpacity: 2,
@@ -30,7 +19,6 @@
         leaveEnabled: false,
         disbandKey: "n"
     };
-
     let uiWindowElement = null;
     let keybindInputActive = false;
     let isKeyDownBound = false;
@@ -103,7 +91,6 @@
         let members = null;
         if (typeof window.Engine.party.getMembers === 'function') members = window.Engine.party.getMembers();
         else if (window.Engine.party.d) members = window.Engine.party.d;
-
         if (!members) return;
         if (members instanceof Map && members.size === 0) return;
         if (!(members instanceof Map) && Object.keys(members).length === 0) return;
@@ -159,36 +146,34 @@
                 <span class="baddonz-text" style="padding:0;">Opuszczaj grupę</span>
             </div>
         `;
-
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Rozwiązywanie", bodyHtml, {
             width: '180px',
             customId: 'baddonz-rg-wnd',
             hasSettings: false,
             hasCollapse: false
         });
-
         const rgCheckbox = uiWindowElement.querySelector(".rg-checkbox");
         const rgLeaveCheckbox = uiWindowElement.querySelector(".rg-leave-checkbox");
         const rgKeybindInput = uiWindowElement.querySelector(".rg-keybind-input");
         const leaveGroupOption = uiWindowElement.querySelector(".rg-leave-group-option");
-
+        
         rgCheckbox.addEventListener('click', () => {
             currentSettings.enabled = rgCheckbox.classList.toggle('active');
             leaveGroupOption.style.display = currentSettings.enabled ? 'flex' : 'none';
             saveSettings();
         });
-
+        
         rgLeaveCheckbox.addEventListener('click', () => {
             currentSettings.leaveEnabled = rgLeaveCheckbox.classList.toggle('active');
             saveSettings();
         });
-
+        
         rgKeybindInput.addEventListener('click', () => {
             keybindInputActive = true;
             rgKeybindInput.focus();
             rgKeybindInput.classList.add('active-keybind-mode');
         });
-
+        
         rgKeybindInput.addEventListener('focusout', () => {
             if (keybindInputActive) {
                 keybindInputActive = false;
@@ -196,7 +181,7 @@
             }
             rgKeybindInput.classList.remove('active-keybind-mode');
         });
-
+        
         if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
             $(rgCheckbox).tip(`Rozwiąż grupę`);
             $(rgLeaveCheckbox).tip(`Jeżeli nie jesteś liderem, opuść grupę`);
@@ -248,5 +233,4 @@
     };
 
     checkApi();
-
 })();
