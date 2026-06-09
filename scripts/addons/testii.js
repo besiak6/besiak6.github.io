@@ -12,38 +12,9 @@
 
     const ADDON_ID = "II";
 
-    const styleSheet = document.createElement("style");
-    styleSheet.type = "text/css";
-    styleSheet.className = "ii-custom-styles";
-    styleSheet.innerText = `
-        .baddonz-ii-wnd { width: 210px; min-width: 210px; }
-        .baddonz-ii-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
-        .baddonz-ii-wnd .baddonz-setting-row { margin-bottom: 2px !important; }
-        .baddonz-ii-wnd .baddonz-text { font-size: 11px; }
-        .baddonz-ii-wnd hr { margin: 3px 0 !important; }
-        
-        body:not(.baddonz-ii-essence) .baddonz-essence-marker { display: none !important; }
-        body:not(.baddonz-ii-levels) .baddonz-levels-marker { display: none !important; }
-        body:not(.baddonz-ii-summary) .baddonz-summary-marker { display: none !important; }
-
-        body:not(.baddonz-ii-common) .baddonz-info-rarity-common { display: none !important; }
-        body:not(.baddonz-ii-upgraded) .baddonz-info-rarity-upgraded { display: none !important; }
-        body:not(.baddonz-ii-unique) .baddonz-info-rarity-unique { display: none !important; }
-        body:not(.baddonz-ii-heroic) .baddonz-info-rarity-heroic { display: none !important; }
-        body:not(.baddonz-ii-legendary) .baddonz-info-rarity-legendary { display: none !important; }
-
-        body.baddonz-ii-hide-opis.baddonz-ii-common .baddonz-desc-rarity-common { display: none !important; }
-        body.baddonz-ii-hide-opis.baddonz-ii-upgraded .baddonz-desc-rarity-upgraded { display: none !important; }
-        body.baddonz-ii-hide-opis.baddonz-ii-unique .baddonz-desc-rarity-unique { display: none !important; }
-        body.baddonz-ii-hide-opis.baddonz-ii-heroic .baddonz-desc-rarity-heroic { display: none !important; }
-        body.baddonz-ii-hide-opis.baddonz-ii-legendary .baddonz-desc-rarity-legendary { display: none !important; }
-    `;
-    if (!document.querySelector(".ii-custom-styles")) document.head.appendChild(styleSheet);
-
     const UPGRADEABLE_RARITIES = ["legendary", "heroic", "unique", "upgraded", "common"];
     const UPGRADEABLE_CLASSES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 29];
     const ICON_STYLE = 'width: 22px; height: 22px; background-size: 100%; display: inline-block; vertical-align: middle;';
-
     const LEGEND_UPGRADE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//upg/lege_enh_ball.gif&quot;);"></div>`;
     const LEGEND_ESSENCE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//neu/pyl-sakryfikacji.gif&quot;);"></div>`;
     const HEROIC_UPGRADE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy/upg/hero_enh_ball.gif&quot;);"></div>`;
@@ -55,7 +26,6 @@
     const COMMON_UPGRADE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//upg/comm_enh_ball.gif&quot;);"></div>`;
     const COMMON_ESSENCE_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://micc.garmory-cdn.cloud/obrazki/itemy//neu/ese_zwycz.gif&quot;);"></div>`;
     const GOLD_ICON = `<div class="item-details__ico" style="${ICON_STYLE} margin-left: 2px; background-image: url(&quot;https://experimental.margonem.pl/img/goldIconNormal.png&quot;);"></div>`;
-
     const LEGBON_SHORT = {
         "curse": "KL",
         "lastheal": "OR",
@@ -70,7 +40,6 @@
         "retaliation": "AO",
         "frenzy": "ES"
     };
-
     let currentSettings = {
         enabled: true,
         windowOpacity: 2,
@@ -86,7 +55,6 @@
         SHOW_HEROIC: true,
         SHOW_LEGENDARY: true
     };
-
     let uiWindowElement = null;
     let observer = null;
 
@@ -108,11 +76,9 @@
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
         const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'amount_essence', 'SHOW_LEGBON_MARKERS', 'HIDE_OPIS', 'UPGRADE_LEVEL', 'SHOW_SUMMARY_LEGEND', 'SHOW_COMMON', 'SHOW_UPGRADED', 'SHOW_UNIQUE', 'SHOW_HEROIC', 'SHOW_LEGENDARY'];
-        
         let accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
-
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
@@ -176,11 +142,16 @@
         let totalGoldCost;
 
         switch (rarity) {
-            case "common": basePoints = (Math.floor(level / 10) * 10) + 180; totalGoldCost = 10 * Math.pow(level, 2) + 1300 * level; break;
-            case "unique": basePoints = 10 * level + 1800; totalGoldCost = 100 * Math.pow(level, 2) + 13000 * level; break;
-            case "upgraded": basePoints = 150 * level + 27000; totalGoldCost = 400 * Math.pow(level, 2) + 52000 * level; break;
-            case "heroic": basePoints = 100 * level + 18000; totalGoldCost = 300 * Math.pow(level, 2) + 39000 * level; break;
-            case "legendary": basePoints = (180 + level) * 1000; totalGoldCost = 600 * Math.pow(level, 2) + 78000 * level; break;
+            case "common": basePoints = (Math.floor(level / 10) * 10) + 180;
+            totalGoldCost = 10 * Math.pow(level, 2) + 1300 * level; break;
+            case "unique": basePoints = 10 * level + 1800;
+            totalGoldCost = 100 * Math.pow(level, 2) + 13000 * level; break;
+            case "upgraded": basePoints = 150 * level + 27000;
+            totalGoldCost = 400 * Math.pow(level, 2) + 52000 * level; break;
+            case "heroic": basePoints = 100 * level + 18000;
+            totalGoldCost = 300 * Math.pow(level, 2) + 39000 * level; break;
+            case "legendary": basePoints = (180 + level) * 1000;
+            totalGoldCost = 600 * Math.pow(level, 2) + 78000 * level; break;
             default: return null;
         }
 
@@ -190,7 +161,6 @@
         const baseEssenceValue = Math.round(level / 10 + 10);
         let totalUpgradeEssence = baseEssenceValue * 3;
         const lastDigit = level % 10;
-
         if (lastDigit >= 2 && lastDigit <= 4) totalUpgradeEssence += 1;
         else if (lastDigit >= 5 && lastDigit <= 8) totalUpgradeEssence -= 1;
 
@@ -221,7 +191,6 @@
     function _addSpanToElement(el, text, isBless) {
         let tz = el.querySelector(".baddonz-legbon-marker");
         if (tz && tz.innerText === text && tz.dataset.isBless === String(isBless)) return;
-
         if (!tz) {
             tz = document.createElement("span");
             tz.className = "baddonz-legbon-marker";
@@ -230,7 +199,6 @@
 
         tz.innerText = text;
         tz.dataset.isBless = isBless;
-        
         // Dopasowany wymiar tła, brak zbędnego paddingu, Arial Black
         Object.assign(tz.style, {
             position: "absolute",
@@ -268,7 +236,6 @@
 
     function applyMarkerToElement(el) {
         if (!el || el.nodeType !== 1) return;
-        
         let $el = $(el);
         let itemData = $el.data('item'); 
         
@@ -280,7 +247,6 @@
         }
 
         if (!itemData) return;
-
         // POBIERAMY Z PAMIĘCI GRY ALBO PRZERABIAMY TYLKO LOKALNIE
         // Absolutnie nic nie nadpisujemy do obiektu itemData!
         let stats = itemData._cachedStats || parseStats(itemData.stat || itemData.stats);
@@ -323,12 +289,10 @@
         
         let $tip = $('<div>').html(tipHtml);
         $tip.append('<div style="display:none;" class="baddonz-item-info-injected"></div>');
-
         let itemLevel = parseInt(stats?.lvl, 10);
         if (stats.lowreq) itemLevel += parseInt(stats.lowreq, 10);
         const itemClass = item.cl;
         const itemRarity = stats?.rarity;
-
         let costs = null;
         if (!isNaN(itemLevel) && UPGRADEABLE_CLASSES.includes(itemClass) && UPGRADEABLE_RARITIES.includes(itemRarity)) {
             costs = calculateCosts(itemLevel, stats.artisanbon, itemRarity);
@@ -376,7 +340,6 @@
             for (let i = 0; i < 4; i++) upgradeLines1_4.push(`+${i+1}: ${formatBigNumber(costs.costs[i])}`);
             const levelsContent = `<div style="text-align: center;"><span class="c_blue">Koszt Poziomów Ulepszenia:</span></div>${upgradeLines1_4.join(' / ')}<br>+5: ${formatBigNumber(costs.costs[4])} | <span class="c_green">${totalEssence} esy</span> | <span class="c_yellow">${formatBigNumber(totalGold, true)} złota</span>`;
             let insertionHtml = `<div class="item-tip-section baddonz-levels-marker baddonz-info-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center; font-size: 11px;">${levelsContent}</div></div>`;
-
             let upgradeIcon = LEGEND_UPGRADE_ICON, essenceIcon = LEGEND_ESSENCE_ICON;
             if (itemRarity === 'heroic') { upgradeIcon = HEROIC_UPGRADE_ICON; essenceIcon = HEROIC_ESSENCE_ICON; }
             else if (itemRarity === 'unique') { upgradeIcon = UNIQUE_UPGRADE_ICON; essenceIcon = UNIQUE_ESSENCE_ICON; }
@@ -426,7 +389,6 @@
 
     function applyToExistingTips() {
         if (!window.TIPS || !window.TIPS.allTips) return;
-        
         let modifiedAny = false;
         $('[tip-id]').each(function() {
             const $el = $(this);
@@ -440,7 +402,6 @@
                 }
             }
         });
-
         const $visibleTip = window.TIPS.$tip;
         if (modifiedAny && $visibleTip && $visibleTip.is(':visible')) {
             const visibleId = $visibleTip.attr('data-tip-id');
@@ -505,7 +466,6 @@
         updateBodyClasses();
 
         hookTipFunction();
-        
         observer = new MutationObserver((mutations) => {
             if (!currentSettings.enabled || !currentSettings.SHOW_LEGBON_MARKERS) return;
             
@@ -525,13 +485,12 @@
                 });
             });
         });
-
         observer.observe(document.body, { childList: true, subtree: true });
 
         setTimeout(() => {
             applyLegbonMarkersToAll();
             applyToExistingTips();
-        }, 500); 
+        }, 500);
     }
 
     function addonStop() {
@@ -555,11 +514,11 @@
 
     const checkApi = () => {
         if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon) {
-            setTimeout(checkApi, 500); return;
+            setTimeout(checkApi, 500);
+            return;
         }
         window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle: onStateToggle });
     };
 
     checkApi();
-
 })();
