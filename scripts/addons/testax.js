@@ -12,22 +12,6 @@
 
     const ADDON_ID = "AX";
     
-    const styleSheet = document.createElement("style");
-    styleSheet.type = "text/css";
-    styleSheet.className = "autox-custom-styles";
-    styleSheet.innerText = `
-        .baddonz-ax-wnd { width:110px; min-width:110px; }
-        .baddonz-ax-wnd-settings { width:250px; min-width:250px; height: auto !important; min-height: unset !important; max-height: unset !important; }
-        .baddonz-ax-wnd-settings .baddonz-window-body { height: auto !important; min-height: unset !important; display: flex; flex-direction: column; gap: 5px; }
-        .baddonz-ax-wnd .baddonz-window-body { padding: 0px 5px 5px 5px !important; gap: 3px !important; }
-        .ax-s-walka-btn { width:100%; }
-        .baddonz-setting-row.ax-main-row { gap:5px; margin: 0; }
-        .baddonz-input.ax-small { width:100%; max-width:79px; font-size:11px; height:20px !important; line-height:18px; text-align:center; padding:1px 0px; }
-        .baddonz-ax-wnd-settings .baddonz-input { text-align:center; height:26px !important; }
-        .baddonz-setting-row span { white-space:nowrap; font-size:11px; }
-    `;
-    if (!document.querySelector(".autox-custom-styles")) document.head.appendChild(styleSheet);
-
     let currentSettings = {
         enabled: true,
         windowOpacity: 2,
@@ -68,7 +52,6 @@
     function loadSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
-
         let accSettings = {};
         try {
             const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
@@ -115,7 +98,7 @@
     }
 
     function notInBattle() { 
-        return window.Engine && window.Engine.battle && !window.Engine.battle.show; 
+        return window.Engine && window.Engine.battle && !window.Engine.battle.show;
     }
     
     function getOthers() { 
@@ -148,7 +131,6 @@
 
     function isInParty(otherId) {
         if (!window.Engine || !window.Engine.party) return false;
-        
         let members = null;
         if (typeof window.Engine.party.getMembers === 'function') {
             members = window.Engine.party.getMembers();
@@ -157,7 +139,6 @@
         }
 
         if (!members) return false;
-
         if (members instanceof Map) {
             return members.has(otherId) || members.has(Number(otherId));
         } else if (Array.isArray(members)) {
@@ -175,7 +156,6 @@
         const lowerNick = other.nick.toLowerCase();
         const alwaysAttackNicksList = currentSettings.alwaysAttackNicks.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
         const ignoreNicksList = currentSettings.ignoreNicks.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-
         if (currentSettings.enableNickOptions) {
             if (alwaysAttackNicksList.includes(lowerNick)) return true;
             if (ignoreNicksList.includes(lowerNick)) return false;
@@ -183,13 +163,10 @@
 
         let otherClanId = other.clan && typeof other.clan === 'object' ? other.clan.id : null;
         let otherClanName = other.clan && (typeof other.clan === 'object' ? other.clan.name : other.clan);
-        
         const ignoreClansList = currentSettings.ignoreClans.split(',').map(s => s.trim()).filter(Boolean);
         const alwaysAttackClansList = currentSettings.alwaysAttackClans.split(',').map(s => s.trim()).filter(Boolean);
-
         const isClanIgnored = (id, name) => (id && ignoreClansList.includes(id.toString())) || (name && ignoreClansList.includes(name));
         const isClanAlwaysAttacked = (id, name) => (id && alwaysAttackClansList.includes(id.toString())) || (name && alwaysAttackClansList.includes(name));
-
         if (currentSettings.enableClanOptions) {
             if ((otherClanId || otherClanName) && isClanAlwaysAttacked(otherClanId, otherClanName)) return true;
             if ((otherClanId || otherClanName) && isClanIgnored(otherClanId, otherClanName)) return false;
@@ -206,7 +183,6 @@
         if (checkSelfProtection()) return [];
         const map = window.Engine?.map?.d;
         if (!map || !isMapValidForAttack(map)) return [];
-
         return getOthers()
             .filter(other => other && !other.inBattle)
             .filter(other => other.lvl >= parsedLevelRange.min && other.lvl <= parsedLevelRange.max)
@@ -221,7 +197,6 @@
 
         const hx = typeof hero.rx !== 'undefined' ? hero.rx : hero.x;
         const hy = typeof hero.ry !== 'undefined' ? hero.ry : hero.y;
-
         const targetsWithDistance = targets.map(other => {
             const ox = typeof other.rx !== 'undefined' ? other.rx : other.x;
             const oy = typeof other.ry !== 'undefined' ? other.ry : other.y;
@@ -230,7 +205,6 @@
                 distance: Math.hypot(hx - ox, hy - oy)
             };
         });
-
         targetsWithDistance.sort((a, b) => a.distance - b.distance);
         return targetsWithDistance[0]; 
     }
@@ -279,7 +253,6 @@
             hasCollapse: true,
             hasClose: false
         });
-
         const settingsBodyHtml = `
             <button class="baddonz-button ax-reset-pos-btn" style="width:100%; margin-bottom: 5px;">Resetuj pozycje okienka</button>
             
@@ -321,12 +294,10 @@
         const axSettingsBtn = uiMainWindow.querySelector(".baddonz-settings-button");
         const axSWalkaBtn = uiMainWindow.querySelector(".ax-s-walka-btn");
         const axExpandedControls = uiMainWindow.querySelector(".ax-expanded-controls");
-
         axEnabledCheckbox.addEventListener('click', () => {
             currentSettings.enabled = axEnabledCheckbox.classList.toggle('active');
             saveSettings();
         });
-
         axLevelRangeInput.addEventListener('change', () => {
             const parsed = parseLevelRange(axLevelRangeInput.value);
             if (parsed) {
@@ -339,7 +310,6 @@
                 else if (window._g) window._g('message|Błędna wartość lvl. Format: min-max');
             }
         });
-
         if (axCollapsedBtn) {
             if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
                 $(axCollapsedBtn).tip(currentSettings.isExpanded ? "Zwiń" : "Rozwiń");
@@ -370,12 +340,10 @@
             currentSettings.fastFight = axSWalkaBtn.classList.toggle('active');
             saveSettings();
         });
-
         uiSettingsWindow.querySelector('.baddonz-close-button').addEventListener('click', () => {
             currentSettings.settingsWindowVisible = false;
             saveSettings();
         });
-
         uiSettingsWindow.querySelector('.baddonz-opacity-button').addEventListener('click', () => {
             if (isUnified) return; 
             uiSettingsWindow.classList.remove(`opacity-${currentSettings.windowSettingsOpacity}`);
@@ -383,7 +351,6 @@
             uiSettingsWindow.classList.add(`opacity-${currentSettings.windowSettingsOpacity}`);
             saveSettings();
         });
-
         uiSettingsWindow.querySelector(".ax-reset-pos-btn").addEventListener('click', () => {
             if (uiMainWindow) {
                 uiMainWindow.style.left = '0px'; 
@@ -395,7 +362,6 @@
                 localStorage.setItem('BaddonzData', JSON.stringify(data));
             }
         });
-
         const chbAttFriends = uiSettingsWindow.querySelector(".ax-attack-friends-checkbox");
         chbAttFriends.addEventListener('click', () => { currentSettings.attackFriends = chbAttFriends.classList.toggle('active'); saveSettings(); });
 
@@ -405,14 +371,11 @@
         const chbClanOpt = uiSettingsWindow.querySelector(".ax-enable-clan-options-checkbox");
         const divClanOpt = uiSettingsWindow.querySelector(".ax-clan-options");
         chbClanOpt.addEventListener('click', () => { currentSettings.enableClanOptions = chbClanOpt.classList.toggle('active'); divClanOpt.style.display = currentSettings.enableClanOptions ? 'flex' : 'none'; saveSettings(); });
-
         uiSettingsWindow.querySelector(".ax-ignore-clans-textarea").addEventListener('change', (e) => { currentSettings.ignoreClans = e.target.value; saveSettings(); });
         uiSettingsWindow.querySelector(".ax-always-attack-clans-textarea").addEventListener('change', (e) => { currentSettings.alwaysAttackClans = e.target.value; saveSettings(); });
-
         const chbNickOpt = uiSettingsWindow.querySelector(".ax-enable-nick-options-checkbox");
         const divNickOpt = uiSettingsWindow.querySelector(".ax-nick-options");
         chbNickOpt.addEventListener('click', () => { currentSettings.enableNickOptions = chbNickOpt.classList.toggle('active'); divNickOpt.style.display = currentSettings.enableNickOptions ? 'flex' : 'none'; saveSettings(); });
-
         uiSettingsWindow.querySelector(".ax-ignore-nicks-textarea").addEventListener('change', (e) => { currentSettings.ignoreNicks = e.target.value; saveSettings(); });
         uiSettingsWindow.querySelector(".ax-always-attack-nicks-textarea").addEventListener('change', (e) => { currentSettings.alwaysAttackNicks = e.target.value; saveSettings(); });
     }
@@ -420,7 +383,6 @@
     function addonInit() {
         loadSettings();
         if (!uiMainWindow) buildUI();
-
         if (!isEngineObserved) {
             if (window.Engine && window.Engine.communication) {
                 emitter.observe(window.Engine.communication, 'parseJSON', data => {
@@ -440,8 +402,7 @@
 
         BADDONZ_TRACK_INTERVAL = setInterval(() => { 
             if (currentSettings.enabled && notInBattle()) handleAutoXLogic(); 
-        }, 100); 
-
+        }, 100);
         BADDONZ_FAST_FIGHT_INTERVAL = setInterval(() => { 
             if (currentSettings.fastFight) handleFastFight(); 
         }, 200);
@@ -470,10 +431,10 @@
 
     const checkApi = () => {
         if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon) {
-            setTimeout(checkApi, 500); return;
+            setTimeout(checkApi, 500);
+            return;
         }
         window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle: onStateToggle });
     };
     checkApi();
-
 })();
