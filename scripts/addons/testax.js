@@ -253,6 +253,7 @@
             hasCollapse: true,
             hasClose: false
         });
+
         const settingsBodyHtml = `
             <button class="baddonz-button ax-reset-pos-btn" style="width:100%; margin-bottom: 5px;">Resetuj pozycje okienka</button>
             
@@ -277,7 +278,13 @@
                 <textarea class="baddonz-textarea baddonz-scroll ax-always-attack-nicks-textarea" placeholder="Nick1, Nick2">${currentSettings.alwaysAttackNicks}</textarea>
             </div>
         `;
-        uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "AutoX Ustawienia", settingsBodyHtml, { width: '250px', customId: 'baddonz-ax-wnd-settings' });
+        
+        // Zmiana tutaj: Dodana flaga hasClose: true naprawiająca kontener nagłówka!
+        uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "AutoX Ustawienia", settingsBodyHtml, { 
+            width: '250px', 
+            customId: 'baddonz-ax-wnd-settings',
+            hasClose: true 
+        });
         
         uiSettingsWindow.classList.add('settings-window');
         uiSettingsWindow.removeAttribute('data-addon-id');
@@ -294,10 +301,12 @@
         const axSettingsBtn = uiMainWindow.querySelector(".baddonz-settings-button");
         const axSWalkaBtn = uiMainWindow.querySelector(".ax-s-walka-btn");
         const axExpandedControls = uiMainWindow.querySelector(".ax-expanded-controls");
+        
         axEnabledCheckbox.addEventListener('click', () => {
             currentSettings.enabled = axEnabledCheckbox.classList.toggle('active');
             saveSettings();
         });
+        
         axLevelRangeInput.addEventListener('change', () => {
             const parsed = parseLevelRange(axLevelRangeInput.value);
             if (parsed) {
@@ -310,6 +319,7 @@
                 else if (window._g) window._g('message|Błędna wartość lvl. Format: min-max');
             }
         });
+        
         if (axCollapsedBtn) {
             if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
                 $(axCollapsedBtn).tip(currentSettings.isExpanded ? "Zwiń" : "Rozwiń");
@@ -340,10 +350,13 @@
             currentSettings.fastFight = axSWalkaBtn.classList.toggle('active');
             saveSettings();
         });
+        
         uiSettingsWindow.querySelector('.baddonz-close-button').addEventListener('click', () => {
             currentSettings.settingsWindowVisible = false;
+            uiSettingsWindow.style.display = 'none';
             saveSettings();
         });
+        
         uiSettingsWindow.querySelector('.baddonz-opacity-button').addEventListener('click', () => {
             if (isUnified) return; 
             uiSettingsWindow.classList.remove(`opacity-${currentSettings.windowSettingsOpacity}`);
@@ -351,6 +364,7 @@
             uiSettingsWindow.classList.add(`opacity-${currentSettings.windowSettingsOpacity}`);
             saveSettings();
         });
+        
         uiSettingsWindow.querySelector(".ax-reset-pos-btn").addEventListener('click', () => {
             if (uiMainWindow) {
                 uiMainWindow.style.left = '0px'; 
@@ -362,6 +376,7 @@
                 localStorage.setItem('BaddonzData', JSON.stringify(data));
             }
         });
+        
         const chbAttFriends = uiSettingsWindow.querySelector(".ax-attack-friends-checkbox");
         chbAttFriends.addEventListener('click', () => { currentSettings.attackFriends = chbAttFriends.classList.toggle('active'); saveSettings(); });
 
@@ -373,6 +388,7 @@
         chbClanOpt.addEventListener('click', () => { currentSettings.enableClanOptions = chbClanOpt.classList.toggle('active'); divClanOpt.style.display = currentSettings.enableClanOptions ? 'flex' : 'none'; saveSettings(); });
         uiSettingsWindow.querySelector(".ax-ignore-clans-textarea").addEventListener('change', (e) => { currentSettings.ignoreClans = e.target.value; saveSettings(); });
         uiSettingsWindow.querySelector(".ax-always-attack-clans-textarea").addEventListener('change', (e) => { currentSettings.alwaysAttackClans = e.target.value; saveSettings(); });
+        
         const chbNickOpt = uiSettingsWindow.querySelector(".ax-enable-nick-options-checkbox");
         const divNickOpt = uiSettingsWindow.querySelector(".ax-nick-options");
         chbNickOpt.addEventListener('click', () => { currentSettings.enableNickOptions = chbNickOpt.classList.toggle('active'); divNickOpt.style.display = currentSettings.enableNickOptions ? 'flex' : 'none'; saveSettings(); });
