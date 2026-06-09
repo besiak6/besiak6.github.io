@@ -14,8 +14,6 @@
 
     let currentSettings = {
         enabled: true,
-        windowOpacity: 2,
-        windowVisible: true,
         leaveEnabled: false,
         disbandKey: "n"
     };
@@ -33,30 +31,21 @@
                 accSettings = data[accId].accountAddons[ADDON_ID] || {};
             }
         } catch (e) {}
-
-        currentSettings = { ...currentSettings, ...accSettings };
-
-        // Synchronizuj windowVisible/windowOpacity do charSettings, żeby menedżer otwierał/zamykał okno poprawnie
+        
         let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        charSettings.windowVisible = currentSettings.windowVisible;
-        charSettings.windowOpacity = currentSettings.windowOpacity;
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
+        currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
-
-        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'leaveEnabled', 'disbandKey'];
+        
+        const accKeys = ['enabled', 'leaveEnabled', 'disbandKey'];
         let accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
-
-        // Zapisz windowVisible/windowOpacity do charSettings, żeby menedżer zachował spójność
-        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        charSettings.windowVisible = currentSettings.windowVisible;
-        charSettings.windowOpacity = currentSettings.windowOpacity;
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
-
+        
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
+        
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
@@ -161,54 +150,24 @@
             hasSettings: false,
             hasCollapse: false
         });
-        // Obserwator zmian UI: łapie interakcję menedżera (X, przezroczystość) i zapisuje do konta
-        const uiObserver = new MutationObserver((mutations) => {
-            let changed = false;
-            mutations.forEach(mutation => {
-                if (mutation.attributeName === 'style') {
-                    const isVisible = uiWindowElement.style.display !== 'none';
-                    if (currentSettings.windowVisible !== isVisible) {
-                        currentSettings.windowVisible = isVisible;
-                        changed = true;
-                    }
-                } else if (mutation.attributeName === 'class') {
-                    for (let i = 0; i < 5; i++) {
-                        if (uiWindowElement.classList.contains(`opacity-${i}`)) {
-                            if (currentSettings.windowOpacity !== i) {
-                                currentSettings.windowOpacity = i;
-                                changed = true;
-                            }
-                            break;
-                        }
-                    }
-                }
-            });
-            if (changed) saveSettings();
-        });
-        uiObserver.observe(uiWindowElement, { attributes: true, attributeFilter: ['style', 'class'] });
-
         const rgCheckbox = uiWindowElement.querySelector(".rg-checkbox");
         const rgLeaveCheckbox = uiWindowElement.querySelector(".rg-leave-checkbox");
         const rgKeybindInput = uiWindowElement.querySelector(".rg-keybind-input");
         const leaveGroupOption = uiWindowElement.querySelector(".rg-leave-group-option");
-        
         rgCheckbox.addEventListener('click', () => {
             currentSettings.enabled = rgCheckbox.classList.toggle('active');
             leaveGroupOption.style.display = currentSettings.enabled ? 'flex' : 'none';
             saveSettings();
         });
-        
         rgLeaveCheckbox.addEventListener('click', () => {
             currentSettings.leaveEnabled = rgLeaveCheckbox.classList.toggle('active');
             saveSettings();
         });
-        
         rgKeybindInput.addEventListener('click', () => {
             keybindInputActive = true;
             rgKeybindInput.focus();
             rgKeybindInput.classList.add('active-keybind-mode');
         });
-        
         rgKeybindInput.addEventListener('focusout', () => {
             if (keybindInputActive) {
                 keybindInputActive = false;
@@ -216,7 +175,6 @@
             }
             rgKeybindInput.classList.remove('active-keybind-mode');
         });
-        
         if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
             $(rgCheckbox).tip(`Rozwiąż grupę`);
             $(rgLeaveCheckbox).tip(`Jeżeli nie jesteś liderem, opuść grupę`);
