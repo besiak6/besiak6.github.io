@@ -60,24 +60,38 @@
             }
         } catch (e) {}
 
-        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
+        currentSettings = { ...currentSettings, ...accSettings };
         parsedLevelRange = parseLevelRange(currentSettings.levelRange) || { min: 0, max: 500 };
+
+        // Synchronizuj windowVisible/windowOpacity do charSettings, żeby menedżer otwierał/zamykał okno poprawnie
+        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        charSettings.windowVisible = currentSettings.windowVisible;
+        charSettings.windowOpacity = currentSettings.windowOpacity;
+        charSettings.settingsWindowVisible = currentSettings.settingsWindowVisible;
+        charSettings.windowSettingsOpacity = currentSettings.windowSettingsOpacity;
+        // Zachowaj ustawienia per-postać (nicki)
+        charSettings.levelRange = currentSettings.levelRange;
+        charSettings.enableNickOptions = currentSettings.enableNickOptions;
+        charSettings.ignoreNicks = currentSettings.ignoreNicks;
+        charSettings.alwaysAttackNicks = currentSettings.alwaysAttackNicks;
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
 
-        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'settingsWindowVisible', 'windowSettingsOpacity', 'isExpanded', 'fastFight', 'attackFriends', 'attackClan', 'enableClanOptions', 'ignoreClans', 'alwaysAttackClans'];
-        const charKeys = ['levelRange', 'enableNickOptions', 'ignoreNicks', 'alwaysAttackNicks'];
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'settingsWindowVisible', 'windowSettingsOpacity', 'isExpanded', 'fastFight', 'attackFriends', 'attackClan', 'enableClanOptions', 'ignoreClans', 'alwaysAttackClans', 'levelRange', 'enableNickOptions', 'ignoreNicks', 'alwaysAttackNicks'];
 
         let accSettings = {};
-        let charSettings = {};
-
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
-        charKeys.forEach(k => charSettings[k] = currentSettings[k]);
 
+        // Zapisz windowVisible/windowOpacity do charSettings, żeby menedżer zachował spójność
+        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        charSettings.windowVisible = currentSettings.windowVisible;
+        charSettings.windowOpacity = currentSettings.windowOpacity;
+        charSettings.settingsWindowVisible = currentSettings.settingsWindowVisible;
+        charSettings.windowSettingsOpacity = currentSettings.windowSettingsOpacity;
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
 
         try {
@@ -286,6 +300,36 @@
         // ZMODYFIKOWANO: Usunięto kolidującą klasę '.settings-window' i wymuszono centrowanie.
         uiSettingsWindow.removeAttribute('data-addon-id');
         uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
+
+        // Obserwator zmian UI: łapie interakcję menedżera (X, przezroczystość) i zapisuje do konta
+        const makeObserver = (wnd, visibleKey, opacityKey) => {
+            const obs = new MutationObserver((mutations) => {
+                let changed = false;
+                mutations.forEach(mutation => {
+                    if (mutation.attributeName === 'style') {
+                        const isVisible = wnd.style.display !== 'none';
+                        if (currentSettings[visibleKey] !== isVisible) {
+                            currentSettings[visibleKey] = isVisible;
+                            changed = true;
+                        }
+                    } else if (mutation.attributeName === 'class') {
+                        for (let i = 0; i < 5; i++) {
+                            if (wnd.classList.contains(`opacity-${i}`)) {
+                                if (currentSettings[opacityKey] !== i) {
+                                    currentSettings[opacityKey] = i;
+                                    changed = true;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                });
+                if (changed) saveSettings();
+            });
+            obs.observe(wnd, { attributes: true, attributeFilter: ['style', 'class'] });
+        };
+        makeObserver(uiMainWindow, 'windowVisible', 'windowOpacity');
+        makeObserver(uiSettingsWindow, 'settingsWindowVisible', 'windowSettingsOpacity');
         
         const isUnified = localStorage.getItem('BaddonzData') && JSON.parse(localStorage.getItem('BaddonzData'))[window.BaddonzAPI.accountId]?.manager?.unifiedOpacityEnabled;
         if (!isUnified) {
