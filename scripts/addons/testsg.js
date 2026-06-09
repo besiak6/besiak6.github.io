@@ -21,6 +21,8 @@
     };
     let currentSettings = {
         enabled: true,
+        windowOpacity: 2,
+        windowVisible: true,
         inviteKey: "b",
         InviteRandoms: false,
         InviteNear: false,
@@ -36,7 +38,6 @@
         FilterbyProfession: false,
         SelectedProfessions: { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true }
     };
-    
     let uiWindowElement = null;
     let keybindInputActive = false;
     let isKeyDownBound = false;
@@ -45,10 +46,19 @@
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
+        const accId = window.BaddonzAPI.accountId;
 
-        // Wczytujemy z API Managera w bezpieczny sposób
-        let cfg = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        currentSettings = { ...currentSettings, ...cfg };
+        let accSettings = {};
+        try {
+            const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
+            if (data[accId] && data[accId].accountAddons) {
+                accSettings = data[accId].accountAddons[ADDON_ID] || {};
+            }
+        } catch (e) {}
+
+        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+
+        currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
 
         if (!currentSettings.SelectedProfessions) {
             currentSettings.SelectedProfessions = { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true };
@@ -57,10 +67,24 @@
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
-        
-        // Zapisujemy bezpośrednio przez API. Ponieważ Manager robi teraz poprawny merge,
-        // nasze zmienne w grze nie nadpiszą "windowVisible" kontrolowanego przez managera.
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, currentSettings);
+        const accId = window.BaddonzAPI.accountId;
+
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'inviteKey', 'InviteRandoms', 'InviteNear', 'autoAcceptEnabled', 'acceptClan', 'acceptAlly', 'acceptFriend', 'acceptOthers', 'rejectUnchecked'];
+        const charKeys = ['InvitebyLevel', 'minLevel', 'maxLevel', 'FilterbyProfession', 'SelectedProfessions'];
+
+        let accSettings = {};
+        let charSettings = {};
+        accKeys.forEach(k => accSettings[k] = currentSettings[k]);
+        charKeys.forEach(k => charSettings[k] = currentSettings[k]);
+
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
+        try {
+            let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
+            if (!data[accId]) data[accId] = {};
+            if (!data[accId].accountAddons) data[accId].accountAddons = {};
+            data[accId].accountAddons[ADDON_ID] = accSettings;
+            localStorage.setItem('BaddonzData', JSON.stringify(data));
+        } catch (e) {}
     }
 
     function isChatFocused() {
@@ -73,7 +97,6 @@
         let members = null;
         if (typeof window.Engine.party.getMembers === 'function') members = window.Engine.party.getMembers();
         else if (window.Engine.party.d) members = window.Engine.party.d;
-        
         if (!members) return false;
 
         if (members instanceof Map) return members.has(otherId) || members.has(Number(otherId));
@@ -382,6 +405,7 @@
 
         zapRandomsCheckbox.addEventListener('click', () => { currentSettings.InviteRandoms = zapRandomsCheckbox.classList.toggle('active'); saveSettings(); });
         zapFromSquareCheckbox.addEventListener('click', () => { currentSettings.InviteNear = zapFromSquareCheckbox.classList.toggle('active'); saveSettings(); });
+
         zapByLevelCheckbox.addEventListener('click', () => { 
             currentSettings.InvitebyLevel = zapByLevelCheckbox.classList.toggle('active'); 
             zapLevelRangeSection.style.display = currentSettings.InvitebyLevel ? 'flex' : 'none';
@@ -418,7 +442,7 @@
             const row = uiWindowElement.querySelector(`.prof-row-${profCode}`);
             if (row && typeof $ === 'function' && typeof $.fn.tip === 'function') {
                 $(row).tip(PROFESSION_NAMES[profCode]);
-             }
+            }
         });
 
         autoAcceptCheckbox.addEventListener('click', () => {
