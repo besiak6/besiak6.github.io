@@ -12,29 +12,13 @@
 
     const ADDON_ID = "ZAP";
 
-    const styleSheet = document.createElement("style");
-    styleSheet.type = "text/css";
-    styleSheet.className = "zap-custom-styles";
-    styleSheet.innerText = `
-        .baddonz-zap-wnd { width:195px; min-width:195px; }
-        .baddonz-zap-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
-        .baddonz-zap-wnd .baddonz-setting-row { margin-bottom: 2px !important; }
-        .baddonz-zap-wnd .baddonz-text { font-size: 11px; }
-        .baddonz-zap-wnd hr { margin: 3px 0 !important; }
-        .baddonz-grid-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px 5px; width: 100%; box-sizing: border-box; }
-        .baddonz-zap-wnd .baddonz-input.compact { width: 45px !important; height: 18px !important; line-height: 16px !important; padding: 1px 2px !important; font-size: 11px !important; text-align: center; margin: 0; }
-    `;
-    if (!document.querySelector(".zap-custom-styles")) document.head.appendChild(styleSheet);
-
     const MARGONEM_RELATIONS = {
         NONE: 1, FRIEND: 2, ENEMY: 3, CLAN: 4, CLAN_ALLY: 5, CLAN_ENEMY: 6
     };
-
     const PROFESSION_NAMES = {
         't': 'Tropiciel', 'b': 'T. Ostrzy', 'w': 'Wojownik',
         'p': 'Paladyn', 'm': 'Mag', 'h': 'Łowca'
     };
-
     let currentSettings = {
         enabled: true,
         windowOpacity: 2,
@@ -48,18 +32,15 @@
         acceptFriend: true,
         acceptOthers: false,
         rejectUnchecked: false,
-
         InvitebyLevel: false,
         minLevel: 0,
         maxLevel: 500,
         FilterbyProfession: false,
         SelectedProfessions: { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true }
     };
-
     let uiWindowElement = null;
     let keybindInputActive = false;
     let isKeyDownBound = false;
-
     const partyInviteRegexPL = /Czy chcesz dołączyć do drużyny gracza <strong>(.+?)<\/strong>\?/;
     const partyInviteRegexEN = /Party invitation received from <strong>(.+?)<\/strong>\. Would you like to join\?/;
 
@@ -93,12 +74,10 @@
 
         let accSettings = {};
         let charSettings = {};
-
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
         charKeys.forEach(k => charSettings[k] = currentSettings[k]);
 
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
-
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
@@ -146,7 +125,6 @@
 
     function getPlayersToInvite() {
         if (!window.Engine.others || typeof window.Engine.others.getDrawableList !== 'function') return [];
-        
         const idInvites = [];
         const partyMemberNicks = new Set();
 
@@ -220,13 +198,11 @@
 
     function handleNewAsk(eventData) {
         if (!currentSettings.autoAcceptEnabled) return;
-
         if (eventData && Array.isArray(eventData) && eventData[0] && typeof eventData[0].q === 'string' && typeof eventData[0].re === 'string' && eventData[0].re.startsWith("party&a=accept")) {
             const questionText = eventData[0].q;
             let inviterNick = null;
 
             let match = questionText.match(partyInviteRegexPL) || questionText.match(partyInviteRegexEN);
-
             if (match && match[1]) {
                 inviterNick = match[1].trim();
                 let foundInviter = null;
@@ -397,7 +373,6 @@
         const zapLevelRangeSection = uiWindowElement.querySelector(".zap-level-range-section");
         const zapMinLevelInput = uiWindowElement.querySelector(".zap-min-level-input");
         const zapMaxLevelInput = uiWindowElement.querySelector(".zap-max-level-input");
-        
         const zapFilterByProfessionCheckbox = uiWindowElement.querySelector(".zap-filter-by-profession-checkbox");
         const zapProfessionFilterSection = uiWindowElement.querySelector(".zap-profession-filter-section");
 
@@ -430,7 +405,7 @@
 
         zapRandomsCheckbox.addEventListener('click', () => { currentSettings.InviteRandoms = zapRandomsCheckbox.classList.toggle('active'); saveSettings(); });
         zapFromSquareCheckbox.addEventListener('click', () => { currentSettings.InviteNear = zapFromSquareCheckbox.classList.toggle('active'); saveSettings(); });
-        
+
         zapByLevelCheckbox.addEventListener('click', () => { 
             currentSettings.InvitebyLevel = zapByLevelCheckbox.classList.toggle('active'); 
             zapLevelRangeSection.style.display = currentSettings.InvitebyLevel ? 'flex' : 'none';
@@ -533,5 +508,4 @@
     };
 
     checkApi();
-
 })();
