@@ -79,8 +79,15 @@
     // ─── Storage helpers ──────────────────────────────────────────────────────
     function loadSettings() {
         if (!window.BaddonzAPI) return;
-        const accId = window.BaddonzAPI.accountId;
 
+        // charSettings zawiera windowVisible i settingsWindowVisible per postać
+        let charSettings = {};
+        if (typeof window.BaddonzAPI.getAddonSettings === 'function') {
+            charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        }
+
+        // accSettings zawiera resztę ustawień (per konto)
+        const accId = window.BaddonzAPI.accountId;
         let accSettings = {};
         try {
             const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
@@ -89,42 +96,39 @@
             }
         } catch (e) {}
 
-        currentSettings = { ...DEFAULT_ACC_SETTINGS, ...DEFAULT_CHAR_SETTINGS, ...accSettings };
-
+        currentSettings = { ...DEFAULT_ACC_SETTINGS, ...DEFAULT_CHAR_SETTINGS, ...accSettings, ...charSettings };
         const count = parseInt(localStorage.getItem('baddonz-daily-upgrade-count'));
         dailyUpgradeCount = !isNaN(count) ? count : 0;
-
-        // Synchronizuj windowVisible/windowOpacity do charSettings, żeby menedżer otwierał/zamykał okno poprawnie
-        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        charSettings.windowVisible = currentSettings.windowVisible;
-        charSettings.windowOpacity = currentSettings.windowOpacity;
-        charSettings.settingsWindowVisible = currentSettings.settingsWindowVisible;
-        charSettings.windowSettingsOpacity = currentSettings.windowSettingsOpacity;
-        if (typeof window.BaddonzAPI.saveAddonSettings === 'function') {
-            window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
-        }
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
-        const accId = window.BaddonzAPI.accountId;
 
-        const accKeys = ['windowOpacity','windowVisible','settingsWindowVisible','windowSettingsOpacity','isCollapsed','hotkeyKey',
-                         'enabled','hotkeyEnabled','use_common','use_unique','allow_bound_items','upgrade_endbattle','count_endbattle',
-                         'bags_upgrade','count_bags_upgrade','cl1','cl2','cl3','cl4','cl5','cl6','cl7','cl8','cl9','cl10','cl11','cl12','cl13','cl14','cl29'];
-        const accSettings = {};
-        accKeys.forEach(k => accSettings[k] = currentSettings[k]);
+        // Kuloodporna poprawka: aktualizujemy widoczność bezpośrednio z DOM
+        if (uiMainWindow) {
+            currentSettings.windowVisible = uiMainWindow.style.display !== 'none';
+        }
+        if (uiSettingsWindow) {
+            currentSettings.settingsWindowVisible = uiSettingsWindow.style.display !== 'none';
+        }
 
-        // Zapisz windowVisible/windowOpacity do charSettings, żeby menedżer zachował spójność
-        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        charSettings.windowVisible = currentSettings.windowVisible;
-        charSettings.windowOpacity = currentSettings.windowOpacity;
-        charSettings.settingsWindowVisible = currentSettings.settingsWindowVisible;
-        charSettings.windowSettingsOpacity = currentSettings.windowSettingsOpacity;
+        // charKeys: widoczność okienek per postać – stąd createAddonWindow poprawnie odczyta stan
+        const charKeys = ['windowVisible', 'settingsWindowVisible',
+                          'enabled', 'hotkeyEnabled', 'use_common', 'use_unique', 'allow_bound_items',
+                          'upgrade_endbattle', 'count_endbattle', 'bags_upgrade', 'count_bags_upgrade',
+                          'cl1','cl2','cl3','cl4','cl5','cl6','cl7','cl8','cl9','cl10','cl11','cl12','cl13','cl14','cl29'];
+        // accKeys: wygląd okienek wspólny dla konta
+        const accKeys = ['windowOpacity', 'windowSettingsOpacity', 'isCollapsed', 'hotkeyKey'];
+
+        const charSettings = {};
+        charKeys.forEach(k => charSettings[k] = currentSettings[k]);
         if (typeof window.BaddonzAPI.saveAddonSettings === 'function') {
             window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
         }
 
+        const accId = window.BaddonzAPI.accountId;
+        const accSettings = {};
+        accKeys.forEach(k => accSettings[k] = currentSettings[k]);
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
@@ -528,37 +532,7 @@
         // Zmuszamy okno do czytania z ustawień przy starcie
         uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
         applyOpacityClass(uiSettingsWindow, currentSettings.windowSettingsOpacity);
-
-        // Obserwator zmian UI: łapie interakcję menedżera (X, przezroczystość) i zapisuje do konta
-        const makeObserver = (wnd, visibleKey, opacityKey) => {
-            const obs = new MutationObserver((mutations) => {
-                let changed = false;
-                mutations.forEach(mutation => {
-                    if (mutation.attributeName === 'style') {
-                        const isVisible = wnd.style.display !== 'none';
-                        if (currentSettings[visibleKey] !== isVisible) {
-                            currentSettings[visibleKey] = isVisible;
-                            changed = true;
-                        }
-                    } else if (mutation.attributeName === 'class') {
-                        for (let i = 0; i < 5; i++) {
-                            if (wnd.classList.contains(`opacity-${i}`)) {
-                                if (currentSettings[opacityKey] !== i) {
-                                    currentSettings[opacityKey] = i;
-                                    changed = true;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                });
-                if (changed) saveSettings();
-            });
-            obs.observe(wnd, { attributes: true, attributeFilter: ['style', 'class'] });
-        };
-        makeObserver(uiMainWindow, 'windowVisible', 'windowOpacity');
-        makeObserver(uiSettingsWindow, 'settingsWindowVisible', 'windowSettingsOpacity');
-
+        
         setupListeners();
         updateMainUI();
     }
