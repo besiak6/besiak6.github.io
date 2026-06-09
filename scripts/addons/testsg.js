@@ -56,28 +56,40 @@
             }
         } catch (e) {}
 
-        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-
-        currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
+        currentSettings = { ...currentSettings, ...accSettings };
 
         if (!currentSettings.SelectedProfessions) {
             currentSettings.SelectedProfessions = { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true };
         }
+
+        // Synchronizuj windowVisible/windowOpacity do charSettings, żeby menedżer otwierał/zamykał okno poprawnie
+        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        charSettings.windowVisible = currentSettings.windowVisible;
+        charSettings.windowOpacity = currentSettings.windowOpacity;
+        // Zachowaj ustawienia per-postać (poziom, profesje)
+        if (accSettings.InvitebyLevel !== undefined) charSettings.InvitebyLevel = currentSettings.InvitebyLevel;
+        if (accSettings.minLevel !== undefined) charSettings.minLevel = currentSettings.minLevel;
+        if (accSettings.maxLevel !== undefined) charSettings.maxLevel = currentSettings.maxLevel;
+        if (accSettings.FilterbyProfession !== undefined) charSettings.FilterbyProfession = currentSettings.FilterbyProfession;
+        if (accSettings.SelectedProfessions !== undefined) charSettings.SelectedProfessions = currentSettings.SelectedProfessions;
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
 
-        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'inviteKey', 'InviteRandoms', 'InviteNear', 'autoAcceptEnabled', 'acceptClan', 'acceptAlly', 'acceptFriend', 'acceptOthers', 'rejectUnchecked'];
-        const charKeys = ['InvitebyLevel', 'minLevel', 'maxLevel', 'FilterbyProfession', 'SelectedProfessions'];
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'inviteKey', 'InviteRandoms', 'InviteNear', 'autoAcceptEnabled', 'acceptClan', 'acceptAlly', 'acceptFriend', 'acceptOthers', 'rejectUnchecked', 'InvitebyLevel', 'minLevel', 'maxLevel', 'FilterbyProfession', 'SelectedProfessions'];
 
         let accSettings = {};
-        let charSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
-        charKeys.forEach(k => charSettings[k] = currentSettings[k]);
 
+        // Zapisz windowVisible/windowOpacity do charSettings, żeby menedżer zachował spójność
+        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        charSettings.windowVisible = currentSettings.windowVisible;
+        charSettings.windowOpacity = currentSettings.windowOpacity;
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
+
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
@@ -363,6 +375,32 @@
             hasSettings: false,
             hasCollapse: false
         });
+
+        // Obserwator zmian UI: łapie interakcję menedżera (X, przezroczystość) i zapisuje do konta
+        const uiObserver = new MutationObserver((mutations) => {
+            let changed = false;
+            mutations.forEach(mutation => {
+                if (mutation.attributeName === 'style') {
+                    const isVisible = uiWindowElement.style.display !== 'none';
+                    if (currentSettings.windowVisible !== isVisible) {
+                        currentSettings.windowVisible = isVisible;
+                        changed = true;
+                    }
+                } else if (mutation.attributeName === 'class') {
+                    for (let i = 0; i < 5; i++) {
+                        if (uiWindowElement.classList.contains(`opacity-${i}`)) {
+                            if (currentSettings.windowOpacity !== i) {
+                                currentSettings.windowOpacity = i;
+                                changed = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            });
+            if (changed) saveSettings();
+        });
+        uiObserver.observe(uiWindowElement, { attributes: true, attributeFilter: ['style', 'class'] });
 
         const zapCheckbox = uiWindowElement.querySelector(".zap-checkbox");
         const zapKeybindInput = uiWindowElement.querySelector(".zap-keybind-input");
