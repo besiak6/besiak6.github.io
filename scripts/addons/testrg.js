@@ -33,21 +33,30 @@
                 accSettings = data[accId].accountAddons[ADDON_ID] || {};
             }
         } catch (e) {}
-        
+
+        currentSettings = { ...currentSettings, ...accSettings };
+
+        // Synchronizuj windowVisible/windowOpacity do charSettings, żeby menedżer otwierał/zamykał okno poprawnie
         let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
+        charSettings.windowVisible = currentSettings.windowVisible;
+        charSettings.windowOpacity = currentSettings.windowOpacity;
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
-        
+
         const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'leaveEnabled', 'disbandKey'];
         let accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
-        
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
-        
+
+        // Zapisz windowVisible/windowOpacity do charSettings, żeby menedżer zachował spójność
+        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        charSettings.windowVisible = currentSettings.windowVisible;
+        charSettings.windowOpacity = currentSettings.windowOpacity;
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
+
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
@@ -152,6 +161,32 @@
             hasSettings: false,
             hasCollapse: false
         });
+        // Obserwator zmian UI: łapie interakcję menedżera (X, przezroczystość) i zapisuje do konta
+        const uiObserver = new MutationObserver((mutations) => {
+            let changed = false;
+            mutations.forEach(mutation => {
+                if (mutation.attributeName === 'style') {
+                    const isVisible = uiWindowElement.style.display !== 'none';
+                    if (currentSettings.windowVisible !== isVisible) {
+                        currentSettings.windowVisible = isVisible;
+                        changed = true;
+                    }
+                } else if (mutation.attributeName === 'class') {
+                    for (let i = 0; i < 5; i++) {
+                        if (uiWindowElement.classList.contains(`opacity-${i}`)) {
+                            if (currentSettings.windowOpacity !== i) {
+                                currentSettings.windowOpacity = i;
+                                changed = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            });
+            if (changed) saveSettings();
+        });
+        uiObserver.observe(uiWindowElement, { attributes: true, attributeFilter: ['style', 'class'] });
+
         const rgCheckbox = uiWindowElement.querySelector(".rg-checkbox");
         const rgLeaveCheckbox = uiWindowElement.querySelector(".rg-leave-checkbox");
         const rgKeybindInput = uiWindowElement.querySelector(".rg-keybind-input");
