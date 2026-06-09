@@ -16,11 +16,46 @@
     let originalAlert = null;
 
     function loadSettings() {
-        if (window.BaddonzAPI) currentSettings = { ...currentSettings, ...window.BaddonzAPI.getAddonSettings(ADDON_ID) };
+        if (!window.BaddonzAPI) return;
+        const accId = window.BaddonzAPI.accountId;
+        let accSettings = {};
+        try {
+            const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
+            if (data[accId] && data[accId].accountAddons) {
+                accSettings = data[accId].accountAddons[ADDON_ID] || {};
+            }
+        } catch (e) {}
+
+        currentSettings = { ...currentSettings, ...accSettings };
+
+        // Synchronizuj windowVisible/windowOpacity do charSettings, żeby menedżer otwierał/zamykał okno poprawnie
+        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        charSettings.windowVisible = currentSettings.windowVisible;
+        charSettings.windowOpacity = currentSettings.windowOpacity;
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
     }
     
     function saveSettings() {
-        if (window.BaddonzAPI) window.BaddonzAPI.saveAddonSettings(ADDON_ID, currentSettings);
+        if (!window.BaddonzAPI) return;
+        const accId = window.BaddonzAPI.accountId;
+
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'blockedNicks'];
+        let accSettings = {};
+        accKeys.forEach(k => accSettings[k] = currentSettings[k]);
+
+        // Zapisz windowVisible/windowOpacity do charSettings, żeby menedżer zachował spójność
+        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        charSettings.windowVisible = currentSettings.windowVisible;
+        charSettings.windowOpacity = currentSettings.windowOpacity;
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
+
+        try {
+            let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
+            if (!data[accId]) data[accId] = {};
+            if (!data[accId].accountAddons) data[accId].accountAddons = {};
+            data[accId].accountAddons[ADDON_ID] = accSettings;
+            localStorage.setItem('BaddonzData', JSON.stringify(data));
+        } catch (e) {}
     }
 
     function enableLogic() {
@@ -75,6 +110,32 @@
         `;
 
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '195px' });
+
+        // Obserwator zmian UI: łapie interakcję menedżera (X, przezroczystość) i zapisuje do konta
+        const uiObserver = new MutationObserver((mutations) => {
+            let changed = false;
+            mutations.forEach(mutation => {
+                if (mutation.attributeName === 'style') {
+                    const isVisible = uiWindowElement.style.display !== 'none';
+                    if (currentSettings.windowVisible !== isVisible) {
+                        currentSettings.windowVisible = isVisible;
+                        changed = true;
+                    }
+                } else if (mutation.attributeName === 'class') {
+                    for (let i = 0; i < 5; i++) {
+                        if (uiWindowElement.classList.contains(`opacity-${i}`)) {
+                            if (currentSettings.windowOpacity !== i) {
+                                currentSettings.windowOpacity = i;
+                                changed = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            });
+            if (changed) saveSettings();
+        });
+        uiObserver.observe(uiWindowElement, { attributes: true, attributeFilter: ['style', 'class'] });
 
         const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
         const apBlockedNickInput = uiWindowElement.querySelector("#ap-blocked-nick-input");
