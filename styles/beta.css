@@ -238,3 +238,41 @@ input.zap-nick-display { cursor: url("https://gordion.margonem.pl/img/gui/cursor
 .wnd-ulepszara.wnd-clp { height: auto !important; width: 175px !important; }
 .wnd-ulepszara.wnd-clp .baddonz-window-body { display:flex !important; padding: 2px 8px 5px 8px !important; gap: 0 !important; }
 .wnd-ulepszara.wnd-clp .upg-item-box { display:none !important; }
+
+/* ============================================================ */
+/* AutoX Styles                                                 */
+/* ============================================================ */
+.baddonz-ax-wnd { width:110px; min-width:110px; }
+.baddonz-ax-wnd-settings { width:250px; min-width:250px; height: auto !important; min-height: unset !important; max-height: unset !important; }
+.baddonz-ax-wnd-settings .baddonz-window-body { height: auto !important; min-height: unset !important; display: flex; flex-direction: column; gap: 5px; }
+.baddonz-ax-wnd .baddonz-window-body { padding: 0px 5px 5px 5px !important; gap: 3px !important; }
+.ax-s-walka-btn { width:100%; }
+.baddonz-setting-row.ax-main-row { gap:5px; margin: 0; }
+.baddonz-input.ax-small { width:100%; max-width:79px; font-size:11px; height:20px !important; line-height:18px; text-align:center; padding:1px 0px; }
+.baddonz-ax-wnd-settings .baddonz-input { text-align:center; height:26px !important; }
+.baddonz-setting-row span { white-space:nowrap; font-size:11px; }
+
+/* ============================================================ */
+/* Item Info Styles                                             */
+/* ============================================================ */
+.baddonz-ii-wnd { width: 210px; min-width: 210px; }
+.baddonz-ii-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
+.baddonz-ii-wnd .baddonz-setting-row { margin-bottom: 2px !important; }
+.baddonz-ii-wnd .baddonz-text { font-size: 11px; }
+.baddonz-ii-wnd hr { margin: 3px 0 !important; }
+
+body:not(.baddonz-ii-essence) .baddonz-essence-marker { display: none !important; }
+body:not(.baddonz-ii-levels) .baddonz-levels-marker { display: none !important; }
+body:not(.baddonz-ii-summary) .baddonz-summary-marker { display: none !important; }
+
+body:not(.baddonz-ii-common) .baddonz-info-rarity-common { display: none !important; }
+body:not(.baddonz-ii-upgraded) .baddonz-info-rarity-upgraded { display: none !important; }
+body:not(.baddonz-ii-unique) .baddonz-info-rarity-unique { display: none !important; }
+body:not(.baddonz-ii-heroic) .baddonz-info-rarity-heroic { display: none !important; }
+body:not(.baddonz-ii-legendary) .baddonz-info-rarity-legendary { display: none !important; }
+
+body.baddonz-ii-hide-opis.baddonz-ii-common .baddonz-desc-rarity-common { display: none !important; }
+body.baddonz-ii-hide-opis.baddonz-ii-upgraded .baddonz-desc-rarity-upgraded { display: none !important; }
+body.baddonz-ii-hide-opis.baddonz-ii-unique .baddonz-desc-rarity-unique { display: none !important; }
+body.baddonz-ii-hide-opis.baddonz-ii-heroic .baddonz-desc-rarity-heroic { display: none !important; }
+body.baddonz-ii-hide-opis.baddonz-ii-legendary .baddonz-desc-rarity-legendary { display: none !important; }
