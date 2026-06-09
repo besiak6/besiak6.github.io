@@ -79,28 +79,35 @@
     // ─── Storage helpers ──────────────────────────────────────────────────────
     function loadSettings() {
         if (!window.BaddonzAPI) return;
-        
+        const accId = window.BaddonzAPI.accountId;
+
         let accSettings = {};
-        if (typeof window.BaddonzAPI.getAddonSettings === 'function') {
-            accSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        }
+        try {
+            const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
+            if (data[accId] && data[accId].accountAddons) {
+                accSettings = data[accId].accountAddons[ADDON_ID] || {};
+            }
+        } catch (e) {}
 
         currentSettings = { ...DEFAULT_ACC_SETTINGS, ...DEFAULT_CHAR_SETTINGS, ...accSettings };
+
         const count = parseInt(localStorage.getItem('baddonz-daily-upgrade-count'));
         dailyUpgradeCount = !isNaN(count) ? count : 0;
+
+        // Synchronizuj windowVisible/windowOpacity do charSettings, żeby menedżer otwierał/zamykał okno poprawnie
+        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        charSettings.windowVisible = currentSettings.windowVisible;
+        charSettings.windowOpacity = currentSettings.windowOpacity;
+        charSettings.settingsWindowVisible = currentSettings.settingsWindowVisible;
+        charSettings.windowSettingsOpacity = currentSettings.windowSettingsOpacity;
+        if (typeof window.BaddonzAPI.saveAddonSettings === 'function') {
+            window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
+        }
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
-
-        // KULOODPORNA POPRAWKA: Przed zapisem aktualizujemy widoczność bezpośrednio z DOM!
-        // Dzięki temu RAM nigdy nie nadpisze ustawień z docka / menedżera.
-        if (uiMainWindow) {
-            currentSettings.windowVisible = uiMainWindow.style.display !== 'none';
-        }
-        if (uiSettingsWindow) {
-            currentSettings.settingsWindowVisible = uiSettingsWindow.style.display !== 'none';
-        }
+        const accId = window.BaddonzAPI.accountId;
 
         const accKeys = ['windowOpacity','windowVisible','settingsWindowVisible','windowSettingsOpacity','isCollapsed','hotkeyKey',
                          'enabled','hotkeyEnabled','use_common','use_unique','allow_bound_items','upgrade_endbattle','count_endbattle',
@@ -108,9 +115,23 @@
         const accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
 
+        // Zapisz windowVisible/windowOpacity do charSettings, żeby menedżer zachował spójność
+        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        charSettings.windowVisible = currentSettings.windowVisible;
+        charSettings.windowOpacity = currentSettings.windowOpacity;
+        charSettings.settingsWindowVisible = currentSettings.settingsWindowVisible;
+        charSettings.windowSettingsOpacity = currentSettings.windowSettingsOpacity;
         if (typeof window.BaddonzAPI.saveAddonSettings === 'function') {
-            window.BaddonzAPI.saveAddonSettings(ADDON_ID, accSettings);
+            window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
         }
+
+        try {
+            let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
+            if (!data[accId]) data[accId] = {};
+            if (!data[accId].accountAddons) data[accId].accountAddons = {};
+            data[accId].accountAddons[ADDON_ID] = accSettings;
+            localStorage.setItem('BaddonzData', JSON.stringify(data));
+        } catch (e) {}
     }
 
     // ─── Progress / item helpers ──────────────────────────────────────────────
@@ -507,7 +528,37 @@
         // Zmuszamy okno do czytania z ustawień przy starcie
         uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
         applyOpacityClass(uiSettingsWindow, currentSettings.windowSettingsOpacity);
-        
+
+        // Obserwator zmian UI: łapie interakcję menedżera (X, przezroczystość) i zapisuje do konta
+        const makeObserver = (wnd, visibleKey, opacityKey) => {
+            const obs = new MutationObserver((mutations) => {
+                let changed = false;
+                mutations.forEach(mutation => {
+                    if (mutation.attributeName === 'style') {
+                        const isVisible = wnd.style.display !== 'none';
+                        if (currentSettings[visibleKey] !== isVisible) {
+                            currentSettings[visibleKey] = isVisible;
+                            changed = true;
+                        }
+                    } else if (mutation.attributeName === 'class') {
+                        for (let i = 0; i < 5; i++) {
+                            if (wnd.classList.contains(`opacity-${i}`)) {
+                                if (currentSettings[opacityKey] !== i) {
+                                    currentSettings[opacityKey] = i;
+                                    changed = true;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                });
+                if (changed) saveSettings();
+            });
+            obs.observe(wnd, { attributes: true, attributeFilter: ['style', 'class'] });
+        };
+        makeObserver(uiMainWindow, 'windowVisible', 'windowOpacity');
+        makeObserver(uiSettingsWindow, 'settingsWindowVisible', 'windowSettingsOpacity');
+
         setupListeners();
         updateMainUI();
     }
