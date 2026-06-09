@@ -40,6 +40,7 @@
         "retaliation": "AO",
         "frenzy": "ES"
     };
+    
     let currentSettings = {
         enabled: true,
         windowOpacity: 2,
@@ -55,6 +56,7 @@
         SHOW_HEROIC: true,
         SHOW_LEGENDARY: true
     };
+    
     let uiWindowElement = null;
     let observer = null;
 
@@ -70,6 +72,12 @@
         } catch (e) {}
 
         currentSettings = { ...currentSettings, ...accSettings };
+
+        // WYMUSZAMY STAN KONTA NA DANEJ POSTACI, ŻEBY MENEDŻER OTWIERAŁ/ZAMYKAŁ OKNO POPRAWNIE
+        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        charSettings.windowVisible = currentSettings.windowVisible;
+        charSettings.windowOpacity = currentSettings.windowOpacity;
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
     }
 
     function saveSettings() {
@@ -78,7 +86,13 @@
         const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'amount_essence', 'SHOW_LEGBON_MARKERS', 'HIDE_OPIS', 'UPGRADE_LEVEL', 'SHOW_SUMMARY_LEGEND', 'SHOW_COMMON', 'SHOW_UPGRADED', 'SHOW_UNIQUE', 'SHOW_HEROIC', 'SHOW_LEGENDARY'];
         let accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
+
+        // ZAPISUJEMY TEŻ DO DANYCH POSTACI, ABY MENEDŻER ZACHOWAŁ SPÓJNOŚĆ
+        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        charSettings.windowVisible = currentSettings.windowVisible;
+        charSettings.windowOpacity = currentSettings.windowOpacity;
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
+
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
@@ -143,15 +157,15 @@
 
         switch (rarity) {
             case "common": basePoints = (Math.floor(level / 10) * 10) + 180;
-            totalGoldCost = 10 * Math.pow(level, 2) + 1300 * level; break;
+                totalGoldCost = 10 * Math.pow(level, 2) + 1300 * level; break;
             case "unique": basePoints = 10 * level + 1800;
-            totalGoldCost = 100 * Math.pow(level, 2) + 13000 * level; break;
+                totalGoldCost = 100 * Math.pow(level, 2) + 13000 * level; break;
             case "upgraded": basePoints = 150 * level + 27000;
-            totalGoldCost = 400 * Math.pow(level, 2) + 52000 * level; break;
+                totalGoldCost = 400 * Math.pow(level, 2) + 52000 * level; break;
             case "heroic": basePoints = 100 * level + 18000;
-            totalGoldCost = 300 * Math.pow(level, 2) + 39000 * level; break;
+                totalGoldCost = 300 * Math.pow(level, 2) + 39000 * level; break;
             case "legendary": basePoints = (180 + level) * 1000;
-            totalGoldCost = 600 * Math.pow(level, 2) + 78000 * level; break;
+                totalGoldCost = 600 * Math.pow(level, 2) + 78000 * level; break;
             default: return null;
         }
 
@@ -199,7 +213,6 @@
 
         tz.innerText = text;
         tz.dataset.isBless = isBless;
-        // Dopasowany wymiar tła, brak zbędnego paddingu, Arial Black
         Object.assign(tz.style, {
             position: "absolute",
             left: "0",
@@ -216,16 +229,15 @@
             zIndex: "2"
         });
 
-        // Weryfikacja czy to błogosławieństwo (cl: 25) żeby zmienić pozycje L-G
         if (isBless) {
             tz.style.top = "0";
             tz.style.bottom = "auto";
-            tz.style.borderBottomRightRadius = "3px"; // Ładne zaokrąglenie p-d
+            tz.style.borderBottomRightRadius = "3px";
             tz.style.borderTopRightRadius = "0";
         } else {
             tz.style.bottom = "0";
             tz.style.top = "auto";
-            tz.style.borderTopRightRadius = "3px"; // Ładne zaokrąglenie p-g
+            tz.style.borderTopRightRadius = "3px";
             tz.style.borderBottomRightRadius = "0";
         }
     }
@@ -247,18 +259,13 @@
         }
 
         if (!itemData) return;
-        // POBIERAMY Z PAMIĘCI GRY ALBO PRZERABIAMY TYLKO LOKALNIE
-        // Absolutnie nic nie nadpisujemy do obiektu itemData!
         let stats = itemData._cachedStats || parseStats(itemData.stat || itemData.stats);
         
         if (stats) {
-            // Szukamy któregokolwiek bonusu z tych 3 typów
             let legbonStr = stats.legbon || stats.socket_injection_legbon || stats.socket_fleeting_legbon;
-            
             if (legbonStr) {
                 let legbonName = legbonStr.split(',')[0];
                 if (LEGBON_SHORT[legbonName]) {
-                    // Sprawdzamy, czy przedmiot to "błogo" (cl = 25)
                     let isBless = (parseInt(itemData.cl, 10) === 25);
                     _addSpanToElement(el, LEGBON_SHORT[legbonName], isBless);
                     return;
@@ -338,7 +345,8 @@
 
             let upgradeLines1_4 = [];
             for (let i = 0; i < 4; i++) upgradeLines1_4.push(`+${i+1}: ${formatBigNumber(costs.costs[i])}`);
-            const levelsContent = `<div style="text-align: center;"><span class="c_blue">Koszt Poziomów Ulepszenia:</span></div>${upgradeLines1_4.join(' / ')}<br>+5: ${formatBigNumber(costs.costs[4])} | <span class="c_green">${totalEssence} esy</span> | <span class="c_yellow">${formatBigNumber(totalGold, true)} złota</span>`;
+            const levelsContent = `<div style="text-align: center;"><span class="c_blue">Koszt Poziomów Ulepszenia:</span></div>${upgradeLines1_4.join(' / ')}<br>+5: ${formatBigNumber(costs.costs[4])} | <span class="c_green">${totalEssence} esy</span> |
+<span class="c_yellow">${formatBigNumber(totalGold, true)} złota</span>`;
             let insertionHtml = `<div class="item-tip-section baddonz-levels-marker baddonz-info-rarity-${itemRarity}"><div class="tip-item-stat-addon" style="text-align: center; font-size: 11px;">${levelsContent}</div></div>`;
             let upgradeIcon = LEGEND_UPGRADE_ICON, essenceIcon = LEGEND_ESSENCE_ICON;
             if (itemRarity === 'heroic') { upgradeIcon = HEROIC_UPGRADE_ICON; essenceIcon = HEROIC_ESSENCE_ICON; }
@@ -436,6 +444,32 @@
             hasClose: true
         });
         uiWindowElement.classList.add('baddonz-ii-wnd');
+
+        // OBSERWATOR ZMIAN UI: Wyłapuje interakcję Menedżera (X, przezroczystość) i zapisuje globalnie do konta
+        const uiObserver = new MutationObserver((mutations) => {
+            let changed = false;
+            mutations.forEach(mutation => {
+                if (mutation.attributeName === 'style') {
+                    const isVisible = uiWindowElement.style.display !== 'none';
+                    if (currentSettings.windowVisible !== isVisible) {
+                        currentSettings.windowVisible = isVisible;
+                        changed = true;
+                    }
+                } else if (mutation.attributeName === 'class') {
+                    for (let i = 0; i < 5; i++) {
+                        if (uiWindowElement.classList.contains(`opacity-${i}`)) {
+                            if (currentSettings.windowOpacity !== i) {
+                                currentSettings.windowOpacity = i;
+                                changed = true;
+                            }
+                            break;
+                        }
+                    }
+                }
+            });
+            if (changed) saveSettings();
+        });
+        uiObserver.observe(uiWindowElement, { attributes: true, attributeFilter: ['style', 'class'] });
 
         const bindToggle = (className, key, callback = null) => {
             const cb = uiWindowElement.querySelector(`.${className}`);
