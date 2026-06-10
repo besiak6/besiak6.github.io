@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Item Info baddonz
-// @version       01.06.2026
+// @version       10.06.2026
 // @description   Informacje o itemach
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -101,27 +101,17 @@
             }
         } catch (e) {}
 
-        // charSettings zawiera windowVisible per postać – stąd createAddonWindow poprawnie odczyta stan
-        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
+        currentSettings = { ...currentSettings, ...accSettings };
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
-
-        // accKeys: ustawienia per konto (wygląd, przełączniki wspólne)
-        const accKeys = ['enabled', 'windowOpacity', 'amount_essence', 'SHOW_LEGBON_MARKERS', 'HIDE_OPIS', 'UPGRADE_LEVEL', 'SHOW_SUMMARY_LEGEND', 'SHOW_COMMON', 'SHOW_UPGRADED', 'SHOW_UNIQUE', 'SHOW_HEROIC', 'SHOW_LEGENDARY'];
-        // charKeys: widoczność okienka per postać
-        const charKeys = ['windowVisible'];
-
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'amount_essence', 'SHOW_LEGBON_MARKERS', 'HIDE_OPIS', 'UPGRADE_LEVEL', 'SHOW_SUMMARY_LEGEND', 'SHOW_COMMON', 'SHOW_UPGRADED', 'SHOW_UNIQUE', 'SHOW_HEROIC', 'SHOW_LEGENDARY'];
+        
         let accSettings = {};
-        let charSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
-        charKeys.forEach(k => charSettings[k] = currentSettings[k]);
-
-        // Zapis per postać (windowVisible) – stąd createAddonWindow poprawnie odczyta stan
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
 
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
@@ -511,17 +501,25 @@
 
     function addonInit() {
         loadSettings();
-        if (!uiWindowElement) buildUI();
         updateBodyClasses();
+        if (!uiWindowElement) buildUI();
 
-        hookTipFunction();
-        
+        if (uiWindowElement) {
+            uiWindowElement.style.display = currentSettings.windowVisible ? '' : 'none';
+            const observerVisibility = new MutationObserver(() => {
+                const isVisible = uiWindowElement.style.display !== 'none';
+                if (currentSettings.windowVisible !== isVisible) {
+                    currentSettings.windowVisible = isVisible;
+                    saveSettings();
+                }
+            });
+            observerVisibility.observe(uiWindowElement, { attributes: true, attributeFilter: ['style'] });
+        }
+
         observer = new MutationObserver((mutations) => {
-            if (!currentSettings.enabled || !currentSettings.SHOW_LEGBON_MARKERS) return;
-            
-            mutations.forEach(mutation => {
-                mutation.addedNodes.forEach(node => {
-                    if (node.nodeType === 1) { 
+            mutations.forEach((mutation) => {
+                mutation.addedNodes.forEach((node) => {
+                    if (node.nodeType === 1) {
                         if (node.classList && node.classList.contains('item')) {
                             applyMarkerToElement(node);
                         }
