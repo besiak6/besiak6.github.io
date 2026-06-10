@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Ulepszara baddonz
-// @version       08.06.2026
+// @version       10.06.2026
 // @description   Automatyczne ulepszanie
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -79,32 +79,31 @@
     // ─── Storage helpers ──────────────────────────────────────────────────────
     function loadSettings() {
         if (!window.BaddonzAPI) return;
-
-        // charSettings zawiera windowVisible i settingsWindowVisible per postać
-        let charSettings = {};
-        if (typeof window.BaddonzAPI.getAddonSettings === 'function') {
-            charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        }
-
-        // accSettings zawiera resztę ustawień (per konto)
         const accId = window.BaddonzAPI.accountId;
-        let accSettings = {};
         try {
             const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
-            if (data[accId] && data[accId].accountAddons) {
-                accSettings = data[accId].accountAddons[ADDON_ID] || {};
+            if (data[accId] && data[accId].accountAddons && data[accId].accountAddons[ADDON_ID]) {
+                currentSettings = { ...DEFAULT_ACC_SETTINGS, ...DEFAULT_CHAR_SETTINGS, ...data[accId].accountAddons[ADDON_ID] };
+                const count = parseInt(localStorage.getItem('baddonz-daily-upgrade-count'));
+                dailyUpgradeCount = !isNaN(count) ? count : 0;
+                return;
             }
         } catch (e) {}
-
-        currentSettings = { ...DEFAULT_ACC_SETTINGS, ...DEFAULT_CHAR_SETTINGS, ...accSettings, ...charSettings };
+        let accSettings = {};
+        if (typeof window.BaddonzAPI.getAddonSettings === 'function') {
+            accSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        }
+        currentSettings = { ...DEFAULT_ACC_SETTINGS, ...DEFAULT_CHAR_SETTINGS, ...accSettings };
         const count = parseInt(localStorage.getItem('baddonz-daily-upgrade-count'));
         dailyUpgradeCount = !isNaN(count) ? count : 0;
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
+        const accId = window.BaddonzAPI.accountId;
 
-        // Kuloodporna poprawka: aktualizujemy widoczność bezpośrednio z DOM
+        // KULOODPORNA POPRAWKA: Przed zapisem aktualizujemy widoczność bezpośrednio z DOM!
+        // Dzięki temu RAM nigdy nie nadpisze ustawień z docka / menedżera.
         if (uiMainWindow) {
             currentSettings.windowVisible = uiMainWindow.style.display !== 'none';
         }
@@ -112,28 +111,21 @@
             currentSettings.settingsWindowVisible = uiSettingsWindow.style.display !== 'none';
         }
 
-        // charKeys: widoczność okienek per postać – stąd createAddonWindow poprawnie odczyta stan
-        const charKeys = ['windowVisible', 'settingsWindowVisible',
-                          'enabled', 'hotkeyEnabled', 'use_common', 'use_unique', 'allow_bound_items',
-                          'upgrade_endbattle', 'count_endbattle', 'bags_upgrade', 'count_bags_upgrade',
-                          'cl1','cl2','cl3','cl4','cl5','cl6','cl7','cl8','cl9','cl10','cl11','cl12','cl13','cl14','cl29'];
-        // accKeys: wygląd okienek wspólny dla konta
-        const accKeys = ['windowOpacity', 'windowSettingsOpacity', 'isCollapsed', 'hotkeyKey'];
-
-        const charSettings = {};
-        charKeys.forEach(k => charSettings[k] = currentSettings[k]);
-        if (typeof window.BaddonzAPI.saveAddonSettings === 'function') {
-            window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
-        }
-
-        const accId = window.BaddonzAPI.accountId;
+        const accKeys = ['windowOpacity','windowVisible','settingsWindowVisible','windowSettingsOpacity','isCollapsed','hotkeyKey',
+                         'enabled','hotkeyEnabled','use_common','use_unique','allow_bound_items','upgrade_endbattle','count_endbattle',
+                         'bags_upgrade','count_bags_upgrade','cl1','cl2','cl3','cl4','cl5','cl6','cl7','cl8','cl9','cl10','cl11','cl12','cl13','cl14','cl29'];
         const accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
+
+        if (typeof window.BaddonzAPI.saveAddonSettings === 'function') {
+            window.BaddonzAPI.saveAddonSettings(ADDON_ID, accSettings);
+        }
+
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
             if (!data[accId].accountAddons) data[accId].accountAddons = {};
-            data[accId].accountAddons[ADDON_ID] = accSettings;
+            data[accId].accountAddons[ADDON_ID] = { ...accSettings };
             localStorage.setItem('BaddonzData', JSON.stringify(data));
         } catch (e) {}
     }
@@ -837,6 +829,30 @@
     function addonInit() {
         loadSettings();
         if (!uiMainWindow) buildUI();
+
+        if (uiMainWindow) {
+            uiMainWindow.style.display = currentSettings.windowVisible ? '' : 'none';
+            const obs1 = new MutationObserver(() => {
+                const isVisible = uiMainWindow.style.display !== 'none';
+                if (currentSettings.windowVisible !== isVisible) {
+                    currentSettings.windowVisible = isVisible;
+                    saveSettings();
+                }
+            });
+            obs1.observe(uiMainWindow, { attributes: true, attributeFilter: ['style'] });
+        }
+
+        if (uiSettingsWindow) {
+            uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? '' : 'none';
+            const obs2 = new MutationObserver(() => {
+                const isVisible = uiSettingsWindow.style.display !== 'none';
+                if (currentSettings.settingsWindowVisible !== isVisible) {
+                    currentSettings.settingsWindowVisible = isVisible;
+                    saveSettings();
+                }
+            });
+            obs2.observe(uiSettingsWindow, { attributes: true, attributeFilter: ['style'] });
+        }
 
         setupCommunicationHook();
         setupKeydownHandler();
