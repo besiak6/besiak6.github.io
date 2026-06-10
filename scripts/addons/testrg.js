@@ -14,6 +14,8 @@
 
     let currentSettings = {
         enabled: true,
+        windowOpacity: 2,
+        windowVisible: true,
         leaveEnabled: false,
         disbandKey: "n"
     };
@@ -40,7 +42,7 @@
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
         
-        const accKeys = ['enabled', 'leaveEnabled', 'disbandKey'];
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'leaveEnabled', 'disbandKey'];
         let accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
         
@@ -154,20 +156,24 @@
         const rgLeaveCheckbox = uiWindowElement.querySelector(".rg-leave-checkbox");
         const rgKeybindInput = uiWindowElement.querySelector(".rg-keybind-input");
         const leaveGroupOption = uiWindowElement.querySelector(".rg-leave-group-option");
+        
         rgCheckbox.addEventListener('click', () => {
             currentSettings.enabled = rgCheckbox.classList.toggle('active');
             leaveGroupOption.style.display = currentSettings.enabled ? 'flex' : 'none';
             saveSettings();
         });
+        
         rgLeaveCheckbox.addEventListener('click', () => {
             currentSettings.leaveEnabled = rgLeaveCheckbox.classList.toggle('active');
             saveSettings();
         });
+        
         rgKeybindInput.addEventListener('click', () => {
             keybindInputActive = true;
             rgKeybindInput.focus();
             rgKeybindInput.classList.add('active-keybind-mode');
         });
+        
         rgKeybindInput.addEventListener('focusout', () => {
             if (keybindInputActive) {
                 keybindInputActive = false;
@@ -175,6 +181,7 @@
             }
             rgKeybindInput.classList.remove('active-keybind-mode');
         });
+        
         if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
             $(rgCheckbox).tip(`Rozwiąż grupę`);
             $(rgLeaveCheckbox).tip(`Jeżeli nie jesteś liderem, opuść grupę`);
@@ -184,6 +191,18 @@
     function addonInit() {
         loadSettings();
         if (!uiWindowElement) buildUI();
+
+        if (uiWindowElement) {
+            uiWindowElement.style.display = currentSettings.windowVisible ? '' : 'none';
+            const observer = new MutationObserver(() => {
+                const isVisible = uiWindowElement.style.display !== 'none';
+                if (currentSettings.windowVisible !== isVisible) {
+                    currentSettings.windowVisible = isVisible;
+                    saveSettings();
+                }
+            });
+            observer.observe(uiWindowElement, { attributes: true, attributeFilter: ['style'] });
+        }
 
         if (!isKeyDownBound) {
             document.addEventListener('keydown', handleKeyDown);
