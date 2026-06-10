@@ -79,46 +79,15 @@
     // ─── Storage helpers ──────────────────────────────────────────────────────
     function loadSettings() {
         if (!window.BaddonzAPI) return;
-        const accId = window.BaddonzAPI.accountId;
-        try {
-            const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
-            if (data[accId] && data[accId].accountAddons && data[accId].accountAddons[ADDON_ID]) {
-                currentSettings = { ...DEFAULT_ACC_SETTINGS, ...DEFAULT_CHAR_SETTINGS, ...data[accId].accountAddons[ADDON_ID] };
-                const count = parseInt(localStorage.getItem('baddonz-daily-upgrade-count'));
-                dailyUpgradeCount = !isNaN(count) ? count : 0;
-                return;
-            }
-        } catch (e) {}
-        let accSettings = {};
-        if (typeof window.BaddonzAPI.getAddonSettings === 'function') {
-            accSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        }
-        currentSettings = { ...DEFAULT_ACC_SETTINGS, ...DEFAULT_CHAR_SETTINGS, ...accSettings };
+        const saved = window.BaddonzAPI.getAddonSettings(ADDON_ID);
+        currentSettings = { ...DEFAULT_ACC_SETTINGS, ...DEFAULT_CHAR_SETTINGS, ...saved };
         const count = parseInt(localStorage.getItem('baddonz-daily-upgrade-count'));
         dailyUpgradeCount = !isNaN(count) ? count : 0;
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
-        const accId = window.BaddonzAPI.accountId;
-
-        const accKeys = ['windowOpacity','windowVisible','settingsWindowVisible','windowSettingsOpacity','isCollapsed','hotkeyKey',
-                         'enabled','hotkeyEnabled','use_common','use_unique','allow_bound_items','upgrade_endbattle','count_endbattle',
-                         'bags_upgrade','count_bags_upgrade','cl1','cl2','cl3','cl4','cl5','cl6','cl7','cl8','cl9','cl10','cl11','cl12','cl13','cl14','cl29'];
-        const accSettings = {};
-        accKeys.forEach(k => accSettings[k] = currentSettings[k]);
-
-        if (typeof window.BaddonzAPI.saveAddonSettings === 'function') {
-            window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
-        }
-
-        try {
-            let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
-            if (!data[accId]) data[accId] = {};
-            if (!data[accId].accountAddons) data[accId].accountAddons = {};
-            data[accId].accountAddons[ADDON_ID] = { ...accSettings };
-            localStorage.setItem('BaddonzData', JSON.stringify(data));
-        } catch (e) {}
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, { ...currentSettings });
     }
 
     // ─── Progress / item helpers ──────────────────────────────────────────────
@@ -823,10 +792,26 @@
 
         if (uiMainWindow) {
             uiMainWindow.style.display = currentSettings.windowVisible ? '' : 'none';
+            const obs1 = new MutationObserver(() => {
+                const isVisible = uiMainWindow.style.display !== 'none';
+                if (currentSettings.windowVisible !== isVisible) {
+                    currentSettings.windowVisible = isVisible;
+                    saveSettings();
+                }
+            });
+            obs1.observe(uiMainWindow, { attributes: true, attributeFilter: ['style'] });
         }
 
         if (uiSettingsWindow) {
             uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? '' : 'none';
+            const obs2 = new MutationObserver(() => {
+                const isVisible = uiSettingsWindow.style.display !== 'none';
+                if (currentSettings.settingsWindowVisible !== isVisible) {
+                    currentSettings.settingsWindowVisible = isVisible;
+                    saveSettings();
+                }
+            });
+            obs2.observe(uiSettingsWindow, { attributes: true, attributeFilter: ['style'] });
         }
 
         setupCommunicationHook();
