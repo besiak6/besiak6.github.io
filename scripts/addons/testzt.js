@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Znacznik Teleportów baddonz
-// @version       02.06.2026
+// @version       10.06.2026
 // @description   Znacznik Teleportów
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -62,18 +62,8 @@
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
-        const accId = window.BaddonzAPI.accountId;
-        let accSettings = {};
-        try {
-            const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
-            if (data[accId] && data[accId].accountAddons) {
-                accSettings = data[accId].accountAddons[ADDON_ID] || {};
-            }
-        } catch (e) {}
-
-        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
-
+        const saved = window.BaddonzAPI.getAddonSettings(ADDON_ID);
+        currentSettings = { ...currentSettings, ...saved };
         if (!currentSettings.customLabels) currentSettings.customLabels = {};
         if (!currentSettings.teleportmass) currentSettings.teleportmass = {};
         if (!currentSettings.ignored_sign) currentSettings.ignored_sign = {};
@@ -81,21 +71,7 @@
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
-        const accId = window.BaddonzAPI.accountId;
-
-        const accKeys = ['enabled', 'customLabels', 'teleportmass', 'ignored_sign'];
-        let accSettings = {};
-        accKeys.forEach(k => accSettings[k] = currentSettings[k]);
-
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
-
-        try {
-            let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
-            if (!data[accId]) data[accId] = {};
-            if (!data[accId].accountAddons) data[accId].accountAddons = {};
-            data[accId].accountAddons[ADDON_ID] = accSettings;
-            localStorage.setItem('BaddonzData', JSON.stringify(data));
-        } catch (e) {}
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, { ...currentSettings });
     }
 
     function parseStats(stats) {
@@ -163,16 +139,13 @@
         let $el = $(el);
         let itemData = $el.data('item');
 
-        // Wyciągamy ID z klasy - twardy wymóg
         let idMatch = el.className.match(/item-id-(\d+)/);
         let id = idMatch ? idMatch[1] : null;
 
-        // Jeśli element nie ma danych w jQuery, a mamy ID z klasy - pytamy silnik gry
         if (!itemData && id && window.Engine && window.Engine.items) {
             itemData = window.Engine.items.getItemById(id);
         }
 
-        // Przywrócony twardy warunek odrzucający przedmioty bez ID (np. dymki z czatu)
         if (!itemData || !id) return;
 
         const tp = getItemTeleport(itemData);
@@ -273,6 +246,7 @@
         uiEditWindow.classList.add('baddonz-zt-wnd-edit');
         uiMassEditWindow.classList.add('baddonz-zt-wnd-mass');
 
+        // Okna tymczasowe — zawsze startują ukryte, nie zapisujemy ich widoczności
         uiAddWindow.style.display = 'none';
         uiEditWindow.style.display = 'none';
         uiMassEditWindow.style.display = 'none';
@@ -358,27 +332,24 @@
         loadSettings();
         if (!uiAddWindow) buildUI();
 
-        observer = new MutationObserver((mutations) => {
-            if (!currentSettings.enabled) return;
-            
-            mutations.forEach(mutation => {
-                mutation.addedNodes.forEach(node => {
-                    if (node.nodeType === 1) { 
-                        if (node.classList && node.classList.contains('item')) {
-                            applyMarkerToElement(node);
-                        }
-                        if (node.querySelectorAll) {
-                            let items = node.querySelectorAll('.item');
-                            if (items.length > 0) {
-                                items.forEach(applyMarkerToElement);
+        if (!observer) {
+            observer = new MutationObserver((mutations) => {
+                if (!currentSettings.enabled) return;
+                mutations.forEach(mutation => {
+                    mutation.addedNodes.forEach(node => {
+                        if (node.nodeType === 1) {
+                            if (node.classList && node.classList.contains('item')) {
+                                applyMarkerToElement(node);
+                            }
+                            if (node.querySelectorAll) {
+                                node.querySelectorAll('.item').forEach(applyMarkerToElement);
                             }
                         }
-                    }
+                    });
                 });
             });
-        });
-
-        observer.observe(document.body, { childList: true, subtree: true });
+            observer.observe(document.body, { childList: true, subtree: true });
+        }
 
         if (!isMenuIntercepted) {
             intercept(window.Engine.interface, 'showPopupMenu', (options, event) => {
