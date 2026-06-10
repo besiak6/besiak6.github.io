@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          AutoX baddonz
-// @version       10.06.2026
+// @version       10.06.2026.1
 // @description   autox
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -52,34 +52,28 @@
     function loadSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
-        let accSettings = {};
         try {
             const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
-            if (data[accId] && data[accId].accountAddons) {
-                accSettings = data[accId].accountAddons[ADDON_ID] || {};
+            if (data[accId] && data[accId].accountAddons && data[accId].accountAddons[ADDON_ID]) {
+                currentSettings = { ...currentSettings, ...data[accId].accountAddons[ADDON_ID] };
+                parsedLevelRange = parseLevelRange(currentSettings.levelRange) || { min: 0, max: 500 };
+                return;
             }
         } catch (e) {}
-
-        let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
+        const charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        currentSettings = { ...currentSettings, ...charSettings };
         parsedLevelRange = parseLevelRange(currentSettings.levelRange) || { min: 0, max: 500 };
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
-
-        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'settingsWindowVisible', 'windowSettingsOpacity', 'isExpanded', 'fastFight', 'attackFriends', 'attackClan', 'enableClanOptions', 'ignoreClans', 'alwaysAttackClans'];
-        const charKeys = ['levelRange', 'enableNickOptions', 'ignoreNicks', 'alwaysAttackNicks'];
-
-        let accSettings = {};
-        let charSettings = {};
-
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'settingsWindowVisible', 'windowSettingsOpacity',
+                         'isExpanded', 'fastFight', 'attackFriends', 'attackClan', 'enableClanOptions',
+                         'ignoreClans', 'alwaysAttackClans', 'levelRange', 'enableNickOptions', 'ignoreNicks', 'alwaysAttackNicks'];
+        const accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
-        charKeys.forEach(k => charSettings[k] = currentSettings[k]);
-
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
-
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
@@ -400,26 +394,10 @@
 
         if (uiMainWindow) {
             uiMainWindow.style.display = currentSettings.windowVisible ? '' : 'none';
-            const obs1 = new MutationObserver(() => {
-                const isVisible = uiMainWindow.style.display !== 'none';
-                if (currentSettings.windowVisible !== isVisible) {
-                    currentSettings.windowVisible = isVisible;
-                    saveSettings();
-                }
-            });
-            obs1.observe(uiMainWindow, { attributes: true, attributeFilter: ['style'] });
         }
 
         if (uiSettingsWindow) {
             uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? '' : 'none';
-            const obs2 = new MutationObserver(() => {
-                const isVisible = uiSettingsWindow.style.display !== 'none';
-                if (currentSettings.settingsWindowVisible !== isVisible) {
-                    currentSettings.settingsWindowVisible = isVisible;
-                    saveSettings();
-                }
-            });
-            obs2.observe(uiSettingsWindow, { attributes: true, attributeFilter: ['style'] });
         }
 
         if (!isEngineObserved) {
