@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Auto Przywo
-// @version       05.08.2025
+// @version       10.06.2026.1
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -25,24 +25,24 @@
                 return;
             }
         } catch (e) {}
-        if (window.BaddonzAPI.getAddonSettings) {
-            currentSettings = { ...currentSettings, ...window.BaddonzAPI.getAddonSettings(ADDON_ID) };
-        }
+        const charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        currentSettings = { ...currentSettings, ...charSettings };
     }
     
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'blockedNicks'];
+        const accSettings = {};
+        accKeys.forEach(k => accSettings[k] = currentSettings[k]);
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
         try {
-            const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
+            let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
             if (!data[accId].accountAddons) data[accId].accountAddons = {};
-            data[accId].accountAddons[ADDON_ID] = { ...currentSettings };
+            data[accId].accountAddons[ADDON_ID] = accSettings;
             localStorage.setItem('BaddonzData', JSON.stringify(data));
         } catch (e) {}
-        if (window.BaddonzAPI.saveAddonSettings) {
-            window.BaddonzAPI.saveAddonSettings(ADDON_ID, currentSettings);
-        }
     }
 
     function enableLogic() {
@@ -191,14 +191,6 @@
 
         if (uiWindowElement) {
             uiWindowElement.style.display = currentSettings.windowVisible ? '' : 'none';
-            const observer = new MutationObserver(() => {
-                const isVisible = uiWindowElement.style.display !== 'none';
-                if (currentSettings.windowVisible !== isVisible) {
-                    currentSettings.windowVisible = isVisible;
-                    saveSettings();
-                }
-            });
-            observer.observe(uiWindowElement, { attributes: true, attributeFilter: ['style'] });
         }
     }
 
