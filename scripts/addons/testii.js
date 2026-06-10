@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Item Info baddonz
-// @version       10.06.2026
+// @version       10.06.2026.1
 // @description   Informacje o itemach
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -93,26 +93,26 @@
     function loadSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
-        let accSettings = {};
         try {
             const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
-            if (data[accId] && data[accId].accountAddons) {
-                accSettings = data[accId].accountAddons[ADDON_ID] || {};
+            if (data[accId] && data[accId].accountAddons && data[accId].accountAddons[ADDON_ID]) {
+                currentSettings = { ...currentSettings, ...data[accId].accountAddons[ADDON_ID] };
+                return;
             }
         } catch (e) {}
-
-        currentSettings = { ...currentSettings, ...accSettings };
+        const charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
+        currentSettings = { ...currentSettings, ...charSettings };
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
-        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'amount_essence', 'SHOW_LEGBON_MARKERS', 'HIDE_OPIS', 'UPGRADE_LEVEL', 'SHOW_SUMMARY_LEGEND', 'SHOW_COMMON', 'SHOW_UPGRADED', 'SHOW_UNIQUE', 'SHOW_HEROIC', 'SHOW_LEGENDARY'];
-        
-        let accSettings = {};
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'amount_essence', 'SHOW_LEGBON_MARKERS',
+                         'HIDE_OPIS', 'UPGRADE_LEVEL', 'SHOW_SUMMARY_LEGEND', 'SHOW_COMMON', 'SHOW_UPGRADED',
+                         'SHOW_UNIQUE', 'SHOW_HEROIC', 'SHOW_LEGENDARY'];
+        const accSettings = {};
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
-
         try {
             let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
             if (!data[accId]) data[accId] = {};
@@ -506,14 +506,6 @@
 
         if (uiWindowElement) {
             uiWindowElement.style.display = currentSettings.windowVisible ? '' : 'none';
-            const observerVisibility = new MutationObserver(() => {
-                const isVisible = uiWindowElement.style.display !== 'none';
-                if (currentSettings.windowVisible !== isVisible) {
-                    currentSettings.windowVisible = isVisible;
-                    saveSettings();
-                }
-            });
-            observerVisibility.observe(uiWindowElement, { attributes: true, attributeFilter: ['style'] });
         }
 
         observer = new MutationObserver((mutations) => {
