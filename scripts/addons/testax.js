@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          AutoX baddonz
-// @version       02.06.2026
+// @version       10.06.2026
 // @description   autox
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -60,7 +60,6 @@
             }
         } catch (e) {}
 
-        // charSettings zawiera windowVisible i settingsWindowVisible (per postać)
         let charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
         currentSettings = { ...currentSettings, ...accSettings, ...charSettings };
         parsedLevelRange = parseLevelRange(currentSettings.levelRange) || { min: 0, max: 500 };
@@ -70,10 +69,8 @@
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
 
-        // accKeys: ustawienia wspólne dla całego konta (nie zależą od postaci)
-        const accKeys = ['enabled', 'windowOpacity', 'windowSettingsOpacity', 'isExpanded', 'fastFight', 'attackFriends', 'attackClan', 'enableClanOptions', 'ignoreClans', 'alwaysAttackClans'];
-        // charKeys: ustawienia per postać (w tym widoczność okienek!)
-        const charKeys = ['windowVisible', 'settingsWindowVisible', 'levelRange', 'enableNickOptions', 'ignoreNicks', 'alwaysAttackNicks'];
+        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'settingsWindowVisible', 'windowSettingsOpacity', 'isExpanded', 'fastFight', 'attackFriends', 'attackClan', 'enableClanOptions', 'ignoreClans', 'alwaysAttackClans'];
+        const charKeys = ['levelRange', 'enableNickOptions', 'ignoreNicks', 'alwaysAttackNicks'];
 
         let accSettings = {};
         let charSettings = {};
@@ -81,7 +78,6 @@
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
         charKeys.forEach(k => charSettings[k] = currentSettings[k]);
 
-        // charSettings trafia do addons[charId] – stąd createAddonWindow poprawnie czyta windowVisible
         window.BaddonzAPI.saveAddonSettings(ADDON_ID, charSettings);
 
         try {
@@ -401,6 +397,30 @@
     function addonInit() {
         loadSettings();
         if (!uiMainWindow) buildUI();
+
+        if (uiMainWindow) {
+            uiMainWindow.style.display = currentSettings.windowVisible ? '' : 'none';
+            const obs1 = new MutationObserver(() => {
+                const isVisible = uiMainWindow.style.display !== 'none';
+                if (currentSettings.windowVisible !== isVisible) {
+                    currentSettings.windowVisible = isVisible;
+                    saveSettings();
+                }
+            });
+            obs1.observe(uiMainWindow, { attributes: true, attributeFilter: ['style'] });
+        }
+
+        if (uiSettingsWindow) {
+            uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? '' : 'none';
+            const obs2 = new MutationObserver(() => {
+                const isVisible = uiSettingsWindow.style.display !== 'none';
+                if (currentSettings.settingsWindowVisible !== isVisible) {
+                    currentSettings.settingsWindowVisible = isVisible;
+                    saveSettings();
+                }
+            });
+            obs2.observe(uiSettingsWindow, { attributes: true, attributeFilter: ['style'] });
+        }
 
         if (!isEngineObserved) {
             if (window.Engine && window.Engine.communication) {
