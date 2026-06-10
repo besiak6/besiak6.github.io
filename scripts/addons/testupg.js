@@ -102,15 +102,6 @@
         if (!window.BaddonzAPI) return;
         const accId = window.BaddonzAPI.accountId;
 
-        // KULOODPORNA POPRAWKA: Przed zapisem aktualizujemy widoczność bezpośrednio z DOM!
-        // Dzięki temu RAM nigdy nie nadpisze ustawień z docka / menedżera.
-        if (uiMainWindow) {
-            currentSettings.windowVisible = uiMainWindow.style.display !== 'none';
-        }
-        if (uiSettingsWindow) {
-            currentSettings.settingsWindowVisible = uiSettingsWindow.style.display !== 'none';
-        }
-
         const accKeys = ['windowOpacity','windowVisible','settingsWindowVisible','windowSettingsOpacity','isCollapsed','hotkeyKey',
                          'enabled','hotkeyEnabled','use_common','use_unique','allow_bound_items','upgrade_endbattle','count_endbattle',
                          'bags_upgrade','count_bags_upgrade','cl1','cl2','cl3','cl4','cl5','cl6','cl7','cl8','cl9','cl10','cl11','cl12','cl13','cl14','cl29'];
@@ -118,7 +109,7 @@
         accKeys.forEach(k => accSettings[k] = currentSettings[k]);
 
         if (typeof window.BaddonzAPI.saveAddonSettings === 'function') {
-            window.BaddonzAPI.saveAddonSettings(ADDON_ID, accSettings);
+            window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
         }
 
         try {
@@ -832,26 +823,10 @@
 
         if (uiMainWindow) {
             uiMainWindow.style.display = currentSettings.windowVisible ? '' : 'none';
-            const obs1 = new MutationObserver(() => {
-                const isVisible = uiMainWindow.style.display !== 'none';
-                if (currentSettings.windowVisible !== isVisible) {
-                    currentSettings.windowVisible = isVisible;
-                    saveSettings();
-                }
-            });
-            obs1.observe(uiMainWindow, { attributes: true, attributeFilter: ['style'] });
         }
 
         if (uiSettingsWindow) {
             uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? '' : 'none';
-            const obs2 = new MutationObserver(() => {
-                const isVisible = uiSettingsWindow.style.display !== 'none';
-                if (currentSettings.settingsWindowVisible !== isVisible) {
-                    currentSettings.settingsWindowVisible = isVisible;
-                    saveSettings();
-                }
-            });
-            obs2.observe(uiSettingsWindow, { attributes: true, attributeFilter: ['style'] });
         }
 
         setupCommunicationHook();
