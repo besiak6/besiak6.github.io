@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Szybka Grupa baddonz
-// @version       2.1.0
+// @version       10.06.2026
 // @description   Szybka Grupa
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -12,327 +12,483 @@
 
     const ADDON_ID = "ZAP";
 
-    const MARGONEM_RELATIONS = { NONE:1, FRIEND:2, ENEMY:3, CLAN:4, CLAN_ALLY:5, CLAN_ENEMY:6 };
-    const PROFESSION_NAMES   = { t:'Tropiciel', b:'T. Ostrzy', w:'Wojownik', p:'Paladyn', m:'Mag', h:'Łowca' };
-
-    // Ustawienia konta — wspólne dla wszystkich postaci
-    const DEFAULT_ACC = {
-        enabled:          true,
-        windowVisible:    true,
-        windowOpacity:    2,
-        inviteKey:        "b",
-        InviteRandoms:    false,
-        InviteNear:       false,
-        autoAcceptEnabled:true,
-        acceptClan:       true,
-        acceptAlly:       true,
-        acceptFriend:     true,
-        acceptOthers:     false,
-        rejectUnchecked:  false
+    const MARGONEM_RELATIONS = {
+        NONE: 1, FRIEND: 2, ENEMY: 3, CLAN: 4, CLAN_ALLY: 5, CLAN_ENEMY: 6
     };
-
-    // Ustawienia postaci — per-character
-    const DEFAULT_CHAR = {
-        InvitebyLevel:       false,
-        minLevel:            0,
-        maxLevel:            500,
-        FilterbyProfession:  false,
-        SelectedProfessions: { t:true, b:true, w:true, p:true, m:true, h:true }
+    const PROFESSION_NAMES = {
+        't': 'Tropiciel', 'b': 'T. Ostrzy', 'w': 'Wojownik',
+        'p': 'Paladyn', 'm': 'Mag', 'h': 'Łowca'
     };
-
-    let S = { ...DEFAULT_ACC, ...DEFAULT_CHAR };
-    let uiWindowElement    = null;
+    let currentSettings = {
+        enabled: true,
+        windowOpacity: 2,
+        windowVisible: true,
+        inviteKey: "b",
+        InviteRandoms: false,
+        InviteNear: false,
+        autoAcceptEnabled: true,
+        acceptClan: true,
+        acceptAlly: true,
+        acceptFriend: true,
+        acceptOthers: false,
+        rejectUnchecked: false,
+        InvitebyLevel: false,
+        minLevel: 0,
+        maxLevel: 500,
+        FilterbyProfession: false,
+        SelectedProfessions: { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true }
+    };
+    let uiWindowElement = null;
     let keybindInputActive = false;
-    let isKeyDownBound     = false;
-
-    const partyInvRegexPL = /Czy chcesz dołączyć do drużyny gracza <strong>(.+?)<\/strong>\?/;
-    const partyInvRegexEN = /Party invitation received from <strong>(.+?)<\/strong>\. Would you like to join\?/;
+    let isKeyDownBound = false;
+    const partyInviteRegexPL = /Czy chcesz dołączyć do drużyny gracza <strong>(.+?)<\/strong>\?/;
+    const partyInviteRegexEN = /Party invitation received from <strong>(.+?)<\/strong>\. Would you like to join\?/;
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
-        const accS  = window.BaddonzAPI.getAccSettings(ADDON_ID);
-        const charS = window.BaddonzAPI.getCharSettings(ADDON_ID);
-        S = { ...DEFAULT_ACC, ...DEFAULT_CHAR, ...accS, ...charS };
-        if (!S.SelectedProfessions) S.SelectedProfessions = { ...DEFAULT_CHAR.SelectedProfessions };
+        const saved = window.BaddonzAPI.getAddonSettings(ADDON_ID);
+        currentSettings = { ...currentSettings, ...saved };
+        if (!currentSettings.SelectedProfessions) {
+            currentSettings.SelectedProfessions = { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true };
+        }
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
-        // Ustawienia konta
-        const accData = {};
-        Object.keys(DEFAULT_ACC).forEach(k => accData[k] = S[k]);
-        window.BaddonzAPI.saveAccSettings(ADDON_ID, accData);
-        // Ustawienia postaci
-        const charData = {};
-        Object.keys(DEFAULT_CHAR).forEach(k => charData[k] = S[k]);
-        window.BaddonzAPI.saveCharSettings(ADDON_ID, charData);
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, { ...currentSettings });
     }
 
-    // ─── Logika ───────────────────────────────────────────────────────────────
     function isChatFocused() {
         const el = document.activeElement;
-        return el && (el.tagName==="INPUT" || el.tagName==="TEXTAREA" || el.isContentEditable);
+        return el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
     }
 
     function isInParty(otherId) {
-        if (!window.Engine?.party) return false;
-        const members = typeof window.Engine.party.getMembers === 'function' ? window.Engine.party.getMembers() : window.Engine.party.d;
+        if (!window.Engine || !window.Engine.party) return false;
+        let members = null;
+        if (typeof window.Engine.party.getMembers === 'function') members = window.Engine.party.getMembers();
+        else if (window.Engine.party.d) members = window.Engine.party.d;
         if (!members) return false;
+
         if (members instanceof Map) return members.has(otherId) || members.has(Number(otherId));
-        if (Array.isArray(members)) return members.some(p => p.id === otherId);
-        if (typeof members === 'object') return !!members[otherId];
+        else if (Array.isArray(members)) return members.some(p => p.id === otherId);
+        else if (typeof members === 'object') return !!members[otherId];
         return false;
     }
 
-    const isInAnyParty    = (p) => p?.d && typeof p.d.pid === 'number' && p.d.pid > 0;
-    const isFriendlyRel   = (p) => p?.d?.relation !== undefined && [MARGONEM_RELATIONS.FRIEND, MARGONEM_RELATIONS.CLAN, MARGONEM_RELATIONS.CLAN_ALLY].includes(p.d.relation);
-    const isInRange       = (p, r) => {
-        if (!window.Engine?.hero || !p?.d) return false;
-        const hx = window.Engine.hero.d.rx ?? window.Engine.hero.d.x;
-        const hy = window.Engine.hero.d.ry ?? window.Engine.hero.d.y;
-        const px = p.d.rx ?? p.d.x;
-        const py = p.d.ry ?? p.d.y;
-        return Math.abs(hx-px) <= r && Math.abs(hy-py) <= r;
-    };
+    function is_he_in_any_party(player) {
+        return player && player.d && typeof player.d.pid === 'number' && player.d.pid > 0;
+    }
+
+    function isFriendlyRelation(player) {
+        if (!player || typeof player.d?.relation !== 'number') return false;
+        return [MARGONEM_RELATIONS.FRIEND, MARGONEM_RELATIONS.CLAN, MARGONEM_RELATIONS.CLAN_ALLY].includes(player.d.relation);
+    }
+
+    function isInRange(player, range) {
+        if (!window.Engine.hero || !player || !player.d) return false;
+        const heroX = typeof window.Engine.hero.d.rx !== 'undefined' ? window.Engine.hero.d.rx : window.Engine.hero.d.x;
+        const heroY = typeof window.Engine.hero.d.ry !== 'undefined' ? window.Engine.hero.d.ry : window.Engine.hero.d.y;
+        const playerX = typeof player.d.rx !== 'undefined' ? player.d.rx : player.d.x;
+        const playerY = typeof player.d.ry !== 'undefined' ? player.d.ry : player.d.y;
+        return Math.abs(heroX - playerX) <= range && Math.abs(heroY - playerY) <= range;
+    }
 
     function getPlayersToInvite() {
-        if (!window.Engine?.others?.getDrawableList) return [];
-        const partyNicks = new Set();
+        if (!window.Engine.others || typeof window.Engine.others.getDrawableList !== 'function') return [];
+        const idInvites = [];
+        const partyMemberNicks = new Set();
+
         if (window.Engine.party) {
-            const members = typeof window.Engine.party.getMembers === 'function' ? window.Engine.party.getMembers() : window.Engine.party.d;
-            if (members instanceof Map) members.forEach(m => { if (m?.nick) partyNicks.add(m.nick.toLowerCase()); });
-            else if (members && typeof members === 'object') for (const id in members) { if (members[id]?.nick) partyNicks.add(members[id].nick.toLowerCase()); }
+            let members = typeof window.Engine.party.getMembers === 'function' ? window.Engine.party.getMembers() : window.Engine.party.d;
+            if (members instanceof Map) {
+                members.forEach(member => { if (member && member.nick) partyMemberNicks.add(member.nick.toLowerCase()); });
+            } else if (members && typeof members === 'object') {
+                for (const memberId in members) {
+                    if (members[memberId] && members[memberId].nick) partyMemberNicks.add(members[memberId].nick.toLowerCase());
+                }
+            }
         }
 
-        const players = Object.values(window.Engine.others.getDrawableList())
-            .filter(e => e.isPlayer && e.d && e.d.id !== window.Engine.hero.d.id && !isInParty(e.d.id) && !isInAnyParty(e))
-            .map(e => ({ p:e, sort:Math.random() }))
-            .sort((a,b) => a.sort-b.sort)
-            .map(o => o.p);
+        let playersOnMap = Object.values(window.Engine.others.getDrawableList())
+            .filter(entry => entry.isPlayer && entry.d && entry.d.id !== window.Engine.hero.d.id && !isInParty(entry.d.id) && !is_he_in_any_party(entry))
+            .map(entry => ({ p: entry, sort: Math.random() }))
+            .sort((a, b) => a.sort - b.sort)
+            .map(obj => obj.p);
 
-        const result = [];
-        players.forEach(player => {
-            if (partyNicks.has(player.d.nick.toLowerCase())) return;
-            if (result.some(inv => inv.value === player.d.id)) return;
+        playersOnMap.forEach(player => {
+            const lowerCasePlayerNick = player.d.nick.toLowerCase();
+            if (partyMemberNicks.has(lowerCasePlayerNick)) return;
+            if (idInvites.some(invite => invite.type === 'id' && invite.value === player.d.id)) return;
 
-            let ok = false;
-            if (S.InviteRandoms)                              ok = true;
-            else if (isFriendlyRel(player))                   ok = true;
-            else if (S.InviteNear && isInRange(player, 1))    ok = true;
-            if (S.InviteNear && !isInRange(player, 1))        ok = false;
+            let shouldInvite = false;
 
-            if (ok && S.InvitebyLevel) {
-                const lvl = parseInt(player.d.lvl);
-                if (isNaN(lvl) || lvl < S.minLevel || lvl > S.maxLevel) ok = false;
+            if (currentSettings.InviteRandoms) {
+                shouldInvite = true;
+            } else if (isFriendlyRelation(player)) {
+                shouldInvite = true;
+            } else if (currentSettings.InviteNear && isInRange(player, 1)) {
+                shouldInvite = true;
             }
-            if (ok && S.FilterbyProfession) {
-                if (!S.SelectedProfessions[player.d.prof]) ok = false;
+
+            if (currentSettings.InviteNear && !isInRange(player, 1)) {
+                shouldInvite = false;
             }
-            if (ok) result.push({ type:'id', value: player.d.id });
+
+            if (shouldInvite && currentSettings.InvitebyLevel) {
+                const playerLevel = parseInt(player.d.lvl);
+                const minLvl = parseInt(currentSettings.minLevel);
+                const maxLvl = parseInt(currentSettings.maxLevel);
+                if (isNaN(playerLevel) || playerLevel < minLvl || playerLevel > maxLvl) shouldInvite = false;
+            }
+
+            if (shouldInvite && currentSettings.FilterbyProfession) {
+                const playerProf = player.d.prof;
+                if (!currentSettings.SelectedProfessions[playerProf]) shouldInvite = false;
+            }
+
+            if (shouldInvite) {
+                idInvites.push({ type: 'id', value: player.d.id });
+            }
         });
-        return result;
+
+        return idInvites;
+    }
+
+    function invitePlayer(inviteData) {
+        if (!isChatFocused()) {
+            if (inviteData.type === 'id') window._g("party&a=inv&id=" + inviteData.value);
+        }
     }
 
     function Ginvite() {
-        if (!S.enabled || isChatFocused()) return;
-        getPlayersToInvite().forEach(inv => window._g("party&a=inv&id=" + inv.value));
+        if (!currentSettings.enabled) return;
+        const playersToInvite = getPlayersToInvite();
+        playersToInvite.forEach(inviteData => invitePlayer(inviteData));
     }
 
     function handleNewAsk(eventData) {
-        if (!S.autoAcceptEnabled) return;
-        if (!Array.isArray(eventData) || !eventData[0]?.q || !eventData[0]?.re?.startsWith("party&a=accept")) return;
-        const m = eventData[0].q.match(partyInvRegexPL) || eventData[0].q.match(partyInvRegexEN);
-        if (!m?.[1]) return;
-        const nick = m[1].trim();
-        let inviter = null;
-        if (window.Engine?.others?.getDrawableList) {
-            for (const e of Object.values(window.Engine.others.getDrawableList())) {
-                if (e.isPlayer && e.d?.nick?.toLowerCase() === nick.toLowerCase()) { inviter = e; break; }
+        if (!currentSettings.autoAcceptEnabled) return;
+        if (eventData && Array.isArray(eventData) && eventData[0] && typeof eventData[0].q === 'string' && typeof eventData[0].re === 'string' && eventData[0].re.startsWith("party&a=accept")) {
+            const questionText = eventData[0].q;
+            let inviterNick = null;
+
+            let match = questionText.match(partyInviteRegexPL) || questionText.match(partyInviteRegexEN);
+            if (match && match[1]) {
+                inviterNick = match[1].trim();
+                let foundInviter = null;
+                
+                if (window.Engine && window.Engine.others && typeof window.Engine.others.getDrawableList === 'function') {
+                    const drawableList = window.Engine.others.getDrawableList();
+                    for (const id in drawableList) {
+                        const player = drawableList[id];
+                        if (player.isPlayer && player.d && player.d.nick && player.d.nick.toLowerCase() === inviterNick.toLowerCase()) {
+                            foundInviter = player;
+                            break;
+                        }
+                    }
+                }
+
+                let shouldAccept = false;
+                let shouldReject = false;
+
+                if (foundInviter) {
+                    const inviterRelation = foundInviter.d.relation;
+                    if (currentSettings.acceptClan && inviterRelation === MARGONEM_RELATIONS.CLAN) shouldAccept = true;
+                    if (currentSettings.acceptAlly && inviterRelation === MARGONEM_RELATIONS.CLAN_ALLY) shouldAccept = true;
+                    if (currentSettings.acceptFriend && inviterRelation === MARGONEM_RELATIONS.FRIEND) shouldAccept = true;
+                    if (currentSettings.acceptOthers && (inviterRelation === MARGONEM_RELATIONS.NONE || inviterRelation === MARGONEM_RELATIONS.ENEMY || inviterRelation === MARGONEM_RELATIONS.CLAN_ENEMY)) shouldAccept = true;
+                } else {
+                    if (currentSettings.acceptClan || currentSettings.acceptFriend) {
+                        shouldAccept = true;
+                    }
+                }
+
+                if (shouldAccept) {
+                    window._g(eventData[0].re + "1");
+                } else if (currentSettings.rejectUnchecked) {
+                    shouldReject = true;
+                    window._g(eventData[0].re + "0");
+                }
+
+                if (shouldAccept || shouldReject) {
+                    if (typeof window.closeModal === "function") window.closeModal();
+                    if (eventData[1] && eventData[1].$ && typeof eventData[1].$.remove === 'function') {
+                        eventData[1].$.remove();
+                        if (eventData[1].$backdrop && typeof eventData[1].$backdrop.remove === 'function') {
+                            eventData[1].$backdrop.remove();
+                        }
+                    }
+                }
             }
-        }
-        let accept = false, reject = false;
-        if (inviter) {
-            const rel = inviter.d.relation;
-            if (S.acceptClan    && rel === MARGONEM_RELATIONS.CLAN)      accept = true;
-            if (S.acceptAlly    && rel === MARGONEM_RELATIONS.CLAN_ALLY) accept = true;
-            if (S.acceptFriend  && rel === MARGONEM_RELATIONS.FRIEND)    accept = true;
-            if (S.acceptOthers  && [MARGONEM_RELATIONS.NONE, MARGONEM_RELATIONS.ENEMY, MARGONEM_RELATIONS.CLAN_ENEMY].includes(rel)) accept = true;
-        } else {
-            if (S.acceptClan || S.acceptFriend) accept = true;
-        }
-        if (!accept && S.rejectUnchecked) reject = true;
-        if (accept) window._g(eventData[0].re + "1");
-        else if (reject) window._g(eventData[0].re + "0");
-        if (accept || reject) {
-            typeof window.closeModal === "function" && window.closeModal();
-            eventData[1]?.$?.remove();
-            eventData[1]?.$backdrop?.remove();
         }
     }
 
     function handleKeyDown(e) {
-        if (!S.enabled) return;
-        const kbInput = uiWindowElement?.querySelector(".zap-keybind-input");
+        if (!currentSettings.enabled) return;
+        const zapKeybindInput = uiWindowElement ? uiWindowElement.querySelector(".zap-keybind-input") : null;
 
-        if (keybindInputActive && kbInput) {
+        if (keybindInputActive && zapKeybindInput) {
             e.preventDefault();
-            const key = e.key.toLowerCase();
-            if (['escape','enter','tab'].includes(key)) { kbInput.blur(); return; }
-            if (!window.BaddonzAPI?.isValidHotkey(key) || key.length !== 1) return;
-            S.inviteKey = key;
-            kbInput.value = key.toUpperCase();
+            const pressedKey = e.key.toLowerCase();
+            
+            if (['escape', 'enter', 'tab'].includes(pressedKey)) {
+                zapKeybindInput.blur();
+                return;
+            }
+
+            if (window.BaddonzAPI && !window.BaddonzAPI.isValidHotkey(pressedKey)) return;
+            if (pressedKey.length !== 1) return;
+
+            currentSettings.inviteKey = pressedKey;
+            zapKeybindInput.value = pressedKey.toUpperCase();
+
             saveSettings();
             keybindInputActive = false;
-            kbInput.blur();
-            kbInput.classList.remove('active-keybind-mode');
+            zapKeybindInput.blur();
+            zapKeybindInput.classList.remove('active-keybind-mode');
             return;
         }
-        if (!isChatFocused() && e.key.toLowerCase() === S.inviteKey) { e.preventDefault(); Ginvite(); }
-    }
 
-    // ─── UI ───────────────────────────────────────────────────────────────────
-    function buildUI() {
-        const profCheckboxes = Object.keys(PROFESSION_NAMES).map(code => `
-            <div class="baddonz-label-wrapper prof-row-${code}" style="justify-content:flex-start;align-items:center;gap:4px;">
-                <div class="baddonz-checkbox prof-cb-${code} ${S.SelectedProfessions[code] ? 'active' : ''}"></div>
-                <div class="baddonz-text" style="padding:0;font-size:11px;">${code.toUpperCase()}</div>
-            </div>`).join('');
-
-        const bodyHtml = `
-            <div class="baddonz-setting-row" style="margin-bottom:4px!important;display:flex;align-items:center;">
-                <div class="baddonz-checkbox zap-enabled ${S.enabled ? 'active' : ''}"></div>
-                <span class="baddonz-text" style="padding:0;margin-left:5px;">Szybka Grupa</span>
-                <input type="text" class="baddonz-input keybind zap-keybind-input" value="${S.inviteKey.toUpperCase()}" readonly
-                       style="width:50px;height:20px;line-height:18px;font-size:11px;padding:1px 0;margin-left:auto;">
-            </div>
-            <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox zap-randoms ${S.InviteRandoms ? 'active' : ''}"></div>
-                <span class="baddonz-text" style="padding:0;">Zapraszaj randomów obok</span>
-            </div>
-            <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox zap-near ${S.InviteNear ? 'active' : ''}"></div>
-                <span class="baddonz-text" style="padding:0;">Grupa z kratki (inne relacje)</span>
-            </div>
-            <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox zap-bylevel ${S.InvitebyLevel ? 'active' : ''}"></div>
-                <span class="baddonz-text" style="padding:0;">Grupa po levelu</span>
-            </div>
-            <div class="zap-level-section" style="display:${S.InvitebyLevel ? 'flex' : 'none'};flex-direction:row;align-items:center;justify-content:center;gap:5px;margin-bottom:2px;width:100%;">
-                <input type="number" class="baddonz-input compact zap-min-level" value="${S.minLevel}" min="0" max="500" placeholder="Od">
-                <span style="color:#fff;font-size:16px;line-height:1;">-</span>
-                <input type="number" class="baddonz-input compact zap-max-level" value="${S.maxLevel}" min="0" max="500" placeholder="Do">
-            </div>
-            <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox zap-byprof ${S.FilterbyProfession ? 'active' : ''}"></div>
-                <span class="baddonz-text" style="padding:0;">Grupa po profesjach</span>
-            </div>
-            <div class="baddonz-grid-3col zap-prof-section" style="display:${S.FilterbyProfession ? 'grid' : 'none'};width:100%;margin-bottom:2px;">
-                ${profCheckboxes}
-            </div>
-            <hr style="width:100%;border-color:#303030;">
-            <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox zap-autoaccept ${S.autoAcceptEnabled ? 'active' : ''}"></div>
-                <span class="baddonz-text" style="padding:0;">Auto akceptacja zaproszeń</span>
-            </div>
-            <div class="baddonz-flex column zap-accept-section" style="display:${S.autoAcceptEnabled ? 'flex' : 'none'};width:100%;gap:2px;">
-                <div class="baddonz-grid-2col">
-                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox zap-acc-friend ${S.acceptFriend ? 'active' : ''}"></div><span class="baddonz-text">Znaj</span></div>
-                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox zap-acc-ally ${S.acceptAlly ? 'active' : ''}"></div><span class="baddonz-text">Sojusz</span></div>
-                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox zap-acc-clan ${S.acceptClan ? 'active' : ''}"></div><span class="baddonz-text">Klan</span></div>
-                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox zap-acc-others ${S.acceptOthers ? 'active' : ''}"></div><span class="baddonz-text">Obcy</span></div>
-                </div>
-                <div class="baddonz-setting-row" style="margin-top:2px;margin-bottom:0;">
-                    <div class="baddonz-checkbox zap-reject ${S.rejectUnchecked ? 'active' : ''}"></div>
-                    <span class="baddonz-text" style="padding:0;">Odrzucaj zaproszenia</span>
-                </div>
-            </div>`;
-
-        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Szybka Grupa", bodyHtml, {
-            width: '195px', customId: 'baddonz-zap-wnd', hasSettings: false, hasCollapse: false
-        });
-
-        const g = (sel) => uiWindowElement.querySelector(sel);
-        const cbToggle = (sel, key) => g(sel).addEventListener('click', () => { S[key] = g(sel).classList.toggle('active'); saveSettings(); });
-
-        g('.zap-enabled').addEventListener('click', () => { S.enabled = g('.zap-enabled').classList.toggle('active'); saveSettings(); });
-
-        const kbInput = g('.zap-keybind-input');
-        kbInput.addEventListener('click', () => { keybindInputActive = true; kbInput.focus(); kbInput.classList.add('active-keybind-mode'); });
-        kbInput.addEventListener('focusout', () => { if (keybindInputActive) { keybindInputActive = false; kbInput.value = S.inviteKey.toUpperCase(); } kbInput.classList.remove('active-keybind-mode'); });
-
-        cbToggle('.zap-randoms',    'InviteRandoms');
-        cbToggle('.zap-near',       'InviteNear');
-
-        g('.zap-bylevel').addEventListener('click', () => {
-            S.InvitebyLevel = g('.zap-bylevel').classList.toggle('active');
-            g('.zap-level-section').style.display = S.InvitebyLevel ? 'flex' : 'none';
-            saveSettings();
-        });
-
-        const fixLevel = (el, key) => {
-            el.addEventListener('change', () => {
-                let v = parseInt(el.value); if (isNaN(v)||v<0) v=0; if (v>500) v=500; el.value = v; S[key] = v; saveSettings();
-            });
-        };
-        fixLevel(g('.zap-min-level'), 'minLevel');
-        fixLevel(g('.zap-max-level'), 'maxLevel');
-
-        g('.zap-byprof').addEventListener('click', () => {
-            S.FilterbyProfession = g('.zap-byprof').classList.toggle('active');
-            g('.zap-prof-section').style.display = S.FilterbyProfession ? 'grid' : 'none';
-            saveSettings();
-        });
-
-        Object.keys(PROFESSION_NAMES).forEach(code => {
-            const el = g(`.prof-cb-${code}`);
-            if (el) el.addEventListener('click', () => { S.SelectedProfessions[code] = el.classList.toggle('active'); saveSettings(); });
-            const row = g(`.prof-row-${code}`);
-            if (row && typeof $ === 'function' && typeof $.fn.tip === 'function') $(row).tip(PROFESSION_NAMES[code]);
-        });
-
-        g('.zap-autoaccept').addEventListener('click', () => {
-            S.autoAcceptEnabled = g('.zap-autoaccept').classList.toggle('active');
-            g('.zap-accept-section').style.display = S.autoAcceptEnabled ? 'flex' : 'none';
-            saveSettings();
-        });
-        cbToggle('.zap-acc-clan',   'acceptClan');
-        cbToggle('.zap-acc-ally',   'acceptAlly');
-        cbToggle('.zap-acc-friend', 'acceptFriend');
-        cbToggle('.zap-acc-others', 'acceptOthers');
-        cbToggle('.zap-reject',     'rejectUnchecked');
-
-        if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
-            $(g('.zap-randoms')).tip("Zapraszaj wszystkich graczy");
-            $(g('.zap-near')).tip("Przydatne na tytanów");
+        if (!isChatFocused() && e.key.toLowerCase() === currentSettings.inviteKey) {
+            e.preventDefault();
+            Ginvite();
         }
     }
 
-    // ─── Lifecycle ────────────────────────────────────────────────────────────
+    function buildUI() {
+        const createProfessionsCheckboxes = () => {
+            let html = '';
+            Object.keys(PROFESSION_NAMES).forEach(code => {
+                html += `
+                    <div class="baddonz-label-wrapper prof-row-${code}" style="justify-content: flex-start; align-items: center; gap: 4px;">
+                        <div class="baddonz-checkbox prof-checkbox-${code}"></div>
+                        <div class="baddonz-text" style="padding: 0; font-size: 11px;">${code.toUpperCase()}</div>
+                    </div>
+                `;
+            });
+            return html;
+        };
+
+        const bodyHtml = `
+            <div class="baddonz-setting-row" style="margin-bottom: 4px !important; display: flex; align-items: center;">
+                <div class="baddonz-checkbox zap-checkbox ${currentSettings.enabled ? 'active' : ''}"></div>
+                <span class="baddonz-text" style="padding: 0; margin-left: 5px;">Szybka Grupa</span>
+                <input type="text" class="baddonz-input keybind zap-keybind-input" value="${currentSettings.inviteKey.toUpperCase()}" readonly style="width: 50px; height: 20px; line-height: 18px; font-size: 11px; padding: 1px 0; margin-left: auto;">
+            </div>
+
+            <div class="baddonz-setting-row">
+                <div class="baddonz-checkbox zap-randoms-checkbox ${currentSettings.InviteRandoms ? 'active' : ''}"></div>
+                <span class="baddonz-text" style="padding:0;">Zapraszaj randomów obok</span>
+            </div>
+
+            <div class="baddonz-setting-row">
+                <div class="baddonz-checkbox zap-from-square-checkbox ${currentSettings.InviteNear ? 'active' : ''}"></div>
+                <span class="baddonz-text" style="padding:0;">Grupa z kratki (inne relacje)</span>
+            </div>
+
+            <div class="baddonz-setting-row">
+                <div class="baddonz-checkbox zap-by-level-checkbox ${currentSettings.InvitebyLevel ? 'active' : ''}"></div>
+                <span class="baddonz-text" style="padding:0;">Grupa po levelu</span>
+            </div>
+
+            <div class="zap-level-range-section" style="display: ${currentSettings.InvitebyLevel ? 'flex' : 'none'}; flex-direction: row; align-items: center; justify-content: center; gap: 5px; margin-bottom: 2px; width: 100%;">
+                <input type="number" class="baddonz-input compact zap-min-level-input" value="${currentSettings.minLevel}" min="0" max="500" placeholder="Od">
+                <span style="color: #fff; font-size: 16px; line-height: 1;">-</span>
+                <input type="number" class="baddonz-input compact zap-max-level-input" value="${currentSettings.maxLevel}" min="0" max="500" placeholder="Do">
+            </div>
+
+            <div class="baddonz-setting-row">
+                <div class="baddonz-checkbox zap-filter-by-profession-checkbox ${currentSettings.FilterbyProfession ? 'active' : ''}"></div>
+                <span class="baddonz-text" style="padding:0;">Grupa po profesjach</span>
+            </div>
+
+            <div class="baddonz-grid-3col zap-profession-filter-section" style="display: ${currentSettings.FilterbyProfession ? 'grid' : 'none'}; width: 100%; margin-bottom: 2px;">
+                ${createProfessionsCheckboxes()}
+            </div>
+
+            <hr style="width: 100%; border-color: #303030;">
+
+            <div class="baddonz-setting-row">
+                <div class="baddonz-checkbox zap-auto-accept-checkbox ${currentSettings.autoAcceptEnabled ? 'active' : ''}"></div>
+                <span class="baddonz-text" style="padding:0;">Auto akceptacja zaproszeń</span>
+            </div>
+
+            <div class="baddonz-flex column zap-accept-options-section" style="display: ${currentSettings.autoAcceptEnabled ? 'flex' : 'none'}; width: 100%; gap: 2px;">
+                <div class="baddonz-grid-2col">
+                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox accept-friend-checkbox ${currentSettings.acceptFriend ? 'active' : ''}"></div><span class="baddonz-text">Znaj</span></div>
+                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox accept-ally-checkbox ${currentSettings.acceptAlly ? 'active' : ''}"></div><span class="baddonz-text">Sojusz</span></div>
+                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox accept-clan-checkbox ${currentSettings.acceptClan ? 'active' : ''}"></div><span class="baddonz-text">Klan</span></div>
+                    <div class="baddonz-label-wrapper"><div class="baddonz-checkbox accept-others-checkbox ${currentSettings.acceptOthers ? 'active' : ''}"></div><span class="baddonz-text">Obcy</span></div>
+                </div>
+                <div class="baddonz-setting-row" style="margin-top: 2px; margin-bottom: 0;">
+                    <div class="baddonz-checkbox reject-unchecked-checkbox ${currentSettings.rejectUnchecked ? 'active' : ''}"></div>
+                    <span class="baddonz-text" style="padding:0;">Odrzucaj zaproszenia</span>
+                </div>
+            </div>
+        `;
+
+        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Szybka Grupa", bodyHtml, {
+            width: '195px',
+            customId: 'baddonz-zap-wnd',
+            hasSettings: false,
+            hasCollapse: false
+        });
+
+        const zapCheckbox = uiWindowElement.querySelector(".zap-checkbox");
+        const zapKeybindInput = uiWindowElement.querySelector(".zap-keybind-input");
+
+        const zapRandomsCheckbox = uiWindowElement.querySelector(".zap-randoms-checkbox");
+        const zapFromSquareCheckbox = uiWindowElement.querySelector(".zap-from-square-checkbox");
+        const zapByLevelCheckbox = uiWindowElement.querySelector(".zap-by-level-checkbox");
+        const zapLevelRangeSection = uiWindowElement.querySelector(".zap-level-range-section");
+        const zapMinLevelInput = uiWindowElement.querySelector(".zap-min-level-input");
+        const zapMaxLevelInput = uiWindowElement.querySelector(".zap-max-level-input");
+        const zapFilterByProfessionCheckbox = uiWindowElement.querySelector(".zap-filter-by-profession-checkbox");
+        const zapProfessionFilterSection = uiWindowElement.querySelector(".zap-profession-filter-section");
+
+        const autoAcceptCheckbox = uiWindowElement.querySelector(".zap-auto-accept-checkbox");
+        const acceptOptionsSection = uiWindowElement.querySelector(".zap-accept-options-section");
+        const acceptClanCheckbox = uiWindowElement.querySelector(".accept-clan-checkbox");
+        const acceptAllyCheckbox = uiWindowElement.querySelector(".accept-ally-checkbox");
+        const acceptFriendCheckbox = uiWindowElement.querySelector(".accept-friend-checkbox");
+        const acceptOthersCheckbox = uiWindowElement.querySelector(".accept-others-checkbox");
+        const rejectUncheckedCheckbox = uiWindowElement.querySelector(".reject-unchecked-checkbox");
+
+        zapCheckbox.addEventListener('click', () => {
+            currentSettings.enabled = zapCheckbox.classList.toggle('active');
+            saveSettings();
+        });
+
+        zapKeybindInput.addEventListener('click', () => {
+            keybindInputActive = true;
+            zapKeybindInput.focus();
+            zapKeybindInput.classList.add('active-keybind-mode');
+        });
+
+        zapKeybindInput.addEventListener('focusout', () => {
+            if (keybindInputActive) {
+                keybindInputActive = false;
+                zapKeybindInput.value = currentSettings.inviteKey.toUpperCase();
+            }
+            zapKeybindInput.classList.remove('active-keybind-mode');
+        });
+
+        zapRandomsCheckbox.addEventListener('click', () => { currentSettings.InviteRandoms = zapRandomsCheckbox.classList.toggle('active'); saveSettings(); });
+        zapFromSquareCheckbox.addEventListener('click', () => { currentSettings.InviteNear = zapFromSquareCheckbox.classList.toggle('active'); saveSettings(); });
+
+        zapByLevelCheckbox.addEventListener('click', () => { 
+            currentSettings.InvitebyLevel = zapByLevelCheckbox.classList.toggle('active'); 
+            zapLevelRangeSection.style.display = currentSettings.InvitebyLevel ? 'flex' : 'none';
+            saveSettings(); 
+        });
+
+        const handleLevelChange = (el, key) => {
+            let val = parseInt(el.value);
+            if (isNaN(val) || val < 0) val = 0;
+            if (val > 500) val = 500;
+            el.value = val;
+            currentSettings[key] = val;
+            saveSettings();
+        };
+
+        zapMinLevelInput.addEventListener('change', (e) => handleLevelChange(e.target, 'minLevel'));
+        zapMaxLevelInput.addEventListener('change', (e) => handleLevelChange(e.target, 'maxLevel'));
+
+        zapFilterByProfessionCheckbox.addEventListener('click', () => {
+            currentSettings.FilterbyProfession = zapFilterByProfessionCheckbox.classList.toggle('active');
+            zapProfessionFilterSection.style.display = currentSettings.FilterbyProfession ? 'grid' : 'none';
+            saveSettings();
+        });
+
+        Object.keys(PROFESSION_NAMES).forEach(profCode => {
+            const checkbox = uiWindowElement.querySelector(`.prof-checkbox-${profCode}`);
+            if (checkbox) {
+                if (currentSettings.SelectedProfessions[profCode]) checkbox.classList.add('active');
+                checkbox.addEventListener('click', () => {
+                    currentSettings.SelectedProfessions[profCode] = checkbox.classList.toggle('active');
+                    saveSettings();
+                });
+            }
+            const row = uiWindowElement.querySelector(`.prof-row-${profCode}`);
+            if (row && typeof $ === 'function' && typeof $.fn.tip === 'function') {
+                $(row).tip(PROFESSION_NAMES[profCode]);
+            }
+        });
+
+        autoAcceptCheckbox.addEventListener('click', () => {
+            currentSettings.autoAcceptEnabled = autoAcceptCheckbox.classList.toggle('active');
+            acceptOptionsSection.style.display = currentSettings.autoAcceptEnabled ? 'flex' : 'none';
+            saveSettings();
+        });
+
+        acceptClanCheckbox.addEventListener('click', () => { currentSettings.acceptClan = acceptClanCheckbox.classList.toggle('active'); saveSettings(); });
+        acceptAllyCheckbox.addEventListener('click', () => { currentSettings.acceptAlly = acceptAllyCheckbox.classList.toggle('active'); saveSettings(); });
+        acceptFriendCheckbox.addEventListener('click', () => { currentSettings.acceptFriend = acceptFriendCheckbox.classList.toggle('active'); saveSettings(); });
+        acceptOthersCheckbox.addEventListener('click', () => { currentSettings.acceptOthers = acceptOthersCheckbox.classList.toggle('active'); saveSettings(); });
+        rejectUncheckedCheckbox.addEventListener('click', () => { currentSettings.rejectUnchecked = rejectUncheckedCheckbox.classList.toggle('active'); saveSettings(); });
+        
+        if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
+            $(zapRandomsCheckbox).tip("Zapraszaj wszystkich graczy");
+            $(zapFromSquareCheckbox).tip("Przydatne na tytanów");
+        }
+    }
+
     function addonInit() {
         loadSettings();
         if (!uiWindowElement) buildUI();
-        if (uiWindowElement) uiWindowElement.style.display = S.windowVisible ? '' : 'none';
-        if (!isKeyDownBound) { document.addEventListener('keydown', handleKeyDown); isKeyDownBound = true; }
-        if (typeof window.API !== 'undefined' && window.Engine?.apiData?.NEW_ASK)
+
+        if (uiWindowElement) {
+            uiWindowElement.style.display = currentSettings.windowVisible ? '' : 'none';
+            const observer = new MutationObserver(() => {
+                const isVisible = uiWindowElement.style.display !== 'none';
+                if (currentSettings.windowVisible !== isVisible) {
+                    currentSettings.windowVisible = isVisible;
+                    saveSettings();
+                }
+            });
+            observer.observe(uiWindowElement, { attributes: true, attributeFilter: ['style'] });
+        }
+
+        if (!isKeyDownBound) {
+            document.addEventListener('keydown', handleKeyDown);
+            isKeyDownBound = true;
+        }
+
+        if (typeof window.API !== 'undefined' && typeof window.Engine.apiData !== 'undefined' && window.Engine.apiData.NEW_ASK) {
             window.API.addCallbackToEvent(window.Engine.apiData.NEW_ASK, handleNewAsk);
+        }
     }
 
     function addonStop() {
-        if (isKeyDownBound) { document.removeEventListener('keydown', handleKeyDown); isKeyDownBound = false; }
-        if (uiWindowElement) { uiWindowElement.remove(); uiWindowElement = null; }
+        if (isKeyDownBound) {
+            document.removeEventListener('keydown', handleKeyDown);
+            isKeyDownBound = false;
+        }
+        if (uiWindowElement) {
+            uiWindowElement.remove();
+            uiWindowElement = null;
+        }
     }
 
     function onStateToggle(isEnabled) {
-        S.enabled = isEnabled;
+        currentSettings.enabled = isEnabled;
         if (uiWindowElement) {
-            const el = uiWindowElement.querySelector(".zap-enabled");
-            if (el) el.classList.toggle('active', isEnabled);
+            const zapCheckbox = uiWindowElement.querySelector(".zap-checkbox");
+            if (zapCheckbox) {
+                if (isEnabled) zapCheckbox.classList.add('active');
+                else zapCheckbox.classList.remove('active');
+            }
         }
     }
 
     const checkApi = () => {
-        if (!window.BaddonzAPI?.registerAddon) { setTimeout(checkApi, 500); return; }
-        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle });
+        if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon) {
+            setTimeout(checkApi, 500);
+            return;
+        }
+        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle: onStateToggle });
     };
+
     checkApi();
 })();
