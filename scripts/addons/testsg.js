@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Szybka Grupa baddonz
-// @version       28.05.2026v2
+// @version       10.06.2026
 // @description   Szybka Grupa
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -466,6 +466,18 @@
     function addonInit() {
         loadSettings();
         if (!uiWindowElement) buildUI();
+
+        if (uiWindowElement) {
+            uiWindowElement.style.display = currentSettings.windowVisible ? '' : 'none';
+            const observer = new MutationObserver(() => {
+                const isVisible = uiWindowElement.style.display !== 'none';
+                if (currentSettings.windowVisible !== isVisible) {
+                    currentSettings.windowVisible = isVisible;
+                    saveSettings();
+                }
+            });
+            observer.observe(uiWindowElement, { attributes: true, attributeFilter: ['style'] });
+        }
 
         if (!isKeyDownBound) {
             document.addEventListener('keydown', handleKeyDown);
