@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Auto Przywo
-// @version       10.06.2026.1
+// @version       2.0
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -10,222 +10,184 @@
     'use strict';
 
     const ADDON_ID = "AP";
-    let currentSettings = { enabled: true, windowOpacity: 2, windowVisible: true, blockedNicks: [] };
-    
+
+    // Wszystko zapisywane do konta (acc) — brak ustawień per-postać
+    const DEFAULT = {
+        enabled:       true,
+        windowVisible: true,
+        windowOpacity: 2,
+        blockedNicks:  []
+    };
+
+    let S = { ...DEFAULT };
     let uiWindowElement = null;
-    let originalAlert = null;
+    let originalAlert   = null;
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
-        const accId = window.BaddonzAPI.accountId;
-        try {
-            const data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
-            if (data[accId] && data[accId].accountAddons && data[accId].accountAddons[ADDON_ID]) {
-                currentSettings = { ...currentSettings, ...data[accId].accountAddons[ADDON_ID] };
-                return;
-            }
-        } catch (e) {}
-        const charSettings = window.BaddonzAPI.getAddonSettings(ADDON_ID) || {};
-        currentSettings = { ...currentSettings, ...charSettings };
+        S = { ...DEFAULT, ...window.BaddonzAPI.getAccSettings(ADDON_ID) };
     }
-    
+
     function saveSettings() {
         if (!window.BaddonzAPI) return;
-        const accId = window.BaddonzAPI.accountId;
-        const accKeys = ['enabled', 'windowOpacity', 'windowVisible', 'blockedNicks'];
-        const accSettings = {};
-        accKeys.forEach(k => accSettings[k] = currentSettings[k]);
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, {});
-        try {
-            let data = JSON.parse(localStorage.getItem('BaddonzData')) || {};
-            if (!data[accId]) data[accId] = {};
-            if (!data[accId].accountAddons) data[accId].accountAddons = {};
-            data[accId].accountAddons[ADDON_ID] = accSettings;
-            localStorage.setItem('BaddonzData', JSON.stringify(data));
-        } catch (e) {}
+        window.BaddonzAPI.saveAccSettings(ADDON_ID, S);
     }
 
+    // ─── Logika ───────────────────────────────────────────────────────────────
     function enableLogic() {
-        if (typeof mAlert !== 'undefined' && !originalAlert) {
-            originalAlert = mAlert;
-            mAlert = function () {
-                if (currentSettings.enabled && arguments[0] !== undefined && typeof arguments[0] === 'string') {
-                    const message = arguments[0];
-                    if (message.includes("przyzywa do siebie swoją drużynę")) {
-                        const nickMatch = message.match(/Gracz (.+?) przyzywa/);
-                        if (nickMatch && nickMatch[1]) {
-                            const summonedNick = nickMatch[1].trim();
-                            const isBlocked = currentSettings.blockedNicks.some(bn => bn.toLowerCase() === summonedNick.toLowerCase());
-                            if (isBlocked) return originalAlert.apply(this, arguments);
-                        }
-
-                        _g("party&a=acceptsummon&answer=1");
-                        if (typeof closeModal === "function") closeModal();
-                        return;
+        if (typeof mAlert === 'undefined' || originalAlert) return;
+        originalAlert = mAlert;
+        mAlert = function() {
+            if (S.enabled && typeof arguments[0] === 'string') {
+                const msg = arguments[0];
+                if (msg.includes("przyzywa do siebie swoją drużynę")) {
+                    const m = msg.match(/Gracz (.+?) przyzywa/);
+                    if (m && m[1]) {
+                        const nick = m[1].trim();
+                        const blocked = S.blockedNicks.some(bn => bn.toLowerCase() === nick.toLowerCase());
+                        if (blocked) return originalAlert.apply(this, arguments);
                     }
+                    _g("party&a=acceptsummon&answer=1");
+                    if (typeof closeModal === "function") closeModal();
+                    return;
                 }
-                return originalAlert.apply(this, arguments);
-            };
-        }
+            }
+            return originalAlert.apply(this, arguments);
+        };
     }
 
     function disableLogic() {
-        if (originalAlert) {
-            mAlert = originalAlert;
-            originalAlert = null;
-        }
+        if (originalAlert) { mAlert = originalAlert; originalAlert = null; }
     }
 
+    // ─── UI ───────────────────────────────────────────────────────────────────
     function buildUI() {
         const bodyHtml = `
-            <div class="baddonz-label-wrapper" style="justify-content: flex-start; align-items: center; gap: 5px;">
-                <div class="baddonz-checkbox ${currentSettings.enabled ? 'active' : ''}" id="ap-checkbox"></div>
-                <div class="baddonz-text" style="padding: 0;">Auto Przywo</div>
+            <div class="baddonz-label-wrapper" style="justify-content:flex-start;align-items:center;gap:5px;">
+                <div class="baddonz-checkbox ${S.enabled ? 'active' : ''}" id="ap-enabled"></div>
+                <div class="baddonz-text" style="padding:0;">Auto Przywo</div>
             </div>
-
-            <div id="ap-blocked-nicks-section" class="baddonz-flex column" style="gap: 5px; margin-top: 5px; display: ${currentSettings.enabled ? 'flex' : 'none'}; box-sizing: border-box; max-width: 100%;">
-                <hr style="width: 100%; border-color: #303030; margin: 0;">
-                <div class="baddonz-text" style="padding: 0;">Nie akceptuj od:</div>
-                
+            <div id="ap-blocked-section" class="baddonz-flex column" style="gap:5px;margin-top:5px;display:${S.enabled ? 'flex' : 'none'};box-sizing:border-box;max-width:100%;">
+                <hr style="width:100%;border-color:#303030;margin:0;">
+                <div class="baddonz-text" style="padding:0;">Nie akceptuj od:</div>
                 <div class="baddonz-input-addbutton">
-                    <input type="text" class="baddonz-input" id="ap-blocked-nick-input" placeholder="Wpisz nick" maxlength="20">
-                    <button class="baddonz-button" id="ap-add-nick-btn">+</button>
+                    <input type="text" class="baddonz-input" id="ap-nick-input" placeholder="Wpisz nick" maxlength="20">
+                    <button class="baddonz-button" id="ap-add-btn">+</button>
                 </div>
-                
-                <div class="baddonz-scroll" id="ap-blocked-nicks-list" style="overflow-y: auto; max-height: 120px; width: 100%; box-sizing: border-box;"></div>
-            </div>
-        `;
+                <div class="baddonz-scroll" id="ap-nicks-list" style="overflow-y:auto;max-height:120px;width:100%;box-sizing:border-box;"></div>
+            </div>`;
 
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Przywo", bodyHtml, { width: '195px' });
 
-        const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
-        const apBlockedNickInput = uiWindowElement.querySelector("#ap-blocked-nick-input");
-        const apAddNickBtn = uiWindowElement.querySelector("#ap-add-nick-btn");
-        const apBlockedNicksList = uiWindowElement.querySelector("#ap-blocked-nicks-list");
-        const section = uiWindowElement.querySelector("#ap-blocked-nicks-section");
+        const elEnabled  = uiWindowElement.querySelector("#ap-enabled");
+        const elSection  = uiWindowElement.querySelector("#ap-blocked-section");
+        const elInput    = uiWindowElement.querySelector("#ap-nick-input");
+        const elAddBtn   = uiWindowElement.querySelector("#ap-add-btn");
+        const elList     = uiWindowElement.querySelector("#ap-nicks-list");
 
-        const renderBlockedNicks = () => {
-            apBlockedNicksList.innerHTML = '';
-            currentSettings.blockedNicks.forEach((nick, index) => {
+        const renderList = () => {
+            elList.innerHTML = '';
+            S.blockedNicks.forEach((nick, idx) => {
                 const el = document.createElement('div');
-                el.className = 'baddonz-list-item'; 
-                
-                // Użycie NATYWNEGO X (close-button) z Menedżera, zabezpieczone na kliknięcia
+                el.className = 'baddonz-list-item';
                 el.innerHTML = `
-                    <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${index}" maxlength="20" style="flex-grow: 1; padding-right: 22px; height: 24px; padding: 2px 5px; font-size: 13px; box-sizing: border-box;">
-                    <div class="baddonz-icon baddonz-close-button baddonz-remove-x" data-index="${index}" title="Usuń z listy"></div>
-                `;
-                apBlockedNicksList.appendChild(el);
+                    <input type="text" class="baddonz-input" value="${nick}" readonly data-index="${idx}" maxlength="20" style="flex-grow:1;height:24px;padding:2px 5px;font-size:13px;box-sizing:border-box;">
+                    <div class="baddonz-icon baddonz-close-button baddonz-remove-x" data-index="${idx}" title="Usuń z listy"></div>`;
+                elList.appendChild(el);
             });
         };
 
-        apCheckbox.addEventListener('click', () => {
-            apCheckbox.classList.toggle('active');
-            currentSettings.enabled = apCheckbox.classList.contains('active');
-            section.style.display = currentSettings.enabled ? 'flex' : 'none';
+        elEnabled.addEventListener('click', () => {
+            S.enabled = elEnabled.classList.toggle('active');
+            elSection.style.display = S.enabled ? 'flex' : 'none';
             saveSettings();
         });
 
-        apAddNickBtn.addEventListener('click', () => {
-            const nick = apBlockedNickInput.value.trim();
-            if (nick && !currentSettings.blockedNicks.some(n => n.toLowerCase() === nick.toLowerCase())) {
-                currentSettings.blockedNicks.push(nick);
-                apBlockedNickInput.value = '';
-                saveSettings(); renderBlockedNicks();
-                apBlockedNicksList.scrollTop = apBlockedNicksList.scrollHeight;
+        elAddBtn.addEventListener('click', () => {
+            const nick = elInput.value.trim();
+            if (nick && !S.blockedNicks.some(n => n.toLowerCase() === nick.toLowerCase())) {
+                S.blockedNicks.push(nick);
+                elInput.value = '';
+                saveSettings();
+                renderList();
+                elList.scrollTop = elList.scrollHeight;
             }
         });
 
-        apBlockedNicksList.addEventListener('click', (e) => {
-            // Reagujemy na kliknięcie w systemowy "X"
+        // Usuwanie (klik w X)
+        elList.addEventListener('click', (e) => {
             if (e.target.classList.contains('baddonz-remove-x') || e.target.classList.contains('baddonz-close-button')) {
-                currentSettings.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
-                saveSettings(); renderBlockedNicks();
+                S.blockedNicks.splice(parseInt(e.target.dataset.index), 1);
+                saveSettings();
+                renderList();
             }
         });
 
-        apBlockedNicksList.addEventListener('click', (e) => {
+        // Edycja (klik w input)
+        elList.addEventListener('click', (e) => {
             if (e.target.tagName === 'INPUT' && e.target.classList.contains('baddonz-input')) {
-                const indexToEdit = parseInt(e.target.dataset.index);
-                const originalNick = currentSettings.blockedNicks[indexToEdit];
-                
+                const idx     = parseInt(e.target.dataset.index);
+                const origNick= S.blockedNicks[idx];
                 e.target.readOnly = false;
                 e.target.focus();
                 e.target.setSelectionRange(e.target.value.length, e.target.value.length);
-
-                const handleBlur = () => {
+                const onBlur = () => {
                     e.target.readOnly = true;
                     const newNick = e.target.value.trim();
-                    if (newNick && newNick.toLowerCase() !== originalNick.toLowerCase()) {
-                        const isDuplicate = currentSettings.blockedNicks.some((n, i) => i !== indexToEdit && n.toLowerCase() === newNick.toLowerCase());
-                        if (!isDuplicate) currentSettings.blockedNicks[indexToEdit] = newNick;
-                        else e.target.value = originalNick;
+                    if (newNick && newNick.toLowerCase() !== origNick.toLowerCase()) {
+                        const dup = S.blockedNicks.some((n, i) => i !== idx && n.toLowerCase() === newNick.toLowerCase());
+                        if (!dup) S.blockedNicks[idx] = newNick;
+                        else e.target.value = origNick;
                     } else if (!newNick) {
-                        currentSettings.blockedNicks.splice(indexToEdit, 1);
+                        S.blockedNicks.splice(idx, 1);
                     } else {
-                        e.target.value = originalNick;
+                        e.target.value = origNick;
                     }
-                    saveSettings(); renderBlockedNicks();
-                    e.target.removeEventListener('blur', handleBlur);
-                    e.target.removeEventListener('keydown', handleKeyDown);
+                    saveSettings();
+                    renderList();
+                    e.target.removeEventListener('blur', onBlur);
+                    e.target.removeEventListener('keydown', onKey);
                 };
-
-                const handleKeyDown = (ev) => { if (ev.key === 'Enter') e.target.blur(); };
-                e.target.addEventListener('blur', handleBlur);
-                e.target.addEventListener('keydown', handleKeyDown);
+                const onKey = (ev) => { if (ev.key === 'Enter') e.target.blur(); };
+                e.target.addEventListener('blur', onBlur);
+                e.target.addEventListener('keydown', onKey);
             }
         });
 
         if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
-            $(apCheckbox).tip('Automatyczna akceptacja przywołania');
-            $(apAddNickBtn).tip('Dodaj nick do czarnej listy');
+            $(elEnabled).tip('Automatyczna akceptacja przywołania');
+            $(elAddBtn).tip('Dodaj nick do czarnej listy');
         }
 
-        renderBlockedNicks();
+        renderList();
     }
 
+    // ─── Lifecycle ────────────────────────────────────────────────────────────
     function addonInit() {
         loadSettings();
         enableLogic();
         if (!uiWindowElement) buildUI();
-
-        if (uiWindowElement) {
-            uiWindowElement.style.display = currentSettings.windowVisible ? '' : 'none';
-        }
+        if (uiWindowElement) uiWindowElement.style.display = S.windowVisible ? '' : 'none';
     }
 
     function addonStop() {
-        disableLogic(); 
-        if (uiWindowElement) {
-            uiWindowElement.remove(); 
-            uiWindowElement = null;
-        }
+        disableLogic();
+        if (uiWindowElement) { uiWindowElement.remove(); uiWindowElement = null; }
     }
 
     function onStateToggle(isEnabled) {
-        currentSettings.enabled = isEnabled;
+        S.enabled = isEnabled;
         if (uiWindowElement) {
-            const apCheckbox = uiWindowElement.querySelector("#ap-checkbox");
-            const section = uiWindowElement.querySelector("#ap-blocked-nicks-section");
-            if (apCheckbox) {
-                if (isEnabled) apCheckbox.classList.add('active');
-                else apCheckbox.classList.remove('active');
-            }
-            if (section) section.style.display = isEnabled ? 'flex' : 'none';
+            const cb  = uiWindowElement.querySelector("#ap-enabled");
+            const sec = uiWindowElement.querySelector("#ap-blocked-section");
+            if (cb)  cb.classList.toggle('active', isEnabled);
+            if (sec) sec.style.display = isEnabled ? 'flex' : 'none';
         }
     }
 
     const checkApi = () => {
-        if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon) {
-            setTimeout(checkApi, 500); return;
-        }
-        window.BaddonzAPI.registerAddon(ADDON_ID, { 
-            init: addonInit, 
-            stop: addonStop,
-            onStateToggle: onStateToggle
-        });
+        if (!window.BaddonzAPI?.registerAddon) { setTimeout(checkApi, 500); return; }
+        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle });
     };
-    
     checkApi();
-
 })();
