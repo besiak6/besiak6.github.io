@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Rozwiązywanie grupy baddonz
-// @version       2.1.0
+// @version       10.06.2026
 // @description   Rozwiązywanie grupy
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -12,168 +12,214 @@
 
     const ADDON_ID = "RG";
 
-    // Wszystko zapisywane do konta (acc)
-    const DEFAULT = {
-        enabled:       true,
-        windowVisible: true,
+    let currentSettings = {
+        enabled: true,
         windowOpacity: 2,
-        leaveEnabled:  false,
-        disbandKey:    "n"
+        windowVisible: true,
+        leaveEnabled: false,
+        disbandKey: "n"
     };
-
-    let S = { ...DEFAULT };
-    let uiWindowElement    = null;
+    let uiWindowElement = null;
     let keybindInputActive = false;
-    let isKeyDownBound     = false;
+    let isKeyDownBound = false;
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
-        S = { ...DEFAULT, ...window.BaddonzAPI.getAccSettings(ADDON_ID) };
+        const saved = window.BaddonzAPI.getAddonSettings(ADDON_ID);
+        currentSettings = { ...currentSettings, ...saved };
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
-        window.BaddonzAPI.saveAccSettings(ADDON_ID, S);
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, { ...currentSettings });
     }
 
-    // ─── Logika ───────────────────────────────────────────────────────────────
     function isChatFocused() {
         const el = document.activeElement;
         return el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
     }
 
     function isLeader() {
-        if (!window.Engine?.party || !window.Engine?.hero) return false;
+        if (!window.Engine || !window.Engine.party || !window.Engine.hero) return false;
         const heroId = window.Engine.hero.d.id;
-        let members = typeof window.Engine.party.getMembers === 'function'
-            ? window.Engine.party.getMembers()
-            : window.Engine.party.d;
-        if (!members) return false;
-        if (members instanceof Map) {
-            for (const m of members.values()) { if (m.leader) return m.id === heroId; }
-        } else {
-            for (const id in members) { if (members[id].leader) return parseInt(id) === heroId; }
+        
+        if (typeof window.Engine.party.getMembers === 'function') {
+            const members = window.Engine.party.getMembers();
+            if (members instanceof Map) {
+                for (const member of members.values()) {
+                    if (member.leader) return member.id === heroId;
+                }
+            } else if (members) {
+                for (const id in members) {
+                    if (members[id].leader) return parseInt(id) === heroId;
+                }
+            }
+        } else if (window.Engine.party.d) {
+            const members = window.Engine.party.d;
+            for (const id in members) {
+                if (members[id].leader) return parseInt(id) === heroId;
+            }
         }
         return false;
     }
 
     function disbandParty() {
-        if (!window.Engine?.party) return;
-        let members = typeof window.Engine.party.getMembers === 'function'
-            ? window.Engine.party.getMembers()
-            : window.Engine.party.d;
+        if (!window.Engine || !window.Engine.party) return;
+        let members = null;
+        if (typeof window.Engine.party.getMembers === 'function') members = window.Engine.party.getMembers();
+        else if (window.Engine.party.d) members = window.Engine.party.d;
         if (!members) return;
         if (members instanceof Map && members.size === 0) return;
         if (!(members instanceof Map) && Object.keys(members).length === 0) return;
-        if (isLeader()) window._g("party&a=disband");
-        else if (S.leaveEnabled) window._g("party&a=rm&id=" + window.Engine.hero.d.id);
+
+        if (isLeader()) {
+            window._g("party&a=disband");
+        } else if (currentSettings.leaveEnabled) {
+            window._g("party&a=rm&id=" + window.Engine.hero.d.id);
+        }
     }
 
     function handleKeyDown(e) {
-        if (!S.enabled) return;
-        const kbInput = uiWindowElement?.querySelector(".rg-keybind-input");
+        if (!currentSettings.enabled) return;
+        const rgKeybindInput = uiWindowElement ? uiWindowElement.querySelector(".rg-keybind-input") : null;
 
-        if (keybindInputActive && kbInput) {
+        if (keybindInputActive && rgKeybindInput) {
             e.preventDefault();
-            const key = e.key.toLowerCase();
-            if (['escape','enter','tab'].includes(key)) { kbInput.blur(); return; }
-            if (!window.BaddonzAPI?.isValidHotkey(key)) return;
-            if (key.length !== 1) return;
-            S.disbandKey = key;
-            kbInput.value = key.toUpperCase();
+            const pressedKey = e.key.toLowerCase();
+            
+            if (['escape', 'enter', 'tab'].includes(pressedKey)) {
+                rgKeybindInput.blur();
+                return;
+            }
+
+            if (window.BaddonzAPI && !window.BaddonzAPI.isValidHotkey(pressedKey)) return;
+            if (pressedKey.length !== 1) return;
+
+            currentSettings.disbandKey = pressedKey;
+            rgKeybindInput.value = pressedKey.toUpperCase();
             saveSettings();
+
             keybindInputActive = false;
-            kbInput.blur();
-            kbInput.classList.remove('active-keybind-mode');
+            rgKeybindInput.blur();
+            rgKeybindInput.classList.remove('active-keybind-mode');
             return;
         }
 
-        if (!isChatFocused() && e.key.toLowerCase() === S.disbandKey) {
+        if (!isChatFocused() && e.key.toLowerCase() === currentSettings.disbandKey) {
             e.preventDefault();
             disbandParty();
         }
     }
 
-    // ─── UI ───────────────────────────────────────────────────────────────────
     function buildUI() {
         const bodyHtml = `
-            <div class="baddonz-setting-row" style="margin-bottom:4px!important;display:flex;align-items:center;">
-                <div class="baddonz-checkbox rg-enabled ${S.enabled ? 'active' : ''}"></div>
-                <span class="baddonz-text" style="padding:0;margin-left:5px;">Rozwiązywanie</span>
-                <input type="text" class="baddonz-input keybind rg-keybind-input" value="${S.disbandKey.toUpperCase()}" readonly
-                       style="width:50px;height:20px;line-height:18px;font-size:11px;padding:1px 0;margin-left:auto;">
+            <div class="baddonz-setting-row" style="margin-bottom: 4px !important; display: flex; align-items: center;">
+                <div class="baddonz-checkbox rg-checkbox ${currentSettings.enabled ? 'active' : ''}"></div>
+                <span class="baddonz-text" style="padding: 0; margin-left: 5px;">Rozwiązywanie</span>
+                <input type="text" class="baddonz-input keybind rg-keybind-input" value="${currentSettings.disbandKey.toUpperCase()}" readonly style="width: 50px; height: 20px; line-height: 18px; font-size: 11px; padding: 1px 0; margin-left: auto;">
             </div>
-            <div class="baddonz-setting-row rg-leave-row" style="display:${S.enabled ? 'flex' : 'none'};">
-                <div class="baddonz-checkbox rg-leave ${S.leaveEnabled ? 'active' : ''}"></div>
+            <div class="baddonz-setting-row rg-leave-group-option" style="display: ${currentSettings.enabled ? 'flex' : 'none'};">
+                <div class="baddonz-checkbox rg-leave-checkbox ${currentSettings.leaveEnabled ? 'active' : ''}"></div>
                 <span class="baddonz-text" style="padding:0;">Opuszczaj grupę</span>
-            </div>`;
-
+            </div>
+        `;
         uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Rozwiązywanie", bodyHtml, {
-            width: '180px', customId: 'baddonz-rg-wnd', hasSettings: false, hasCollapse: false
+            width: '180px',
+            customId: 'baddonz-rg-wnd',
+            hasSettings: false,
+            hasCollapse: false
         });
-
-        const elEnabled  = uiWindowElement.querySelector(".rg-enabled");
-        const elLeave    = uiWindowElement.querySelector(".rg-leave");
-        const elLeaveRow = uiWindowElement.querySelector(".rg-leave-row");
-        const elKeybind  = uiWindowElement.querySelector(".rg-keybind-input");
-
-        elEnabled.addEventListener('click', () => {
-            S.enabled = elEnabled.classList.toggle('active');
-            elLeaveRow.style.display = S.enabled ? 'flex' : 'none';
+        const rgCheckbox = uiWindowElement.querySelector(".rg-checkbox");
+        const rgLeaveCheckbox = uiWindowElement.querySelector(".rg-leave-checkbox");
+        const rgKeybindInput = uiWindowElement.querySelector(".rg-keybind-input");
+        const leaveGroupOption = uiWindowElement.querySelector(".rg-leave-group-option");
+        
+        rgCheckbox.addEventListener('click', () => {
+            currentSettings.enabled = rgCheckbox.classList.toggle('active');
+            leaveGroupOption.style.display = currentSettings.enabled ? 'flex' : 'none';
             saveSettings();
         });
-
-        elLeave.addEventListener('click', () => {
-            S.leaveEnabled = elLeave.classList.toggle('active');
+        
+        rgLeaveCheckbox.addEventListener('click', () => {
+            currentSettings.leaveEnabled = rgLeaveCheckbox.classList.toggle('active');
             saveSettings();
         });
-
-        elKeybind.addEventListener('click', () => {
+        
+        rgKeybindInput.addEventListener('click', () => {
             keybindInputActive = true;
-            elKeybind.focus();
-            elKeybind.classList.add('active-keybind-mode');
+            rgKeybindInput.focus();
+            rgKeybindInput.classList.add('active-keybind-mode');
         });
-
-        elKeybind.addEventListener('focusout', () => {
+        
+        rgKeybindInput.addEventListener('focusout', () => {
             if (keybindInputActive) {
                 keybindInputActive = false;
-                elKeybind.value = S.disbandKey.toUpperCase();
+                rgKeybindInput.value = currentSettings.disbandKey.toUpperCase();
             }
-            elKeybind.classList.remove('active-keybind-mode');
+            rgKeybindInput.classList.remove('active-keybind-mode');
         });
-
+        
         if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
-            $(elEnabled).tip('Rozwiąż grupę');
-            $(elLeave).tip('Jeżeli nie jesteś liderem, opuść grupę');
+            $(rgCheckbox).tip(`Rozwiąż grupę`);
+            $(rgLeaveCheckbox).tip(`Jeżeli nie jesteś liderem, opuść grupę`);
         }
     }
 
-    // ─── Lifecycle ────────────────────────────────────────────────────────────
     function addonInit() {
         loadSettings();
         if (!uiWindowElement) buildUI();
-        if (uiWindowElement) uiWindowElement.style.display = S.windowVisible ? '' : 'none';
-        if (!isKeyDownBound) { document.addEventListener('keydown', handleKeyDown); isKeyDownBound = true; }
+
+        if (uiWindowElement) {
+            uiWindowElement.style.display = currentSettings.windowVisible ? '' : 'none';
+            const observer = new MutationObserver(() => {
+                const isVisible = uiWindowElement.style.display !== 'none';
+                if (currentSettings.windowVisible !== isVisible) {
+                    currentSettings.windowVisible = isVisible;
+                    saveSettings();
+                }
+            });
+            observer.observe(uiWindowElement, { attributes: true, attributeFilter: ['style'] });
+        }
+
+        if (!isKeyDownBound) {
+            document.addEventListener('keydown', handleKeyDown);
+            isKeyDownBound = true;
+        }
     }
 
     function addonStop() {
-        if (isKeyDownBound) { document.removeEventListener('keydown', handleKeyDown); isKeyDownBound = false; }
-        if (uiWindowElement) { uiWindowElement.remove(); uiWindowElement = null; }
+        if (isKeyDownBound) {
+            document.removeEventListener('keydown', handleKeyDown);
+            isKeyDownBound = false;
+        }
+        if (uiWindowElement) {
+            uiWindowElement.remove();
+            uiWindowElement = null;
+        }
     }
 
     function onStateToggle(isEnabled) {
-        S.enabled = isEnabled;
+        currentSettings.enabled = isEnabled;
         if (uiWindowElement) {
-            const elEnabled  = uiWindowElement.querySelector(".rg-enabled");
-            const elLeaveRow = uiWindowElement.querySelector(".rg-leave-row");
-            if (elEnabled)  elEnabled.classList.toggle('active', isEnabled);
-            if (elLeaveRow) elLeaveRow.style.display = isEnabled ? 'flex' : 'none';
+            const rgCheckbox = uiWindowElement.querySelector(".rg-checkbox");
+            const leaveGroupOption = uiWindowElement.querySelector(".rg-leave-group-option");
+            if (rgCheckbox) {
+                if (isEnabled) rgCheckbox.classList.add('active');
+                else rgCheckbox.classList.remove('active');
+            }
+            if (leaveGroupOption) {
+                leaveGroupOption.style.display = isEnabled ? 'flex' : 'none';
+            }
         }
     }
 
     const checkApi = () => {
-        if (!window.BaddonzAPI?.registerAddon) { setTimeout(checkApi, 500); return; }
-        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle });
+        if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon) {
+            setTimeout(checkApi, 500);
+            return;
+        }
+        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle: onStateToggle });
     };
+
     checkApi();
 })();
