@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name          Zasięg walki baddonz
-// @version       1.0
-// @description   Podświetla graczy poza zasięgiem walki
+// @name          Zasięg Walki baddonz
+// @version       1.2
+// @description   Podświetla graczy w grupie poza zasięgiem
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -11,106 +11,132 @@
     'use strict';
 
     const ADDON_ID = "ZW";
-    
+
     let isEnabled = false;
-    let isHooked = false;
+    let isEngineHooked = false;
     let originalParseJSON = null;
 
-    const isOtherInBattleRange = (other) => {
-        if (!window.Engine?.hero?.d || !other?.d) return false;
-        const { x: hx, y: hy } = window.Engine.hero.d;
-        const { x, y } = other.d;
-        return Math.max(Math.abs(x - hx), Math.abs(y - hy)) <= 20;
-    };
+    function isOtherInBattleRange(otherId) {
+        if (!window.Engine || !window.Engine.hero || !window.Engine.hero.d) return false;
+        
+        const other = window.Engine.others.getById(otherId);
+        if (!other || !other.d) return false;
 
-    const updatePartyMembers = () => {
-        if (!window.Engine?.party || !window.Engine.hero?.d) return;
-        
-        const getMembers = window.Engine.party.getMembers;
-        if (typeof getMembers !== 'function') return;
-        
-        const members = getMembers();
-        if (!members || !(members instanceof Map)) return;
+        const hero = window.Engine.hero.d;
+        const hx = typeof hero.rx !== 'undefined' ? hero.rx : hero.x;
+        const hy = typeof hero.ry !== 'undefined' ? hero.ry : hero.y;
+        const ox = typeof other.d.rx !== 'undefined' ? other.d.rx : other.d.x;
+        const oy = typeof other.d.ry !== 'undefined' ? other.d.ry : other.d.y;
 
-        const others = window.Engine.others?.check() || {};
-        const { id: hid } = window.Engine.hero.d;
+        return Math.max(Math.abs(ox - hx), Math.abs(oy - hy)) <= 20;
+    }
+    function updatePartyMembers() {
+        if (!isEnabled || !window.Engine || !window.Engine.party || !window.Engine.hero) return;
         
-        const $wnd = window.Engine.party.get$Wnd ? window.Engine.party.get$Wnd() : null;
-        if ($wnd && $wnd[0]) {
-            const amountEl = $wnd[0].querySelector(".amount");
-            if (amountEl) amountEl.innerText = `(${members.size})`;
+        const heroId = window.Engine.hero.d.id;
+        let members = null;
+        if (typeof window.Engine.party.getMembers === 'function') {
+            members = window.Engine.party.getMembers();
+        } else if (window.Engine.party.d) {
+            members = window.Engine.party.d;
         }
 
-        members.forEach((c, v) => {
-            if (v == hid) return;
-            const inRange = others[v] && isOtherInBattleRange(others[v]);
-            if (c.el) {
-                const nickText = c.el.querySelector(".nickname-text");
-                if (nickText) {
-                    nickText.style.color = inRange ? "" : "red";
+        if (!members) return;
+        try {
+            if (window.Engine.party.get$Wnd && typeof window.Engine.party.get$Wnd === 'function') {
+                const $wnd = window.Engine.party.get$Wnd();
+                if ($wnd && $wnd.length) {
+                    const amountEl = $wnd[0].querySelector(".amount");
+                    if (amountEl) {
+                        const size = members instanceof Map ? members.size : Object.keys(members).length;
+                        amountEl.innerText = `(${size})`;
+                    }
                 }
             }
-        });
-    };
+        } catch (e) {}
+        const applyColorToMember = (id, memberObj) => {
+            if (parseInt(id) === heroId) return;
 
-    const resetPartyMembers = () => {
-        if (!window.Engine?.party || typeof window.Engine.party.getMembers !== 'function') return;
-        const members = window.Engine.party.getMembers();
-        if (members instanceof Map) {
-            members.forEach((c) => {
-                if (c.el) {
-                    const nickText = c.el.querySelector(".nickname-text");
-                    if (nickText) nickText.style.color = "";
+            const inRange = isOtherInBattleRange(id);
+            let el = memberObj.$ ? memberObj.$[0] : memberObj.el;
+
+            if (el) {
+                const nickEl = el.querySelector(".nickname-text") || el.querySelector(".nick") || el.querySelector(".name");
+                if (nickEl) {
+                    nickEl.style.color = inRange ? "" : "#ff5555";
                 }
-            });
-        }
-    };
+            }
+        };
 
+        if (members instanceof Map) {
+            for (const [id, member] of members.entries()) {
+                applyColorToMember(id, member);
+            }
+        } else if (typeof members === 'object') {
+            for (const id in members) {
+                applyColorToMember(id, members[id]);
+            }
+        }
+    }
+    function resetPartyMembersUI() {
+        if (!window.Engine || !window.Engine.party) return;
+        
+        let members = null;
+        if (typeof window.Engine.party.getMembers === 'function') {
+            members = window.Engine.party.getMembers();
+        } else if (window.Engine.party.d) {
+            members = window.Engine.party.d;
+        }
+
+        if (!members) return;
+
+        const clearColor = (memberObj) => {
+            let el = memberObj.$ ? memberObj.$[0] : memberObj.el;
+            if (el) {
+                const nickEl = el.querySelector(".nickname-text") || el.querySelector(".nick") || el.querySelector(".name");
+                if (nickEl) nickEl.style.color = "";
+            }
+        };
+
+        if (members instanceof Map) {
+            for (const member of members.values()) clearColor(member);
+        } else if (typeof members === 'object') {
+            for (const id in members) clearColor(members[id]);
+        }
+    }
     function addonInit() {
-        if (isHooked) {
-            isEnabled = true;
-            updatePartyMembers();
-            return;
-        }
+        isEnabled = true;
 
-        try {
-            if (!window.Engine || !window.Engine.communication) {
+        if (!isEngineHooked) {
+            if (window.Engine && window.Engine.communication) {
+                originalParseJSON = window.Engine.communication.parseJSON;
+                
+                window.Engine.communication.parseJSON = function(data) {
+                    const result = originalParseJSON.apply(this, arguments);
+                    if (isEnabled && data && (data.h || data.party || data.other)) {
+                        updatePartyMembers();
+                    }
+                    
+                    return result;
+                };
+                
+                isEngineHooked = true;
+            } else {
                 setTimeout(addonInit, 500);
                 return;
             }
-
-            originalParseJSON = window.Engine.communication.parseJSON;
-            
-            window.Engine.communication.parseJSON = function(data) {
-                const result = originalParseJSON.apply(this, arguments);
-                if (isEnabled && data && (data.h || data.party || data.other || data.o)) {
-                    updatePartyMembers();
-                }
-                return result;
-            };
-
-            isHooked = true;
-            isEnabled = true;
-            
-            updatePartyMembers();
-
-        } catch (e) {
-            console.error("Zasięg walki baddonz - błąd inicjalizacji", e);
-            setTimeout(addonInit, 500);
         }
+        updatePartyMembers();
     }
-
     function addonStop() {
         isEnabled = false;
-        resetPartyMembers(); 
+        resetPartyMembersUI();
     }
-    
-    function onStateToggle(enabledState) {
-        isEnabled = enabledState;
-        if (isEnabled) {
-            updatePartyMembers();
+    function onStateToggle(state) {
+        if (state) {
+            addonInit();
         } else {
-            resetPartyMembers();
+            addonStop();
         }
     }
 
