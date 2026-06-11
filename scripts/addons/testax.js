@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          AutoX baddonz
-// @version       10.06.2026
+// @version       11.06.2026
 // @description   autox
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -11,6 +11,7 @@
     'use strict';
 
     const ADDON_ID = "AX";
+    const CHAR_KEYS = ["levelRange"]; // Klucze zarządzane przez managera per postać
     
     let currentSettings = {
         enabled: true,
@@ -51,14 +52,23 @@
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
-        const saved = window.BaddonzAPI.getAddonSettings(ADDON_ID);
+        // Wywołanie scentralizowanego odczytu z managera
+        const saved = (window.BaddonzAPI.getScopedSettings)
+            ? window.BaddonzAPI.getScopedSettings(ADDON_ID, CHAR_KEYS)
+            : window.BaddonzAPI.getAddonSettings(ADDON_ID);
+            
         currentSettings = { ...currentSettings, ...saved };
         parsedLevelRange = parseLevelRange(currentSettings.levelRange) || { min: 0, max: 500 };
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, { ...currentSettings });
+        // Wywołanie scentralizowanego zapisu do managera
+        if (window.BaddonzAPI.saveScopedSettings) {
+            window.BaddonzAPI.saveScopedSettings(ADDON_ID, currentSettings, CHAR_KEYS);
+        } else {
+            window.BaddonzAPI.saveAddonSettings(ADDON_ID, currentSettings);
+        }
     }
 
     function parseLevelRange(str) {
@@ -255,7 +265,6 @@
         
         uiSettingsWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "AutoX Ustawienia", settingsBodyHtml, { width: '250px', customId: 'baddonz-ax-wnd-settings' });
         
-        // ZMODYFIKOWANO: Usunięto kolidującą klasę '.settings-window' i wymuszono centrowanie.
         uiSettingsWindow.removeAttribute('data-addon-id');
         uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
         
