@@ -11,8 +11,16 @@
     'use strict';
 
     const ADDON_ID = "ZAP";
-    // Definiujemy 3 obszary opcji, które Baddonz ma centralnie przypisywać do ID postaci:
-    const CHAR_KEYS = ["InviteRandoms", "InvitebyLevel", "minLevel", "maxLevel", "FilterbyProfession", "SelectedProfessions"];
+    
+    // Klucze, które będą zapisywane indywidualnie per-postać
+    const CHAR_SPECIFIC_KEYS = [
+        'InviteRandoms', 
+        'InvitebyLevel', 
+        'minLevel', 
+        'maxLevel', 
+        'FilterbyProfession', 
+        'SelectedProfessions'
+    ];
 
     const MARGONEM_RELATIONS = {
         NONE: 1, FRIEND: 2, ENEMY: 3, CLAN: 4, CLAN_ALLY: 5, CLAN_ENEMY: 6
@@ -48,13 +56,8 @@
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
-        // Centralne pobranie z uwzględnieniem filtrów postaci z managera
-        const saved = (window.BaddonzAPI.getScopedSettings)
-            ? window.BaddonzAPI.getScopedSettings(ADDON_ID, CHAR_KEYS)
-            : window.BaddonzAPI.getAddonSettings(ADDON_ID);
-            
+        const saved = window.BaddonzAPI.getAddonSettings(ADDON_ID);
         currentSettings = { ...currentSettings, ...saved };
-
         if (!currentSettings.SelectedProfessions) {
             currentSettings.SelectedProfessions = { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true };
         }
@@ -62,12 +65,7 @@
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
-        // Centralny zapis profilowany w managerze
-        if (window.BaddonzAPI.saveScopedSettings) {
-            window.BaddonzAPI.saveScopedSettings(ADDON_ID, currentSettings, CHAR_KEYS);
-        } else {
-            window.BaddonzAPI.saveAddonSettings(ADDON_ID, currentSettings);
-        }
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, { ...currentSettings }, CHAR_SPECIFIC_KEYS);
     }
 
     function isChatFocused() {
