@@ -11,8 +11,10 @@
     'use strict';
 
     const ADDON_ID = "AX";
-    const CHAR_KEYS = ["levelRange"]; // Klucze zarządzane przez managera per postać
     
+    // Klucze, które będą zapisywane indywidualnie per-postać
+    const CHAR_SPECIFIC_KEYS = ['levelRange'];
+
     let currentSettings = {
         enabled: true,
         windowOpacity: 2,
@@ -52,23 +54,14 @@
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
-        // Wywołanie scentralizowanego odczytu z managera
-        const saved = (window.BaddonzAPI.getScopedSettings)
-            ? window.BaddonzAPI.getScopedSettings(ADDON_ID, CHAR_KEYS)
-            : window.BaddonzAPI.getAddonSettings(ADDON_ID);
-            
+        const saved = window.BaddonzAPI.getAddonSettings(ADDON_ID);
         currentSettings = { ...currentSettings, ...saved };
         parsedLevelRange = parseLevelRange(currentSettings.levelRange) || { min: 0, max: 500 };
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
-        // Wywołanie scentralizowanego zapisu do managera
-        if (window.BaddonzAPI.saveScopedSettings) {
-            window.BaddonzAPI.saveScopedSettings(ADDON_ID, currentSettings, CHAR_KEYS);
-        } else {
-            window.BaddonzAPI.saveAddonSettings(ADDON_ID, currentSettings);
-        }
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, { ...currentSettings }, CHAR_SPECIFIC_KEYS);
     }
 
     function parseLevelRange(str) {
