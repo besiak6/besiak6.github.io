@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Szybka Grupa baddonz
-// @version       10.06.2026
+// @version       11.06.2026
 // @description   Szybka Grupa
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -11,6 +11,8 @@
     'use strict';
 
     const ADDON_ID = "ZAP";
+    // Definiujemy 3 obszary opcji, które Baddonz ma centralnie przypisywać do ID postaci:
+    const CHAR_KEYS = ["InviteRandoms", "InvitebyLevel", "minLevel", "maxLevel", "FilterbyProfession", "SelectedProfessions"];
 
     const MARGONEM_RELATIONS = {
         NONE: 1, FRIEND: 2, ENEMY: 3, CLAN: 4, CLAN_ALLY: 5, CLAN_ENEMY: 6
@@ -46,8 +48,13 @@
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
-        const saved = window.BaddonzAPI.getAddonSettings(ADDON_ID);
+        // Centralne pobranie z uwzględnieniem filtrów postaci z managera
+        const saved = (window.BaddonzAPI.getScopedSettings)
+            ? window.BaddonzAPI.getScopedSettings(ADDON_ID, CHAR_KEYS)
+            : window.BaddonzAPI.getAddonSettings(ADDON_ID);
+            
         currentSettings = { ...currentSettings, ...saved };
+
         if (!currentSettings.SelectedProfessions) {
             currentSettings.SelectedProfessions = { 't': true, 'b': true, 'w': true, 'p': true, 'm': true, 'h': true };
         }
@@ -55,7 +62,12 @@
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, { ...currentSettings });
+        // Centralny zapis profilowany w managerze
+        if (window.BaddonzAPI.saveScopedSettings) {
+            window.BaddonzAPI.saveScopedSettings(ADDON_ID, currentSettings, CHAR_KEYS);
+        } else {
+            window.BaddonzAPI.saveAddonSettings(ADDON_ID, currentSettings);
+        }
     }
 
     function isChatFocused() {
