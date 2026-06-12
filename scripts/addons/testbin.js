@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Śmieciara baddonz
 // @version       10.06.2026
-// @description   Niszczenie przeterminowanych przedmiotów
+// @description   Automatycznie niszczy przeterminowane przedmioty w plecaku
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -12,15 +12,15 @@
 
     const ADDON_ID = "TRASH";
     const MICC_BASE_URL = 'https://micc.garmory-cdn.cloud/obrazki/itemy/';
+    const SCAN_DELAY = 5000;
     const ITEM_DESTROY_DELAY = 2000;
 
     let currentSettings = {
-        enabled: true
+        enabled: true,
     };
 
-    let uiWindow = null;
+    let uiPopupWindow = null;
     let pendingItems = [];
-    let isDestroying = false;
 
     // ─── Settings ─────────────────────────────────────────────────────────────
     function loadSettings() {
@@ -51,196 +51,154 @@
     }
 
     function destroyItem(itemId) {
-        return new Promise(resolve => {
-            window._g(`moveitem&st=-2&id=${itemId}`);
-            setTimeout(resolve, ITEM_DESTROY_DELAY);
-        });
+        window._g(`moveitem&st=-2&id=${itemId}`);
     }
 
     // ─── UI ───────────────────────────────────────────────────────────────────
-    function buildUI() {
-        // Wstrzykujemy style dla okna Śmieciary
-        if (!document.querySelector('.trash-wnd-styles')) {
-            const style = document.createElement('style');
-            style.className = 'trash-wnd-styles';
-            style.textContent = `
-                .baddonz-trash-wnd {
-                    width: 280px;
-                    min-width: 220px;
-                }
-                .baddonz-trash-wnd .baddonz-window-header .baddonz-window-controls.left {
-                    visibility: hidden;
-                    pointer-events: none;
-                    width: 20px;
-                }
-                .trash-items-grid {
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 6px;
-                    padding: 6px 4px 2px 4px;
-                    min-height: 42px;
-                    max-height: 160px;
-                    overflow-y: auto;
-                    justify-content: flex-start;
-                    align-content: flex-start;
-                }
-                .trash-item-slot {
-                    position: relative;
-                    width: 36px;
-                    height: 36px;
-                    border: 1px solid #555;
-                    background: rgba(0,0,0,0.4);
-                    flex-shrink: 0;
-                    cursor: default;
-                }
-                .trash-item-slot img.trash-item-gif {
-                    width: 36px;
-                    height: 36px;
-                    display: block;
-                    position: absolute;
-                    top: 0; left: 0;
-                    z-index: 1;
-                }
-                .trash-item-slot .trash-item-name-tooltip {
-                    display: none;
-                }
-                .trash-footer {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 5px;
-                    padding: 6px 4px 4px 4px;
-                    border-top: 1px solid #333;
-                    margin-top: 2px;
-                }
-                .trash-count-label {
-                    font-size: 11px;
-                    color: #aaa;
-                    text-align: center;
-                }
-                .trash-destroy-btn {
-                    width: 100%;
-                    background: linear-gradient(180deg, #8b1a1a 0%, #5a0e0e 100%);
-                    border: 1px solid #c0392b;
-                    color: #fff;
-                    font-size: 12px;
-                    font-weight: bold;
-                    padding: 5px 0;
-                    cursor: pointer;
-                    text-align: center;
-                    letter-spacing: 0.5px;
-                    transition: background 0.15s;
-                }
-                .trash-destroy-btn:hover {
-                    background: linear-gradient(180deg, #a52020 0%, #6e1111 100%);
-                }
-                .trash-destroy-btn:disabled {
-                    opacity: 0.5;
-                    cursor: not-allowed;
-                }
-            `;
-            document.head.appendChild(style);
-        }
+    function buildPopup() {
+        if (uiPopupWindow) return;
 
         const bodyHtml = `
-            <div class="trash-items-grid" id="trash-items-grid"></div>
-            <div class="trash-footer">
-                <div class="trash-count-label" id="trash-count-label"></div>
-                <button class="trash-destroy-btn" id="trash-destroy-btn">Zniszcz</button>
+            <div id="trash-items-grid" style="
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                padding: 4px;
+                min-height: 42px;
+                justify-content: flex-start;
+                align-items: flex-start;
+            "></div>
+            <div style="display: flex; justify-content: center; margin-top: 6px;">
+                <button class="baddonz-button trash-destroy-btn" style="width: 100%; padding: 4px 0;">Zniszcz</button>
             </div>
         `;
 
-        uiWindow = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Śmieciara", bodyHtml, {
-            customId: 'baddonz-trash-wnd',
-            hasSettings: false,
-            hasCollapse: false,
-            hasClose: true
-        });
+        uiPopupWindow = window.BaddonzAPI.createAddonWindow(
+            ADDON_ID,
+            "Śmieciara",
+            bodyHtml,
+            {
+                width: '220px',
+                customId: 'baddonz-trash-popup',
+                hasSettings: false,
+                hasCollapse: false,
+                hasClose: true,
+            }
+        );
 
-        uiWindow.style.display = 'none';
+        // Usuwamy przycisk zmiany przezroczystości – nie potrzebny w tym oknie
+        const opacityBtn = uiPopupWindow.querySelector('.baddonz-opacity-button');
+        if (opacityBtn) opacityBtn.remove();
 
-        // Przycisk Zniszcz
-        uiWindow.querySelector('#trash-destroy-btn').addEventListener('click', () => {
-            if (isDestroying || pendingItems.length === 0) return;
-            uiWindow.style.display = 'none';
-            startDestroying([...pendingItems]);
-        });
+        uiPopupWindow.style.display = 'none';
 
         // Przycisk zamknij
-        uiWindow.querySelector('.baddonz-close-button').addEventListener('click', () => {
-            uiWindow.style.display = 'none';
-            pendingItems = [];
-        });
-    }
-
-    function buildItemSlot(item) {
-        const slot = document.createElement('div');
-        slot.className = 'trash-item-slot';
-
-        const iconSource = item.icon || `${item.id}.png`;
-        const gifName = iconSource.replace(/\.[^/.]+$/, '.gif');
-
-        const img = document.createElement('img');
-        img.className = 'trash-item-gif';
-        img.src = MICC_BASE_URL + gifName;
-        img.alt = item.name || '';
-
-        // Podpinamy tip z nazwą jeśli jest dostępny
-        slot.appendChild(img);
-
-        if (item.$ && typeof $ === 'function' && typeof $.fn.tip === 'function') {
-            const $cloned = item.$.clone();
-            $cloned.css({ position: 'absolute', top: 0, left: 0, width: '36px', height: '36px', zIndex: 2 });
-            $cloned.data('item', item);
-            $cloned.find('canvas.icon, canvas.canvas-notice').remove();
-            $(slot).append($cloned);
-        } else if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
-            $(slot).tip(item.name || String(item.id));
+        const closeBtn = uiPopupWindow.querySelector('.baddonz-close-button');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                uiPopupWindow.style.display = 'none';
+            });
         }
 
-        return slot;
+        // Przycisk Zniszcz
+        const destroyBtn = uiPopupWindow.querySelector('.trash-destroy-btn');
+        if (destroyBtn) {
+            destroyBtn.addEventListener('click', () => {
+                uiPopupWindow.style.display = 'none';
+                startDestroying(pendingItems);
+            });
+        }
+    }
+
+    function centerWindow(wnd) {
+        const w = wnd.offsetWidth || 220;
+        const h = wnd.offsetHeight || 160;
+        wnd.style.left = `${Math.max(0, (window.innerWidth - w) / 2)}px`;
+        wnd.style.top  = `${Math.max(0, (window.innerHeight - h) / 2)}px`;
+    }
+
+    function renderItemsInPopup(items) {
+        const grid = uiPopupWindow.querySelector('#trash-items-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        items.forEach(item => {
+            // Wrapper – taki sam rozmiar jak slot itemu w grze
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = `
+                position: relative;
+                width: 32px;
+                height: 32px;
+                flex-shrink: 0;
+            `;
+
+            // Klonujemy element DOM itemu jeśli istnieje
+            if (item.$ && item.$.length) {
+                const $clone = item.$.clone();
+                $clone.find('canvas.icon, canvas.canvas-notice').remove();
+                $clone.css({ position: 'relative', width: '32px', height: '32px', top: '0', left: '0' });
+                $clone.data('item', item);
+
+                // Nakładamy GIF z MICC (tak jak w Ulepszarze)
+                const iconSource = item.icon || `${item.id}.png`;
+                const gifName = iconSource.replace(/\.[^/.]+$/, '.gif');
+                const $img = $('<img>')
+                    .attr('src', MICC_BASE_URL + gifName)
+                    .css({ width: '32px', height: '32px', position: 'absolute', top: '0', left: '0', zIndex: '0' });
+                $clone.append($img);
+
+                wrapper.appendChild($clone[0]);
+            } else {
+                // Fallback: sam obrazek z MICC
+                const iconSource = item.icon || `${item.id}.png`;
+                const gifName = iconSource.replace(/\.[^/.]+$/, '.gif');
+                const img = document.createElement('img');
+                img.src = MICC_BASE_URL + gifName;
+                img.style.cssText = 'width:32px; height:32px; display:block;';
+                img.title = item.name || '';
+                wrapper.appendChild(img);
+            }
+
+            // Tooltip z nazwą itemu jeśli jQuery tip dostępny
+            if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
+                $(wrapper).tip(item.name || '');
+            }
+
+            grid.appendChild(wrapper);
+        });
     }
 
     function showPopup(items) {
-        if (!uiWindow) buildUI();
-        if (!items || items.length === 0) return;
-
+        if (!uiPopupWindow) buildPopup();
         pendingItems = items;
+        renderItemsInPopup(items);
+        uiPopupWindow.style.display = 'flex';
 
-        const grid = uiWindow.querySelector('#trash-items-grid');
-        const label = uiWindow.querySelector('#trash-count-label');
-        const btn = uiWindow.querySelector('#trash-destroy-btn');
+        // Centrujemy po wyrenderowaniu
+        requestAnimationFrame(() => centerWindow(uiPopupWindow));
 
-        grid.innerHTML = '';
-        items.forEach(item => grid.appendChild(buildItemSlot(item)));
-
-        label.textContent = `Znaleziono ${items.length} przeterminowanych przedmiotów`;
-        btn.disabled = false;
-        btn.textContent = 'Zniszcz';
-
-        uiWindow.style.display = 'flex';
-
-        // Wyśrodkowanie okna
-        requestAnimationFrame(() => {
-            const w = uiWindow.offsetWidth || 280;
-            const h = uiWindow.offsetHeight || 200;
-            uiWindow.style.left = `${Math.max(0, (window.innerWidth - w) / 2)}px`;
-            uiWindow.style.top  = `${Math.max(0, (window.innerHeight - h) / 2)}px`;
-        });
+        // Wynosimy na wierzch
+        uiPopupWindow.dispatchEvent(new Event('mousedown'));
     }
 
     // ─── Destroy logic ────────────────────────────────────────────────────────
-    async function startDestroying(items) {
-        isDestroying = true;
-        let destroyed = 0;
-        for (const item of items) {
-            await destroyItem(item.id);
-            destroyed++;
+    function startDestroying(items) {
+        if (!items || items.length === 0) return;
+        let index = 0;
+
+        function next() {
+            if (index >= items.length) {
+                if (typeof window.message === 'function') {
+                    window.message(`Zniszczono ${items.length} przeterminowanych itemów.`);
+                }
+                return;
+            }
+            destroyItem(items[index].id);
+            index++;
+            setTimeout(next, ITEM_DESTROY_DELAY);
         }
-        if (window.message) {
-            window.message(`Śmieciara: zniszczono ${destroyed} przeterminowanych przedmiotów.`);
-        }
-        pendingItems = [];
-        isDestroying = false;
+
+        next();
     }
 
     // ─── Scan ─────────────────────────────────────────────────────────────────
@@ -252,44 +210,16 @@
         }
     }
 
-    function hookAllInit() {
-        if (!window.Engine) { setTimeout(hookAllInit, 500); return; }
-
-        // Czekamy na Engine.allInit
-        const origAllInit = window.Engine.allInit;
-        if (typeof origAllInit === 'function') {
-            window.Engine.allInit = function (...args) {
-                const result = origAllInit.apply(this, args);
-                setTimeout(scan, 1500);
-                return result;
-            };
-        } else {
-            // Fallback – obserwujemy przypisanie
-            let hooked = false;
-            Object.defineProperty(window.Engine, 'allInit', {
-                configurable: true,
-                get() { return this._allInit; },
-                set(fn) {
-                    this._allInit = function (...args) {
-                        const result = fn.apply(this, args);
-                        if (!hooked) { hooked = true; setTimeout(scan, 1500); }
-                        return result;
-                    };
-                }
-            });
-        }
-    }
-
     // ─── Init / Stop ──────────────────────────────────────────────────────────
     function addonInit() {
         loadSettings();
-        if (!uiWindow) buildUI();
-        hookAllInit();
+        if (!uiPopupWindow) buildPopup();
+        setTimeout(scan, SCAN_DELAY);
     }
 
     function addonStop() {
-        if (uiWindow) {
-            uiWindow.style.display = 'none';
+        if (uiPopupWindow) {
+            uiPopupWindow.style.display = 'none';
         }
         pendingItems = [];
     }
@@ -297,19 +227,24 @@
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
         saveSettings();
-        if (!isEnabled && uiWindow) {
-            uiWindow.style.display = 'none';
-            pendingItems = [];
+        if (!isEnabled && uiPopupWindow) {
+            uiPopupWindow.style.display = 'none';
         }
     }
 
-    // ─── Register ─────────────────────────────────────────────────────────────
+    // ─── API check ────────────────────────────────────────────────────────────
     const checkApi = () => {
         if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon) {
-            setTimeout(checkApi, 500); return;
+            setTimeout(checkApi, 500);
+            return;
         }
-        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle });
+        window.BaddonzAPI.registerAddon(ADDON_ID, {
+            init: addonInit,
+            stop: addonStop,
+            onStateToggle: onStateToggle,
+        });
     };
+
     checkApi();
 
 })();
