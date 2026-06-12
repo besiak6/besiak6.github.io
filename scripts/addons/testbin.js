@@ -17,8 +17,8 @@
     let currentSettings = {
         enabled: true,
         autoDestroy: false,
-        settingsWindowVisible: false,
         windowSettingsOpacity: 2,
+        settingsWindowVisible: false,
     };
 
     let uiPopupWindow = null;
@@ -71,127 +71,7 @@
         }
     }
 
-    // ─── Build settings window ────────────────────────────────────────────────
-    function buildSettingsWindow() {
-        if (uiSettingsWindow) return;
-
-        const bodyHtml = `
-            <div class="baddonz-setting-row">
-                <div class="baddonz-checkbox trash-auto-destroy ${currentSettings.autoDestroy ? 'active' : ''}"></div>
-                <span class="baddonz-text">Automatyczne Niszczenie</span>
-            </div>
-        `;
-
-        uiSettingsWindow = window.BaddonzAPI.createAddonWindow(
-            ADDON_ID,
-            "Śmieciara Ustawienia",
-            bodyHtml,
-            {
-                width: '220px',
-                customId: 'baddonz-trash-settings',
-                hasSettings: false,
-                hasCollapse: false,
-                hasClose: true,
-            }
-        );
-
-        uiSettingsWindow.classList.add('settings-window');
-        uiSettingsWindow.removeAttribute('data-addon-id');
-        uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
-        applyOpacityClass(uiSettingsWindow, currentSettings.windowSettingsOpacity);
-
-        // Opacity button
-        const opacityBtn = uiSettingsWindow.querySelector('.baddonz-opacity-button');
-        if (opacityBtn) {
-            opacityBtn.addEventListener('click', () => {
-                const baddonzData = JSON.parse(localStorage.getItem('BaddonzData') || '{}');
-                const accId = window.BaddonzAPI?.accountId;
-                const unified = baddonzData[accId]?.manager?.unifiedOpacityEnabled;
-                if (unified && window.setBaddonzGlobalOpacity) {
-                    const cur = baddonzData[accId]?.manager?.currentOpacity ?? 2;
-                    window.setBaddonzGlobalOpacity((cur + 1) % 5);
-                } else {
-                    currentSettings.windowSettingsOpacity = (currentSettings.windowSettingsOpacity + 1) % 5;
-                    applyOpacityClass(uiSettingsWindow, currentSettings.windowSettingsOpacity);
-                    saveSettings();
-                }
-            });
-        }
-
-        // Close button
-        const closeBtn = uiSettingsWindow.querySelector('.baddonz-close-button');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                uiSettingsWindow.style.display = 'none';
-                currentSettings.settingsWindowVisible = false;
-                saveSettings();
-            });
-        }
-
-        // Checkbox auto destroy
-        const autoDestroyCheckbox = uiSettingsWindow.querySelector('.trash-auto-destroy');
-        if (autoDestroyCheckbox) {
-            autoDestroyCheckbox.addEventListener('click', () => {
-                currentSettings.autoDestroy = autoDestroyCheckbox.classList.toggle('active');
-                saveSettings();
-            });
-        }
-    }
-
-    // ─── Build popup window ───────────────────────────────────────────────────
-    function buildPopup() {
-        if (uiPopupWindow) return;
-
-        const bodyHtml = `
-            <div id="trash-items-grid" style="
-                display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
-                padding: 4px;
-                min-height: 42px;
-                justify-content: center;
-                align-items: center;
-            "></div>
-            <div style="display: flex; justify-content: center; margin-top: 6px;">
-                <button class="baddonz-button trash-destroy-btn" style="width: 100%; padding: 4px 0;">Zniszcz</button>
-            </div>
-        `;
-
-        uiPopupWindow = window.BaddonzAPI.createAddonWindow(
-            ADDON_ID,
-            "Śmieciara",
-            bodyHtml,
-            {
-                width: '220px',
-                customId: 'baddonz-trash-popup',
-                hasSettings: false,
-                hasCollapse: false,
-                hasClose: true,
-            }
-        );
-
-        uiPopupWindow.style.display = 'none';
-
-        // Close button
-        const closeBtn = uiPopupWindow.querySelector('.baddonz-close-button');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                uiPopupWindow.style.display = 'none';
-                pendingItems = [];
-            });
-        }
-
-        // Destroy button
-        const destroyBtn = uiPopupWindow.querySelector('.trash-destroy-btn');
-        if (destroyBtn) {
-            destroyBtn.addEventListener('click', () => {
-                uiPopupWindow.style.display = 'none';
-                startDestroying(pendingItems);
-                pendingItems = [];
-            });
-        }
-    }
-
+    // ─── Center window ────────────────────────────────────────────────────────
     function centerWindow(wnd) {
         const w = wnd.offsetWidth || 220;
         const h = wnd.offsetHeight || 160;
@@ -199,6 +79,7 @@
         wnd.style.top  = `${Math.max(0, (window.innerHeight - h) / 2)}px`;
     }
 
+    // ─── Render items in popup ────────────────────────────────────────────────
     function renderItemsInPopup(items) {
         if (!uiPopupWindow) return;
         const grid = uiPopupWindow.querySelector('#trash-items-grid');
@@ -219,43 +100,92 @@
             const gifName = iconSource.replace(/\.[^/.]+$/, '.gif');
             const img = document.createElement('img');
             img.src = MICC_BASE_URL + gifName;
-            img.style.cssText = 'width:32px; height:32px; display:block; position:absolute; top:0; left:0; z-index:1;';
+            img.style.cssText = 'width:32px; height:32px; display:block; position:absolute; top:0; left:0;';
 
-            // Fallback na PNG jeśli GIF nie istnieje
+            // Fallback na statyczny obrazek jeśli GIF nie istnieje
             img.onerror = () => {
-                const pngName = iconSource.replace(/\.[^/.]+$/, '.png');
-                img.src = MICC_BASE_URL + pngName;
-                img.onerror = null;
+                const staticName = iconSource.replace(/\.[^/.]+$/, '.png');
+                img.src = MICC_BASE_URL + staticName;
             };
 
             wrapper.appendChild(img);
 
-            // Klonujemy oryginalny element z gry jeśli istnieje (dla tooltipa i interakcji)
-            if (item.$ && item.$.length) {
-                const $clone = item.$.clone();
-                $clone.find('canvas, img').remove();
-                $clone.css({
-                    position: 'absolute',
-                    width: '32px',
-                    height: '32px',
-                    top: '0',
-                    left: '0',
-                    zIndex: '2',
-                    background: 'transparent',
-                });
-                $clone.data('item', item);
-                wrapper.appendChild($clone[0]);
-            }
-
             // Tooltip z nazwą
-            if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
+            if (typeof $ === 'function' && typeof $.fn.tip === 'function' && item.$) {
+                $(wrapper).data('item', item);
                 $(wrapper).tip(item.name || '');
-            } else {
-                wrapper.title = item.name || '';
             }
 
             grid.appendChild(wrapper);
         });
+    }
+
+    // ─── Build popup ──────────────────────────────────────────────────────────
+    function buildPopup() {
+        if (uiPopupWindow) return;
+
+        const bodyHtml = `
+            <div id="trash-items-grid" style="
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                padding: 4px 2px;
+                min-height: 42px;
+                justify-content: center;
+                align-items: flex-start;
+            "></div>
+            <div style="display: flex; justify-content: center; margin-top: 6px;">
+                <button class="baddonz-button trash-destroy-btn" style="width: 100%; padding: 4px 0;">Zniszcz</button>
+            </div>
+        `;
+
+        uiPopupWindow = window.BaddonzAPI.createAddonWindow(
+            ADDON_ID,
+            "Śmieciara",
+            bodyHtml,
+            {
+                width: '220px',
+                customId: 'baddonz-trash-popup',
+                hasSettings: false,
+                hasCollapse: false,
+                hasClose: true,
+            }
+        );
+
+        applyOpacityClass(uiPopupWindow, currentSettings.windowSettingsOpacity);
+        uiPopupWindow.style.display = 'none';
+
+        const closeBtn = uiPopupWindow.querySelector('.baddonz-close-button');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                uiPopupWindow.style.display = 'none';
+            });
+        }
+
+        const opacityBtn = uiPopupWindow.querySelector('.baddonz-opacity-button');
+        if (opacityBtn) {
+            opacityBtn.addEventListener('click', () => {
+                const baddonzData = JSON.parse(localStorage.getItem('BaddonzData') || '{}');
+                const accId = window.BaddonzAPI?.accountId;
+                const unified = baddonzData[accId]?.manager?.unifiedOpacityEnabled;
+                if (unified && window.setBaddonzGlobalOpacity) {
+                    const cur = baddonzData[accId]?.manager?.currentOpacity ?? 2;
+                    window.setBaddonzGlobalOpacity((cur + 1) % 5);
+                } else {
+                    currentSettings.windowSettingsOpacity = (currentSettings.windowSettingsOpacity + 1) % 5;
+                    applyOpacityClass(uiPopupWindow, currentSettings.windowSettingsOpacity);
+                    saveSettings();
+                }
+            });
+        }
+
+        const destroyBtn = uiPopupWindow.querySelector('.trash-destroy-btn');
+        if (destroyBtn) {
+            destroyBtn.addEventListener('click', () => {
+                uiPopupWindow.style.display = 'none';
+                startDestroying(pendingItems);
+            });
+        }
     }
 
     function showPopup(items) {
@@ -267,16 +197,79 @@
         uiPopupWindow.dispatchEvent(new Event('mousedown'));
     }
 
+    // ─── Build settings window ────────────────────────────────────────────────
+    function buildSettingsWindow() {
+        if (uiSettingsWindow) return;
+
+        const bodyHtml = `
+            <div class="baddonz-setting-row">
+                <div class="baddonz-checkbox trash-auto-destroy ${currentSettings.autoDestroy ? 'active' : ''}"></div>
+                <span class="baddonz-text">Automatyczne Niszczenie</span>
+            </div>
+        `;
+
+        uiSettingsWindow = window.BaddonzAPI.createAddonWindow(
+            ADDON_ID,
+            "Śmieciara — Ustawienia",
+            bodyHtml,
+            {
+                width: '230px',
+                customId: 'baddonz-trash-settings',
+                hasSettings: false,
+                hasCollapse: false,
+                hasClose: true,
+            }
+        );
+
+        uiSettingsWindow.classList.add('settings-window');
+        applyOpacityClass(uiSettingsWindow, currentSettings.windowSettingsOpacity);
+        uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
+
+        const closeBtn = uiSettingsWindow.querySelector('.baddonz-close-button');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                uiSettingsWindow.style.display = 'none';
+                currentSettings.settingsWindowVisible = false;
+                saveSettings();
+            });
+        }
+
+        const opacityBtn = uiSettingsWindow.querySelector('.baddonz-opacity-button');
+        if (opacityBtn) {
+            opacityBtn.addEventListener('click', () => {
+                const baddonzData = JSON.parse(localStorage.getItem('BaddonzData') || '{}');
+                const accId = window.BaddonzAPI?.accountId;
+                const unified = baddonzData[accId]?.manager?.unifiedOpacityEnabled;
+                if (unified && window.setBaddonzGlobalOpacity) {
+                    const cur = baddonzData[accId]?.manager?.currentOpacity ?? 2;
+                    window.setBaddonzGlobalOpacity((cur + 1) % 5);
+                } else {
+                    currentSettings.windowSettingsOpacity = (currentSettings.windowSettingsOpacity + 1) % 5;
+                    applyOpacityClass(uiSettingsWindow, currentSettings.windowSettingsOpacity);
+                    saveSettings();
+                }
+            });
+        }
+
+        const autoDestroyCheckbox = uiSettingsWindow.querySelector('.trash-auto-destroy');
+        if (autoDestroyCheckbox) {
+            autoDestroyCheckbox.addEventListener('click', () => {
+                currentSettings.autoDestroy = autoDestroyCheckbox.classList.toggle('active');
+                saveSettings();
+            });
+        }
+    }
+
     // ─── Destroy logic ────────────────────────────────────────────────────────
     function startDestroying(items) {
         if (!items || items.length === 0) return;
-        const count = items.length;
         let index = 0;
+        const total = items.length;
 
         function next() {
-            if (index >= count) {
+            if (index >= total) {
                 if (typeof window.message === 'function') {
-                    window.message(`Zniszczono ${count} przeterminowanych itemów.`);
+                    window.message(`Zniszczono ${total} przeterminowanych itemów.`);
                 }
                 return;
             }
@@ -304,8 +297,8 @@
     // ─── Init / Stop ──────────────────────────────────────────────────────────
     function addonInit() {
         loadSettings();
-        buildSettingsWindow();
-        buildPopup();
+        if (!uiPopupWindow) buildPopup();
+        if (!uiSettingsWindow) buildSettingsWindow();
 
         // Obserwator widoczności okna ustawień
         if (uiSettingsWindow) {
@@ -319,7 +312,7 @@
             obs.observe(uiSettingsWindow, { attributes: true, attributeFilter: ['style'] });
         }
 
-        // Skan natychmiast po załadowaniu (bez delay)
+        // Skan natychmiast po załadowaniu gry
         scan();
     }
 
@@ -332,8 +325,8 @@
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
         saveSettings();
-        if (!isEnabled) {
-            if (uiPopupWindow) uiPopupWindow.style.display = 'none';
+        if (!isEnabled && uiPopupWindow) {
+            uiPopupWindow.style.display = 'none';
         }
     }
 
