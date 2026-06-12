@@ -1,7 +1,19 @@
-(function () {
+// ==UserScript==
+// @name          Minigierka baddonz
+// @version       1.0
+// @description   Podświetlanie elementów w ukrytej minigrze
+// @author        besiaczek
+// @match         https://*.margonem.pl/
+// @grant         none
+// ==/UserScript==
+
+(function() {
     'use strict';
 
     const ADDON_ID = "MINI";
+
+    let originalAddWindow = null;
+    let isHooked = false;
 
     const knowledgeBase = {
         "alpinia": ["itemy/ros/alpinia.gif"],
@@ -128,13 +140,10 @@
         "zwój": ["itemy/pap/pap45.gif"]
     };
 
-    let originalAddWindow = null;
-    let isHooked = false;
-
     function addonInit() {
         if (isHooked) return;
 
-        if (typeof window.Engine === 'undefined' || typeof window.Engine.windowManager === 'undefined') {
+        if (!window.Engine || !window.Engine.windowManager || typeof window.Engine.windowManager.add !== 'function' || !window.Engine.windowsData) {
             setTimeout(addonInit, 500);
             return;
         }
@@ -146,12 +155,7 @@
                 const minigame = windowData.objParent;
 
                 const drawHelpers = function() {
-                    if (typeof $ !== 'undefined') {
-                        $('.helper-circle').remove();
-                    } else {
-                        const existingHelpers = document.querySelectorAll('.helper-circle');
-                        existingHelpers.forEach(el => el.remove());
-                    }
+                    if (typeof $ !== 'undefined') $('.helper-circle').remove();
 
                     if (!minigame.initData || !minigame.initData.objects) return;
 
@@ -169,7 +173,7 @@
 
                     if (!$container) return;
 
-                    objects.forEach((obj) => {
+                    objects.forEach((obj, index) => {
                         let knownNames = [];
 
                         for (let word in knowledgeBase) {
@@ -186,46 +190,44 @@
                             let exactWidth = obj.size[2];
                             let exactHeight = obj.size[3];
 
-                            if (typeof $ !== 'undefined') {
-                                let $circle = $("<div>").addClass("helper-circle").css({
-                                    position: 'absolute',
-                                    top: obj.pos[1] + 'px',
-                                    left: obj.pos[0] + 'px',
-                                    width: exactWidth + 'px',
-                                    height: exactHeight + 'px',
-                                    border: `3px solid ${color}`,
-                                    borderRadius: '8px',
-                                    pointerEvents: 'none',
-                                    boxShadow: `0 0 8px ${color}, inset 0 0 5px ${color}`,
-                                    zIndex: 1000
-                                });
+                            let $circle = $("<div>").addClass("helper-circle").css({
+                                position: 'absolute',
+                                top: obj.pos[1] + 'px',
+                                left: obj.pos[0] + 'px',
+                                width: exactWidth + 'px',
+                                height: exactHeight + 'px',
+                                border: `3px solid ${color}`,
+                                borderRadius: '8px',
+                                pointerEvents: 'none',
+                                boxShadow: `0 0 8px ${color}, inset 0 0 5px ${color}`,
+                                zIndex: 1000
+                            });
 
-                                $circle.append($("<small>").text(targetName).css({
-                                    position: 'absolute',
-                                    top: '-18px',
-                                    width: '100%',
-                                    textAlign: 'center',
-                                    color: color,
-                                    fontWeight: 'bold',
-                                    fontSize: '11px',
-                                    textShadow: '1px 1px 2px black'
-                                }));
+                            $circle.append($("<small>").text(targetName).css({
+                                position: 'absolute',
+                                top: '-18px',
+                                width: '100%',
+                                textAlign: 'center',
+                                color: color,
+                                fontWeight: 'bold',
+                                fontSize: '11px',
+                                textShadow: '1px 1px 2px black'
+                            }));
 
-                                $container.append($circle);
-                            }
+                            $container.append($circle);
                         }
                     });
                 };
 
                 const originalUpdateBoard = minigame.updateBoard;
                 minigame.updateBoard = function() {
-                    originalUpdateBoard.apply(this, arguments);
+                    if (originalUpdateBoard) originalUpdateBoard.apply(this, arguments);
                     drawHelpers();
                 };
 
                 const originalUpdateElements = minigame.updateElements;
                 minigame.updateElements = function(tab) {
-                    originalUpdateElements.apply(this, arguments);
+                    if (originalUpdateElements) originalUpdateElements.apply(this, arguments);
                     drawHelpers();
                 };
 
@@ -235,6 +237,7 @@
                     }
                 }, 300);
             }
+
             return originalAddWindow.apply(this, arguments);
         };
 
@@ -245,16 +248,16 @@
         if (isHooked && originalAddWindow && window.Engine && window.Engine.windowManager) {
             window.Engine.windowManager.add = originalAddWindow;
         }
+        originalAddWindow = null;
+        isHooked = false;
 
+        // Czyszczenie znaczników po wyłączeniu
         if (typeof $ !== 'undefined') {
             $('.helper-circle').remove();
         } else {
-            const existingHelpers = document.querySelectorAll('.helper-circle');
-            existingHelpers.forEach(el => el.remove());
+            const circles = document.querySelectorAll('.helper-circle');
+            circles.forEach(c => c.remove());
         }
-
-        originalAddWindow = null;
-        isHooked = false;
     }
 
     const checkApi = () => {
@@ -262,11 +265,12 @@
             setTimeout(checkApi, 500);
             return;
         }
-        window.BaddonzAPI.registerAddon(ADDON_ID, {
-            init: addonInit,
-            stop: addonStop
+        window.BaddonzAPI.registerAddon(ADDON_ID, { 
+            init: addonInit, 
+            stop: addonStop 
         });
     };
 
     checkApi();
+
 })();
