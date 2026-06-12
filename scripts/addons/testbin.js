@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Śmieciara baddonz
-// @version       10.06.2026
+// @version       12.06.2026
 // @description   Niszczy przeterminowane przedmioty w plecaku
 // @author        besiak
 // @match         https://*.margonem.pl/*
@@ -284,6 +284,27 @@
             autoCb.addEventListener('click', () => {
                 currentSettings.autoDestroy = autoCb.classList.toggle('active');
                 saveSettings();
+
+                if (currentSettings.autoDestroy) {
+                    // Właśnie włączono auto — jeśli popup jest otwarty, zamknij i zniszcz
+                    if (uiPopupWindow && uiPopupWindow.style.display !== 'none') {
+                        uiPopupWindow.style.display = 'none';
+                        startDestroying(pendingItems);
+                    } else if (pendingItems.length === 0) {
+                        // Popup nie był otwarty — skanujemy od nowa i od razu niszczymy
+                        const expired = getExpiredItems();
+                        if (expired.length > 0) {
+                            pendingItems = expired;
+                            startDestroying(pendingItems);
+                        }
+                    }
+                } else {
+                    // Właśnie wyłączono auto — jeśli są zapamiętane itemy, pokaż popup
+                    const expired = getExpiredItems();
+                    if (expired.length > 0) {
+                        showPopup(expired);
+                    }
+                }
             });
             if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
                 $(autoCb).tip('Niszczy itemy automatycznie bez pytania');
