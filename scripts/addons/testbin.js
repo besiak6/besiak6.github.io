@@ -12,14 +12,17 @@
 
     const ADDON_ID = "TRASH";
     const MICC_BASE_URL = 'https://micc.garmory-cdn.cloud/obrazki/itemy/';
-    const SCAN_DELAY = 5000;
     const ITEM_DESTROY_DELAY = 2000;
 
     let currentSettings = {
         enabled: true,
+        autoDestroy: false,
+        settingsWindowVisible: false,
+        windowSettingsOpacity: 2,
     };
 
     let uiPopupWindow = null;
+    let uiSettingsWindow = null;
     let pendingItems = [];
 
     // ─── Settings ─────────────────────────────────────────────────────────────
@@ -54,7 +57,88 @@
         window._g(`moveitem&st=-2&id=${itemId}`);
     }
 
-    // ─── UI ───────────────────────────────────────────────────────────────────
+    // ─── Opacity helper ───────────────────────────────────────────────────────
+    function applyOpacityClass(wnd, opacity) {
+        for (let i = 0; i < 5; i++) wnd.classList.remove(`opacity-${i}`);
+        const baddonzData = JSON.parse(localStorage.getItem('BaddonzData') || '{}');
+        const accId = window.BaddonzAPI?.accountId;
+        const unified = baddonzData[accId]?.manager?.unifiedOpacityEnabled;
+        if (unified) {
+            const globalOp = baddonzData[accId]?.manager?.currentOpacity ?? 2;
+            wnd.classList.add(`opacity-${globalOp}`);
+        } else {
+            wnd.classList.add(`opacity-${opacity}`);
+        }
+    }
+
+    // ─── Build settings window ────────────────────────────────────────────────
+    function buildSettingsWindow() {
+        if (uiSettingsWindow) return;
+
+        const bodyHtml = `
+            <div class="baddonz-setting-row">
+                <div class="baddonz-checkbox trash-auto-destroy ${currentSettings.autoDestroy ? 'active' : ''}"></div>
+                <span class="baddonz-text">Automatyczne Niszczenie</span>
+            </div>
+        `;
+
+        uiSettingsWindow = window.BaddonzAPI.createAddonWindow(
+            ADDON_ID,
+            "Śmieciara Ustawienia",
+            bodyHtml,
+            {
+                width: '220px',
+                customId: 'baddonz-trash-settings',
+                hasSettings: false,
+                hasCollapse: false,
+                hasClose: true,
+            }
+        );
+
+        uiSettingsWindow.classList.add('settings-window');
+        uiSettingsWindow.removeAttribute('data-addon-id');
+        uiSettingsWindow.style.display = currentSettings.settingsWindowVisible ? 'flex' : 'none';
+        applyOpacityClass(uiSettingsWindow, currentSettings.windowSettingsOpacity);
+
+        // Opacity button
+        const opacityBtn = uiSettingsWindow.querySelector('.baddonz-opacity-button');
+        if (opacityBtn) {
+            opacityBtn.addEventListener('click', () => {
+                const baddonzData = JSON.parse(localStorage.getItem('BaddonzData') || '{}');
+                const accId = window.BaddonzAPI?.accountId;
+                const unified = baddonzData[accId]?.manager?.unifiedOpacityEnabled;
+                if (unified && window.setBaddonzGlobalOpacity) {
+                    const cur = baddonzData[accId]?.manager?.currentOpacity ?? 2;
+                    window.setBaddonzGlobalOpacity((cur + 1) % 5);
+                } else {
+                    currentSettings.windowSettingsOpacity = (currentSettings.windowSettingsOpacity + 1) % 5;
+                    applyOpacityClass(uiSettingsWindow, currentSettings.windowSettingsOpacity);
+                    saveSettings();
+                }
+            });
+        }
+
+        // Close button
+        const closeBtn = uiSettingsWindow.querySelector('.baddonz-close-button');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                uiSettingsWindow.style.display = 'none';
+                currentSettings.settingsWindowVisible = false;
+                saveSettings();
+            });
+        }
+
+        // Checkbox auto destroy
+        const autoDestroyCheckbox = uiSettingsWindow.querySelector('.trash-auto-destroy');
+        if (autoDestroyCheckbox) {
+            autoDestroyCheckbox.addEventListener('click', () => {
+                currentSettings.autoDestroy = autoDestroyCheckbox.classList.toggle('active');
+                saveSettings();
+            });
+        }
+    }
+
+    // ─── Build popup window ───────────────────────────────────────────────────
     function buildPopup() {
         if (uiPopupWindow) return;
 
@@ -65,8 +149,8 @@
                 gap: 6px;
                 padding: 4px;
                 min-height: 42px;
-                justify-content: flex-start;
-                align-items: flex-start;
+                justify-content: center;
+                align-items: center;
             "></div>
             <div style="display: flex; justify-content: center; margin-top: 6px;">
                 <button class="baddonz-button trash-destroy-btn" style="width: 100%; padding: 4px 0;">Zniszcz</button>
@@ -86,26 +170,24 @@
             }
         );
 
-        // Usuwamy przycisk zmiany przezroczystości – nie potrzebny w tym oknie
-        const opacityBtn = uiPopupWindow.querySelector('.baddonz-opacity-button');
-        if (opacityBtn) opacityBtn.remove();
-
         uiPopupWindow.style.display = 'none';
 
-        // Przycisk zamknij
+        // Close button
         const closeBtn = uiPopupWindow.querySelector('.baddonz-close-button');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
                 uiPopupWindow.style.display = 'none';
+                pendingItems = [];
             });
         }
 
-        // Przycisk Zniszcz
+        // Destroy button
         const destroyBtn = uiPopupWindow.querySelector('.trash-destroy-btn');
         if (destroyBtn) {
             destroyBtn.addEventListener('click', () => {
                 uiPopupWindow.style.display = 'none';
                 startDestroying(pendingItems);
+                pendingItems = [];
             });
         }
     }
@@ -118,12 +200,12 @@
     }
 
     function renderItemsInPopup(items) {
+        if (!uiPopupWindow) return;
         const grid = uiPopupWindow.querySelector('#trash-items-grid');
         if (!grid) return;
         grid.innerHTML = '';
 
         items.forEach(item => {
-            // Wrapper – taki sam rozmiar jak slot itemu w grze
             const wrapper = document.createElement('div');
             wrapper.style.cssText = `
                 position: relative;
@@ -132,36 +214,44 @@
                 flex-shrink: 0;
             `;
 
-            // Klonujemy element DOM itemu jeśli istnieje
+            // GIF z MICC jako główna grafika
+            const iconSource = item.icon || `${item.id}.png`;
+            const gifName = iconSource.replace(/\.[^/.]+$/, '.gif');
+            const img = document.createElement('img');
+            img.src = MICC_BASE_URL + gifName;
+            img.style.cssText = 'width:32px; height:32px; display:block; position:absolute; top:0; left:0; z-index:1;';
+
+            // Fallback na PNG jeśli GIF nie istnieje
+            img.onerror = () => {
+                const pngName = iconSource.replace(/\.[^/.]+$/, '.png');
+                img.src = MICC_BASE_URL + pngName;
+                img.onerror = null;
+            };
+
+            wrapper.appendChild(img);
+
+            // Klonujemy oryginalny element z gry jeśli istnieje (dla tooltipa i interakcji)
             if (item.$ && item.$.length) {
                 const $clone = item.$.clone();
-                $clone.find('canvas.icon, canvas.canvas-notice').remove();
-                $clone.css({ position: 'relative', width: '32px', height: '32px', top: '0', left: '0' });
+                $clone.find('canvas, img').remove();
+                $clone.css({
+                    position: 'absolute',
+                    width: '32px',
+                    height: '32px',
+                    top: '0',
+                    left: '0',
+                    zIndex: '2',
+                    background: 'transparent',
+                });
                 $clone.data('item', item);
-
-                // Nakładamy GIF z MICC (tak jak w Ulepszarze)
-                const iconSource = item.icon || `${item.id}.png`;
-                const gifName = iconSource.replace(/\.[^/.]+$/, '.gif');
-                const $img = $('<img>')
-                    .attr('src', MICC_BASE_URL + gifName)
-                    .css({ width: '32px', height: '32px', position: 'absolute', top: '0', left: '0', zIndex: '0' });
-                $clone.append($img);
-
                 wrapper.appendChild($clone[0]);
-            } else {
-                // Fallback: sam obrazek z MICC
-                const iconSource = item.icon || `${item.id}.png`;
-                const gifName = iconSource.replace(/\.[^/.]+$/, '.gif');
-                const img = document.createElement('img');
-                img.src = MICC_BASE_URL + gifName;
-                img.style.cssText = 'width:32px; height:32px; display:block;';
-                img.title = item.name || '';
-                wrapper.appendChild(img);
             }
 
-            // Tooltip z nazwą itemu jeśli jQuery tip dostępny
+            // Tooltip z nazwą
             if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
                 $(wrapper).tip(item.name || '');
+            } else {
+                wrapper.title = item.name || '';
             }
 
             grid.appendChild(wrapper);
@@ -173,23 +263,20 @@
         pendingItems = items;
         renderItemsInPopup(items);
         uiPopupWindow.style.display = 'flex';
-
-        // Centrujemy po wyrenderowaniu
         requestAnimationFrame(() => centerWindow(uiPopupWindow));
-
-        // Wynosimy na wierzch
         uiPopupWindow.dispatchEvent(new Event('mousedown'));
     }
 
     // ─── Destroy logic ────────────────────────────────────────────────────────
     function startDestroying(items) {
         if (!items || items.length === 0) return;
+        const count = items.length;
         let index = 0;
 
         function next() {
-            if (index >= items.length) {
+            if (index >= count) {
                 if (typeof window.message === 'function') {
-                    window.message(`Zniszczono ${items.length} przeterminowanych itemów.`);
+                    window.message(`Zniszczono ${count} przeterminowanych itemów.`);
                 }
                 return;
             }
@@ -205,7 +292,11 @@
     function scan() {
         if (!currentSettings.enabled) return;
         const expired = getExpiredItems();
-        if (expired.length > 0) {
+        if (expired.length === 0) return;
+
+        if (currentSettings.autoDestroy) {
+            startDestroying(expired);
+        } else {
             showPopup(expired);
         }
     }
@@ -213,22 +304,36 @@
     // ─── Init / Stop ──────────────────────────────────────────────────────────
     function addonInit() {
         loadSettings();
-        if (!uiPopupWindow) buildPopup();
-        setTimeout(scan, SCAN_DELAY);
+        buildSettingsWindow();
+        buildPopup();
+
+        // Obserwator widoczności okna ustawień
+        if (uiSettingsWindow) {
+            const obs = new MutationObserver(() => {
+                const isVisible = uiSettingsWindow.style.display !== 'none';
+                if (currentSettings.settingsWindowVisible !== isVisible) {
+                    currentSettings.settingsWindowVisible = isVisible;
+                    saveSettings();
+                }
+            });
+            obs.observe(uiSettingsWindow, { attributes: true, attributeFilter: ['style'] });
+        }
+
+        // Skan natychmiast po załadowaniu (bez delay)
+        scan();
     }
 
     function addonStop() {
-        if (uiPopupWindow) {
-            uiPopupWindow.style.display = 'none';
-        }
+        if (uiPopupWindow) uiPopupWindow.style.display = 'none';
+        if (uiSettingsWindow) uiSettingsWindow.style.display = 'none';
         pendingItems = [];
     }
 
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
         saveSettings();
-        if (!isEnabled && uiPopupWindow) {
-            uiPopupWindow.style.display = 'none';
+        if (!isEnabled) {
+            if (uiPopupWindow) uiPopupWindow.style.display = 'none';
         }
     }
 
