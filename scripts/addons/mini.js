@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Minigierka baddonz
-// @version       1.0
+// @version       1.1
 // @description   Podświetlanie elementów w ukrytej minigrze
 // @author        besiaczek
 // @match         https://*.margonem.pl/
@@ -12,6 +12,7 @@
 
     const ADDON_ID = "MINI";
 
+    let currentSettings = { enabled: true };
     let originalAddWindow = null;
     let isHooked = false;
 
@@ -143,7 +144,7 @@
     function addonInit() {
         if (isHooked) return;
 
-        if (!window.Engine || !window.Engine.windowManager || typeof window.Engine.windowManager.add !== 'function' || !window.Engine.windowsData) {
+        if (!window.Engine || !window.Engine.windowManager || typeof window.Engine.windowManager.add !== 'function') {
             setTimeout(addonInit, 500);
             return;
         }
@@ -151,7 +152,14 @@
         originalAddWindow = window.Engine.windowManager.add;
 
         window.Engine.windowManager.add = function(windowData) {
-            if (windowData.nameWindow === window.Engine.windowsData.name.HIDDEN_MINI_GAME) {
+            // Jeśli dodatek został wyłączony w menedżerze, przepuszczamy okno bez modyfikacji
+            if (!currentSettings.enabled) {
+                return originalAddWindow.apply(this, arguments);
+            }
+
+            const targetGameWindow = window.Engine.windowsData?.name?.HIDDEN_MINI_GAME || "hidden-mini-game";
+
+            if (windowData && windowData.nameWindow === targetGameWindow) {
                 const minigame = windowData.objParent;
 
                 const drawHelpers = function() {
@@ -251,12 +259,15 @@
         originalAddWindow = null;
         isHooked = false;
 
-        // Czyszczenie znaczników po wyłączeniu
         if (typeof $ !== 'undefined') {
             $('.helper-circle').remove();
-        } else {
-            const circles = document.querySelectorAll('.helper-circle');
-            circles.forEach(c => c.remove());
+        }
+    }
+
+    function onStateToggle(isEnabled) {
+        currentSettings.enabled = isEnabled;
+        if (!isEnabled && typeof $ !== 'undefined') {
+            $('.helper-circle').remove();
         }
     }
 
@@ -267,7 +278,8 @@
         }
         window.BaddonzAPI.registerAddon(ADDON_ID, { 
             init: addonInit, 
-            stop: addonStop 
+            stop: addonStop,
+            onStateToggle: onStateToggle
         });
     };
 
