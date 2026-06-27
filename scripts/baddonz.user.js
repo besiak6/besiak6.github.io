@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Baddonz
-// @version       2.11
-// @description   Dodatki NI
+// @version       1.0
+// @description   Menadżer dodatków by besiak
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -9,14 +9,11 @@
 // @downloadURL   https://besiak6.github.io/scripts/baddonz.user.js
 // @updateURL     https://besiak6.github.io/scripts/baddonz.user.js
 // ==/UserScript==
-(function () {
-    const v = localStorage.getItem('baddonz_v') || '0';
-    window.CSS_URL = `https://besiak6.github.io/styles/baddonz2.css?v=${v}`;
-    const s = document.createElement('script');
-    s.src = `https://besiak6.github.io/scripts/baddonz2.js?v=${v}`;
-    document.head.appendChild(s);
-    fetch(`https://besiak6.github.io/scripts/version.json?t=${Date.now()}`)
-        .then(r => r.json())
-        .then(d => { if (d?.version !== v) localStorage.setItem('baddonz_v', d.version); })
-        .catch(() => {});
+(function() {
+    window.CSS_URL = "https://besiak6.github.io/styles/baddonz.css";
+    const version = Date.now();
+    const build = "https://besiak6.github.io/scripts/baddonz.js";
+    const script = document.createElement("script");
+    script.src = `${build}?v=${version}`;
+    document.body.appendChild(script);
 })();
