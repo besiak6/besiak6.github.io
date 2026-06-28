@@ -438,12 +438,9 @@ body.baddonz-ii-hide-opis.baddonz-ii-legendary .baddonz-desc-rarity-legendary { 
 .baddonz-rg-wnd .baddonz-window-body { padding: 4px 6px 6px 6px !important; gap: 3px !important; }
 .baddonz-rg-wnd .baddonz-setting-row { margin-bottom: 2px !important; }
 .baddonz-rg-wnd .baddonz-text { font-size: 11px; }
-.baddonz-otch-wnd { width: 140px; min-width: 140px; }
-.baddonz-otch-wnd .baddonz-window-body { padding: 4px 8px 6px 8px !important; gap: 3px !important; }
-.otch-main-row { gap: 6px; margin: 0; align-items: center; }
-
-.baddonz-otch-wnd-settings { width: 230px; min-width: 230px; height: auto !important; min-height: unset !important; max-height: unset !important; }
-.baddonz-otch-wnd-settings .baddonz-window-body { height: auto !important; min-height: unset !important; padding: 5px 8px 8px 8px !important; gap: 4px !important; display: flex; flex-direction: column; }
-.baddonz-otch-wnd-settings .baddonz-text { font-size: 11px; }
-.baddonz-otch-wnd-settings .baddonz-select { height: 22px; font-size: 11px; }
+.baddonz-otch-wnd { width: 210px; min-width: 210px; }
+.baddonz-otch-wnd .baddonz-window-body { padding: 5px 8px 8px 8px !important; gap: 4px !important; }
+.baddonz-otch-wnd .baddonz-text { font-size: 11px; }
+.baddonz-otch-wnd .baddonz-select { height: 22px; font-size: 11px; }
 .otch-sets-section { padding-top: 2px; }
+.otch-state-button { margin-right: 2px; }
