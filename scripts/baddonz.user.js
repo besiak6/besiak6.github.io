@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name          Baddonz
-// @version       2.13
+// @version       2.13.1
 // @description   Dodatki NI
 // @author        besiak
 // @match         https://*.margonem.pl/*
