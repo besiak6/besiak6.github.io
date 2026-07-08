@@ -236,9 +236,11 @@
         });
         targetsWithDistance.sort((a, b) => a.distance - b.distance);
         const closest = targetsWithDistance[0];
-        console.log(`[AutoX-Debug] Dystans do celu ${closest.target.nick}: Chebyshev(kratki)=${closest.distance}, Euclides(rx/ry, stara metoda)=${closest.euclideanDebug.toFixed(2)}`);
-        // TYMCZASOWY LOG DIAGNOSTYCZNY - do znalezienia pól "martwy"/"dialog". Usunę po ustaleniu nazw pól.
-        console.log(`[AutoX-Debug] [DIAGNOSTYKA] Surowy obiekt celu (${closest.target.nick}):`, closest.target);
+        // Logujemy dystans/cel tylko gdy jest w rozsądnym zasięgu (kontekst ok. 2x zasięg ataku),
+        // żeby nie zaśmiecać konsoli przeciwnikami kilkanaście kratek dalej. Nie wpływa to na atak.
+        if (closest.distance <= 6) {
+            console.log(`[AutoX-Debug] Dystans do celu ${closest.target.nick}: Chebyshev(kratki)=${closest.distance}, Euclides(rx/ry, stara metoda)=${closest.euclideanDebug.toFixed(2)}`);
+        }
         return closest;
     }
 
@@ -273,7 +275,9 @@
 
         const closestTargetWithDistance = getClosestTarget();
         if (closestTargetWithDistance) {
-            console.log(`[AutoX-Debug] Wytypowano cel do ataku: ${closestTargetWithDistance.target.nick}`);
+            if (closestTargetWithDistance.distance <= 6) {
+                console.log(`[AutoX-Debug] Wytypowano cel do ataku: ${closestTargetWithDistance.target.nick}`);
+            }
             attack(closestTargetWithDistance.target, closestTargetWithDistance.distance);
         }
     }
@@ -457,6 +461,13 @@
                         if (data.h) console.log(`[AutoX-Debug] [GRA ZWRÓCIŁA data.h - Bohater]`, data.h);
                         if (data.f) console.log(`[AutoX-Debug] [GRA ZWRÓCIŁA data.f - Status Walki]`, data.f);
                         if (data.town) console.log(`[AutoX-Debug] [GRA ZWRÓCIŁA data.town - Pakiet Zmiany Mapy]`, data.town);
+
+                        // Reagujemy NATYCHMIAST na każdy pakiet ruchu (data.o - inni gracze, data.h - bohater),
+                        // zamiast czekać na najbliższy tick stałego interwału. Łapie to graczy, którzy
+                        // przemykają przez zasięg ataku szybciej niż wynosi odstęp między tickami.
+                        if ((data.o || data.h) && currentSettings.enabled && notInBattle() && isHeroActionable()) {
+                            handleAutoXLogic();
+                        }
                     }
                 });
                 isEngineObserved = true;
@@ -469,9 +480,11 @@
             isEndBattleHooked = true;
         }
 
+        // Interwał zostaje jako zapasowa siatka bezpieczeństwa (np. gdy przez chwilę nie ma żadnych
+        // pakietów ruchu), skrócony z 100ms do 60ms dla dodatkowej czułości.
         BADDONZ_TRACK_INTERVAL = setInterval(() => { 
             if (currentSettings.enabled && notInBattle() && isHeroActionable()) handleAutoXLogic(); 
-        }, 100);
+        }, 60);
 
         BADDONZ_FAST_FIGHT_INTERVAL = setInterval(() => { 
             if (currentSettings.fastFight) handleFastFight(); 
