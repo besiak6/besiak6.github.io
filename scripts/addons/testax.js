@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          AutoX baddonz
-// @version       11.06.2026
-// @description   autox z zaawansowanym logowaniem w konsoli
+// @version       08.07.2026
+// @description   autox
 // @author        besiak
 // @match         https://*.margonem.pl/*
 // @grant         none
@@ -23,15 +23,10 @@
         windowSettingsOpacity: 2,
         isExpanded: false,
         fastFight: false,
-        attackFriends: false,
-        attackClan: false,
         enableClanOptions: true,
         ignoreClans: "",
         alwaysAttackClans: "",
-        levelRange: "0-500",
-        enableNickOptions: false,
-        ignoreNicks: "",
-        alwaysAttackNicks: ""
+        levelRange: "0-500"
     };
 
     let uiMainWindow = null;
@@ -43,9 +38,14 @@
     let isEndBattleHooked = false;
     let parsedLevelRange = { min: 0, max: 500 };
 
-    // --- NOWE ZMIENNE DO FINETUNINGU I OBSŁUGI MAP ---
+    // --- ZMIENNE DO OBSŁUGI MAP I OCHRONY (fail-safe) ---
     let BADDONZ_LAST_MAP_ID = null;
     let BADDONZ_MAP_LOADED_TIME = 0;
+
+    // Bufor potwierdzeń "brak ochrony" per gracz - zapobiega atakowaniu na podstawie
+    // pojedynczego, potencjalnie błędnego/pustego odczytu listy emocji.
+    const BADDONZ_PROTECTION_CONFIRM = new Map(); // id -> licznik kolejnych spójnych odczytów "brak ochrony"
+    const BADDONZ_REQUIRED_CONFIRMATIONS = 3; // ok. 3 x 100ms = ~300ms stabilnego odczytu zanim uznamy cel za pewny
 
     class Emitter {
         constructor() { this.events = {}; }
@@ -84,23 +84,38 @@
         return window.Engine.others.getDrawableList().map(o => o.d); 
     }
 
+    // --- FAIL-SAFE + DEBOUNCE: pusta/niepewna lista emocji NIGDY nie oznacza "brak ochrony" ---
     function checkTargetProtection(other) {
-        if (!window.Engine.others.getById(other.id)) return true;
+        if (!window.Engine.others.getById(other.id)) return false;
         const otherObj = window.Engine.others.getById(other.id);
         const emoList = typeof otherObj.getOnSelfEmoList === 'function' ? otherObj.getOnSelfEmoList() : [];
-        
+
         console.log(`[AutoX-Debug] Sprawdzam gracza: ${other.nick} (ID: ${other.id}). Załadowane emocje:`, emoList.map(e => e?.name));
-        
+
+        // Pusta/niepewna lista = NIE WIEMY czy jest ochrona -> resetuj licznik i traktuj jako NIEATAKOWALNY w tym ticku
         if (!emoList || emoList.length === 0) {
-            console.warn(`[AutoX-Debug] ${other.nick} ma PUSTĄ listę emocji. Silnik traktuje to jako BRAK ochrony!`);
-            return true;
+            console.warn(`[AutoX-Debug] ${other.nick} ma PUSTĄ listę emocji (niepewny stan). Resetuję licznik potwierdzeń, POMIJAM w tym ticku.`);
+            BADDONZ_PROTECTION_CONFIRM.delete(other.id);
+            return false;
         }
-        
+
         const hasProtection = emoList.some(e => e && ['battle', 'pvpprotected'].includes(e.name));
         if (hasProtection) {
             console.log(`[AutoX-Debug] Gracz ${other.nick} POMINIĘTY (posiada status walki lub ochronki).`);
+            BADDONZ_PROTECTION_CONFIRM.delete(other.id);
+            return false;
         }
-        return !hasProtection;
+
+        // Brak ochrony potwierdzony w tym ticku -> zwiększ licznik spójnych odczytów
+        const current = (BADDONZ_PROTECTION_CONFIRM.get(other.id) || 0) + 1;
+        BADDONZ_PROTECTION_CONFIRM.set(other.id, current);
+
+        if (current < BADDONZ_REQUIRED_CONFIRMATIONS) {
+            console.log(`[AutoX-Debug] Gracz ${other.nick} - brak ochrony, ale niepotwierdzone (${current}/${BADDONZ_REQUIRED_CONFIRMATIONS}). Czekam na kolejne potwierdzenie.`);
+            return false;
+        }
+
+        return true; // dopiero po N kolejnych spójnych odczytach cel jest uznawany za atakowalny
     }
 
     function checkSelfProtection() {
@@ -147,17 +162,10 @@
         return false;
     }
 
+    // --- UPROSZCZONA LOGIKA WROGA: tylko relacja + lista klanów (bez attackFriends/attackClan/nicków) ---
     function isEnemy(other) {
         if (!other || typeof other.relation !== 'number') return false;
         if (isInParty(other)) return false;
-
-        const lowerNick = other.nick.toLowerCase();
-        const alwaysAttackNicksList = currentSettings.alwaysAttackNicks.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-        const ignoreNicksList = currentSettings.ignoreNicks.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-        if (currentSettings.enableNickOptions) {
-            if (alwaysAttackNicksList.includes(lowerNick)) return true;
-            if (ignoreNicksList.includes(lowerNick)) return false;
-        }
 
         let otherClanId = other.clan && typeof other.clan === 'object' ? other.clan.id : null;
         let otherClanName = other.clan && (typeof other.clan === 'object' ? other.clan.name : other.clan);
@@ -165,17 +173,14 @@
         const alwaysAttackClansList = currentSettings.alwaysAttackClans.split(',').map(s => s.trim()).filter(Boolean);
         const isClanIgnored = (id, name) => (id && ignoreClansList.includes(id.toString())) || (name && ignoreClansList.includes(name));
         const isClanAlwaysAttacked = (id, name) => (id && alwaysAttackClansList.includes(id.toString())) || (name && alwaysAttackClansList.includes(name));
-        
+
         if (currentSettings.enableClanOptions) {
             if ((otherClanId || otherClanName) && isClanAlwaysAttacked(otherClanId, otherClanName)) return true;
             if ((otherClanId || otherClanName) && isClanIgnored(otherClanId, otherClanName)) return false;
         }
 
-        if ([1, 3, 6, 8].includes(other.relation)) return true;
-        if (other.relation === 2 && currentSettings.attackFriends) return true;
-        if ([4, 5, 7].includes(other.relation) && currentSettings.attackClan) return true;
-
-        return false;
+        // Domyślne relacje traktowane jako wróg: BRAK(1), WRÓG(3), WRÓG KLANU(6), WRÓG FRAKCJI(8)
+        return [1, 3, 6, 8].includes(other.relation);
     }
 
     function getValidTargets() {
@@ -189,31 +194,46 @@
             .filter(other => isEnemy(other));
     }
 
+    // --- POPRAWIONY DYSTANS: kratki (tile) + Chebyshev, z logiem porównawczym do starej metody ---
     function getClosestTarget() {
         const hero = window.Engine.hero.d;
         const targets = getValidTargets();
         if (!targets.length) return null;
 
-        const hx = typeof hero.rx !== 'undefined' ? hero.rx : hero.x;
-        const hy = typeof hero.ry !== 'undefined' ? hero.ry : hero.y;
+        // Współrzędne kratkowe (x,y) - stabilne, nie interpolowane w trakcie animacji ruchu
+        const hx = hero.x;
+        const hy = hero.y;
+        // Współrzędne "real" (rx,ry) - mogą być chwilowo nieaktualne podczas ruchu, zostawiamy do porównania w logu
+        const hrx = typeof hero.rx !== 'undefined' ? hero.rx : hero.x;
+        const hry = typeof hero.ry !== 'undefined' ? hero.ry : hero.y;
+
         const targetsWithDistance = targets.map(other => {
-            const ox = typeof other.rx !== 'undefined' ? other.rx : other.x;
-            const oy = typeof other.ry !== 'undefined' ? other.ry : other.y;
+            const ox = other.x;
+            const oy = other.y;
+            const orx = typeof other.rx !== 'undefined' ? other.rx : other.x;
+            const ory = typeof other.ry !== 'undefined' ? other.ry : other.y;
+
+            const chebyshevDistance = Math.max(Math.abs(hx - ox), Math.abs(hy - oy)); // kratki, "po skosie liczy się jak 1 krok"
+            const euclideanRealDistance = Math.hypot(hrx - orx, hry - ory); // stara metoda, linia prosta na rx/ry
+
             return {
                 target: other,
-                distance: Math.hypot(hx - ox, hy - oy)
+                distance: chebyshevDistance,
+                euclideanDebug: euclideanRealDistance
             };
         });
         targetsWithDistance.sort((a, b) => a.distance - b.distance);
-        return targetsWithDistance[0]; 
+        const closest = targetsWithDistance[0];
+        console.log(`[AutoX-Debug] Dystans do celu ${closest.target.nick}: Chebyshev(kratki)=${closest.distance}, Euclides(rx/ry, stara metoda)=${closest.euclideanDebug.toFixed(2)}`);
+        return closest;
     }
 
     let BADDONZ_LAST_ATTACK = 0;
     function attack(target, distance) {
         if (Date.now() - BADDONZ_LAST_ATTACK < 300) return false;
-        if (distance <= 3.85) {
+        if (distance <= 3) {
             // LOGOWANIE WYSYŁANEGO ATAKU
-            console.log(`%c[AutoX-Debug] WYSYŁAM ATAK DO SERWERA -> Cel: ${target.nick} (ID: ${target.id}), Lvl: ${target.lvl}, Dystans: ${distance.toFixed(2)}`, "background: red; color: white; font-weight: bold; padding: 3px;");
+            console.log(`%c[AutoX-Debug] WYSYŁAM ATAK DO SERWERA -> Cel: ${target.nick} (ID: ${target.id}), Lvl: ${target.lvl}, Dystans(kratki): ${distance}`, "background: red; color: white; font-weight: bold; padding: 3px;");
             window._g('fight&a=attack&id=' + target.id);
             BADDONZ_LAST_ATTACK = Date.now();
             return true;
@@ -229,6 +249,7 @@
             console.log(`%c[AutoX-Debug] Zmiana mapy wykryta! Stara: ${BADDONZ_LAST_MAP_ID} -> Nowa: ${map.id} (${map.name}). Włączam blokadę 500ms na załadowanie ochronek.`, "background: #007acc; color: white; padding: 2px;");
             BADDONZ_LAST_MAP_ID = map.id;
             BADDONZ_MAP_LOADED_TIME = Date.now();
+            BADDONZ_PROTECTION_CONFIRM.clear(); // czyścimy stare potwierdzenia, nieaktualne na nowej mapie
         }
 
         // 2. Blokada czasowa
@@ -274,11 +295,7 @@
         
         const settingsBodyHtml = `
             <button class="baddonz-button ax-reset-pos-btn" style="width:100%; margin-bottom: 5px;">Resetuj pozycje okienka</button>
-            
-            <div class="baddonz-setting-row"><div class="baddonz-checkbox ax-attack-friends-checkbox ${currentSettings.attackFriends ? 'active' : ''}"></div><span>Atakuj Przyjaciół</span></div>
-            <div class="baddonz-setting-row"><div class="baddonz-checkbox ax-attack-clan-checkbox ${currentSettings.attackClan ? 'active' : ''}"></div><span>Atakuj Klan/Sojusz</span></div>
-            
-            <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
+
             <div class="baddonz-setting-row"><div class="baddonz-checkbox ax-enable-clan-options-checkbox ${currentSettings.enableClanOptions ? 'active' : ''}"></div><span>Kryteria Klanowe</span></div>
             <div class="ax-clan-options" style="display: ${currentSettings.enableClanOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
                 <span class="baddonz-text" style="padding:0;">Nigdy nie atakuj klanów:</span>
@@ -286,15 +303,6 @@
         
                 <span class="baddonz-text" style="padding:0;">Zawsze atakuj klany:</span>
                 <textarea class="baddonz-textarea baddonz-scroll ax-always-attack-clans-textarea" placeholder="Nazwa klanu, ID">${currentSettings.alwaysAttackClans}</textarea>
-            </div>
-
-            <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
-            <div class="baddonz-setting-row"><div class="baddonz-checkbox ax-enable-nick-options-checkbox ${currentSettings.enableNickOptions ? 'active' : ''}"></div><span>Po nickach</span></div>
-            <div class="ax-nick-options" style="display: ${currentSettings.enableNickOptions ? 'flex' : 'none'}; flex-direction:column; gap:5px;">
-                <span class="baddonz-text" style="padding:0;">Nigdy nie atakuj:</span>
-                <textarea class="baddonz-textarea baddonz-scroll ax-ignore-nicks-textarea" placeholder="Nick1, Nick2">${currentSettings.ignoreNicks}</textarea>
-                <span class="baddonz-text" style="padding:0;">Zawsze atakuj:</span>
-                <textarea class="baddonz-textarea baddonz-scroll ax-always-attack-nicks-textarea" placeholder="Nick1, Nick2">${currentSettings.alwaysAttackNicks}</textarea>
             </div>
         `;
         
@@ -387,25 +395,12 @@
             }
         });
 
-        const chbAttFriends = uiSettingsWindow.querySelector(".ax-attack-friends-checkbox");
-        chbAttFriends.addEventListener('click', () => { currentSettings.attackFriends = chbAttFriends.classList.toggle('active'); saveSettings(); });
-
-        const chbAttClan = uiSettingsWindow.querySelector(".ax-attack-clan-checkbox");
-        chbAttClan.addEventListener('click', () => { currentSettings.attackClan = chbAttClan.classList.toggle('active'); saveSettings(); });
-
         const chbClanOpt = uiSettingsWindow.querySelector(".ax-enable-clan-options-checkbox");
         const divClanOpt = uiSettingsWindow.querySelector(".ax-clan-options");
         chbClanOpt.addEventListener('click', () => { currentSettings.enableClanOptions = chbClanOpt.classList.toggle('active'); divClanOpt.style.display = currentSettings.enableClanOptions ? 'flex' : 'none'; saveSettings(); });
 
         uiSettingsWindow.querySelector(".ax-ignore-clans-textarea").addEventListener('change', (e) => { currentSettings.ignoreClans = e.target.value; saveSettings(); });
         uiSettingsWindow.querySelector(".ax-always-attack-clans-textarea").addEventListener('change', (e) => { currentSettings.alwaysAttackClans = e.target.value; saveSettings(); });
-
-        const chbNickOpt = uiSettingsWindow.querySelector(".ax-enable-nick-options-checkbox");
-        const divNickOpt = uiSettingsWindow.querySelector(".ax-nick-options");
-        chbNickOpt.addEventListener('click', () => { currentSettings.enableNickOptions = chbNickOpt.classList.toggle('active'); divNickOpt.style.display = currentSettings.enableNickOptions ? 'flex' : 'none'; saveSettings(); });
-
-        uiSettingsWindow.querySelector(".ax-ignore-nicks-textarea").addEventListener('change', (e) => { currentSettings.ignoreNicks = e.target.value; saveSettings(); });
-        uiSettingsWindow.querySelector(".ax-always-attack-nicks-textarea").addEventListener('change', (e) => { currentSettings.alwaysAttackNicks = e.target.value; saveSettings(); });
     }
 
     function addonInit() {
@@ -441,7 +436,6 @@
             if (window.Engine && window.Engine.communication) {
                 emitter.observe(window.Engine.communication, 'parseJSON', data => {
                     if (data) {
-                        // Tutaj sprawdzisz, co gra dokładnie zwraca w pakietach
                         if (data.o) console.log(`[AutoX-Debug] [GRA ZWRÓCIŁA data.o - Inni Gracze]`, data.o);
                         if (data.h) console.log(`[AutoX-Debug] [GRA ZWRÓCIŁA data.h - Bohater]`, data.h);
                         if (data.f) console.log(`[AutoX-Debug] [GRA ZWRÓCIŁA data.f - Status Walki]`, data.f);
