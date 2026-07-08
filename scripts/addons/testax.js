@@ -42,10 +42,13 @@
     let BADDONZ_LAST_MAP_ID = null;
     let BADDONZ_MAP_LOADED_TIME = 0;
 
-    // Bufor potwierdzeń "brak ochrony" per gracz - zapobiega atakowaniu na podstawie
-    // pojedynczego, potencjalnie błędnego/pustego odczytu listy emocji.
-    const BADDONZ_PROTECTION_CONFIRM = new Map(); // id -> licznik kolejnych spójnych odczytów "brak ochrony"
-    const BADDONZ_REQUIRED_CONFIRMATIONS = 3; // ok. 3 x 100ms = ~300ms stabilnego odczytu zanim uznamy cel za pewny
+    // Silnik gry potrafi chwilowo wyczyścić listę emocji innych graczy zaraz po odebraniu
+    // pakietu data.o (odświeżenie listy innych graczy), zanim ją odtworzy. Blokujemy ocenę
+    // ochrony na krótką chwilę po takim pakiecie, zamiast wymagać wielu potwierdzeń w kółko
+    // (bo pusta lista jest też NORMALNYM stanem gracza bez żadnego statusu - nie da się
+    // tego odróżnić samym liczeniem powtórzeń).
+    let BADDONZ_OTHERS_REFRESHED_TIME = 0;
+    const BADDONZ_PROTECTION_LOCKOUT_MS = 400;
 
     class Emitter {
         constructor() { this.events = {}; }
@@ -84,7 +87,7 @@
         return window.Engine.others.getDrawableList().map(o => o.d); 
     }
 
-    // --- FAIL-SAFE + DEBOUNCE: pusta/niepewna lista emocji NIGDY nie oznacza "brak ochrony" ---
+    // --- FAIL-SAFE: krótki lockout po odświeżeniu listy innych graczy, poza nim ufamy odczytowi ---
     function checkTargetProtection(other) {
         if (!window.Engine.others.getById(other.id)) return false;
         const otherObj = window.Engine.others.getById(other.id);
@@ -92,30 +95,22 @@
 
         console.log(`[AutoX-Debug] Sprawdzam gracza: ${other.nick} (ID: ${other.id}). Załadowane emocje:`, emoList.map(e => e?.name));
 
-        // Pusta/niepewna lista = NIE WIEMY czy jest ochrona -> resetuj licznik i traktuj jako NIEATAKOWALNY w tym ticku
-        if (!emoList || emoList.length === 0) {
-            console.warn(`[AutoX-Debug] ${other.nick} ma PUSTĄ listę emocji (niepewny stan). Resetuję licznik potwierdzeń, POMIJAM w tym ticku.`);
-            BADDONZ_PROTECTION_CONFIRM.delete(other.id);
+        // Krótko po pakiecie data.o (lub zmianie mapy) lista emocji bywa chwilowo pusta,
+        // mimo że gracz w rzeczywistości MA ochronę - w tym oknie nie ufamy pustej liście.
+        const sinceRefresh = Date.now() - BADDONZ_OTHERS_REFRESHED_TIME;
+        if ((!emoList || emoList.length === 0) && sinceRefresh < BADDONZ_PROTECTION_LOCKOUT_MS) {
+            console.warn(`[AutoX-Debug] ${other.nick} ma PUSTĄ listę emocji w oknie ${BADDONZ_PROTECTION_LOCKOUT_MS}ms po odświeżeniu danych (niepewny stan, ${sinceRefresh}ms temu). POMIJAM w tym ticku.`);
             return false;
         }
 
-        const hasProtection = emoList.some(e => e && ['battle', 'pvpprotected'].includes(e.name));
+        // Poza oknem niepewności ufamy odczytowi wprost - pusta lista = naprawdę brak statusu.
+        const hasProtection = emoList && emoList.some(e => e && ['battle', 'pvpprotected'].includes(e.name));
         if (hasProtection) {
             console.log(`[AutoX-Debug] Gracz ${other.nick} POMINIĘTY (posiada status walki lub ochronki).`);
-            BADDONZ_PROTECTION_CONFIRM.delete(other.id);
             return false;
         }
 
-        // Brak ochrony potwierdzony w tym ticku -> zwiększ licznik spójnych odczytów
-        const current = (BADDONZ_PROTECTION_CONFIRM.get(other.id) || 0) + 1;
-        BADDONZ_PROTECTION_CONFIRM.set(other.id, current);
-
-        if (current < BADDONZ_REQUIRED_CONFIRMATIONS) {
-            console.log(`[AutoX-Debug] Gracz ${other.nick} - brak ochrony, ale niepotwierdzone (${current}/${BADDONZ_REQUIRED_CONFIRMATIONS}). Czekam na kolejne potwierdzenie.`);
-            return false;
-        }
-
-        return true; // dopiero po N kolejnych spójnych odczytach cel jest uznawany za atakowalny
+        return true;
     }
 
     function checkSelfProtection() {
@@ -249,7 +244,7 @@
             console.log(`%c[AutoX-Debug] Zmiana mapy wykryta! Stara: ${BADDONZ_LAST_MAP_ID} -> Nowa: ${map.id} (${map.name}). Włączam blokadę 500ms na załadowanie ochronek.`, "background: #007acc; color: white; padding: 2px;");
             BADDONZ_LAST_MAP_ID = map.id;
             BADDONZ_MAP_LOADED_TIME = Date.now();
-            BADDONZ_PROTECTION_CONFIRM.clear(); // czyścimy stare potwierdzenia, nieaktualne na nowej mapie
+            BADDONZ_OTHERS_REFRESHED_TIME = Date.now(); // zmiana mapy też liczy się jako "odświeżenie" - włącz lockout
         }
 
         // 2. Blokada czasowa
@@ -436,7 +431,10 @@
             if (window.Engine && window.Engine.communication) {
                 emitter.observe(window.Engine.communication, 'parseJSON', data => {
                     if (data) {
-                        if (data.o) console.log(`[AutoX-Debug] [GRA ZWRÓCIŁA data.o - Inni Gracze]`, data.o);
+                        if (data.o) {
+                            console.log(`[AutoX-Debug] [GRA ZWRÓCIŁA data.o - Inni Gracze]`, data.o);
+                            BADDONZ_OTHERS_REFRESHED_TIME = Date.now();
+                        }
                         if (data.h) console.log(`[AutoX-Debug] [GRA ZWRÓCIŁA data.h - Bohater]`, data.h);
                         if (data.f) console.log(`[AutoX-Debug] [GRA ZWRÓCIŁA data.f - Status Walki]`, data.f);
                         if (data.town) console.log(`[AutoX-Debug] [GRA ZWRÓCIŁA data.town - Pakiet Zmiany Mapy]`, data.town);
