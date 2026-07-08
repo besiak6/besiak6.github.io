@@ -206,9 +206,10 @@
             .filter(other => isEnemy(other));
     }
 
-    // --- DYSTANS: hero.rx/ry (na bieżąco, płynne w trakcie ruchu) vs cel.x/y (kratka, stabilne) ---
-    // Tak liczy to sprawdzone MDMA - hero.x/y "skacze" dopiero po dojściu do kratki, więc w trakcie
-    // biegu jest nieaktualne. rx/ry bohatera aktualizuje się na bieżąco, dlatego to jego używamy.
+    // --- DYSTANS: rx/ry po OBU stronach (hero i cel), bo obie postacie mogą się ruszać ---
+    // Wcześniej liczyliśmy hero.rx/ry vs cel.x/y - to naprawiało ruch bohatera, ale nie ruch celu
+    // (cel.x/y "skacze" dopiero po dojściu do kratki, tak samo jak wcześniej hero.x/y).
+    // rx/ry po obu stronach jest symetryczne: śledzi na bieżąco zarówno Ciebie jak i poruszający się cel.
     function getClosestTarget() {
         const hero = window.Engine.hero.d;
         const targets = getValidTargets();
@@ -218,25 +219,26 @@
         const hry = typeof hero.ry !== 'undefined' ? hero.ry : hero.y;
 
         const targetsWithDistance = targets.map(other => {
-            const mainDistance = Math.hypot(hrx - other.x, hry - other.y); // hero rx/ry vs cel x/y (wzorzec z MDMA)
-
-            // Metryki pomocnicze tylko do logu porównawczego, żeby łatwo było zdiagnozować rozbieżności
-            const chebyshevTileDistance = Math.max(Math.abs(hero.x - other.x), Math.abs(hero.y - other.y));
             const orx = typeof other.rx !== 'undefined' ? other.rx : other.x;
             const ory = typeof other.ry !== 'undefined' ? other.ry : other.y;
-            const bothRealDistance = Math.hypot(hrx - orx, hry - ory);
+
+            const mainDistance = Math.hypot(hrx - orx, hry - ory); // rx/ry obu stron - główna metryka
+
+            // Metryki pomocnicze tylko do logu porównawczego
+            const chebyshevTileDistance = Math.max(Math.abs(hero.x - other.x), Math.abs(hero.y - other.y));
+            const heroRealTargetTileDistance = Math.hypot(hrx - other.x, hry - other.y); // poprzednia wersja (hero rx/ry vs cel x/y)
 
             return {
                 target: other,
                 distance: mainDistance,
                 chebyshevDebug: chebyshevTileDistance,
-                bothRealDebug: bothRealDistance
+                heroRealTargetTileDebug: heroRealTargetTileDistance
             };
         });
         targetsWithDistance.sort((a, b) => a.distance - b.distance);
         const closest = targetsWithDistance[0];
         if (closest.distance <= 6) {
-            console.log(`[AutoX-Debug] Dystans do celu ${closest.target.nick}: Główna(hero.rx/ry vs cel.x/y)=${closest.distance.toFixed(2)}, Chebyshev(kratki x/y obu)=${closest.chebyshevDebug}, Euclides(rx/ry obu)=${closest.bothRealDebug.toFixed(2)}`);
+            console.log(`[AutoX-Debug] Dystans do celu ${closest.target.nick}: Główna(rx/ry obu)=${closest.distance.toFixed(2)}, Chebyshev(kratki x/y obu)=${closest.chebyshevDebug}, hero.rx/ry vs cel.x/y=${closest.heroRealTargetTileDebug.toFixed(2)}`);
         }
         return closest;
     }
