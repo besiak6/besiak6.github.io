@@ -81,6 +81,23 @@
     function notInBattle() { 
         return window.Engine && window.Engine.battle && !window.Engine.battle.show;
     }
+
+    // Bohater martwy lub w trakcie dialogu z NPC -> AutoX ma stać z boku
+    function isHeroActionable() {
+        if (!window.Engine) return false;
+
+        if (window.Engine.dead) {
+            console.log(`[AutoX-Debug] Bohater jest martwy (Engine.dead=true). Wstrzymuję AutoX.`);
+            return false;
+        }
+
+        if (window.Engine.dialogue) {
+            console.log(`[AutoX-Debug] Otwarty dialog z NPC (Engine.dialogue=true). Wstrzymuję AutoX.`);
+            return false;
+        }
+
+        return true;
+    }
     
     function getOthers() { 
         if (!window.Engine || !window.Engine.others) return [];
@@ -220,6 +237,8 @@
         targetsWithDistance.sort((a, b) => a.distance - b.distance);
         const closest = targetsWithDistance[0];
         console.log(`[AutoX-Debug] Dystans do celu ${closest.target.nick}: Chebyshev(kratki)=${closest.distance}, Euclides(rx/ry, stara metoda)=${closest.euclideanDebug.toFixed(2)}`);
+        // TYMCZASOWY LOG DIAGNOSTYCZNY - do znalezienia pól "martwy"/"dialog". Usunę po ustaleniu nazw pól.
+        console.log(`[AutoX-Debug] [DIAGNOSTYKA] Surowy obiekt celu (${closest.target.nick}):`, closest.target);
         return closest;
     }
 
@@ -451,7 +470,7 @@
         }
 
         BADDONZ_TRACK_INTERVAL = setInterval(() => { 
-            if (currentSettings.enabled && notInBattle()) handleAutoXLogic(); 
+            if (currentSettings.enabled && notInBattle() && isHeroActionable()) handleAutoXLogic(); 
         }, 100);
 
         BADDONZ_FAST_FIGHT_INTERVAL = setInterval(() => { 
