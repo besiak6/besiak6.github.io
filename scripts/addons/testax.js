@@ -206,40 +206,37 @@
             .filter(other => isEnemy(other));
     }
 
-    // --- POPRAWIONY DYSTANS: kratki (tile) + Chebyshev, z logiem porównawczym do starej metody ---
+    // --- DYSTANS: hero.rx/ry (na bieżąco, płynne w trakcie ruchu) vs cel.x/y (kratka, stabilne) ---
+    // Tak liczy to sprawdzone MDMA - hero.x/y "skacze" dopiero po dojściu do kratki, więc w trakcie
+    // biegu jest nieaktualne. rx/ry bohatera aktualizuje się na bieżąco, dlatego to jego używamy.
     function getClosestTarget() {
         const hero = window.Engine.hero.d;
         const targets = getValidTargets();
         if (!targets.length) return null;
 
-        // Współrzędne kratkowe (x,y) - stabilne, nie interpolowane w trakcie animacji ruchu
-        const hx = hero.x;
-        const hy = hero.y;
-        // Współrzędne "real" (rx,ry) - mogą być chwilowo nieaktualne podczas ruchu, zostawiamy do porównania w logu
         const hrx = typeof hero.rx !== 'undefined' ? hero.rx : hero.x;
         const hry = typeof hero.ry !== 'undefined' ? hero.ry : hero.y;
 
         const targetsWithDistance = targets.map(other => {
-            const ox = other.x;
-            const oy = other.y;
+            const mainDistance = Math.hypot(hrx - other.x, hry - other.y); // hero rx/ry vs cel x/y (wzorzec z MDMA)
+
+            // Metryki pomocnicze tylko do logu porównawczego, żeby łatwo było zdiagnozować rozbieżności
+            const chebyshevTileDistance = Math.max(Math.abs(hero.x - other.x), Math.abs(hero.y - other.y));
             const orx = typeof other.rx !== 'undefined' ? other.rx : other.x;
             const ory = typeof other.ry !== 'undefined' ? other.ry : other.y;
-
-            const chebyshevDistance = Math.max(Math.abs(hx - ox), Math.abs(hy - oy)); // kratki, "po skosie liczy się jak 1 krok"
-            const euclideanRealDistance = Math.hypot(hrx - orx, hry - ory); // stara metoda, linia prosta na rx/ry
+            const bothRealDistance = Math.hypot(hrx - orx, hry - ory);
 
             return {
                 target: other,
-                distance: chebyshevDistance,
-                euclideanDebug: euclideanRealDistance
+                distance: mainDistance,
+                chebyshevDebug: chebyshevTileDistance,
+                bothRealDebug: bothRealDistance
             };
         });
         targetsWithDistance.sort((a, b) => a.distance - b.distance);
         const closest = targetsWithDistance[0];
-        // Logujemy dystans/cel tylko gdy jest w rozsądnym zasięgu (kontekst ok. 2x zasięg ataku),
-        // żeby nie zaśmiecać konsoli przeciwnikami kilkanaście kratek dalej. Nie wpływa to na atak.
         if (closest.distance <= 6) {
-            console.log(`[AutoX-Debug] Dystans do celu ${closest.target.nick}: Chebyshev(kratki)=${closest.distance}, Euclides(rx/ry, stara metoda)=${closest.euclideanDebug.toFixed(2)}`);
+            console.log(`[AutoX-Debug] Dystans do celu ${closest.target.nick}: Główna(hero.rx/ry vs cel.x/y)=${closest.distance.toFixed(2)}, Chebyshev(kratki x/y obu)=${closest.chebyshevDebug}, Euclides(rx/ry obu)=${closest.bothRealDebug.toFixed(2)}`);
         }
         return closest;
     }
@@ -249,7 +246,7 @@
         if (Date.now() - BADDONZ_LAST_ATTACK < 300) return false;
         if (distance <= 3) {
             // LOGOWANIE WYSYŁANEGO ATAKU
-            console.log(`%c[AutoX-Debug] WYSYŁAM ATAK DO SERWERA -> Cel: ${target.nick} (ID: ${target.id}), Lvl: ${target.lvl}, Dystans(kratki): ${distance}`, "background: red; color: white; font-weight: bold; padding: 3px;");
+            console.log(`%c[AutoX-Debug] WYSYŁAM ATAK DO SERWERA -> Cel: ${target.nick} (ID: ${target.id}), Lvl: ${target.lvl}, Dystans: ${distance.toFixed(2)}`, "background: red; color: white; font-weight: bold; padding: 3px;");
             window._g('fight&a=attack&id=' + target.id);
             BADDONZ_LAST_ATTACK = Date.now();
             return true;
