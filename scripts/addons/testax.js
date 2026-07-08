@@ -10,7 +10,7 @@
 (function() {
     'use strict';
 
-    const ADDON_ID = "AX";
+    const ADDON_ID = "TESTAX";
     
     // Klucze, które będą zapisywane indywidualnie per-postać
     const CHAR_SPECIFIC_KEYS = ['levelRange'];
