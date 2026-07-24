@@ -309,8 +309,7 @@ top: 1px; right: 2px; color: #ff0000; font-size: 14px; font-weight: bold; z-inde
 }
 .item-searcher-window-title { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
 .item-searcher-baddonz-window { cursor: url(https://gordion.margonem.pl/img/gui/cursor/1n.png?v=1730794617277) 5 -5, auto; }
-.item-searcher-baddonz-input:focus { outline: none;
-border-color: #96f096; }
+.item-searcher-baddonz-input:focus { outline: none; }
 .item-searcher-baddonz-label-wrapper { display: flex; align-items: center; gap: 4px; }
 .baddonz-state-button { width: 9px; height: 9px;
 background: radial-gradient(ellipse at center, rgb(255, 0, 0), #101010); border-radius: 50%; box-shadow: 0 0 3px 1px rgba(255, 0, 0, 0.75);
