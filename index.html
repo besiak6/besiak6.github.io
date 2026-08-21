@@ -1,3 +1,4 @@
+<!-- PLIK: index.html (STRONA GŁÓWNA) -->
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -12,16 +13,22 @@
         .top-banner a { color: #000; text-decoration: underline; margin-left: 5px; }
         .footer-banner { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #161b22; color: #ff5555; padding: 10px 0; font-size: 0.9em; z-index: 1001; border-top: 1px solid #30363d; font-weight: 500; }
         .footer-banner a { color: #58a6ff; text-decoration: none; font-weight: bold; }
+        
+        /* Zmodyfikowana nawigacja */
         .navbar { position: fixed; top: 28px; left: 0; width: 100%; background: rgba(13, 17, 23, 0.95); border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; box-sizing: border-box; z-index: 1000; }
-        .nav-brand { display: flex; align-items: center; gap: 10px; font-size: 1.5em; font-weight: bold; color: #58a6ff; }
+        .nav-brand { display: flex; align-items: center; gap: 10px; font-size: 1.5em; font-weight: bold; color: #58a6ff; text-decoration: none; transition: 0.2s; }
+        .nav-brand:hover { filter: brightness(1.2); }
         .nav-brand img { width: 35px; height: 35px; }
+        
         .nav-links { display: flex; gap: 15px; }
         .nav-links a { color: #c9d1d9; text-decoration: none; font-size: 1.1em; font-weight: 600; display: flex; align-items: center; gap: 8px; background: #21262d; padding: 8px 15px; border-radius: 6px; border: 1px solid #30363d; transition: 0.2s; }
         .nav-links a:hover { background: #30363d; color: #fff; }
+        
         @keyframes slideDown { 0% { transform: translateY(-100px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
         @keyframes slideUp { 0% { transform: translateY(50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
         @keyframes slideLeft { 0% { transform: translateX(-100px); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
         @keyframes slideRight { 0% { transform: translateX(100px); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+        
         .content { padding: 40px 20px; z-index: 10; margin-top: 50px; }
         h1 { font-size: 5em; margin-bottom: 5px; color: #58a6ff; text-shadow: 0 0 15px rgba(88, 166, 255, 0.5); font-weight: 800; opacity: 0; animation: slideDown 1s ease-out forwards; animation-delay: 0.3s; }
         .subtitle { font-size: 1.2em; margin-bottom: 40px; color: #c9d1d9; opacity: 0; animation: slideUp 1s ease-out forwards; animation-delay: 0.7s; }
@@ -40,19 +47,25 @@
 </head>
 <body>
     <div class="top-banner">Spodobały Ci się dodatki? <a href="https://buymeacoffee.com/besiak" target="_blank">Wesprzyj mnie na Buy Me a Coffee! ☕</a></div>
+    
     <nav class="navbar">
-        <div class="nav-brand"><img src="https://i.imgur.com/OAtRFEw.png" alt="Baddonz Logo">BADDONZ</div>
+        <a href="/" class="nav-brand">
+            <img src="https://i.imgur.com/OAtRFEw.png" alt="Baddonz Logo">
+            BADDONZ
+        </a>
         <div class="nav-links">
-            <a href="/"><i class="fas fa-home"></i> Główna</a>
             <a href="/dodatki"><i class="fas fa-puzzle-piece"></i> Dodatki</a>
         </div>
     </nav>
+
     <div class="content">
         <h1>Baddonz</h1>
         <p class="subtitle">Dodatki do Margonem na Nowy Interfejs</p>
         <a href="https://besiak6.github.io/scripts/baddonz.user.js" class="install-button" target="_blank">Zainstaluj</a>
     </div>
+
     <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="discord-icon-fixed"><i class="fab fa-discord"></i></a>
+    
     <div class="right-panel">
         <h3>Polecane Serwery</h3>
         <img src="https://i.imgur.com/tFnmBzB.png" alt="NI Theme">
@@ -60,6 +73,7 @@
         <p>Najlepszy motyw na NI - DarkensUI by xallergoat</p>
         <a href="https://discord.gg/66Kt4jZnTb" target="_blank" class="dc-btn"><i class="fab fa-discord"></i> Dołącz</a>
     </div>
+    
     <div class="footer-banner">Znalazłeś błąd lub masz jakiś problem? Dołącz do <a href="https://discord.gg/rJeNVHr49f" target="_blank">discorda</a>, lub napisz do mnie na dc: besiak6</div>
 </body>
 </html>
