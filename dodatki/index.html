@@ -1,3 +1,4 @@
+<!-- PLIK: dodatki/index.html (STRONA Z DODATKAMI) -->
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -12,65 +13,187 @@
         .top-banner a { color: #000; text-decoration: underline; margin-left: 5px; }
         .footer-banner { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #161b22; color: #ff5555; padding: 10px 0; font-size: 0.9em; z-index: 1001; border-top: 1px solid #30363d; font-weight: 500; text-align: center; }
         .footer-banner a { color: #58a6ff; text-decoration: none; font-weight: bold; }
+        
         .navbar { position: fixed; top: 28px; left: 0; width: 100%; background: rgba(13, 17, 23, 0.95); border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; box-sizing: border-box; z-index: 1000; }
-        .nav-brand { display: flex; align-items: center; gap: 10px; font-size: 1.5em; font-weight: bold; color: #58a6ff; }
+        .nav-brand { display: flex; align-items: center; gap: 10px; font-size: 1.5em; font-weight: bold; color: #58a6ff; text-decoration: none; transition: 0.2s; }
+        .nav-brand:hover { filter: brightness(1.2); }
         .nav-brand img { width: 35px; height: 35px; }
+        
         .nav-links { display: flex; gap: 15px; }
-        .nav-links a { color: #c9d1d9; text-decoration: none; font-size: 1.1em; font-weight: 600; display: flex; align-items: center; gap: 8px; background: #21262d; padding: 8px 15px; border-radius: 6px; border: 1px solid #30363d; transition: 0.2s; }
-        .nav-links a:hover { background: #30363d; color: #fff; }
+        .nav-links a { color: #c9d1d9; text-decoration: none; font-size: 1.1em; font-weight: 600; display: flex; align-items: center; gap: 8px; background: #30363d; padding: 8px 15px; border-radius: 6px; border: 1px solid #58a6ff; transition: 0.2s; box-shadow: 0 0 10px rgba(88,166,255,0.2); }
+        
         .discord-icon-fixed { position: fixed; bottom: 55px; left: 20px; z-index: 1000; transition: transform 0.2s; color: #58a6ff; font-size: 40px; text-decoration: none; }
         .discord-icon-fixed:hover { transform: scale(1.1); }
-        .right-panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(22, 27, 34, 0.95); border: 1px solid #30363d; border-radius: 12px; padding: 15px; width: 220px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 999; }
-        .right-panel h3 { margin: 0 0 10px 0; font-size: 1.1em; color: #fff; border-bottom: 1px solid #30363d; padding-bottom: 8px; }
-        .right-panel img { width: 100%; border-radius: 6px; margin-bottom: 10px; }
-        .right-panel h4 { margin: 0 0 5px 0; color: #58a6ff; font-size: 1em; }
-        .right-panel p { font-size: 0.85em; color: #8b949e; margin: 0 0 15px 0; }
-        .right-panel .dc-btn { display: inline-block; width: 100%; padding: 8px 0; background: #5865F2; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 0.9em; transition: 0.2s; }
-        .right-panel .dc-btn:hover { background: #4752C4; }
         
-        /* Styl dla sekcji z dodatkami */
-        .content { padding: 120px 20px 80px 20px; z-index: 10; width: 100%; max-width: 800px; text-align: center; }
-        .content h2 { color: #58a6ff; font-size: 2.5em; margin-bottom: 30px; }
-        .addon-box { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin-bottom: 20px; text-align: left; }
-        .addon-box h3 { margin: 0 0 10px 0; color: #fff; }
-        .addon-box p { color: #8b949e; margin: 0 0 15px 0; }
-        .addon-box .install-btn { display: inline-block; background: #238636; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold; transition: 0.2s; }
-        .addon-box .install-btn:hover { background: #2ea043; }
+        /* Styl siatki z dodatkami */
+        .content { padding: 120px 20px 80px 20px; z-index: 10; width: 100%; max-width: 1200px; text-align: center; }
+        .content h2 { color: #58a6ff; font-size: 2.5em; margin-bottom: 40px; text-shadow: 0 0 10px rgba(88, 166, 255, 0.3); }
+        
+        .addons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; text-align: left; }
+        
+        .addon-box { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s; position: relative; overflow: hidden; }
+        .addon-box:hover { transform: translateY(-5px); border-color: #58a6ff; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        
+        .addon-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .addon-icon { font-size: 1.8em; color: #58a6ff; width: 40px; text-align: center; }
+        .addon-title { margin: 0; color: #fff; font-size: 1.3em; }
+        
+        .addon-desc { color: #8b949e; font-size: 0.95em; line-height: 1.5; margin-bottom: 20px; flex-grow: 1; }
+        
+        .addon-tags { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .tag { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; font-size: 0.75em; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
+        .tag-free { color: #3fb950; border-color: #2ea043; background: rgba(46, 160, 67, 0.1); }
+        
     </style>
 </head>
 <body>
     <div class="top-banner">Spodobały Ci się dodatki? <a href="https://buymeacoffee.com/besiak" target="_blank">Wesprzyj mnie na Buy Me a Coffee! ☕</a></div>
     
     <nav class="navbar">
-        <div class="nav-brand"><img src="https://i.imgur.com/OAtRFEw.png" alt="Baddonz Logo">BADDONZ</div>
+        <a href="/" class="nav-brand">
+            <img src="https://i.imgur.com/OAtRFEw.png" alt="Baddonz Logo">
+            BADDONZ
+        </a>
         <div class="nav-links">
-            <a href="/"><i class="fas fa-home"></i> Główna</a>
             <a href="/dodatki"><i class="fas fa-puzzle-piece"></i> Dodatki</a>
         </div>
     </nav>
 
     <div class="content">
-        <h2>Lista Dodatków</h2>
+        <h2>Dostępne Skrypty</h2>
         
-        <!-- Przykładowy dodatek 1 (Możesz go skopiować i podmienić dane) -->
-        <div class="addon-box">
-            <h3>Nazwa Twojego Dodatku</h3>
-            <p>Krótki opis tego, co robi ten dodatek w grze Margonem na Nowym Interfejsie.</p>
-            <a href="LINK_DO_SKRYPTU.user.js" class="install-btn">Zainstaluj skrypt</a>
+        <div class="addons-grid">
+            
+            <div class="addon-box">
+                <div class="addon-header">
+                    <div class="addon-icon"><i class="fas fa-rocket"></i></div>
+                    <h3 class="addon-title">Auto Przywo</h3>
+                </div>
+                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-window-maximize"></i> Okno UI</span></div>
+                <p class="addon-desc">Automatyczna akceptacja przywołań.</p>
+            </div>
+
+            <div class="addon-box">
+                <div class="addon-header">
+                    <div class="addon-icon"><i class="fas fa-skull-crossbones"></i></div>
+                    <h3 class="addon-title">AutoX</h3>
+                </div>
+                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-cog"></i> Konfiguracja</span></div>
+                <p class="addon-desc">Automatyczne atakowanie graczy z zaawansowaną konfiguracją.</p>
+            </div>
+
+            <div class="addon-box">
+                <div class="addon-header">
+                    <div class="addon-icon"><i class="fas fa-gift"></i></div>
+                    <h3 class="addon-title">Free Gift</h3>
+                </div>
+                <div class="addon-tags"><span class="tag tag-free">Darmowe</span></div>
+                <p class="addon-desc">Automatyczne odbieranie kalendarza i aktualności w grze.</p>
+            </div>
+
+            <div class="addon-box">
+                <div class="addon-header">
+                    <div class="addon-icon"><i class="fas fa-circle-info"></i></div>
+                    <h3 class="addon-title">ItemInfo</h3>
+                </div>
+                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-window-maximize"></i> Okno UI</span></div>
+                <p class="addon-desc">Szczegółowe informacje o przedmiotach.</p>
+            </div>
+
+            <div class="addon-box">
+                <div class="addon-header">
+                    <div class="addon-icon"><i class="fas fa-search"></i></div>
+                    <h3 class="addon-title">Item Searcher</h3>
+                </div>
+                <div class="addon-tags"><span class="tag tag-free">Darmowe</span></div>
+                <p class="addon-desc">Wyszukuje przedmioty bezpośrednio w ekwipunku oraz depozycie.</p>
+            </div>
+
+            <div class="addon-box">
+                <div class="addon-header">
+                    <div class="addon-icon"><i class="fas fa-gamepad"></i></div>
+                    <h3 class="addon-title">Minigierki</h3>
+                </div>
+                <div class="addon-tags"><span class="tag tag-free">Darmowe</span></div>
+                <p class="addon-desc">Wizualne ułatwienie rozwiązywania minigierek w Margonem.</p>
+            </div>
+
+            <div class="addon-box">
+                <div class="addon-header">
+                    <div class="addon-icon"><i class="fas fa-comment"></i></div>
+                    <h3 class="addon-title">MiniChat</h3>
+                </div>
+                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-window-maximize"></i> Okno UI</span></div>
+                <p class="addon-desc">Umożliwia pełne dostosowanie wielkości chatu w grze.</p>
+            </div>
+
+            <div class="addon-box">
+                <div class="addon-header">
+                    <div class="addon-icon"><i class="fas fa-users-slash"></i></div>
+                    <h3 class="addon-title">Rozwiązywanie Grupy</h3>
+                </div>
+                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-cog"></i> Konfiguracja</span></div>
+                <p class="addon-desc">Szybkie rozwiązywanie grupy z możliwością dostosowania opcji.</p>
+            </div>
+
+            <div class="addon-box">
+                <div class="addon-header">
+                    <div class="addon-icon"><i class="fas fa-bed"></i></div>
+                    <h3 class="addon-title">Sleeping Commander</h3>
+                </div>
+                <div class="addon-tags"><span class="tag tag-free">Darmowe</span></div>
+                <p class="addon-desc">Automatyczne oddawanie dowodzenia w grupie.</p>
+            </div>
+
+            <div class="addon-box">
+                <div class="addon-header">
+                    <div class="addon-icon"><i class="fas fa-user-plus"></i></div>
+                    <h3 class="addon-title">Szybka Grupa</h3>
+                </div>
+                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-cog"></i> Konfiguracja</span></div>
+                <p class="addon-desc">Błyskawiczne zapraszanie do grupy z własną konfiguracją.</p>
+            </div>
+
+            <div class="addon-box">
+                <div class="addon-header">
+                    <div class="addon-icon"><i class="fas fa-arrow-trend-up"></i></div>
+                    <h3 class="addon-title">Ulepszara</h3>
+                </div>
+                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-cog"></i> Konfiguracja</span></div>
+                <p class="addon-desc">Automatyczne ulepszanie wybranego przedmiotu według ustalonej konfiguracji.</p>
+            </div>
+
+            <div class="addon-box">
+                <div class="addon-header">
+                    <div class="addon-icon"><i class="fas fa-trash-can"></i></div>
+                    <h3 class="addon-title">Śmieciara</h3>
+                </div>
+                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-cog"></i> Konfiguracja</span></div>
+                <p class="addon-desc">Szybkie i zautomatyzowane niszczenie zbędnych przedmiotów.</p>
+            </div>
+
+            <div class="addon-box">
+                <div class="addon-header">
+                    <div class="addon-icon"><i class="fas fa-crosshairs"></i></div>
+                    <h3 class="addon-title">Zasięg Walki</h3>
+                </div>
+                <div class="addon-tags"><span class="tag tag-free">Darmowe</span></div>
+                <p class="addon-desc">Wizualnie podświetla obszar i zasięg walki na mapie.</p>
+            </div>
+
+            <div class="addon-box">
+                <div class="addon-header">
+                    <div class="addon-icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <h3 class="addon-title">Znacznik Teleportów</h3>
+                </div>
+                <div class="addon-tags"><span class="tag tag-free">Darmowe</span></div>
+                <p class="addon-desc">Podpisuje teleporty z opcją ręcznej edycji nazw i znaczników.</p>
+            </div>
+
         </div>
-        
     </div>
 
     <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="discord-icon-fixed"><i class="fab fa-discord"></i></a>
-    
-    <div class="right-panel">
-        <h3>Polecane Serwery</h3>
-        <img src="https://i.imgur.com/tFnmBzB.png" alt="NI Theme">
-        <h4>NI Theme</h4>
-        <p>Najlepszy motyw na NI - DarkensUI by xallergoat</p>
-        <a href="https://discord.gg/66Kt4jZnTb" target="_blank" class="dc-btn"><i class="fab fa-discord"></i> Dołącz</a>
-    </div>
-    
     <div class="footer-banner">Znalazłeś błąd lub masz jakiś problem? Dołącz do <a href="https://discord.gg/rJeNVHr49f" target="_blank">discorda</a>, lub napisz do mnie na dc: besiak6</div>
 </body>
 </html>
