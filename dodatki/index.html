@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baddonz - Dodatki</title>
+    <link rel="icon" type="image/png" href="https://i.imgur.com/OAtRFEw.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { background: linear-gradient(135deg, #0d1117, #1b0033); color: #c9d1d9; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
+        .top-banner { position: fixed; top: 0; left: 0; width: 100%; background-color: #FFDD00; color: #000; padding: 5px 0; font-weight: bold; font-size: 0.9em; z-index: 1001; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        .top-banner a { color: #000; text-decoration: underline; margin-left: 5px; }
+        .footer-banner { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #161b22; color: #ff5555; padding: 10px 0; font-size: 0.9em; z-index: 1001; border-top: 1px solid #30363d; font-weight: 500; text-align: center; }
+        .footer-banner a { color: #58a6ff; text-decoration: none; font-weight: bold; }
+        .navbar { position: fixed; top: 28px; left: 0; width: 100%; background: rgba(13, 17, 23, 0.95); border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; box-sizing: border-box; z-index: 1000; }
+        .nav-brand { display: flex; align-items: center; gap: 10px; font-size: 1.5em; font-weight: bold; color: #58a6ff; }
+        .nav-brand img { width: 35px; height: 35px; }
+        .nav-links { display: flex; gap: 15px; }
+        .nav-links a { color: #c9d1d9; text-decoration: none; font-size: 1.1em; font-weight: 600; display: flex; align-items: center; gap: 8px; background: #21262d; padding: 8px 15px; border-radius: 6px; border: 1px solid #30363d; transition: 0.2s; }
+        .nav-links a:hover { background: #30363d; color: #fff; }
+        .discord-icon-fixed { position: fixed; bottom: 55px; left: 20px; z-index: 1000; transition: transform 0.2s; color: #58a6ff; font-size: 40px; text-decoration: none; }
+        .discord-icon-fixed:hover { transform: scale(1.1); }
+        .right-panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(22, 27, 34, 0.95); border: 1px solid #30363d; border-radius: 12px; padding: 15px; width: 220px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 999; }
+        .right-panel h3 { margin: 0 0 10px 0; font-size: 1.1em; color: #fff; border-bottom: 1px solid #30363d; padding-bottom: 8px; }
+        .right-panel img { width: 100%; border-radius: 6px; margin-bottom: 10px; }
+        .right-panel h4 { margin: 0 0 5px 0; color: #58a6ff; font-size: 1em; }
+        .right-panel p { font-size: 0.85em; color: #8b949e; margin: 0 0 15px 0; }
+        .right-panel .dc-btn { display: inline-block; width: 100%; padding: 8px 0; background: #5865F2; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 0.9em; transition: 0.2s; }
+        .right-panel .dc-btn:hover { background: #4752C4; }
+        
+        /* Styl dla sekcji z dodatkami */
+        .content { padding: 120px 20px 80px 20px; z-index: 10; width: 100%; max-width: 800px; text-align: center; }
+        .content h2 { color: #58a6ff; font-size: 2.5em; margin-bottom: 30px; }
+        .addon-box { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin-bottom: 20px; text-align: left; }
+        .addon-box h3 { margin: 0 0 10px 0; color: #fff; }
+        .addon-box p { color: #8b949e; margin: 0 0 15px 0; }
+        .addon-box .install-btn { display: inline-block; background: #238636; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-weight: bold; transition: 0.2s; }
+        .addon-box .install-btn:hover { background: #2ea043; }
+    </style>
+</head>
+<body>
+    <div class="top-banner">Spodobały Ci się dodatki? <a href="https://buymeacoffee.com/besiak" target="_blank">Wesprzyj mnie na Buy Me a Coffee! ☕</a></div>
+    
+    <nav class="navbar">
+        <div class="nav-brand"><img src="https://i.imgur.com/OAtRFEw.png" alt="Baddonz Logo">BADDONZ</div>
+        <div class="nav-links">
+            <a href="/"><i class="fas fa-home"></i> Główna</a>
+            <a href="/dodatki"><i class="fas fa-puzzle-piece"></i> Dodatki</a>
+        </div>
+    </nav>
+
+    <div class="content">
+        <h2>Lista Dodatków</h2>
+        
+        <!-- Przykładowy dodatek 1 (Możesz go skopiować i podmienić dane) -->
+        <div class="addon-box">
+            <h3>Nazwa Twojego Dodatku</h3>
+            <p>Krótki opis tego, co robi ten dodatek w grze Margonem na Nowym Interfejsie.</p>
+            <a href="LINK_DO_SKRYPTU.user.js" class="install-btn">Zainstaluj skrypt</a>
+        </div>
+        
+    </div>
+
+    <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="discord-icon-fixed"><i class="fab fa-discord"></i></a>
+    
+    <div class="right-panel">
+        <h3>Polecane Serwery</h3>
+        <img src="https://i.imgur.com/tFnmBzB.png" alt="NI Theme">
+        <h4>NI Theme</h4>
+        <p>Najlepszy motyw na NI - DarkensUI by xallergoat</p>
+        <a href="https://discord.gg/66Kt4jZnTb" target="_blank" class="dc-btn"><i class="fab fa-discord"></i> Dołącz</a>
+    </div>
+    
+    <div class="footer-banner">Znalazłeś błąd lub masz jakiś problem? Dołącz do <a href="https://discord.gg/rJeNVHr49f" target="_blank">discorda</a>, lub napisz do mnie na dc: besiak6</div>
+</body>
+</html>
