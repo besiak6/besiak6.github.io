@@ -58,17 +58,16 @@
         #wheel-canvas { width: 100%; height: 100%; border-radius: 50%; border: 4px solid #58a6ff; box-shadow: 0 0 15px rgba(88,166,255,0.4); transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1); }
         .wheel-pointer { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 20px solid #FFDD00; z-index: 10; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
 
-        /* Pojemnik na wylosowane dziki (stackowanie) */
-        .prize-images-container { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 5px; margin: 15px auto; min-height: 100px; }
+        #prize-images { margin: 20px auto 30px auto; min-height: 120px; display: flex; justify-content: center; align-items: center; }
 
-        /* Dzik wysunięty znacznie wyżej */
+        /* Dzik wysunięty wyżej zza panelu */
         #dzik-main {
             position: absolute;
-            top: 20px; /* start schowany w dół */
+            top: 20px; 
             left: 50%;
             transform: translateX(-50%);
             width: 80px; 
-            z-index: 1; /* za nagłówkiem "Polecane Serwery" i panelem, żeby wyskoczył zza niego */
+            z-index: 1; 
             opacity: 0;
             transition: top 0.3s ease, opacity 0.3s ease;
             cursor: pointer;
@@ -117,7 +116,7 @@
                 <button class="modal-btn" id="spin-btn" onclick="spinWheel()">ZAKRĘĆ KOŁEM 🎡</button>
             </div>
             <div id="prize-section" style="display: none;">
-                <div id="prize-images" class="prize-images-container"></div>
+                <div id="prize-images"></div>
                 <p id="prize-text" style="font-weight: bold; font-size: 1.1em; color: #FFDD00; margin-bottom: 15px;"></p>
                 <a href="https://buymeacoffee.com/besiak" target="_blank" class="modal-btn" id="prize-link">Podaruj dzika ☕</a>
             </div>
@@ -125,9 +124,9 @@
     </div>
 
     <script>
+        // Dokładnie 9 pól: 1x Skrzynka, 2x 4pak, 6x Dzik
         const prizesArray = [
-            "DZIK", "4pak DZIK", "DZIK", "Skrzynka DZIK", "DZIK", "4pak DZIK", 
-            "DZIK", "4pak DZIK", "DZIK", "4pak DZIK", "DZIK", "DZIK", "DZIK"
+            "DZIK", "4pak DZIK", "DZIK", "DZIK", "Skrzynka DZIK", "DZIK", "4pak DZIK", "DZIK", "DZIK"
         ];
         
         let currentRotation = 0;
@@ -138,16 +137,16 @@
             const ctx = canvas.getContext('2d');
             const numSegments = prizesArray.length;
             const arc = (2 * Math.PI) / numSegments;
-            const colors = ["#238636", "#1f6feb", "#2ea043", "#8957e5", "#da3633", "#d29922", "#3fb950", "#58a6ff"];
+            // 9 różnych kolorów, żeby pola się nie zlały
+            const colors = ["#238636", "#1f6feb", "#8957e5", "#da3633", "#d29922", "#3fb950", "#58a6ff", "#e34c26", "#6e40c9"];
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const center = canvas.width / 2;
 
             for (let i = 0; i < numSegments; i++) {
-                // Przesunięcie o -90 stopni, żeby index 0 rysował się dokładnie od góry koła
                 const angle = i * arc - (Math.PI / 2); 
                 ctx.beginPath();
-                ctx.fillStyle = colors[i % colors.length];
+                ctx.fillStyle = colors[i];
                 ctx.moveTo(center, center);
                 ctx.arc(center, center, center, angle, angle + arc, false);
                 ctx.lineTo(center, center);
@@ -164,6 +163,21 @@
             }
         }
 
+        // Ważone szanse na trafienie (niezależne od ilości pól!)
+        function getWinningIndex() {
+            // Szanse procentowe łącznie muszą dać 100%:
+            // 6x DZIK (po 7.5% = 45%), 2x 4pak (po 5% = 10%), 1x Skrzynka (45%)
+            const weights = [7.5, 5.0, 7.5, 7.5, 45.0, 7.5, 5.0, 7.5, 7.5];
+            
+            let sum = 0;
+            let r = Math.random() * 100;
+            for (let i = 0; i < weights.length; i++) {
+                sum += weights[i];
+                if (r <= sum) return i;
+            }
+            return 0; // zabezpieczenie
+        }
+
         function spinWheel() {
             if (isSpinning) return;
             isSpinning = true;
@@ -171,18 +185,18 @@
             const spinBtn = document.getElementById('spin-btn');
             spinBtn.style.pointerEvents = 'none';
 
-            const winningIndex = Math.floor(Math.random() * prizesArray.length);
+            // Używamy ważonej funkcji, a nie zwykłego randoma - Skrzynka wlatuje znacznie częściej
+            const winningIndex = getWinningIndex();
             const prize = prizesArray[winningIndex];
 
             const numSegments = prizesArray.length;
             const arcDeg = 360 / numSegments;
             
-            // Logika idealnego trafienia wskaźnikiem
             let targetRelative = 360 - (winningIndex * arcDeg + arcDeg / 2);
             let diff = targetRelative - (currentRotation % 360);
             if (diff < 0) diff += 360;
 
-            currentRotation += 360 * 5 + diff; // 5 obrotów plus korekta do konkretnego pola
+            currentRotation += 360 * 5 + diff;
 
             const canvas = document.getElementById('wheel-canvas');
             canvas.style.transform = `rotate(${currentRotation}deg)`;
@@ -202,29 +216,52 @@
             const linkEl = document.getElementById('prize-link');
             const imgContainer = document.getElementById('prize-images');
             
-            imgContainer.innerHTML = ''; // czyszczenie grafik
             const dzikImg = 'https://i.imgur.com/syTg29C.png';
+            let html = '';
 
             if (prize === "Skrzynka DZIK") {
                 textEl.innerText = "Wylosowano: Skrzynkę Dzików!";
                 linkEl.innerText = "Podaruj skrzynkę dzików ☕";
-                imgContainer.style.maxWidth = '150px'; // układ 3x3 lub podobny gęsty stack
-                for(let i=0; i<9; i++) {
-                    imgContainer.innerHTML += `<img src="${dzikImg}" style="width: 45px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">`;
-                }
+                
+                // Prawdziwa wataha / piramida (Z-Index dodaje głębi z przodu na tył)
+                html = `
+                <div style="position: relative; width: 140px; height: 130px; margin: 0 auto;">
+                    <!-- Tył -->
+                    <img src="${dzikImg}" style="position:absolute; top:0; left:10px; width:45px; z-index:1; filter: drop-shadow(0 4px 5px rgba(0,0,0,0.8));">
+                    <img src="${dzikImg}" style="position:absolute; top:0; left:50px; width:45px; z-index:1; filter: drop-shadow(0 4px 5px rgba(0,0,0,0.8));">
+                    <img src="${dzikImg}" style="position:absolute; top:0; left:90px; width:45px; z-index:1; filter: drop-shadow(0 4px 5px rgba(0,0,0,0.8));">
+                    <!-- Środek -->
+                    <img src="${dzikImg}" style="position:absolute; top:30px; left:0px; width:55px; z-index:2; filter: drop-shadow(0 4px 5px rgba(0,0,0,0.9));">
+                    <img src="${dzikImg}" style="position:absolute; top:30px; left:45px; width:55px; z-index:2; filter: drop-shadow(0 4px 5px rgba(0,0,0,0.9));">
+                    <img src="${dzikImg}" style="position:absolute; top:30px; left:85px; width:55px; z-index:2; filter: drop-shadow(0 4px 5px rgba(0,0,0,0.9));">
+                    <!-- Przód -->
+                    <img src="${dzikImg}" style="position:absolute; top:65px; left:20px; width:65px; z-index:3; filter: drop-shadow(0 5px 6px rgba(0,0,0,1));">
+                    <img src="${dzikImg}" style="position:absolute; top:65px; left:60px; width:65px; z-index:3; filter: drop-shadow(0 5px 6px rgba(0,0,0,1));">
+                    <!-- Boss na samym froncie -->
+                    <img src="${dzikImg}" style="position:absolute; top:90px; left:35px; width:75px; z-index:4; filter: drop-shadow(0 6px 8px rgba(0,0,0,1));">
+                </div>`;
             } else if (prize === "4pak DZIK") {
                 textEl.innerText = "Wylosowano: 4pak Dzików!";
                 linkEl.innerText = "Podaruj 4pak dzika ☕";
-                imgContainer.style.maxWidth = '110px'; // idealne pod układ 2x2
-                for(let i=0; i<4; i++) {
-                    imgContainer.innerHTML += `<img src="${dzikImg}" style="width: 50px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">`;
-                }
+                
+                // Profesjonalna paczka 2x2 z nakładaniem
+                html = `
+                <div style="position: relative; width: 110px; height: 110px; margin: 0 auto;">
+                    <img src="${dzikImg}" style="position:absolute; top:0; left:15px; width:50px; z-index:1; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.8));">
+                    <img src="${dzikImg}" style="position:absolute; top:0; left:50px; width:50px; z-index:1; filter: drop-shadow(0 3px 4px rgba(0,0,0,0.8));">
+                    <img src="${dzikImg}" style="position:absolute; top:40px; left:0px; width:60px; z-index:2; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.9));">
+                    <img src="${dzikImg}" style="position:absolute; top:40px; left:50px; width:60px; z-index:2; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.9));">
+                </div>`;
             } else {
                 textEl.innerText = "Wylosowano: Dzik!";
                 linkEl.innerText = "Podaruj dzika ☕";
-                imgContainer.style.maxWidth = '100px'; // Pojedynczy, duży dzik
-                imgContainer.innerHTML = `<img src="${dzikImg}" style="width: 80px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));">`;
+                html = `
+                <div style="position: relative; width: 80px; height: 90px; margin: 0 auto;">
+                    <img src="${dzikImg}" style="position:absolute; top:10px; left:0; width:80px; z-index:1; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));">
+                </div>`;
             }
+
+            imgContainer.innerHTML = html;
         }
 
         function closeModal() {
@@ -239,7 +276,6 @@
             const dzikMain = document.getElementById('dzik-main');
             const niImg = document.getElementById('ni-trigger');
 
-            // Przesunąłem top na -65px (dzik wystaje znacznie wyżej, nie nakłada się na tekst)
             niImg.addEventListener('mouseenter', () => {
                 dzikMain.style.top = '-65px';
                 dzikMain.style.opacity = '1';
