@@ -35,37 +35,39 @@
         .discord-icon-fixed { position: fixed; bottom: 55px; left: 20px; z-index: 1000; transition: transform 0.2s; color: #58a6ff; font-size: 40px; text-decoration: none; opacity: 0; animation: slideLeft 1s ease-out forwards; animation-delay: 1.5s; }
         .discord-icon-fixed:hover { transform: scale(1.1); }
         
-        /* Panel Polecane (z dodanym z-index i relative) */
-        .right-panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(22, 27, 34, 0.95); border: 1px solid #30363d; border-radius: 12px; padding: 15px; width: 220px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 999; opacity: 0; animation: slideRight 1s ease-out forwards; animation-delay: 1.5s; }
+        .right-panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(22, 27, 34, 0.95); border: 1px solid #30363d; border-radius: 12px; padding: 15px; width: 220px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 999; opacity: 0; animation: slideRight 1s ease-out forwards; animation-delay: 1.5s; overflow: visible; }
         .right-panel h3 { margin: 0 0 10px 0; font-size: 1.1em; color: #fff; border-bottom: 1px solid #30363d; padding-bottom: 8px; }
-        .right-panel img { width: 100%; border-radius: 6px; margin-bottom: 10px; position: relative; z-index: 10; }
+        .right-panel img.ni-img { width: 100%; border-radius: 6px; margin-bottom: 10px; position: relative; z-index: 2; }
         .right-panel h4 { margin: 0 0 5px 0; color: #58a6ff; font-size: 1em; }
         .right-panel p { font-size: 0.85em; color: #8b949e; margin: 0 0 15px 0; }
         .right-panel .dc-btn { display: inline-block; width: 100%; padding: 8px 0; background: #5865F2; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 0.9em; transition: 0.2s; }
         .right-panel .dc-btn:hover { background: #4752C4; }
 
-        /* Easter Egg Modal (skopiowane z podstrony) */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 10000; justify-content: center; align-items: center; }
-        .modal-box { background: #161b22; border: 2px solid #58a6ff; border-radius: 12px; padding: 30px; text-align: center; max-width: 400px; box-shadow: 0 0 30px rgba(88, 166, 255, 0.4); position: relative; }
-        .modal-box h3 { color: #FFDD00; font-size: 2em; margin: 0 0 10px 0; text-shadow: 0 0 10px rgba(255, 221, 0, 0.4); }
-        .modal-box p { color: #c9d1d9; font-size: 1.1em; margin-bottom: 20px; }
-        .modal-box img { width: 120px; margin-bottom: 20px; animation: float 3s infinite ease-in-out; }
-        .modal-btn { display: inline-block; background: #FFDD00; color: #000; padding: 12px 24px; font-weight: bold; text-decoration: none; border-radius: 6px; transition: 0.2s; font-size: 1.1em; }
+        /* Modal z Kołem Fortuny */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 10000; justify-content: center; align-items: center; }
+        .modal-box { background: #161b22; border: 2px solid #58a6ff; border-radius: 12px; padding: 25px; text-align: center; max-width: 350px; box-shadow: 0 0 30px rgba(88, 166, 255, 0.4); position: relative; }
+        .modal-box h3 { color: #FFDD00; font-size: 1.8em; margin: 0 0 10px 0; text-shadow: 0 0 10px rgba(255, 221, 0, 0.4); }
+        .modal-box p { color: #c9d1d9; font-size: 1em; margin-bottom: 15px; }
+        .modal-btn { display: inline-block; background: #FFDD00; color: #000; padding: 10px 20px; font-weight: bold; text-decoration: none; border-radius: 6px; transition: 0.2s; font-size: 1em; border: none; cursor: pointer; margin-top: 10px; }
         .modal-btn:hover { transform: scale(1.05); background: #ffea00; }
         .close-modal { position: absolute; top: 10px; right: 15px; color: #8b949e; cursor: pointer; font-size: 1.2em; }
         .close-modal:hover { color: #fff; }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
 
-        /* Dzik za panelem */
+        /* Styl Koła Fortuny */
+        .wheel-container { position: relative; width: 220px; height: 220px; margin: 0 auto 15px auto; }
+        #wheel-canvas { width: 100%; height: 100%; border-radius: 50%; border: 4px solid #58a6ff; box-shadow: 0 0 15px rgba(88,166,255,0.4); transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1); }
+        .wheel-pointer { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 20px solid #FFDD00; z-index: 10; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
+
+        /* Duży Dzik wyskakujący */
         #dzik-main {
             position: absolute;
             top: 20px;
             left: 50%;
-            margin-left: -22.5px; /* wyśrodkowanie połową szerokości */
-            width: 45px;
-            z-index: 1; /* Za zawartością panelu, ale nad samym tłem panelu */
+            transform: translateX(-50%);
+            width: 80px; /* Znacznie większy dzik */
+            z-index: 1; 
             opacity: 0;
-            transition: top 0.4s ease, opacity 0.4s ease;
+            transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
             cursor: pointer;
         }
     </style>
@@ -86,10 +88,10 @@
 
     <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="discord-icon-fixed"><i class="fab fa-discord"></i></a>
     
-    <div class="right-panel">
+    <div class="right-panel" id="right-panel">
         <img src="https://i.imgur.com/syTg29C.png" id="dzik-main" alt="Dzik peeking">
         <h3>Polecane Serwery</h3>
-        <img src="https://i.imgur.com/tFnmBzB.png" alt="NI Theme" id="ni-trigger">
+        <img src="https://i.imgur.com/tFnmBzB.png" class="ni-img" alt="NI Theme" id="ni-trigger">
         <h4>NI Theme</h4>
         <p>Najlepszy motyw na NI - DarkensUI by xallergoat</p>
         <a href="https://discord.gg/66Kt4jZnTb" target="_blank" class="dc-btn"><i class="fab fa-discord"></i> Dołącz</a>
@@ -97,31 +99,147 @@
     
     <div class="footer-banner" id="bot-banner">Znalazłeś błąd lub masz jakiś problem? Dołącz do <a href="https://discord.gg/rJeNVHr49f" target="_blank">discorda</a>, lub napisz do mnie na dc: besiak6</div>
 
-    <!-- EASTER EGG MODAL -->
+    <!-- MODAL Z KOŁEM FORTUNY -->
     <div class="modal-overlay" id="dzik-modal">
         <div class="modal-box">
             <i class="fa-solid fa-xmark close-modal" onclick="document.getElementById('dzik-modal').style.display='none'"></i>
             <h3>GRATULACJE!</h3>
-            <img src="https://i.imgur.com/syTg29C.png" alt="Dzik">
-            <p>Złapałeś białego dzika, najlepszego energola!</p>
-            <a href="https://buymeacoffee.com/besiak" target="_blank" class="modal-btn">Podaruj dzika ☕</a>
+            <div id="wheel-section">
+                <p>Złapałeś białego dzika! Zakręć kołem i sprawdź nagrodę:</p>
+                <div class="wheel-container">
+                    <div class="wheel-pointer"></div>
+                    <canvas id="wheel-canvas" width="300" height="300"></canvas>
+                </div>
+                <button class="modal-btn" id="spin-btn" onclick="spinWheel()">ZAKRĘĆ KOŁEM 🎡</button>
+            </div>
+            <div id="prize-section" style="display: none;">
+                <img src="https://i.imgur.com/syTg29C.png" alt="Dzik" style="width: 90px; margin: 10px 0;">
+                <p id="prize-text" style="font-weight: bold; font-size: 1.1em; color: #FFDD00;"></p>
+                <a href="https://buymeacoffee.com/besiak" target="_blank" class="modal-btn" id="prize-link">Podaruj dzika ☕</a>
+            </div>
         </div>
     </div>
 
     <script>
+        // Konfiguracja Koła Fortuny (8x DZIK, 4x 4pak DZIK, 1x Skrzynka DZIK)
+        const wheelSlices = [
+            { text: "DZIK", color: "#238636" },
+            { text: "4pak", color: "#1f6feb" },
+            { text: "DZIK", color: "#2ea043" },
+            { text: "Skrzynia", color: "#8957e5" },
+            { text: "DZIK", color: "#238636" },
+            { text: "4pak", color: "#1f6feb" },
+            { text: "DZIK", color: "#2ea043" },
+            { text: "4pak", color: "#1f6feb" },
+            { text: "DZIK", color: "#238636" },
+            { text: "Skrzynia", color: "#8957e5" }, // Tylko 1 Skrzynia w rzeczywistości, ale rozpiszmy dokładną tablicę 13 elementów:
+        ];
+        
+        // Dokładna tablica 13 nagród (8x DZIK, 4x 4pak DZIK, 1x Skrzynka DZIK)
+        const prizesArray = [
+            "DZIK", "4pak DZIK", "DZIK", "Skrzynka DZIK", "DZIK", "4pak DZIK", 
+            "DZIK", "4pak DZIK", "DZIK", "4pak DZIK", "DZIK", "DZIK", "DZIK"
+        ];
+        
+        let currentRotation = 0;
+
+        function drawWheel() {
+            const canvas = document.getElementById('wheel-canvas');
+            const ctx = canvas.getContext('2d');
+            const numSegments = prizesArray.length;
+            const arc = (2 * Math.PI) / numSegments;
+            const colors = ["#238636", "#1f6feb", "#2ea043", "#8957e5", "#da3633", "#d29922", "#3fb950", "#58a6ff"];
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const center = canvas.width / 2;
+
+            for (let i = 0; i < numSegments; i++) {
+                const angle = i * arc;
+                ctx.beginPath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.moveTo(center, center);
+                ctx.arc(center, center, center, angle, angle + arc, false);
+                ctx.lineTo(center, center);
+                ctx.fill();
+                ctx.save();
+
+                // Tekst na kole
+                ctx.translate(center, center);
+                ctx.rotate(angle + arc / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 11px sans-serif";
+                ctx.fillText(prizesArray[i], center - 15, 5);
+                ctx.restore();
+            }
+        }
+
+        function spinWheel() {
+            const spinBtn = document.getElementById('spin-btn');
+            spinBtn.style.pointerEvents = 'none';
+
+            // Losuj indeks nagrody
+            const winningIndex = Math.floor(Math.random() * prizesArray.length);
+            const prize = prizesArray[winningIndex];
+
+            const numSegments = prizesArray.length;
+            const arcDeg = 360 / numSegments;
+            
+            // Oblicz kąt obrotu tak, aby wygrany segment zatrzymał się na górze (wskaźnik jest na górze)
+            const targetDeg = 360 * 5 + (360 - (winningIndex * arcDeg + arcDeg / 2));
+            currentRotation = targetDeg;
+
+            const canvas = document.getElementById('wheel-canvas');
+            canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+            // Po zakończeniu animacji (4 sekundy) pokaż wynik i zapisz do localStorage
+            setTimeout(() => {
+                localStorage.setItem('baddonz_prize', prize);
+                showPrizeResult(prize);
+            }, 4000);
+        }
+
+        function showPrizeResult(prize) {
+            document.getElementById('wheel-section').style.display = 'none';
+            document.getElementById('prize-section').style.display = 'block';
+            
+            const textEl = document.getElementById('prize-text');
+            const linkEl = document.getElementById('prize-link');
+
+            if (prize === "Skrzynka DZIK") {
+                textEl.innerText = "Wylosowano: Skrzynkę Dzików! (Legit drop!)";
+                linkEl.innerText = "Podaruj skrzynkę dzików ☕";
+            } else if (prize === "4pak DZIK") {
+                textEl.innerText = "Wylosowano: 4pak Dzików!";
+                linkEl.innerText = "Podaruj 4pak dzika ☕";
+            } else {
+                textEl.innerText = "Wylosowano: Dzik!";
+                linkEl.innerText = "Podaruj dzika ☕";
+            }
+        }
+
         window.onload = () => {
+            drawWheel();
+
             const dzikMain = document.getElementById('dzik-main');
             const niTrigger = document.getElementById('ni-trigger');
             let isPeeking = false;
-            let animationStage = 0; // 0=schowany, 1=wysunięty, 2=spada, 3=lata
+            let animationStage = 0; // 0=schowany, 1=wysunięty, 2=spada/lata
             let bounceInterval;
 
-            // Wyskakiwanie i chowanie się dzika za obrazkiem NI
+            // Najechanie na NI Theme -> dzik wyskakuje i ląduje idealnie na górnej krawędzi panelu
             niTrigger.addEventListener('mouseenter', () => {
                 if (animationStage === 0) {
-                    dzikMain.style.top = '-40px';
+                    dzikMain.style.top = '-45px'; // Dokładnie na górnej krawędzi panelu
                     dzikMain.style.opacity = '1';
                     isPeeking = true;
+
+                    // Po 2 sekundach sam zaczyna spadać i uciekać
+                    setTimeout(() => {
+                        if (animationStage === 0 && isPeeking) {
+                            triggerFallAndFly();
+                        }
+                    }, 2000);
                 }
             });
 
@@ -133,51 +251,60 @@
                 }
             });
 
-            // Akcja po kliknięciu
+            // Kliknięcie w dzika (gdy jest na panelu lub gdy lata)
             dzikMain.addEventListener('mousedown', () => {
-                if (animationStage === 3) {
-                    // Jeśli już lata - ZŁAPANY!
-                    clearInterval(bounceInterval);
-                    dzikMain.style.display = 'none';
-                    document.getElementById('dzik-modal').style.display = 'flex';
+                if (animationStage === 0 || animationStage === 1) {
+                    triggerFallAndFly();
                     return;
                 }
 
-                if (animationStage === 0) {
-                    animationStage = 1; // Zapobiega powrotowi
+                if (animationStage === 2) {
+                    // ZŁAPANY W LOCIE!
+                    clearInterval(bounceInterval);
+                    dzikMain.style.display = 'none';
                     
-                    // Krok 1: Przechylenie (przewrócenie na bok)
-                    dzikMain.style.transition = 'transform 1.5s ease-in-out, margin-left 3s linear';
-                    dzikMain.style.transform = 'rotate(-90deg)';
-                    
-                    // Krok 2: Powolne zsuwanie się w lewo z panelu
-                    setTimeout(() => {
-                        dzikMain.style.marginLeft = '-150px'; 
-                    }, 1000);
-
-                    // Krok 3: Spadanie (odklejenie od panelu i wolne latanie)
-                    setTimeout(() => {
-                        startFlying();
-                    }, 4000);
+                    // Sprawdź local storage (czy gracz już kręcił kołem)
+                    const savedPrize = localStorage.getItem('baddonz_prize');
+                    if (savedPrize) {
+                        showPrizeResult(savedPrize);
+                    } else {
+                        document.getElementById('wheel-section').style.display = 'block';
+                        document.getElementById('prize-section').style.display = 'none';
+                    }
+                    document.getElementById('dzik-modal').style.display = 'flex';
                 }
             });
 
+            function triggerFallAndFly() {
+                if (animationStage !== 0) return;
+                animationStage = 1;
+
+                // Krok 1: Przechylenie w lewo o 90 stopni
+                dzikMain.style.transition = 'transform 1s ease-in-out';
+                dzikMain.style.transform = 'translateX(-50%) rotate(-90deg)';
+
+                // Krok 2: Zsuwanie się z krawędzi w lewo i start lotu
+                setTimeout(() => {
+                    startFlying();
+                }, 1000);
+            }
+
             function startFlying() {
-                animationStage = 3;
+                animationStage = 2;
                 const rect = dzikMain.getBoundingClientRect();
-                document.body.appendChild(dzikMain); // Przeniesienie dzika do body
+                document.body.appendChild(dzikMain); // Przeniesienie do body
                 
                 dzikMain.style.position = 'fixed';
                 dzikMain.style.left = rect.left + 'px';
                 dzikMain.style.top = rect.top + 'px';
-                dzikMain.style.marginLeft = '0'; // reset
+                dzikMain.style.transform = 'none';
                 dzikMain.style.transition = 'none';
                 dzikMain.style.zIndex = '10002';
 
                 let x = rect.left;
                 let y = rect.top;
-                let vx = -2; // prędkość X
-                let vy = 3;  // prędkość Y (spadanie)
+                let vx = -2.5; 
+                let vy = 2.5;  
                 let rot = -90;
 
                 const topBanner = document.getElementById('top-banner').offsetHeight;
@@ -186,15 +313,15 @@
                 bounceInterval = setInterval(() => {
                     x += vx;
                     y += vy;
-                    rot += 1; // Wolne kręcenie się
+                    rot += 1.5; // Wolne kręcenie się w locie
 
-                    // Odbijanie się
+                    // Odbijanie od krawędzi ekranu
                     if (x <= 0) { x = 0; vx *= -1; }
-                    if (x + 45 >= window.innerWidth) { x = window.innerWidth - 45; vx *= -1; }
+                    if (x + 80 >= window.innerWidth) { x = window.innerWidth - 80; vx *= -1; }
                     
-                    // Odbija się od paska nawigacji (góra) i paska dolnego
-                    if (y <= topBanner + 50) { y = topBanner + 50; vy *= -1; }
-                    if (y + 45 >= window.innerHeight - botBanner) { y = window.innerHeight - botBanner - 45; vy *= -1; }
+                    // Odbijanie od górnego i dolnego paska
+                    if (y <= topBanner + 10) { y = topBanner + 10; vy *= -1; }
+                    if (y + 80 >= window.innerHeight - botBanner) { y = window.innerHeight - botBanner - 80; vy *= -1; }
 
                     dzikMain.style.left = x + 'px';
                     dzikMain.style.top = y + 'px';
