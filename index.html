@@ -36,7 +36,7 @@
         .discord-icon-fixed:hover { transform: scale(1.1); }
         
         .right-panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(22, 27, 34, 0.95); border: 1px solid #30363d; border-radius: 12px; padding: 15px; width: 220px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 999; opacity: 0; animation: slideRight 1s ease-out forwards; animation-delay: 1.5s; overflow: visible; }
-        .right-panel h3 { margin: 0 0 10px 0; font-size: 1.1em; color: #fff; border-bottom: 1px solid #30363d; padding-bottom: 8px; }
+        .right-panel h3 { margin: 0 0 10px 0; font-size: 1.1em; color: #fff; border-bottom: 1px solid #30363d; padding-bottom: 8px; position: relative; z-index: 3; }
         .right-panel img.ni-img { width: 100%; border-radius: 6px; margin-bottom: 10px; position: relative; z-index: 2; cursor: pointer; }
         .right-panel h4 { margin: 0 0 5px 0; color: #58a6ff; font-size: 1em; }
         .right-panel p { font-size: 0.85em; color: #8b949e; margin: 0 0 15px 0; }
@@ -45,7 +45,7 @@
 
         /* Modal z Kołem Fortuny */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: 10000; justify-content: center; align-items: center; }
-        .modal-box { background: #161b22; border: 2px solid #58a6ff; border-radius: 12px; padding: 25px; text-align: center; max-width: 350px; box-shadow: 0 0 30px rgba(88, 166, 255, 0.4); position: relative; }
+        .modal-box { background: #161b22; border: 2px solid #58a6ff; border-radius: 12px; padding: 25px; text-align: center; min-width: 320px; max-width: 400px; box-shadow: 0 0 30px rgba(88, 166, 255, 0.4); position: relative; }
         .modal-box h3 { color: #FFDD00; font-size: 1.8em; margin: 0 0 10px 0; text-shadow: 0 0 10px rgba(255, 221, 0, 0.4); }
         .modal-box p { color: #c9d1d9; font-size: 1em; margin-bottom: 15px; }
         .modal-btn { display: inline-block; background: #FFDD00; color: #000; padding: 10px 20px; font-weight: bold; text-decoration: none; border-radius: 6px; transition: 0.2s; font-size: 1em; border: none; cursor: pointer; margin-top: 10px; }
@@ -58,14 +58,17 @@
         #wheel-canvas { width: 100%; height: 100%; border-radius: 50%; border: 4px solid #58a6ff; box-shadow: 0 0 15px rgba(88,166,255,0.4); transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1); }
         .wheel-pointer { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 20px solid #FFDD00; z-index: 10; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
 
-        /* Duży Dzik stojący na krawędzi */
+        /* Pojemnik na wylosowane dziki (stackowanie) */
+        .prize-images-container { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 5px; margin: 15px auto; min-height: 100px; }
+
+        /* Dzik wysunięty znacznie wyżej */
         #dzik-main {
             position: absolute;
-            top: 20px;
+            top: 20px; /* start schowany w dół */
             left: 50%;
             transform: translateX(-50%);
             width: 80px; 
-            z-index: 1; 
+            z-index: 1; /* za nagłówkiem "Polecane Serwery" i panelem, żeby wyskoczył zza niego */
             opacity: 0;
             transition: top 0.3s ease, opacity 0.3s ease;
             cursor: pointer;
@@ -114,8 +117,8 @@
                 <button class="modal-btn" id="spin-btn" onclick="spinWheel()">ZAKRĘĆ KOŁEM 🎡</button>
             </div>
             <div id="prize-section" style="display: none;">
-                <img src="https://i.imgur.com/syTg29C.png" alt="Dzik" style="width: 90px; margin: 10px 0;">
-                <p id="prize-text" style="font-weight: bold; font-size: 1.1em; color: #FFDD00;"></p>
+                <div id="prize-images" class="prize-images-container"></div>
+                <p id="prize-text" style="font-weight: bold; font-size: 1.1em; color: #FFDD00; margin-bottom: 15px;"></p>
                 <a href="https://buymeacoffee.com/besiak" target="_blank" class="modal-btn" id="prize-link">Podaruj dzika ☕</a>
             </div>
         </div>
@@ -141,7 +144,8 @@
             const center = canvas.width / 2;
 
             for (let i = 0; i < numSegments; i++) {
-                const angle = i * arc;
+                // Przesunięcie o -90 stopni, żeby index 0 rysował się dokładnie od góry koła
+                const angle = i * arc - (Math.PI / 2); 
                 ctx.beginPath();
                 ctx.fillStyle = colors[i % colors.length];
                 ctx.moveTo(center, center);
@@ -173,7 +177,12 @@
             const numSegments = prizesArray.length;
             const arcDeg = 360 / numSegments;
             
-            currentRotation += 360 * 5 + (360 - (winningIndex * arcDeg + arcDeg / 2));
+            // Logika idealnego trafienia wskaźnikiem
+            let targetRelative = 360 - (winningIndex * arcDeg + arcDeg / 2);
+            let diff = targetRelative - (currentRotation % 360);
+            if (diff < 0) diff += 360;
+
+            currentRotation += 360 * 5 + diff; // 5 obrotów plus korekta do konkretnego pola
 
             const canvas = document.getElementById('wheel-canvas');
             canvas.style.transform = `rotate(${currentRotation}deg)`;
@@ -191,16 +200,30 @@
             
             const textEl = document.getElementById('prize-text');
             const linkEl = document.getElementById('prize-link');
+            const imgContainer = document.getElementById('prize-images');
+            
+            imgContainer.innerHTML = ''; // czyszczenie grafik
+            const dzikImg = 'https://i.imgur.com/syTg29C.png';
 
             if (prize === "Skrzynka DZIK") {
                 textEl.innerText = "Wylosowano: Skrzynkę Dzików!";
                 linkEl.innerText = "Podaruj skrzynkę dzików ☕";
+                imgContainer.style.maxWidth = '150px'; // układ 3x3 lub podobny gęsty stack
+                for(let i=0; i<9; i++) {
+                    imgContainer.innerHTML += `<img src="${dzikImg}" style="width: 45px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">`;
+                }
             } else if (prize === "4pak DZIK") {
                 textEl.innerText = "Wylosowano: 4pak Dzików!";
                 linkEl.innerText = "Podaruj 4pak dzika ☕";
+                imgContainer.style.maxWidth = '110px'; // idealne pod układ 2x2
+                for(let i=0; i<4; i++) {
+                    imgContainer.innerHTML += `<img src="${dzikImg}" style="width: 50px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));">`;
+                }
             } else {
                 textEl.innerText = "Wylosowano: Dzik!";
                 linkEl.innerText = "Podaruj dzika ☕";
+                imgContainer.style.maxWidth = '100px'; // Pojedynczy, duży dzik
+                imgContainer.innerHTML = `<img src="${dzikImg}" style="width: 80px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));">`;
             }
         }
 
@@ -216,8 +239,9 @@
             const dzikMain = document.getElementById('dzik-main');
             const niImg = document.getElementById('ni-trigger');
 
+            // Przesunąłem top na -65px (dzik wystaje znacznie wyżej, nie nakłada się na tekst)
             niImg.addEventListener('mouseenter', () => {
-                dzikMain.style.top = '-45px';
+                dzikMain.style.top = '-65px';
                 dzikMain.style.opacity = '1';
                 dzikMain.style.pointerEvents = 'auto';
             });
