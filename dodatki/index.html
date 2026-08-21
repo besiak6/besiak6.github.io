@@ -1,4 +1,3 @@
-<!-- PLIK: dodatki/index.html (STRONA Z DODATKAMI) -->
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -25,25 +24,47 @@
         .discord-icon-fixed { position: fixed; bottom: 55px; left: 20px; z-index: 1000; transition: transform 0.2s; color: #58a6ff; font-size: 40px; text-decoration: none; }
         .discord-icon-fixed:hover { transform: scale(1.1); }
         
+        /* Panel z pomysłami */
+        .idea-panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(22, 27, 34, 0.95); border: 1px solid #30363d; border-radius: 12px; padding: 20px; width: 220px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 999; }
+        .idea-panel i.fa-lightbulb { font-size: 2.5em; color: #FFDD00; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255, 221, 0, 0.5); }
+        .idea-panel h3 { margin: 0 0 10px 0; font-size: 1.1em; color: #fff; border-bottom: 1px solid #30363d; padding-bottom: 8px; }
+        .idea-panel p { font-size: 0.85em; color: #c9d1d9; margin: 0 0 15px 0; line-height: 1.4; }
+        .idea-panel .dc-btn { display: inline-block; width: 100%; padding: 10px 0; background: #5865F2; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 0.95em; transition: 0.2s; }
+        .idea-panel .dc-btn:hover { background: #4752C4; }
+        
         /* Styl siatki z dodatkami */
         .content { padding: 120px 20px 80px 20px; z-index: 10; width: 100%; max-width: 1200px; text-align: center; }
         .content h2 { color: #58a6ff; font-size: 2.5em; margin-bottom: 40px; text-shadow: 0 0 10px rgba(88, 166, 255, 0.3); }
         
         .addons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; text-align: left; }
         
-        .addon-box { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s; position: relative; overflow: hidden; }
+        .addon-box { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s; position: relative; }
         .addon-box:hover { transform: translateY(-5px); border-color: #58a6ff; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
         
-        .addon-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .addon-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
         .addon-icon { font-size: 1.8em; color: #58a6ff; width: 40px; text-align: center; }
         .addon-title { margin: 0; color: #fff; font-size: 1.3em; }
         
-        .addon-desc { color: #8b949e; font-size: 0.95em; line-height: 1.5; margin-bottom: 20px; flex-grow: 1; }
+        .addon-desc { color: #8b949e; font-size: 0.95em; line-height: 1.5; margin-bottom: 15px; flex-grow: 1; }
         
-        .addon-tags { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .addon-tags { display: flex; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; min-height: 24px; }
         .tag { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; font-size: 0.75em; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
-        .tag-free { color: #3fb950; border-color: #2ea043; background: rgba(46, 160, 67, 0.1); }
         
+        /* Easter Egg Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 10000; justify-content: center; align-items: center; }
+        .modal-box { background: #161b22; border: 2px solid #58a6ff; border-radius: 12px; padding: 30px; text-align: center; max-width: 400px; box-shadow: 0 0 30px rgba(88, 166, 255, 0.4); animation: slideUp 0.5s ease-out; position: relative; }
+        .modal-box h3 { color: #FFDD00; font-size: 2em; margin: 0 0 10px 0; text-shadow: 0 0 10px rgba(255, 221, 0, 0.4); }
+        .modal-box p { color: #c9d1d9; font-size: 1.1em; margin-bottom: 20px; }
+        .modal-box img { width: 120px; margin-bottom: 20px; animation: float 3s infinite ease-in-out; }
+        .modal-btn { display: inline-block; background: #FFDD00; color: #000; padding: 12px 24px; font-weight: bold; text-decoration: none; border-radius: 6px; transition: 0.2s; font-size: 1.1em; }
+        .modal-btn:hover { transform: scale(1.05); background: #ffea00; }
+        .close-modal { position: absolute; top: 10px; right: 15px; color: #8b949e; cursor: pointer; font-size: 1.2em; }
+        .close-modal:hover { color: #fff; }
+
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        @keyframes slideUp { 0% { transform: translateY(50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+        @keyframes pulse { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.1); filter: brightness(1.3); } 100% { transform: scale(1); filter: brightness(1); } }
+
     </style>
 </head>
 <body>
@@ -60,140 +81,225 @@
     </nav>
 
     <div class="content">
-        <h2>Dostępne Skrypty</h2>
+        <h2>Lista Dodatków</h2>
         
-        <div class="addons-grid">
+        <div class="addons-grid" id="addons-container">
             
             <div class="addon-box">
-                <div class="addon-header">
-                    <div class="addon-icon"><i class="fas fa-rocket"></i></div>
-                    <h3 class="addon-title">Auto Przywo</h3>
-                </div>
-                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-window-maximize"></i> Okno UI</span></div>
+                <div class="addon-header"><div class="addon-icon"><i class="fas fa-rocket"></i></div><h3 class="addon-title">Auto Przywo</h3></div>
+                <div class="addon-tags"></div>
                 <p class="addon-desc">Automatyczna akceptacja przywołań.</p>
             </div>
 
             <div class="addon-box">
-                <div class="addon-header">
-                    <div class="addon-icon"><i class="fas fa-skull-crossbones"></i></div>
-                    <h3 class="addon-title">AutoX</h3>
-                </div>
-                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-cog"></i> Konfiguracja</span></div>
-                <p class="addon-desc">Automatyczne atakowanie graczy z zaawansowaną konfiguracją.</p>
+                <div class="addon-header"><div class="addon-icon"><i class="fas fa-skull-crossbones"></i></div><h3 class="addon-title">AutoX</h3></div>
+                <div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div>
+                <p class="addon-desc">Automatyczne atakowanie graczy z konfiguracją.</p>
             </div>
 
             <div class="addon-box">
-                <div class="addon-header">
-                    <div class="addon-icon"><i class="fas fa-gift"></i></div>
-                    <h3 class="addon-title">Free Gift</h3>
-                </div>
-                <div class="addon-tags"><span class="tag tag-free">Darmowe</span></div>
+                <div class="addon-header"><div class="addon-icon"><i class="fas fa-gift"></i></div><h3 class="addon-title">Free Gift</h3></div>
+                <div class="addon-tags"></div>
                 <p class="addon-desc">Automatyczne odbieranie kalendarza i aktualności w grze.</p>
             </div>
 
             <div class="addon-box">
-                <div class="addon-header">
-                    <div class="addon-icon"><i class="fas fa-circle-info"></i></div>
-                    <h3 class="addon-title">ItemInfo</h3>
-                </div>
-                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-window-maximize"></i> Okno UI</span></div>
-                <p class="addon-desc">Szczegółowe informacje o przedmiotach.</p>
+                <div class="addon-header"><div class="addon-icon"><i class="fas fa-circle-info"></i></div><h3 class="addon-title">ItemInfo</h3></div>
+                <div class="addon-tags"></div>
+                <p class="addon-desc">Szczegółowe informacje o itemkach.</p>
             </div>
 
             <div class="addon-box">
-                <div class="addon-header">
-                    <div class="addon-icon"><i class="fas fa-search"></i></div>
-                    <h3 class="addon-title">Item Searcher</h3>
-                </div>
-                <div class="addon-tags"><span class="tag tag-free">Darmowe</span></div>
-                <p class="addon-desc">Wyszukuje przedmioty bezpośrednio w ekwipunku oraz depozycie.</p>
+                <div class="addon-header"><div class="addon-icon"><i class="fas fa-search"></i></div><h3 class="addon-title">Item Searcher</h3></div>
+                <div class="addon-tags"></div>
+                <p class="addon-desc">Wyszukuje przedmioty w ekwipunku i depozycie.</p>
             </div>
 
             <div class="addon-box">
-                <div class="addon-header">
-                    <div class="addon-icon"><i class="fas fa-gamepad"></i></div>
-                    <h3 class="addon-title">Minigierki</h3>
-                </div>
-                <div class="addon-tags"><span class="tag tag-free">Darmowe</span></div>
-                <p class="addon-desc">Wizualne ułatwienie rozwiązywania minigierek w Margonem.</p>
+                <div class="addon-header"><div class="addon-icon"><i class="fas fa-gamepad"></i></div><h3 class="addon-title">Minigierki</h3></div>
+                <div class="addon-tags"></div>
+                <p class="addon-desc">Wizualne ułatwienie rozwiązania minigierek.</p>
             </div>
 
             <div class="addon-box">
-                <div class="addon-header">
-                    <div class="addon-icon"><i class="fas fa-comment"></i></div>
-                    <h3 class="addon-title">MiniChat</h3>
-                </div>
-                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-window-maximize"></i> Okno UI</span></div>
-                <p class="addon-desc">Umożliwia pełne dostosowanie wielkości chatu w grze.</p>
+                <div class="addon-header"><div class="addon-icon"><i class="fas fa-comment"></i></div><h3 class="addon-title">MiniChat</h3></div>
+                <div class="addon-tags"></div>
+                <p class="addon-desc">Umożliwia dostosowanie wielkości chatu.</p>
             </div>
 
             <div class="addon-box">
-                <div class="addon-header">
-                    <div class="addon-icon"><i class="fas fa-users-slash"></i></div>
-                    <h3 class="addon-title">Rozwiązywanie Grupy</h3>
-                </div>
-                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-cog"></i> Konfiguracja</span></div>
-                <p class="addon-desc">Szybkie rozwiązywanie grupy z możliwością dostosowania opcji.</p>
+                <div class="addon-header"><div class="addon-icon"><i class="fas fa-users-slash"></i></div><h3 class="addon-title">Rozwiązywanie Grupy</h3></div>
+                <div class="addon-tags"></div>
+                <p class="addon-desc">Rozwiązywanie grupy z konfiguracją.</p>
             </div>
 
             <div class="addon-box">
-                <div class="addon-header">
-                    <div class="addon-icon"><i class="fas fa-bed"></i></div>
-                    <h3 class="addon-title">Sleeping Commander</h3>
-                </div>
-                <div class="addon-tags"><span class="tag tag-free">Darmowe</span></div>
-                <p class="addon-desc">Automatyczne oddawanie dowodzenia w grupie.</p>
+                <div class="addon-header"><div class="addon-icon"><i class="fas fa-bed"></i></div><h3 class="addon-title">Sleeping Commander</h3></div>
+                <div class="addon-tags"></div>
+                <p class="addon-desc">Oddaje dowodzenie.</p>
             </div>
 
             <div class="addon-box">
-                <div class="addon-header">
-                    <div class="addon-icon"><i class="fas fa-user-plus"></i></div>
-                    <h3 class="addon-title">Szybka Grupa</h3>
-                </div>
-                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-cog"></i> Konfiguracja</span></div>
-                <p class="addon-desc">Błyskawiczne zapraszanie do grupy z własną konfiguracją.</p>
+                <div class="addon-header"><div class="addon-icon"><i class="fas fa-user-plus"></i></div><h3 class="addon-title">Szybka Grupa</h3></div>
+                <div class="addon-tags"></div>
+                <p class="addon-desc">Zapraszanie do grupy z konfiguracją.</p>
             </div>
 
             <div class="addon-box">
-                <div class="addon-header">
-                    <div class="addon-icon"><i class="fas fa-arrow-trend-up"></i></div>
-                    <h3 class="addon-title">Ulepszara</h3>
-                </div>
-                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-cog"></i> Konfiguracja</span></div>
-                <p class="addon-desc">Automatyczne ulepszanie wybranego przedmiotu według ustalonej konfiguracji.</p>
+                <div class="addon-header"><div class="addon-icon"><i class="fas fa-arrow-trend-up"></i></div><h3 class="addon-title">Ulepszara</h3></div>
+                <div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div>
+                <p class="addon-desc">Automatyczne ulepszanie wybranego itemu wraz z konfiguracją.</p>
             </div>
 
             <div class="addon-box">
-                <div class="addon-header">
-                    <div class="addon-icon"><i class="fas fa-trash-can"></i></div>
-                    <h3 class="addon-title">Śmieciara</h3>
-                </div>
-                <div class="addon-tags"><span class="tag tag-free">Darmowe</span><span class="tag"><i class="fas fa-cog"></i> Konfiguracja</span></div>
-                <p class="addon-desc">Szybkie i zautomatyzowane niszczenie zbędnych przedmiotów.</p>
+                <div class="addon-header"><div class="addon-icon"><i class="fas fa-trash-can"></i></div><h3 class="addon-title">Śmieciara</h3></div>
+                <div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div>
+                <p class="addon-desc">Niszczenie itemów z poziomu panelu z konfiguracją.</p>
             </div>
 
             <div class="addon-box">
-                <div class="addon-header">
-                    <div class="addon-icon"><i class="fas fa-crosshairs"></i></div>
-                    <h3 class="addon-title">Zasięg Walki</h3>
-                </div>
-                <div class="addon-tags"><span class="tag tag-free">Darmowe</span></div>
-                <p class="addon-desc">Wizualnie podświetla obszar i zasięg walki na mapie.</p>
+                <div class="addon-header"><div class="addon-icon"><i class="fas fa-crosshairs"></i></div><h3 class="addon-title">Zasięg Walki</h3></div>
+                <div class="addon-tags"></div>
+                <p class="addon-desc">Podświetla zasięg walki na ekranie.</p>
             </div>
 
             <div class="addon-box">
-                <div class="addon-header">
-                    <div class="addon-icon"><i class="fas fa-map-marker-alt"></i></div>
-                    <h3 class="addon-title">Znacznik Teleportów</h3>
-                </div>
-                <div class="addon-tags"><span class="tag tag-free">Darmowe</span></div>
-                <p class="addon-desc">Podpisuje teleporty z opcją ręcznej edycji nazw i znaczników.</p>
+                <div class="addon-header"><div class="addon-icon"><i class="fas fa-map-marker-alt"></i></div><h3 class="addon-title">Znacznik Teleportów</h3></div>
+                <div class="addon-tags"></div>
+                <p class="addon-desc">Podpisuje teleporty, możliwość edytowania podpisów.</p>
             </div>
 
         </div>
     </div>
 
+    <!-- Panel Pomysłów na mody (po prawej) -->
+    <div class="idea-panel">
+        <i class="fa-solid fa-lightbulb"></i>
+        <h3>Masz pomysł na dodatek?</h3>
+        <p>Brakuje Ci jakiejś funkcji w grze? A może chcesz zupełnie nowy dodatek? Dołącz do naszego Discorda i opisz swój pomysł!</p>
+        <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="dc-btn"><i class="fab fa-discord"></i> Napisz propozycję</a>
+    </div>
+
     <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="discord-icon-fixed"><i class="fab fa-discord"></i></a>
     <div class="footer-banner">Znalazłeś błąd lub masz jakiś problem? Dołącz do <a href="https://discord.gg/rJeNVHr49f" target="_blank">discorda</a>, lub napisz do mnie na dc: besiak6</div>
+
+    <!-- EASTER EGG MONSTER -->
+    <img id="dzik" src="https://i.imgur.com/syTg29C.png" alt="Dzik" style="position: absolute; width: 45px; z-index: 1; top: -15px; right: -15px; opacity: 0.8; cursor: pointer; transition: 0.1s;">
+
+    <!-- EASTER EGG MODAL (Wyskakujące okienko) -->
+    <div class="modal-overlay" id="dzik-modal">
+        <div class="modal-box">
+            <i class="fa-solid fa-xmark close-modal" onclick="document.getElementById('dzik-modal').style.display='none'"></i>
+            <h3>GRATULACJE!</h3>
+            <img src="https://i.imgur.com/syTg29C.png" alt="Dzik">
+            <p>Złapałeś białego dzika, najlepszego energola!</p>
+            <a href="https://buymeacoffee.com/besiak" target="_blank" class="modal-btn">Podaruj dzika besiakowi ☕</a>
+        </div>
+    </div>
+
+    <script>
+        // Logika uciekającego Dzika
+        window.onload = () => {
+            const dzik = document.getElementById('dzik');
+            const cards = document.querySelectorAll('.addon-box');
+            // Wybierz losowy kafelek i ukryj tam dzika
+            const randomCard = cards[Math.floor(Math.random() * cards.length)];
+            randomCard.style.overflow = 'visible'; 
+            randomCard.appendChild(dzik);
+
+            let isRunning = false;
+            let isStopped = false;
+            let x = 0, y = 0, vx = 0, vy = 0, rot = 0;
+            let mouseX = -1000, mouseY = -1000;
+            let physicsInterval;
+
+            // Śledzenie myszki
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+
+            // Gdy użytkownik najedzie na dzika...
+            dzik.addEventListener('mouseenter', () => {
+                if (!isRunning && !isStopped) {
+                    isRunning = true;
+                    
+                    // Przepnij dzika do body, żeby mógł latać po całym oknie
+                    const rect = dzik.getBoundingClientRect();
+                    document.body.appendChild(dzik);
+                    dzik.style.position = 'fixed';
+                    dzik.style.left = rect.left + 'px';
+                    dzik.style.top = rect.top + 'px';
+                    dzik.style.right = 'auto'; 
+                    dzik.style.zIndex = 9999;
+                    dzik.style.width = '70px'; // Dzik rośnie
+                    dzik.style.opacity = '1';
+
+                    x = rect.left;
+                    y = rect.top;
+
+                    // Silnik fizyki (uciekanie)
+                    physicsInterval = setInterval(() => {
+                        let centerX = x + 35; 
+                        let centerY = y + 35;
+
+                        let dx = centerX - mouseX;
+                        let dy = centerY - mouseY;
+                        let dist = Math.sqrt(dx*dx + dy*dy);
+
+                        // Jeżeli myszka jest blisko, dodaj siłę odpychającą
+                        if (dist < 200) {
+                            let force = (200 - dist) / 10;
+                            vx += (dx / dist) * force;
+                            vy += (dy / dist) * force;
+                        }
+
+                        // Utrzymaj dzika w ruchu
+                        if (Math.abs(vx) < 0.5 && Math.abs(vy) < 0.5) {
+                            vx += (Math.random() - 0.5) * 4;
+                            vy += (Math.random() - 0.5) * 4;
+                        }
+
+                        // Tarcie
+                        vx *= 0.96;
+                        vy *= 0.96;
+
+                        x += vx;
+                        y += vy;
+
+                        // Odbijanie od krawędzi okna
+                        if (x <= 0) { x = 0; vx *= -1; }
+                        if (x + 70 >= window.innerWidth) { x = window.innerWidth - 70; vx *= -1; }
+                        if (y <= 0) { y = 0; vy *= -1; }
+                        if (y + 70 >= window.innerHeight) { y = window.innerHeight - 70; vy *= -1; }
+
+                        rot += (vx + vy) * 3; // Rotacja zależna od prędkości
+
+                        dzik.style.left = x + 'px';
+                        dzik.style.top = y + 'px';
+                        dzik.style.transform = `rotate(${rot}deg)`;
+                    }, 16);
+
+                    // Zatrzymaj po 30 sekundach (30000 ms)
+                    setTimeout(() => {
+                        clearInterval(physicsInterval);
+                        isRunning = false;
+                        isStopped = true;
+                        // Dzik pulsuje, żeby zachęcić do kliknięcia
+                        dzik.style.animation = 'pulse 1s infinite ease-in-out';
+                        dzik.style.transform = 'scale(1.2) rotate(0deg)'; 
+                    }, 30000);
+                }
+            });
+
+            // Kliknięcie w dzika (możliwe sensownie tylko gdy się zatrzyma)
+            dzik.addEventListener('click', () => {
+                if (isStopped) {
+                    dzik.style.display = 'none'; // Schowaj dzika z ekranu
+                    document.getElementById('dzik-modal').style.display = 'flex'; // Pokaż okienko
+                }
+            });
+        };
+    </script>
 </body>
 </html>
