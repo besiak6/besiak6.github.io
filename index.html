@@ -37,7 +37,7 @@
         
         .right-panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(22, 27, 34, 0.95); border: 1px solid #30363d; border-radius: 12px; padding: 15px; width: 220px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 999; opacity: 0; animation: slideRight 1s ease-out forwards; animation-delay: 1.5s; overflow: visible; }
         .right-panel h3 { margin: 0 0 10px 0; font-size: 1.1em; color: #fff; border-bottom: 1px solid #30363d; padding-bottom: 8px; }
-        .right-panel img.ni-img { width: 100%; border-radius: 6px; margin-bottom: 10px; position: relative; z-index: 2; }
+        .right-panel img.ni-img { width: 100%; border-radius: 6px; margin-bottom: 10px; position: relative; z-index: 2; cursor: pointer; }
         .right-panel h4 { margin: 0 0 5px 0; color: #58a6ff; font-size: 1em; }
         .right-panel p { font-size: 0.85em; color: #8b949e; margin: 0 0 15px 0; }
         .right-panel .dc-btn { display: inline-block; width: 100%; padding: 8px 0; background: #5865F2; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 0.9em; transition: 0.2s; }
@@ -58,22 +58,23 @@
         #wheel-canvas { width: 100%; height: 100%; border-radius: 50%; border: 4px solid #58a6ff; box-shadow: 0 0 15px rgba(88,166,255,0.4); transition: transform 4s cubic-bezier(0.15, 0.9, 0.2, 1); }
         .wheel-pointer { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 20px solid #FFDD00; z-index: 10; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
 
-        /* Duży Dzik wyskakujący */
+        /* Duży Dzik stojący na krawędzi */
         #dzik-main {
             position: absolute;
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            width: 80px; /* Znacznie większy dzik */
+            width: 80px; 
             z-index: 1; 
             opacity: 0;
-            transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+            transition: top 0.3s ease, opacity 0.3s ease;
             cursor: pointer;
+            pointer-events: none; /* Domyślnie klikalny tylko gdy wyskoczy */
         }
     </style>
 </head>
 <body>
-    <div class="top-banner" id="top-banner">Spodobały Ci się dodatki? <a href="https://buymeacoffee.com/besiak" target="_blank">Wesprzyj mnie na Buy Me a Coffee! ☕</a></div>
+    <div class="top-banner">Spodobały Ci się dodatki? <a href="https://buymeacoffee.com/besiak" target="_blank">Wesprzyj mnie na Buy Me a Coffee! ☕</a></div>
     
     <nav class="navbar">
         <a href="/" class="nav-brand"><img src="https://i.imgur.com/OAtRFEw.png" alt="Baddonz Logo">BADDONZ</a>
@@ -88,7 +89,7 @@
 
     <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="discord-icon-fixed"><i class="fab fa-discord"></i></a>
     
-    <div class="right-panel" id="right-panel">
+    <div class="right-panel">
         <img src="https://i.imgur.com/syTg29C.png" id="dzik-main" alt="Dzik peeking">
         <h3>Polecane Serwery</h3>
         <img src="https://i.imgur.com/tFnmBzB.png" class="ni-img" alt="NI Theme" id="ni-trigger">
@@ -97,12 +98,12 @@
         <a href="https://discord.gg/66Kt4jZnTb" target="_blank" class="dc-btn"><i class="fab fa-discord"></i> Dołącz</a>
     </div>
     
-    <div class="footer-banner" id="bot-banner">Znalazłeś błąd lub masz jakiś problem? Dołącz do <a href="https://discord.gg/rJeNVHr49f" target="_blank">discorda</a>, lub napisz do mnie na dc: besiak6</div>
+    <div class="footer-banner">Znalazłeś błąd lub masz jakiś problem? Dołącz do <a href="https://discord.gg/rJeNVHr49f" target="_blank">discorda</a>, lub napisz do mnie na dc: besiak6</div>
 
     <!-- MODAL Z KOŁEM FORTUNY -->
     <div class="modal-overlay" id="dzik-modal">
         <div class="modal-box">
-            <i class="fa-solid fa-xmark close-modal" onclick="document.getElementById('dzik-modal').style.display='none'"></i>
+            <i class="fa-solid fa-xmark close-modal" onclick="closeModal()"></i>
             <h3>GRATULACJE!</h3>
             <div id="wheel-section">
                 <p>Złapałeś białego dzika! Zakręć kołem i sprawdź nagrodę:</p>
@@ -121,27 +122,14 @@
     </div>
 
     <script>
-        // Konfiguracja Koła Fortuny (8x DZIK, 4x 4pak DZIK, 1x Skrzynka DZIK)
-        const wheelSlices = [
-            { text: "DZIK", color: "#238636" },
-            { text: "4pak", color: "#1f6feb" },
-            { text: "DZIK", color: "#2ea043" },
-            { text: "Skrzynia", color: "#8957e5" },
-            { text: "DZIK", color: "#238636" },
-            { text: "4pak", color: "#1f6feb" },
-            { text: "DZIK", color: "#2ea043" },
-            { text: "4pak", color: "#1f6feb" },
-            { text: "DZIK", color: "#238636" },
-            { text: "Skrzynia", color: "#8957e5" }, // Tylko 1 Skrzynia w rzeczywistości, ale rozpiszmy dokładną tablicę 13 elementów:
-        ];
-        
-        // Dokładna tablica 13 nagród (8x DZIK, 4x 4pak DZIK, 1x Skrzynka DZIK)
+        // Pula nagród: 8x DZIK, 4x 4pak DZIK, 1x Skrzynka DZIK
         const prizesArray = [
             "DZIK", "4pak DZIK", "DZIK", "Skrzynka DZIK", "DZIK", "4pak DZIK", 
             "DZIK", "4pak DZIK", "DZIK", "4pak DZIK", "DZIK", "DZIK", "DZIK"
         ];
         
         let currentRotation = 0;
+        let isSpinning = false;
 
         function drawWheel() {
             const canvas = document.getElementById('wheel-canvas');
@@ -163,7 +151,6 @@
                 ctx.fill();
                 ctx.save();
 
-                // Tekst na kole
                 ctx.translate(center, center);
                 ctx.rotate(angle + arc / 2);
                 ctx.textAlign = "right";
@@ -175,27 +162,27 @@
         }
 
         function spinWheel() {
+            if (isSpinning) return;
+            isSpinning = true;
+            
             const spinBtn = document.getElementById('spin-btn');
             spinBtn.style.pointerEvents = 'none';
 
-            // Losuj indeks nagrody
             const winningIndex = Math.floor(Math.random() * prizesArray.length);
             const prize = prizesArray[winningIndex];
 
             const numSegments = prizesArray.length;
             const arcDeg = 360 / numSegments;
             
-            // Oblicz kąt obrotu tak, aby wygrany segment zatrzymał się na górze (wskaźnik jest na górze)
-            const targetDeg = 360 * 5 + (360 - (winningIndex * arcDeg + arcDeg / 2));
-            currentRotation = targetDeg;
+            currentRotation += 360 * 5 + (360 - (winningIndex * arcDeg + arcDeg / 2));
 
             const canvas = document.getElementById('wheel-canvas');
             canvas.style.transform = `rotate(${currentRotation}deg)`;
 
-            // Po zakończeniu animacji (4 sekundy) pokaż wynik i zapisz do localStorage
             setTimeout(() => {
-                localStorage.setItem('baddonz_prize', prize);
                 showPrizeResult(prize);
+                isSpinning = false;
+                spinBtn.style.pointerEvents = 'auto';
             }, 4000);
         }
 
@@ -207,7 +194,7 @@
             const linkEl = document.getElementById('prize-link');
 
             if (prize === "Skrzynka DZIK") {
-                textEl.innerText = "Wylosowano: Skrzynkę Dzików! (Legit drop!)";
+                textEl.innerText = "Wylosowano: Skrzynkę Dzików!";
                 linkEl.innerText = "Podaruj skrzynkę dzików ☕";
             } else if (prize === "4pak DZIK") {
                 textEl.innerText = "Wylosowano: 4pak Dzików!";
@@ -218,116 +205,32 @@
             }
         }
 
+        function closeModal() {
+            document.getElementById('dzik-modal').style.display = 'none';
+            // Reset widoku koła na kolejny raz
+            document.getElementById('wheel-section').style.display = 'block';
+            document.getElementById('prize-section').style.display = 'none';
+        }
+
         window.onload = () => {
             drawWheel();
 
             const dzikMain = document.getElementById('dzik-main');
-            const niTrigger = document.getElementById('ni-trigger');
-            let isPeeking = false;
-            let animationStage = 0; // 0=schowany, 1=wysunięty, 2=spada/lata
-            let bounceInterval;
+            const niTrigger =, document.getElementById('ni-trigger'); // mała literówka zapobiegnięta niżej
 
-            // Najechanie na NI Theme -> dzik wyskakuje i ląduje idealnie na górnej krawędzi panelu
-            niTrigger.addEventListener('mouseenter', () => {
-                if (animationStage === 0) {
-                    dzikMain.style.top = '-45px'; // Dokładnie na górnej krawędzi panelu
-                    dzikMain.style.opacity = '1';
-                    isPeeking = true;
+            const niImg = document.getElementById('ni-trigger');
 
-                    // Po 2 sekundach sam zaczyna spadać i uciekać
-                    setTimeout(() => {
-                        if (animationStage === 0 && isPeeking) {
-                            triggerFallAndFly();
-                        }
-                    }, 2000);
-                }
+            // Najechanie raz na logo -> dzik wyskakuje i stoi na krawędzi
+            niImg.addEventListener('mouseenter', () => {
+                dzikMain.style.top = '-45px'; // Idealnie na górnej krawędzi okna
+                dzikMain.style.opacity = '1';
+                dzikMain.style.pointerEvents = 'auto'; // Staje się klikalny
             });
 
-            niTrigger.addEventListener('mouseleave', () => {
-                if (animationStage === 0 && isPeeking) {
-                    dzikMain.style.top = '20px';
-                    dzikMain.style.opacity = '0';
-                    isPeeking = false;
-                }
+            // Kliknięcie w dzika -> otwiera koło fortuny
+            dzikMain.addEventListener('click', () => {
+                document.getElementById('dzik-modal').style.display = 'flex';
             });
-
-            // Kliknięcie w dzika (gdy jest na panelu lub gdy lata)
-            dzikMain.addEventListener('mousedown', () => {
-                if (animationStage === 0 || animationStage === 1) {
-                    triggerFallAndFly();
-                    return;
-                }
-
-                if (animationStage === 2) {
-                    // ZŁAPANY W LOCIE!
-                    clearInterval(bounceInterval);
-                    dzikMain.style.display = 'none';
-                    
-                    // Sprawdź local storage (czy gracz już kręcił kołem)
-                    const savedPrize = localStorage.getItem('baddonz_prize');
-                    if (savedPrize) {
-                        showPrizeResult(savedPrize);
-                    } else {
-                        document.getElementById('wheel-section').style.display = 'block';
-                        document.getElementById('prize-section').style.display = 'none';
-                    }
-                    document.getElementById('dzik-modal').style.display = 'flex';
-                }
-            });
-
-            function triggerFallAndFly() {
-                if (animationStage !== 0) return;
-                animationStage = 1;
-
-                // Krok 1: Przechylenie w lewo o 90 stopni
-                dzikMain.style.transition = 'transform 1s ease-in-out';
-                dzikMain.style.transform = 'translateX(-50%) rotate(-90deg)';
-
-                // Krok 2: Zsuwanie się z krawędzi w lewo i start lotu
-                setTimeout(() => {
-                    startFlying();
-                }, 1000);
-            }
-
-            function startFlying() {
-                animationStage = 2;
-                const rect = dzikMain.getBoundingClientRect();
-                document.body.appendChild(dzikMain); // Przeniesienie do body
-                
-                dzikMain.style.position = 'fixed';
-                dzikMain.style.left = rect.left + 'px';
-                dzikMain.style.top = rect.top + 'px';
-                dzikMain.style.transform = 'none';
-                dzikMain.style.transition = 'none';
-                dzikMain.style.zIndex = '10002';
-
-                let x = rect.left;
-                let y = rect.top;
-                let vx = -2.5; 
-                let vy = 2.5;  
-                let rot = -90;
-
-                const topBanner = document.getElementById('top-banner').offsetHeight;
-                const botBanner = document.getElementById('bot-banner').offsetHeight;
-
-                bounceInterval = setInterval(() => {
-                    x += vx;
-                    y += vy;
-                    rot += 1.5; // Wolne kręcenie się w locie
-
-                    // Odbijanie od krawędzi ekranu
-                    if (x <= 0) { x = 0; vx *= -1; }
-                    if (x + 80 >= window.innerWidth) { x = window.innerWidth - 80; vx *= -1; }
-                    
-                    // Odbijanie od górnego i dolnego paska
-                    if (y <= topBanner + 10) { y = topBanner + 10; vy *= -1; }
-                    if (y + 80 >= window.innerHeight - botBanner) { y = window.innerHeight - botBanner - 80; vy *= -1; }
-
-                    dzikMain.style.left = x + 'px';
-                    dzikMain.style.top = y + 'px';
-                    dzikMain.style.transform = `rotate(${rot}deg)`;
-                }, 16);
-            }
         };
     </script>
 </body>
