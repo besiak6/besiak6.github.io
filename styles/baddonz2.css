@@ -483,6 +483,6 @@ body.baddonz-ii-hide-opis.baddonz-ii-legendary .baddonz-desc-rarity-legendary { 
 .baddonz-bm-wnd .bm-font-item:hover { background: #ffffff1a; }
 .baddonz-bm-wnd .bm-font-item.active { background: #46464666; color: #96f096; font-weight: bold; }
 .baddonz-bm-wnd { max-height: 400px; }
-.baddonz-bm-wnd .baddonz-window-body { padding-right: 0 !important; overflow: hidden; }
-.baddonz-bm-wnd .bm-scroll-content { width: 100%; max-height: 100%; overflow-y: auto; box-sizing: border-box; padding: 6px 6px 10px 4px; }
+.baddonz-bm-wnd .baddonz-window-body { padding-right: 0 !important; overflow: hidden; overflow-x: hidden; }
+.baddonz-bm-wnd .bm-scroll-content { width: 100%; max-height: 100%; overflow-y: auto; overflow-x: hidden; box-sizing: border-box; padding: 6px 4px 10px 2px; }
 .baddonz-bm-wnd .bm-test-button { width: 100%; box-sizing: border-box; }
