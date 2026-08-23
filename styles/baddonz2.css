@@ -460,7 +460,12 @@ body.baddonz-ii-hide-opis.baddonz-ii-legendary .baddonz-desc-rarity-legendary { 
 .is-depo-counter { position: absolute; top: 2px; left: 2px; color: #ff3333; font-size: 12px; font-weight: 900; pointer-events: none; z-index: 10; line-height: 1; text-shadow: 0 0 3px #000, 1px 1px 0 #000; }
 .item-searcher-dimmed-item { opacity: 0.2 !important; filter: grayscale(60%); }
 .baddonz-bm-wnd { max-height: 400px; }
-.baddonz-bm-wnd .baddonz-window-body { overflow-y: auto; }
+.baddonz-bm-wnd .baddonz-window-body {
+    height: auto !important;
+    max-height: 375px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
 
 .baddonz-bm-wnd input[type=color] {
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
@@ -518,14 +523,6 @@ body.baddonz-ii-hide-opis.baddonz-ii-legendary .baddonz-desc-rarity-legendary { 
     width: 52px;
     padding: 0;
     border-radius: 4px;
-}
-.baddonz-bm-wnd .bm-scroll-wrap {
-    display: flex;
-    flex-direction: column;
-    max-height: 375px;
-    overflow-y: auto;
-    padding-right: 4px;
-    box-sizing: border-box;
 }
 .baddonz-bm-wnd .bm-font-list {
     width: 100%;
