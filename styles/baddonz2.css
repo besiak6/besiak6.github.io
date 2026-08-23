@@ -459,17 +459,59 @@ body.baddonz-ii-hide-opis.baddonz-ii-legendary .baddonz-desc-rarity-legendary { 
 .is-bag-counter { position: absolute; top: 2px; left: 2px; color: #ff3333; font-size: 12px; font-weight: 900; pointer-events: none; z-index: 10; line-height: 1; text-shadow: 0 0 3px #000, 1px 1px 0 #000; }
 .is-depo-counter { position: absolute; top: 2px; left: 2px; color: #ff3333; font-size: 12px; font-weight: 900; pointer-events: none; z-index: 10; line-height: 1; text-shadow: 0 0 3px #000, 1px 1px 0 #000; }
 .item-searcher-dimmed-item { opacity: 0.2 !important; filter: grayscale(60%); }
-.baddonz-bm-wnd { max-height: 400px; }
-.baddonz-bm-wnd .baddonz-window-body {
-    height: auto !important;
-    max-height: 375px;
-    overflow-y: auto;
-    overflow-x: hidden;
+.baddonz_game-layer { display: flex; }
+
+.baddonz_game-layer .message,
+.baddonz_game-layer .message * {
+    color: var(--bm-color, #ffc120) !important;
+    font-size: var(--bm-font-size, 10px) !important;
+    font-family: var(--bm-font-family, Verdana, Arial, Helvetica, sans-serif) !important;
 }
 
-.baddonz-bm-wnd input[type=color] {
-    cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important;
+.baddonz_game-layer .message {
+    line-height: normal !important;
+    font-weight: bold !important;
+    pointer-events: var(--bm-pointer-events, none) !important;
+
+    -webkit-text-stroke: var(--bm-outline-width, 2px) var(--bm-outline-color, #000000);
+    paint-order: stroke fill;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5) !important;
+
+    background: none;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    transition: none;
+    text-align: center !important;
+    width: auto !important;
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+    z-index: auto !important;
+    padding: 0;
 }
+
+.baddonz_game-layer.bm-box .message {
+    background-color: rgba(var(--bm-box-color-rgb, 0, 0, 0), var(--bm-box-opacity, 0.55)) !important;
+    padding: 5px 12px !important;
+    border-radius: var(--bm-box-radius, 6px) !important;
+}
+
+.baddonz_game-layer.bm-box.bm-box-border .message {
+    border: var(--bm-box-border-width, 1px) solid var(--bm-box-border-color, #ffc120) !important;
+}
+
+.baddonz_game-layer.bm-glow .message {
+    filter: drop-shadow(0 0 var(--bm-glow-strength, 6px) var(--bm-glow-color, #ffc120));
+}
+
+.baddonz-bm-hide-native .alerts-layer .big-messages,
+.baddonz-bm-hide-native .mAlert-mobile-layer .big-messages,
+.baddonz-bm-hide-native .mAlert-layer .big-messages,
+.baddonz-bm-hide-native .console-layer .big-messages {
+    display: none !important;
+}
+
+.baddonz-bm-wnd input[type=color] { cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer !important; }
 
 .baddonz-bm-wnd .bm-row {
     display: flex;
@@ -524,9 +566,10 @@ body.baddonz-ii-hide-opis.baddonz-ii-legendary .baddonz-desc-rarity-legendary { 
     padding: 0;
     border-radius: 4px;
 }
+
 .baddonz-bm-wnd .bm-font-list {
     width: 100%;
-    max-height: 75px;
+    max-height: 150px;
     overflow-y: auto;
     box-sizing: border-box;
     background: #0003;
@@ -537,7 +580,7 @@ body.baddonz-ii-hide-opis.baddonz-ii-legendary .baddonz-desc-rarity-legendary { 
     flex-direction: column;
 }
 .baddonz-bm-wnd .bm-font-item {
-    padding: 4px 8px;
+    padding: 5px 8px;
     font-size: 12px;
     color: #fff;
     cursor: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer;
@@ -550,4 +593,13 @@ body.baddonz-ii-hide-opis.baddonz-ii-legendary .baddonz-desc-rarity-legendary { 
     background: #46464666;
     color: #96f096;
     font-weight: bold;
+}
+.baddonz-bm-wnd { max-height: 400px; }
+.baddonz-bm-wnd .baddonz-window-body { padding-right: 0 !important; overflow: hidden; }
+.baddonz-bm-wnd .bm-scroll-content {
+    width: 100%;
+    max-height: 100%;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 6px 8px 10px 10px;
 }
