@@ -7,122 +7,155 @@
     <link rel="icon" type="image/png" href="https://i.imgur.com/OAtRFEw.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* === TWÓJ ORYGINALNY CSS (UI) === */
-        body { background: linear-gradient(135deg, #0d1117, #1b0033); color: #c9d1d9; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; user-select: none; }
+        /* =========================================
+           1. ORYGINALNY WYGLĄD STRONY (IDEALNY KOPION)
+           ========================================= */
+        :root {
+            --bg-dark: #0d1117;
+            --bg-panel: #161b22;
+            --border-color: #30363d;
+            --accent-blue: #58a6ff;
+            --text-main: #c9d1d9;
+            --text-muted: #8b949e;
+        }
+
+        body { 
+            background: linear-gradient(135deg, var(--bg-dark), #1b0033); 
+            color: var(--text-main); 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh; 
+            overflow-x: hidden; 
+            user-select: none;
+        }
+
+        /* Navigacja i Banery */
         .top-banner { position: fixed; top: 0; left: 0; width: 100%; background-color: #FFDD00; color: #000; padding: 5px 0; font-weight: bold; font-size: 0.9em; z-index: 1001; text-align: center; display: flex; justify-content: center; align-items: center; gap: 5px; }
         .top-banner a { color: #000; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px; }
         .top-banner img { height: 18px; width: auto; vertical-align: middle; }
-        .footer-banner { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #161b22; color: #ff5555; padding: 10px 0; font-size: 0.9em; z-index: 1001; border-top: 1px solid #30363d; font-weight: 500; text-align: center; }
-        .footer-banner a { color: #58a6ff; text-decoration: none; font-weight: bold; }
-        .navbar { position: fixed; top: 28px; left: 0; width: 100%; background: rgba(13, 17, 23, 0.95); border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; box-sizing: border-box; z-index: 1000; }
-        .nav-brand { display: flex; align-items: center; gap: 10px; font-size: 1.5em; font-weight: bold; color: #58a6ff; text-decoration: none; transition: 0.2s; }
+        
+        .navbar { position: fixed; top: 28px; left: 0; width: 100%; background: rgba(13, 17, 23, 0.95); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; box-sizing: border-box; z-index: 1000; backdrop-filter: blur(5px); }
+        .nav-brand { display: flex; align-items: center; gap: 10px; font-size: 1.5em; font-weight: bold; color: var(--accent-blue); text-decoration: none; }
         .nav-brand img { width: 35px; height: 35px; }
-        .nav-links { display: flex; gap: 15px; }
-        .nav-links a { color: #c9d1d9; text-decoration: none; font-size: 1.1em; font-weight: 600; display: flex; align-items: center; gap: 8px; background: #30363d; padding: 8px 15px; border-radius: 6px; border: 1px solid #58a6ff; box-shadow: 0 0 10px rgba(88,166,255,0.2); }
-        .discord-icon-fixed { position: fixed; bottom: 55px; left: 20px; z-index: 1000; transition: transform 0.2s; color: #58a6ff; font-size: 40px; text-decoration: none; }
-        .idea-panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(22, 27, 34, 0.95); border: 1px solid #30363d; border-radius: 12px; padding: 20px; width: 220px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 999; }
-        .idea-panel h3 { margin: 0 0 10px 0; font-size: 1.1em; color: #fff; border-bottom: 1px solid #30363d; padding-bottom: 8px; }
-        .idea-panel p { font-size: 0.85em; color: #c9d1d9; margin: 0 0 15px 0; }
-        .idea-panel .dc-btn { display: inline-block; width: 100%; padding: 10px 0; background: #5865F2; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; }
-        .content { padding: 120px 20px 80px 20px; z-index: 10; width: 100%; max-width: 1200px; text-align: center; transition: transform 0.05s; }
-        .content h2 { color: #58a6ff; font-size: 2.5em; margin-bottom: 40px; text-shadow: 0 0 10px rgba(88, 166, 255, 0.3); }
-        .addons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; text-align: left; }
-        .addon-box { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; position: relative; transition: all 0.2s; overflow: hidden; }
-        .addon-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; pointer-events: none; }
-        .addon-icon { font-size: 1.8em; color: #58a6ff; width: 40px; text-align: center; pointer-events: auto; }
-        .addon-title { margin: 0; color: #fff; font-size: 1.3em; pointer-events: none;}
-        .addon-desc { color: #8b949e; font-size: 0.95em; flex-grow: 1; pointer-events: none;}
-        .addon-tags { display: flex; gap: 8px; margin-bottom: 5px; min-height: 24px; pointer-events: none;}
-        .tag { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; font-size: 0.75em; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
+        .nav-links a { color: var(--text-main); text-decoration: none; font-size: 1.1em; font-weight: 600; display: flex; align-items: center; gap: 8px; background: var(--border-color); padding: 8px 15px; border-radius: 6px; border: 1px solid var(--accent-blue); box-shadow: 0 0 10px rgba(88,166,255,0.2); }
 
-        /* === EASTER EGG: ROZPOCZĘCIE === */
+        .footer-banner { position: fixed; bottom: 0; left: 0; width: 100%; background-color: var(--bg-panel); color: #ff5555; padding: 10px 0; font-size: 0.9em; z-index: 1001; border-top: 1px solid var(--border-color); font-weight: 500; text-align: center; }
+        
+        /* Grid i Kafelki */
+        .content { padding: 100px 20px 80px 20px; z-index: 10; width: 100%; max-width: 1200px; text-align: center; }
+        .content h2 { color: var(--accent-blue); font-size: 2.5em; margin-bottom: 40px; text-shadow: 0 0 10px rgba(88, 166, 255, 0.3); }
+        .addons-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; text-align: left; }
+        
+        .addon-box { background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 10px; padding: 20px; display: flex; flex-direction: column; position: relative; transition: transform 0.2s, box-shadow 0.2s; }
+        .addon-box:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.5); }
+        .addon-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+        .addon-icon { font-size: 1.8em; color: var(--accent-blue); width: 40px; text-align: center; }
+        .addon-title { margin: 0; color: #fff; font-size: 1.3em; }
+        .addon-desc { color: var(--text-muted); font-size: 0.95em; margin: 0; flex-grow: 1; line-height: 1.4; }
+
+        /* Panel Boczny */
+        .idea-panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(22, 27, 34, 0.95); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; width: 220px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 999; }
+        .idea-panel h3 { margin: 0 0 10px 0; font-size: 1.1em; color: #fff; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .idea-panel p { font-size: 0.85em; color: var(--text-main); margin: 0 0 15px 0; }
+        .dc-btn { display: inline-block; width: 100%; padding: 10px 0; background: #5865F2; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .dc-btn:hover { background: #4752c4; }
+
+        /* =========================================
+           2. MECHANIKA ZAGADKI (EASTER EGG)
+           ========================================= */
         .idea-icon-container { position: relative; height: 50px; margin-bottom: 10px; display: flex; justify-content: center; align-items: center; }
         #hidden-key { position: absolute; font-size: 2em; color: #d4af37; opacity: 0; transform: scale(0.5); transition: 0.3s; cursor: pointer; }
         #hidden-key.revealed { opacity: 1; transform: scale(1); z-index: 50; }
-        #draggable-lightbulb { font-size: 2.5em; color: #FFDD00; cursor: grab; position: relative; z-index: 100; text-shadow: 0 0 15px rgba(255, 221, 0, 0.8); }
+        
+        #draggable-lightbulb { font-size: 2.5em; color: #FFDD00; cursor: grab; position: relative; z-index: 100; filter: drop-shadow(0 0 10px rgba(255, 221, 0, 0.5)); transition: transform 0.1s; }
         #draggable-lightbulb:active { cursor: grabbing; }
         #cursor-key { position: fixed; font-size: 2em; color: #d4af37; pointer-events: none; z-index: 9999; display: none; transform: translate(-20%, -20%) rotate(-45deg); filter: drop-shadow(2px 4px 6px black); }
 
-        /* SEJF I BROŃ W ŚRODKU (SVG) */
-        #item-info-box { perspective: 1000px; transform-style: preserve-3d; }
-        .vault-door { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-sizing: border-box; transform-origin: left; transition: transform 1.5s cubic-bezier(0.25, 0.1, 0.25, 1); z-index: 2; display: flex; flex-direction: column; }
-        .vault-interior { background: #000; border: 2px inset #444; border-radius: 10px; position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-sizing: border-box; z-index: 1; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 30px #222; }
-        .vault-unlocked .vault-door { transform: rotateY(-115deg); box-shadow: 20px 0 30px rgba(0,0,0,0.8); }
-        #lock-icon { cursor: pointer; transition: 0.2s; position: relative; z-index: 10; font-size: 2em; }
-        #lock-icon:hover { transform: scale(1.2); color: #FFDD00; text-shadow: 0 0 10px #FFDD00; }
+        /* Sejf udający normalny kafelek */
+        #item-info-box { perspective: 1000px; transform-style: preserve-3d; position: relative; overflow: visible; }
+        .vault-door { background: var(--bg-panel); border-radius: 10px; width: 100%; height: 100%; position: relative; z-index: 2; transform-origin: left; transition: transform 1.2s cubic-bezier(0.25, 0.1, 0.25, 1); display: flex; flex-direction: column; }
+        .vault-interior { background: radial-gradient(circle, #333 0%, #000 100%); border: 2px inset #555; border-radius: 10px; position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-sizing: border-box; z-index: 1; display: flex; justify-content: center; align-items: center; box-shadow: inset 0 0 30px #000; }
         
-        #secret-ak47-svg { width: 80%; max-width: 200px; cursor: pointer; filter: drop-shadow(0 0 10px #ff5555); transition: 0.3s; animation: floatWeapon 2s infinite ease-in-out; }
-        #secret-ak47-svg:hover { transform: scale(1.1); filter: drop-shadow(0 0 20px #ff5555) drop-shadow(0 0 40px #ffaa00); }
-        @keyframes floatWeapon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .vault-unlocked .vault-door { transform: rotateY(-105deg); opacity: 0.8; pointer-events: none; }
+        
+        /* Broń w sejfie */
+        #secret-ak47-svg { width: 70%; max-width: 150px; cursor: pointer; filter: drop-shadow(0 0 15px #ffaa00); animation: floatWeapon 2s infinite ease-in-out; pointer-events: none; opacity: 0; transition: opacity 0.5s 1s; }
+        .vault-unlocked #secret-ak47-svg { pointer-events: auto; opacity: 1; }
+        #secret-ak47-svg:hover { filter: drop-shadow(0 0 25px #ff5555) brightness(1.2); }
+        @keyframes floatWeapon { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
-        /* === TRYB FPS CS:GO === */
-        body.fps-active { cursor: none !important; overflow: hidden; }
+        /* =========================================
+           3. TRYB FPS CS:GO (POINTER LOCK API)
+           ========================================= */
+        body.fps-active { cursor: none !important; user-select: none; }
         body.fps-active * { cursor: none !important; }
-        body.fps-active.shaking .content { transform: translate(calc(var(--shake-x) * 1px), calc(var(--shake-y) * 1px)); }
+        body.fps-active.shaking { transform: translate(calc(var(--shake-x) * 1px), calc(var(--shake-y) * 1px)); }
 
         #fps-ui { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9000; display: none; }
         
-        /* Celownik (Dynamic Crosshair) */
-        #crosshair { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; transition: 0.05s; }
-        .ch-line { position: absolute; background: #00ff00; }
-        .ch-line.top { top: -15px; left: -1px; width: 2px; height: 10px; }
-        .ch-line.bottom { top: 5px; left: -1px; width: 2px; height: 10px; }
-        .ch-line.left { top: -1px; left: -15px; width: 10px; height: 2px; }
-        .ch-line.right { top: -1px; left: 5px; width: 10px; height: 2px; }
-        .shooting #crosshair { transform: translate(-50%, -50%) scale(1.8); opacity: 0.5; }
-
-        /* Hitmarker */
-        #hitmarker { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0; transition: opacity 0.1s; }
-        #hitmarker::before, #hitmarker::after { content: ''; position: absolute; background: red; width: 12px; height: 2px; top: 0; left: -6px; box-shadow: 0 0 5px red; }
-        #hitmarker::before { transform: rotate(45deg) translate(5px, 5px); }
-        #hitmarker::after { transform: rotate(-45deg) translate(-5px, 5px); }
-        #hitmarker.active { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
-
-        /* Viewmodel (Ręce + Broń) */
-        #viewmodel { position: absolute; bottom: -50px; right: 15%; width: 500px; height: 400px; transition: transform 0.05s ease-out; transform-origin: bottom right; filter: drop-shadow(-15px 15px 20px rgba(0,0,0,0.8)); }
-        .shooting #viewmodel { transform: translate(30px, 40px) rotate(8deg); }
+        /* WIRTUALNY CELOWNIK - To nim teraz sterujemy, myszka jest zablokowana! */
+        #virtual-crosshair { position: fixed; width: 40px; height: 40px; transform: translate(-50%, -50%); pointer-events: none; z-index: 9999; }
+        .ch-line { position: absolute; background: #00ff00; box-shadow: 0 0 2px #000; transition: 0.05s ease-out; }
+        /* Dynamiczny rozrzut (spread) */
+        .ch-line.top { top: 0; left: 19px; width: 2px; height: 12px; }
+        .ch-line.bottom { bottom: 0; left: 19px; width: 2px; height: 12px; }
+        .ch-line.left { top: 19px; left: 0; width: 12px; height: 2px; }
+        .ch-line.right { top: 19px; right: 0; width: 12px; height: 2px; }
         
-        /* Muzzle Flash (Ogień z lufy) */
-        #muzzle-flash { position: absolute; top: 50px; left: 20px; width: 150px; height: 150px; background: radial-gradient(circle, #fff 10%, #ffaa00 30%, transparent 60%); opacity: 0; transform: scale(0.5); pointer-events: none; mix-blend-mode: screen; }
-        .shooting #muzzle-flash { opacity: 1; transform: scale(1) rotate(45deg); transition: 0.05s; }
+        .shooting .ch-line.top { top: -6px; }
+        .shooting .ch-line.bottom { bottom: -6px; }
+        .shooting .ch-line.left { left: -6px; }
+        .shooting .ch-line.right { right: -6px; }
 
-        /* Killfeed */
+        /* Hitmarker (znak X) */
+        #hitmarker { position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; transform: translate(-50%, -50%); opacity: 0; transition: opacity 0.1s; pointer-events: none; }
+        #hitmarker::before, #hitmarker::after { content: ''; position: absolute; background: #ff0000; width: 14px; height: 2px; top: 9px; left: 3px; box-shadow: 0 0 4px red; }
+        #hitmarker::before { transform: rotate(45deg); }
+        #hitmarker::after { transform: rotate(-45deg); }
+        #hitmarker.active { opacity: 1; transform: translate(-50%, -50%) scale(1.3); transition: none; }
+
+        /* Viewmodel - Ulepszona Broń i Ręce */
+        #viewmodel { position: absolute; bottom: -20px; right: 10%; width: 600px; height: 450px; transform-origin: bottom right; transition: transform 0.05s ease-out, right 0.1s; filter: drop-shadow(-20px 20px 25px rgba(0,0,0,0.7)); }
+        .shooting #viewmodel { transform: translate(20px, 30px) rotate(4deg); }
+        
+        /* Muzzle Flash */
+        #muzzle-flash { position: absolute; top: 50px; left: 10px; width: 200px; height: 200px; background: radial-gradient(circle, #fff 5%, #ffaa00 20%, transparent 60%); opacity: 0; transform: scale(0.5); pointer-events: none; mix-blend-mode: screen; }
+        .shooting #muzzle-flash { opacity: 1; transform: scale(1.2) rotate(45deg); }
+
+        /* HUD & Killfeed */
         #killfeed { position: absolute; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 5px; pointer-events: none; }
-        .kill-entry { background: rgba(0,0,0,0.7); border: 1px solid #444; color: #fff; padding: 5px 15px; border-radius: 5px; font-family: monospace; display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s forwards, fadeOut 0.5s 4s forwards; font-size: 14px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
-        .kill-entry .killer { color: #58a6ff; font-weight: bold; }
+        .kill-entry { background: rgba(0,0,0,0.8); border: 1px solid var(--border-color); color: #fff; padding: 5px 15px; border-radius: 4px; font-family: monospace; display: flex; align-items: center; gap: 10px; animation: slideIn 0.2s forwards, fadeOut 0.5s 4s forwards; font-size: 14px; box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        .kill-entry .killer { color: var(--accent-blue); font-weight: bold; }
         .kill-entry .victim { color: #ff5555; font-weight: bold; }
-        .kill-weapon { width: 40px; height: auto; filter: invert(1); }
+        .hud-panel { position: absolute; bottom: 30px; background: rgba(0,0,0,0.7); padding: 10px 25px; border-left: 5px solid var(--accent-blue); font-family: monospace; font-size: 28px; font-weight: bold; color: #fff; text-shadow: 2px 2px 0 #000; }
+        #hud-health { left: 40px; border-left-color: #28a745; }
+        #hud-ammo { right: 40px; border-left-color: #ffdd00; }
+
+        /* System Zniszczeń */
+        .bullet-hole { position: absolute; width: 14px; height: 14px; background: radial-gradient(circle, #000 30%, #333 70%, transparent 100%); border-radius: 50%; pointer-events: none; z-index: 8999; transform: translate(-50%, -50%); opacity: 0.9; box-shadow: inset 0 0 4px #000; }
+        .particle { position: absolute; pointer-events: none; z-index: 9999; border-radius: 2px; box-shadow: 0 0 8px rgba(0,0,0,0.8); }
+        .destructible { transition: filter 0.1s; }
+        .destroyed { pointer-events: none !important; opacity: 0; transition: opacity 0.1s; }
+
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; } }
 
-        /* HUD */
-        .hud-panel { position: absolute; bottom: 30px; background: rgba(0,0,0,0.6); padding: 10px 20px; border-left: 5px solid #58a6ff; font-family: monospace; font-size: 24px; color: #fff; text-shadow: 2px 2px 0 #000; }
-        #hud-health { left: 30px; border-left-color: #28a745; }
-        #hud-ammo { right: 30px; border-left-color: #ffdd00; }
-
-        /* Zniszczenia: Dziury i Odłamki */
-        .bullet-hole { position: fixed; width: 16px; height: 16px; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="15" fill="%23000"/><path d="M50 35 L45 10 M50 65 L60 90 M35 50 L10 40 M65 50 L95 60 M40 40 L20 20 M60 60 L85 85" stroke="%23222" stroke-width="3"/></svg>') no-repeat center center; pointer-events: none; z-index: 8999; transform: translate(-50%, -50%); opacity: 0.8; }
-        
-        .particle { position: fixed; pointer-events: none; z-index: 9999; border-radius: 2px; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
-        
-        .destructible { transition: filter 0.1s; }
-        .destructible:active { filter: brightness(2); }
-        .destroyed { pointer-events: none !important; opacity: 0; transition: opacity 0.2s; }
-
-        /* Ekran końcowy */
-        #end-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; color: #fff; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 2s; text-align: center; }
+        /* End Screen */
+        #end-screen { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); color: #fff; z-index: 10000; display: flex; flex-direction: column; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: opacity 1.5s; text-align: center; }
         #end-screen.visible { opacity: 1; pointer-events: all; }
-        #end-screen h1 { font-size: 3em; color: #FFDD00; margin-bottom: 20px; }
-        #end-screen img { width: 150px; margin-bottom: 30px; animation: heartbeat 1.5s infinite; }
-        #end-screen a { display: inline-block; padding: 15px 30px; background: #ff5555; color: white; text-decoration: none; font-weight: bold; font-size: 1.5em; border-radius: 10px; transition: 0.3s; text-transform: uppercase; }
-        #end-screen a:hover { background: #ff2222; transform: scale(1.1); box-shadow: 0 0 20px red; cursor: pointer; }
-        @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        #end-screen h1 { font-size: 4em; color: #FFDD00; margin-bottom: 10px; text-transform: uppercase; font-family: Impact, sans-serif; letter-spacing: 2px; }
+        #end-screen h2 { color: #ff5555; margin-bottom: 40px; font-family: 'Segoe UI', sans-serif; }
+        #end-screen a { padding: 15px 40px; background: #ff5555; color: white; text-decoration: none; font-weight: bold; font-size: 1.5em; border-radius: 5px; transition: 0.2s; cursor: pointer; border: 2px solid #ff2222; }
+        #end-screen a:hover { background: #cc0000; transform: scale(1.05); box-shadow: 0 0 20px rgba(255,0,0,0.5); }
     </style>
 </head>
 <body>
-    <!-- Standardowe UI (Tło, banery itp.) -->
-    <div class="top-banner destructible" data-name="Górny Baner">Spodobały Ci się dodatki? <a href="https://suppi.pl/besiak" target="_blank">Wesprzyj mnie <img src="https://i.imgur.com/syTg29C.png" alt="Dzik"></a></div>
-    <nav class="navbar destructible" data-name="Menu Główne">
+
+    <div class="top-banner destructible" data-name="Baner Górny">Spodobały Ci się dodatki? <a href="https://suppi.pl/besiak" target="_blank">Wesprzyj mnie <img src="https://i.imgur.com/syTg29C.png" alt="Dzik"></a></div>
+    <nav class="navbar destructible" data-name="Menu">
         <a href="/" class="nav-brand"><img src="https://i.imgur.com/OAtRFEw.png" alt="Logo">BADDONZ</a>
         <div class="nav-links"><a href="/dodatki"><i class="fas fa-puzzle-piece"></i> Dodatki</a></div>
     </nav>
@@ -134,21 +167,25 @@
             <div class="addon-box destructible" data-name="AutoX"><div class="addon-header"><div class="addon-icon"><i class="fas fa-skull-crossbones"></i></div><h3 class="addon-title">AutoX</h3></div><p class="addon-desc">Automatyczne atakowanie graczy z konfiguracją.</p></div>
             <div class="addon-box destructible" data-name="Free Gift"><div class="addon-header"><div class="addon-icon"><i class="fas fa-gift"></i></div><h3 class="addon-title">Free Gift</h3></div><p class="addon-desc">Automatyczne odbieranie kalendarza.</p></div>
             
-            <!-- SEJF Z BRONIĄ (ItemInfo) -->
-            <div class="addon-box" id="item-info-box" style="min-height: 165px;">
+            <div class="addon-box" id="item-info-box">
                 <div class="vault-interior">
-                    <!-- Ikona SVG Broni (nie ma prawa zniknąć) -->
-                    <svg id="secret-ak47-svg" viewBox="0 0 100 40" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10,25 L25,25 L30,15 L70,15 L75,20 L95,20 L95,18 L72,13 L35,13 L32,10 L25,10 Z" fill="#555"/>
-                        <path d="M70,18 L95,18 L95,20 L75,20 Z" fill="#333"/>
-                        <path d="M40,15 L45,28 L50,28 L45,15 Z" fill="#8b4513"/> <!-- Magazynek -->
-                        <path d="M10,25 L5,35 L12,35 L18,25 Z" fill="#8b4513"/> <!-- Kolba -->
-                        <path d="M25,25 L25,32 L28,32 L28,25 Z" fill="#8b4513"/> <!-- Uchwyt -->
+                    <svg id="secret-ak47-svg" viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="metal" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#777" /><stop offset="100%" stop-color="#222" /></linearGradient>
+                            <linearGradient id="wood" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#a0522d" /><stop offset="100%" stop-color="#5c3317" /></linearGradient>
+                        </defs>
+                        <rect x="70" y="25" width="110" height="6" fill="url(#metal)" />
+                        <rect x="90" y="20" width="50" height="4" fill="url(#metal)" />
+                        <path d="M 180 25 L 185 20 L 190 25 Z" fill="url(#metal)" /> <path d="M 90 28 L 130 28 L 125 36 L 85 36 Z" fill="url(#wood)" />
+                        <path d="M 40 25 L 90 25 L 90 40 L 40 40 Z" fill="url(#metal)" />
+                        <path d="M 60 40 L 75 75 L 85 75 L 75 40 Z" fill="#111" />
+                        <path d="M 45 40 L 45 60 L 52 60 L 52 40 Z" fill="url(#wood)" />
+                        <path d="M 40 25 L 10 35 L 10 50 L 35 40 Z" fill="url(#wood)" />
                     </svg>
                 </div>
-                <div class="vault-door destructible" data-name="Drzwi Sejfu">
+                <div class="vault-door destructible" data-name="ItemInfo">
                     <div class="addon-header">
-                        <div class="addon-icon" id="lock-icon" title="Otwórz..."><i class="fas fa-circle-info"></i></div>
+                        <div class="addon-icon" id="lock-icon" title="Przeciągnij tu żarówkę!"><i class="fas fa-circle-info"></i></div>
                         <h3 class="addon-title">ItemInfo</h3>
                     </div>
                     <p class="addon-desc">Szczegółowe informacje o itemkach.</p>
@@ -161,7 +198,6 @@
             <div class="addon-box destructible" data-name="Rozwiązywanie Grupy"><div class="addon-header"><div class="addon-icon"><i class="fas fa-users-slash"></i></div><h3 class="addon-title">Rozwiązywanie Grupy</h3></div><p class="addon-desc">Rozwiązywanie grupy z konfiguracją.</p></div>
             <div class="addon-box destructible" data-name="Sleeping Commander"><div class="addon-header"><div class="addon-icon"><i class="fas fa-bed"></i></div><h3 class="addon-title">Sleeping Commander</h3></div><p class="addon-desc">Oddaje dowodzenie.</p></div>
             <div class="addon-box destructible" data-name="Ulepszara"><div class="addon-header"><div class="addon-icon"><i class="fas fa-arrow-trend-up"></i></div><h3 class="addon-title">Ulepszara</h3></div><p class="addon-desc">Automatyczne ulepszanie.</p></div>
-            <div class="addon-box destructible" data-name="Śmieciara"><div class="addon-header"><div class="addon-icon"><i class="fas fa-trash-can"></i></div><h3 class="addon-title">Śmieciara</h3></div><p class="addon-desc">Niszczenie itemów.</p></div>
         </div>
     </div>
 
@@ -179,54 +215,61 @@
 
     <i class="fas fa-key" id="cursor-key"></i>
 
-    <!-- INTERFEJS CS:GO -->
     <div id="fps-ui">
-        <div id="crosshair">
+        <div id="virtual-crosshair">
             <div class="ch-line top"></div>
             <div class="ch-line bottom"></div>
             <div class="ch-line left"></div>
             <div class="ch-line right"></div>
+            <div id="hitmarker"></div>
         </div>
-        <div id="hitmarker"></div>
         
         <div id="killfeed"></div>
         
         <div class="hud-panel" id="hud-health">✚ 100</div>
         <div class="hud-panel" id="hud-ammo">30 / 90</div>
 
-        <!-- Ręce i broń (SVG) -->
         <div id="viewmodel">
             <div id="muzzle-flash"></div>
-            <svg viewBox="0 0 200 150" style="width: 100%; height: 100%; filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.5));">
-                <!-- Reka lewa (trzyma lufę) -->
-                <path d="M 0,150 L 50,90 L 80,95 L 85,110 L 20,150 Z" fill="#dcb285"/>
-                <!-- Lufa i front -->
-                <path d="M 60,85 L 180,50 L 180,45 L 80,75 Z" fill="#444"/>
-                <path d="M 70,85 L 120,70 L 115,85 L 65,100 Z" fill="#8b4513"/> <!-- Drewno przód -->
-                <path d="M 170,45 L 175,40 L 180,50 Z" fill="#222"/> <!-- Muszka -->
-                <!-- Korpus i rączka -->
-                <path d="M 20,150 L 100,100 L 120,110 L 80,150 Z" fill="#333"/>
-                <!-- Magazynek -->
-                <path d="M 80,105 L 100,140 L 120,130 L 95,100 Z" fill="#222"/>
-                <!-- Reka prawa (na spuscie) -->
-                <path d="M 120,150 L 90,115 L 105,110 L 140,150 Z" fill="#dcb285"/>
+            <svg viewBox="0 0 400 300" style="width: 100%; height: 100%; filter: drop-shadow(5px 10px 15px rgba(0,0,0,0.6));">
+                <defs>
+                    <linearGradient id="gunMetal" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#555"/><stop offset="50%" stop-color="#333"/><stop offset="100%" stop-color="#111"/></linearGradient>
+                    <linearGradient id="gunWood" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="#8B4513"/><stop offset="100%" stop-color="#3e1d05"/></linearGradient>
+                    <linearGradient id="glove" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1f1f1f"/><stop offset="100%" stop-color="#0a0a0a"/></linearGradient>
+                </defs>
+                <path d="M 0 300 L 120 180 L 160 190 L 150 210 L 40 300 Z" fill="url(#glove)" stroke="#ff2222" stroke-width="2"/>
+                <circle cx="140" cy="195" r="8" fill="#ff2222"/> <rect x="130" y="160" width="250" height="15" fill="url(#gunMetal)" rx="2"/>
+                <path d="M 370 155 L 380 150 L 385 160 L 380 165 Z" fill="#111"/> <rect x="150" y="150" width="100" height="10" fill="url(#gunMetal)"/> <path d="M 160 155 L 240 145 L 250 175 L 150 175 Z" fill="url(#gunWood)"/>
+                
+                <path d="M 30 300 L 170 190 L 210 200 L 120 300 Z" fill="url(#gunMetal)"/>
+                
+                <path d="M 160 200 Q 180 260 160 280 L 180 290 Q 210 250 190 195 Z" fill="#151515" stroke="#333" stroke-width="2"/>
+                
+                <path d="M 240 300 L 180 230 L 205 220 L 280 300 Z" fill="url(#glove)" stroke="#ff2222" stroke-width="2"/>
+                <circle cx="195" cy="225" r="8" fill="#ff2222"/>
             </svg>
         </div>
     </div>
 
-    <!-- EKRAN KOŃCOWY -->
     <div id="end-screen">
-        <img src="https://i.imgur.com/syTg29C.png" alt="Dzik">
-        <h1>BADDONZ HAS BEEN PLANTED</h1>
-        <h2>Terroryści wygrywają!</h2>
-        <a onclick="location.reload()">Zagraj ponownie</a>
+        <h1>BADDONZ ZNISZCZONE</h1>
+        <h2>Terroryści wygrywają.</h2>
+        <a onclick="document.exitPointerLock(); location.reload();">Rozpocznij nową rundę</a>
     </div>
 
-    <!-- SKRYPT LOGIKI CS:GO -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            let isDraggingLightbulb = false, bulbDetached = false, hasKey = false, fpsMode = false;
+            // === ZMIENNE STANU ===
+            let isDraggingLightbulb = false;
+            let bulbDetached = false;
+            let hasKey = false;
+            let fpsMode = false;
             let boxesDestroyed = 0;
+            
+            // Prawdziwe celowanie - pozycje
+            let crosshairX = window.innerWidth / 2;
+            let crosshairY = window.innerHeight / 2;
+            
             const destructibles = document.querySelectorAll('.destructible');
             const totalBoxes = destructibles.length;
 
@@ -238,274 +281,248 @@
             const secretWeaponSvg = document.getElementById('secret-ak47-svg');
             
             const fpsUI = document.getElementById('fps-ui');
+            const virtualCrosshair = document.getElementById('virtual-crosshair');
             const hitmarker = document.getElementById('hitmarker');
             const killfeed = document.getElementById('killfeed');
             
-            // --- AUDIO ENGINE (Web Audio API) ---
+            // --- AUDIO (Bez zmian, było dobre) ---
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-            // Generator strzału z AK-47 (Szum + Filtr)
             function playAK47Sound() {
                 if(audioCtx.state === 'suspended') audioCtx.resume();
-                
-                // Szum (White Noise)
-                const bufferSize = audioCtx.sampleRate * 0.3; // 0.3 sekundy
+                const bufferSize = audioCtx.sampleRate * 0.2;
                 const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
                 const data = buffer.getChannelData(0);
                 for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-                
-                const noise = audioCtx.createBufferSource();
-                noise.buffer = buffer;
-                
-                // Filtr dolnoprzepustowy (tłumi pisk, zostawia "mięso")
-                const filter = audioCtx.createBiquadFilter();
-                filter.type = 'lowpass';
-                filter.frequency.value = 1500;
-                
-                // Głośność i zanikanie
-                const gainNode = audioCtx.createGain();
-                gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-                
-                noise.connect(filter);
-                filter.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                
-                noise.start();
-                noise.stop(audioCtx.currentTime + 0.2);
+                const noise = audioCtx.createBufferSource(); noise.buffer = buffer;
+                const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 1200;
+                const gainNode = audioCtx.createGain(); gainNode.gain.setValueAtTime(1, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                noise.connect(filter); filter.connect(gainNode); gainNode.connect(audioCtx.destination);
+                noise.start(); noise.stop(audioCtx.currentTime + 0.15);
             }
-
-            // Dźwięk Hitmarkera (Charakterystyczny "Dink")
             function playHitSound() {
-                const osc = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(2500, audioCtx.currentTime); // Wysoki dźwięk
-                osc.frequency.exponentialRampToValueAtTime(2000, audioCtx.currentTime + 0.1);
-                gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                osc.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.1);
+                const osc = audioCtx.createOscillator(); const gainNode = audioCtx.createGain();
+                osc.type = 'sine'; osc.frequency.setValueAtTime(2500, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(1500, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.4, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.connect(gainNode); gainNode.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.1);
             }
-
-            // Dźwięk rozbijania szkła/plastiku
             function playShatterSound() {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.2);
-                gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.2);
+                const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+                osc.type = 'square'; osc.frequency.setValueAtTime(200, audioCtx.currentTime); osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.5, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.2);
             }
 
-            // --- MECHANIKA ZAGADKI ---
+            // --- ZAGADKA Z KLUCZEM ---
             let startX, startY;
             bulb.addEventListener('mousedown', (e) => {
                 if(bulbDetached) return;
-                isDraggingLightbulb = true;
-                startX = e.clientX; startY = e.clientY;
+                isDraggingLightbulb = true; startX = e.clientX; startY = e.clientY;
             });
-
             document.addEventListener('mousemove', (e) => {
-                if(isDraggingLightbulb) {
-                    bulb.style.transform = `translate(${e.clientX - startX}px, ${e.clientY - startY}px)`;
-                    if(Math.abs(e.clientX - startX) > 50 || Math.abs(e.clientY - startY) > 50) {
-                        bulbDetached = true; isDraggingLightbulb = false;
-                        bulb.style.position = 'fixed';
-                        bulb.style.left = e.clientX + 'px'; bulb.style.top = e.clientY + 'px';
-                        bulb.style.pointerEvents = 'none';
-                        setTimeout(() => { bulb.style.transition = 'top 1s ease-in'; bulb.style.top = '120vh'; }, 50);
-                        hiddenKey.classList.add('revealed');
+                // Gdy nie jesteśmy w trybie FPS, zachowujemy się normalnie
+                if(!fpsMode) {
+                    if(isDraggingLightbulb) {
+                        bulb.style.transform = `translate(${e.clientX - startX}px, ${e.clientY - startY}px)`;
+                        if(Math.abs(e.clientX - startX) > 50 || Math.abs(e.clientY - startY) > 50) {
+                            bulbDetached = true; isDraggingLightbulb = false;
+                            bulb.style.position = 'fixed'; bulb.style.left = e.clientX + 'px'; bulb.style.top = e.clientY + 'px'; bulb.style.pointerEvents = 'none';
+                            setTimeout(() => { bulb.style.transition = 'top 1s ease-in'; bulb.style.top = '120vh'; }, 50);
+                            hiddenKey.classList.add('revealed');
+                        }
                     }
-                }
-                if(hasKey && !fpsMode) {
-                    cursorKey.style.left = e.clientX + 'px'; cursorKey.style.top = e.clientY + 'px';
-                }
-                // Śledzenie kursora przez całe ciało
-                if(fpsMode) {
-                    const x = (e.clientX / window.innerWidth - 0.5) * 20;
-                    const y = (e.clientY / window.innerHeight - 0.5) * 20;
-                    fpsUI.style.transform = `translate(${-x}px, ${-y}px)`;
+                    if(hasKey) { cursorKey.style.left = e.clientX + 'px'; cursorKey.style.top = e.clientY + 'px'; }
                 }
             });
-
             document.addEventListener('mouseup', () => {
-                if(isDraggingLightbulb && !bulbDetached) {
-                    isDraggingLightbulb = false; bulb.style.transform = 'translate(0,0)';
-                }
+                if(isDraggingLightbulb && !bulbDetached) { isDraggingLightbulb = false; bulb.style.transform = 'translate(0,0)'; }
             });
-
-            hiddenKey.addEventListener('click', () => {
-                hasKey = true; hiddenKey.style.display = 'none'; cursorKey.style.display = 'block';
-            });
-
+            hiddenKey.addEventListener('click', () => { hasKey = true; hiddenKey.style.display = 'none'; cursorKey.style.display = 'block'; });
             lockIcon.addEventListener('click', (e) => {
                 if(hasKey) {
-                    e.stopPropagation();
-                    cursorKey.style.display = 'none'; hasKey = false;
+                    e.stopPropagation(); cursorKey.style.display = 'none'; hasKey = false;
                     itemInfoBox.classList.add('vault-unlocked');
-                    // Pisk zamka
-                    const osc = audioCtx.createOscillator();
-                    osc.connect(audioCtx.destination);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+                    const osc = audioCtx.createOscillator(); osc.connect(audioCtx.destination); osc.start(); osc.stop(audioCtx.currentTime + 0.1);
                 }
             });
 
+            // --- AKTYWACJA FPS (POINTER LOCK) ---
             secretWeaponSvg.addEventListener('click', (e) => {
                 e.stopPropagation();
-                fpsMode = true;
-                document.body.classList.add('fps-active');
-                fpsUI.style.display = 'block';
-                itemInfoBox.style.display = 'none'; // usuwamy sejf
+                // Prośba do przeglądarki o zablokowanie kursora myszy
+                document.body.requestPointerLock = document.body.requestPointerLock || document.body.mozRequestPointerLock;
+                document.body.requestPointerLock();
             });
 
-            // --- MECHANIKA STRZELANIA CS:GO ---
+            // Reakcja na zmianę statusu blokady myszki
+            document.addEventListener('pointerlockchange', () => {
+                if (document.pointerLockElement === document.body) {
+                    // Myszka zablokowana - Włączamy tryb CS:GO
+                    fpsMode = true;
+                    document.body.classList.add('fps-active');
+                    fpsUI.style.display = 'block';
+                    itemInfoBox.style.display = 'none';
+                    // Reset pozycji celownika na środek ekranu
+                    crosshairX = window.innerWidth / 2;
+                    crosshairY = window.innerHeight / 2;
+                    updateCrosshairPos();
+                } else {
+                    // Ktoś wcisnął ESC - pauza gry
+                    fpsMode = false;
+                    document.body.classList.remove('fps-active');
+                    fpsUI.style.display = 'none';
+                }
+            });
+
+            // --- FIZYKA CELOWANIA (SUROWY INPUT) ---
+            document.addEventListener('mousemove', (e) => {
+                if(fpsMode) {
+                    // Czułość myszki (Sensitivity)
+                    const sensitivity = 0.8;
+                    
+                    crosshairX += e.movementX * sensitivity;
+                    crosshairY += e.movementY * sensitivity;
+
+                    // Ogranicz celownik do krawędzi ekranu
+                    crosshairX = Math.max(0, Math.min(window.innerWidth, crosshairX));
+                    crosshairY = Math.max(0, Math.min(window.innerHeight, crosshairY));
+
+                    updateCrosshairPos();
+
+                    // Viewmodel Sway (Broń "buja się" za celownikiem)
+                    const swayX = (crosshairX / window.innerWidth - 0.5) * 40;
+                    const swayY = (crosshairY / window.innerHeight - 0.5) * 40;
+                    document.getElementById('viewmodel').style.right = (10 - swayX/10) + '%';
+                }
+            });
+
+            function updateCrosshairPos() {
+                virtualCrosshair.style.left = crosshairX + 'px';
+                virtualCrosshair.style.top = crosshairY + 'px';
+            }
+
+            // --- MECHANIKA STRZELANIA ---
             let isShooting = false;
             let shootInterval;
+            let recoilKick = 0;
             
-            function fireWeapon(clientX, clientY) {
-                // Efekty wizualne odrzutu
-                fpsUI.classList.add('shooting');
+            function fireWeapon() {
+                if(!fpsMode) return;
+                
+                // ODRZUT (RECOIL) - Fizycznie rzuca celownikiem do góry
+                recoilKick = Math.min(recoilKick + 1, 10);
+                crosshairY -= (15 + Math.random() * 5); // W górę
+                crosshairX += (Math.random() - 0.5) * (recoilKick * 3); // Rozrzut na boki
+                
+                // clamp
+                crosshairX = Math.max(0, Math.min(window.innerWidth, crosshairX));
+                crosshairY = Math.max(0, Math.min(window.innerHeight, crosshairY));
+                updateCrosshairPos();
+
+                // Efekty wizualne
+                virtualCrosshair.classList.add('shooting');
                 document.body.classList.add('shaking');
-                document.body.style.setProperty('--shake-x', (Math.random() - 0.5) * 10);
-                document.body.style.setProperty('--shake-y', (Math.random() - 0.5) * 10);
+                document.body.style.setProperty('--shake-x', (Math.random() - 0.5) * 15);
+                document.body.style.setProperty('--shake-y', (Math.random() - 0.5) * 15);
                 
                 setTimeout(() => {
-                    fpsUI.classList.remove('shooting');
+                    virtualCrosshair.classList.remove('shooting');
                     document.body.classList.remove('shaking');
                 }, 80);
 
                 playAK47Sound();
 
-                // Dodawanie dziury po kuli
+                // Dziura po kuli, tam gdzie patrzy wirtualny celownik
                 const hole = document.createElement('div');
                 hole.className = 'bullet-hole';
-                // Rozrzut (Spread)
-                const spreadX = (Math.random() - 0.5) * 20;
-                const spreadY = (Math.random() - 0.5) * 20;
-                hole.style.left = (clientX + spreadX) + 'px';
-                hole.style.top = (clientY + spreadY) + 'px';
+                hole.style.left = crosshairX + 'px';
+                hole.style.top = crosshairY + 'px';
                 document.body.appendChild(hole);
+                setTimeout(() => hole.remove(), 4000);
 
-                // Usuwanie dziur po czasie by nie lagować
-                setTimeout(() => hole.remove(), 5000);
-
-                // --- DETEKCJA TRAFIEŃ ---
-                fpsUI.style.pointerEvents = 'none';
-                const target = document.elementFromPoint(clientX + spreadX, clientY + spreadY);
-                fpsUI.style.pointerEvents = '';
+                // --- RAYCASTING (SPRAWDZANIE TRAFIENIA) ---
+                // elementFromPoint działa idealnie z absolutnymi koordynatami viewportu
+                const target = document.elementFromPoint(crosshairX, crosshairY);
 
                 if(target) {
                     const destructible = target.closest('.destructible');
                     if(destructible && !destructible.classList.contains('destroyed')) {
-                        destroyElement(destructible, clientX, clientY);
+                        destroyElement(destructible, crosshairX, crosshairY);
                     }
                 }
             }
 
-            // Obsługa Full-Auto
             document.addEventListener('mousedown', (e) => {
-                if(!fpsMode || e.target.closest('#end-screen')) return;
+                if(!fpsMode || e.button !== 0) return; // Tylko LPM
                 if(audioCtx.state === 'suspended') audioCtx.resume();
                 
                 isShooting = true;
-                fireWeapon(e.clientX, e.clientY);
+                fireWeapon();
                 shootInterval = setInterval(() => {
-                    if(isShooting) fireWeapon(e.clientX, e.clientY);
-                }, 100); // 600 RPM (jak prawdziwy AK-47)
+                    if(isShooting) fireWeapon();
+                }, 100); 
             });
 
             document.addEventListener('mouseup', () => {
                 isShooting = false;
                 clearInterval(shootInterval);
+                recoilKick = 0; // reset recoilu po puszczeniu spustu
             });
 
-            // --- SYSTEM CZĄSTECZEK I ZNISZCZEŃ ---
+            // --- ZNISZCZENIA (Cząsteczki) ---
             function destroyElement(el, x, y) {
                 el.classList.add('destroyed');
                 boxesDestroyed++;
                 
                 playHitSound();
-                setTimeout(playShatterSound, 50);
+                setTimeout(playShatterSound, 30);
 
-                // Pokazanie Hitmarkera
                 hitmarker.classList.add('active');
-                setTimeout(() => hitmarker.classList.remove('active'), 100);
+                setTimeout(() => hitmarker.classList.remove('active'), 150);
 
-                // Dodanie do Killfeedu
                 const name = el.getAttribute('data-name') || 'Kafelek';
                 addHitToKillfeed(name);
 
-                // Eksplozja cząsteczek (Odłamki)
                 const rect = el.getBoundingClientRect();
                 const colors = ['#161b22', '#30363d', '#58a6ff', '#21262d'];
                 
-                for(let i = 0; i < 30; i++) {
+                for(let i = 0; i < 25; i++) {
                     const p = document.createElement('div');
                     p.className = 'particle';
-                    p.style.width = (Math.random() * 15 + 5) + 'px';
-                    p.style.height = p.style.width;
+                    p.style.width = (Math.random() * 15 + 5) + 'px'; p.style.height = p.style.width;
                     p.style.background = colors[Math.floor(Math.random() * colors.length)];
-                    
-                    // Początkowa pozycja (środek zniszczonego elementu)
-                    p.style.left = (rect.left + rect.width/2) + 'px';
-                    p.style.top = (rect.top + rect.height/2) + 'px';
+                    p.style.left = (rect.left + rect.width/2) + 'px'; p.style.top = (rect.top + rect.height/2) + 'px';
                     document.body.appendChild(p);
 
-                    // Animacja fizyczna (wylatuje w losowym kierunku i spada)
                     const angle = Math.random() * Math.PI * 2;
                     const velocity = Math.random() * 150 + 50;
                     const tx = Math.cos(angle) * velocity;
-                    const ty = Math.sin(angle) * velocity - 100; // Podbicie do góry
+                    const ty = Math.sin(angle) * velocity - 100;
 
                     p.animate([
                         { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
                         { transform: `translate(${tx}px, ${ty + 300}px) rotate(${Math.random()*720}deg)`, opacity: 0 }
-                    ], {
-                        duration: 800 + Math.random() * 500,
-                        easing: 'cubic-bezier(.25,.8,.25,1)',
-                        fill: 'forwards'
-                    });
+                    ], { duration: 800 + Math.random() * 500, easing: 'cubic-bezier(.25,.8,.25,1)', fill: 'forwards' });
 
                     setTimeout(() => p.remove(), 1500);
                 }
 
-                // Sprawdzanie wygranej
                 if(boxesDestroyed >= totalBoxes) {
-                    setTimeout(triggerEndScreen, 1500);
+                    setTimeout(triggerEndScreen, 1000);
                 }
             }
 
             function addHitToKillfeed(victimName) {
                 const entry = document.createElement('div');
                 entry.className = 'kill-entry';
-                // Ikona AK wygenerowana jako base64 svg by było najszybciej i najbezpieczniej
+                // Ikona nowej broni w killfeedzie
                 const akIcon = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40"><path d="M10,25 L25,25 L30,15 L70,15 L75,20 L95,20 L95,18 L72,13 L35,13 L32,10 L25,10 Z" fill="white"/><path d="M40,15 L45,28 L50,28 L45,15 Z" fill="white"/></svg>';
                 
-                entry.innerHTML = `
-                    <span class="killer">Gracz</span>
-                    <img src='${akIcon}' class="kill-weapon">
-                    <span class="victim">${victimName}</span>
-                `;
+                entry.innerHTML = `<span class="killer">Gracz</span> <img src='${akIcon}' style="width:40px; filter:invert(1);"> <span class="victim">${victimName}</span>`;
                 killfeed.appendChild(entry);
-                
-                // Trzymaj maksymalnie 4 logi w killfeedzie
-                if(killfeed.children.length > 4) {
-                    killfeed.removeChild(killfeed.firstChild);
-                }
+                if(killfeed.children.length > 5) killfeed.removeChild(killfeed.firstChild);
             }
 
             function triggerEndScreen() {
-                fpsMode = false;
-                document.body.classList.remove('fps-active');
-                fpsUI.style.display = 'none';
                 document.getElementById('end-screen').classList.add('visible');
             }
         });
