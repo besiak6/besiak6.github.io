@@ -1,98 +1,364 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baddonz - Dodatki</title>
-    <link rel="icon" type="image/png" href="https://i.imgur.com/OAtRFEw.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        body { background: linear-gradient(135deg, #0d1117, #1b0033); color: #c9d1d9; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
-        
-        .top-banner { position: fixed; top: 0; left: 0; width: 100%; background-color: #FFDD00; color: #000; padding: 5px 0; font-weight: bold; font-size: 0.9em; z-index: 1001; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; gap: 5px; }
-        .top-banner a { color: #000; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px; }
-        .top-banner img { height: 18px; width: auto; vertical-align: middle; }
-        
-        .footer-banner { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #161b22; color: #ff5555; padding: 10px 0; font-size: 0.9em; z-index: 1001; border-top: 1px solid #30363d; font-weight: 500; text-align: center; }
-        .footer-banner a { color: #58a6ff; text-decoration: none; font-weight: bold; }
-        
-        .navbar { position: fixed; top: 28px; left: 0; width: 100%; background: rgba(13, 17, 23, 0.95); border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; box-sizing: border-box; z-index: 1000; }
-        .nav-brand { display: flex; align-items: center; gap: 10px; font-size: 1.5em; font-weight: bold; color: #58a6ff; text-decoration: none; transition: 0.2s; }
-        .nav-brand:hover { filter: brightness(1.2); }
-        .nav-brand img { width: 35px; height: 35px; }
-        
-        .nav-links { display: flex; gap: 15px; }
-        .nav-links a { color: #c9d1d9; text-decoration: none; font-size: 1.1em; font-weight: 600; display: flex; align-items: center; gap: 8px; background: #30363d; padding: 8px 15px; border-radius: 6px; border: 1px solid #58a6ff; transition: 0.2s; box-shadow: 0 0 10px rgba(88,166,255,0.2); }
-        
-        .discord-icon-fixed { position: fixed; bottom: 55px; left: 20px; z-index: 1000; transition: transform 0.2s; color: #58a6ff; font-size: 40px; text-decoration: none; }
-        .discord-icon-fixed:hover { transform: scale(1.1); }
-        
-        .idea-panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(22, 27, 34, 0.95); border: 1px solid #30363d; border-radius: 12px; padding: 20px; width: 220px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 999; }
-        .idea-panel i.fa-lightbulb { font-size: 2.5em; color: #FFDD00; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255, 221, 0, 0.5); }
-        .idea-panel h3 { margin: 0 0 10px 0; font-size: 1.1em; color: #fff; border-bottom: 1px solid #30363d; padding-bottom: 8px; }
-        .idea-panel p { font-size: 0.85em; color: #c9d1d9; margin: 0 0 15px 0; line-height: 1.4; }
-        .idea-panel .dc-btn { display: inline-block; width: 100%; padding: 10px 0; background: #5865F2; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 0.95em; transition: 0.2s; }
-        .idea-panel .dc-btn:hover { background: #4752C4; }
-        
-        .content { padding: 120px 20px 80px 20px; z-index: 10; width: 100%; max-width: 1200px; text-align: center; }
-        .content h2 { color: #58a6ff; font-size: 2.5em; margin-bottom: 40px; text-shadow: 0 0 10px rgba(88, 166, 255, 0.3); }
-        
-        .addons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; text-align: left; }
-        .addon-box { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s; position: relative; }
-        .addon-box:hover { transform: translateY(-5px); border-color: #58a6ff; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
-        
-        .addon-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-        .addon-icon { font-size: 1.8em; color: #58a6ff; width: 40px; text-align: center; }
-        .addon-title { margin: 0; color: #fff; font-size: 1.3em; }
-        .addon-desc { color: #8b949e; font-size: 0.95em; line-height: 1.5; margin-bottom: 15px; flex-grow: 1; }
-        .addon-tags { display: flex; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; min-height: 24px; }
-        .tag { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; font-size: 0.75em; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <div class="top-banner">Spodobały Ci się dodatki? <a href="https://suppi.pl/besiak" target="_blank">Wesprzyj mnie <img src="https://i.imgur.com/syTg29C.png" alt="Dzik"></a></div>
-    
-    <nav class="navbar">
-        <a href="/" class="nav-brand"><img src="https://i.imgur.com/OAtRFEw.png" alt="Baddonz Logo">BADDONZ</a>
-        <div class="nav-links"><a href="/dodatki"><i class="fas fa-puzzle-piece"></i> Dodatki</a></div>
-    </nav>
+<!-- === EASTER EGG: AK-47 SAFECRACKER & DESTRUCTION === -->
+<style>
+  /* Ukryty Klucz pod Żarówką */
+  #hidden-key {
+    position: absolute;
+    display: none;
+    font-size: 22px;
+    color: #ffd700;
+    cursor: pointer;
+    z-index: 1;
+    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
+    animation: keyGlow 1.5s infinite alternate;
+  }
+  @keyframes keyGlow {
+    from { transform: scale(1); filter: drop-shadow(0 0 5px #ffd700); }
+    to { transform: scale(1.15); filter: drop-shadow(0 0 15px #ffaa00); }
+  }
 
-    <div class="content">
-        <h2>Lista Dodatków</h2>
-        <div class="addons-grid" id="addons-container">
-            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-rocket"></i></div><h3 class="addon-title">Auto Przywo</h3></div><div class="addon-tags"></div><p class="addon-desc">Automatyczna akceptacja przywołań.</p></div>
-            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-skull-crossbones"></i></div><h3 class="addon-title">AutoX</h3></div><div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div><p class="addon-desc">Automatyczne atakowanie graczy z konfiguracją.</p></div>
-            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-gift"></i></div><h3 class="addon-title">Free Gift</h3></div><div class="addon-tags"></div><p class="addon-desc">Automatyczne odbieranie kalendarza i aktualności w grze.</p></div>
-            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-circle-info"></i></div><h3 class="addon-title">ItemInfo</h3></div><div class="addon-tags"></div><p class="addon-desc">Szczegółowe informacje o itemkach.</p></div>
-            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-search"></i></div><h3 class="addon-title">Item Searcher</h3></div><div class="addon-tags"></div><p class="addon-desc">Wyszukuje przedmioty w ekwipunku i depozycie.</p></div>
-            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-gamepad"></i></div><h3 class="addon-title">Minigierki</h3></div><div class="addon-tags"></div><p class="addon-desc">Wizualne ułatwienie rozwiązania minigierek.</p></div>
-            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-comment"></i></div><h3 class="addon-title">MiniChat</h3></div><div class="addon-tags"></div><p class="addon-desc">Umożliwia dostosowanie wielkości chatu.</p></div>
-            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-users-slash"></i></div><h3 class="addon-title">Rozwiązywanie Grupy</h3></div><div class="addon-tags"></div><p class="addon-desc">Rozwiązywanie grupy z konfiguracją.</p></div>
-            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-bed"></i></div><h3 class="addon-title">Sleeping Commander</h3></div><div class="addon-tags"></div><p class="addon-desc">Oddaje dowodzenie.</p></div>
-            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-user-plus"></i></div><h3 class="addon-title">Szybka Grupa</h3></div><div class="addon-tags"></div><p class="addon-desc">Zapraszanie do grupy z konfiguracją.</p></div>
-            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-arrow-trend-up"></i></div><h3 class="addon-title">Ulepszara</h3></div><div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div><p class="addon-desc">Automatyczne ulepszanie wybranego itemu wraz z konfiguracją.</p></div>
-            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-trash-can"></i></div><h3 class="addon-title">Śmieciara</h3></div><div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div><p class="addon-desc">Niszczenie itemów z poziomu panelu z konfiguracją.</p></div>
-            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-crosshairs"></i></div><h3 class="addon-title">Zasięg Walki</h3></div><div class="addon-tags"></div><p class="addon-desc">Podświetla zasięg walki na ekranie.</p></div>
-            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-map-marker-alt"></i></div><h3 class="addon-title">Znacznik Teleportów</h3></div><div class="addon-tags"></div><p class="addon-desc">Podpisuje teleporty, możliwość edytowania podpisów.</p></div>
-            <div class="addon-box" style="border: 2px solid #ffeb3b;">
-                <div class="addon-header">
-                    <div class="addon-icon"><i class="fas fa-comments"></i></div>
-                    <h3 class="addon-title" style="color: #ffeb3b;">Better Message [PREMIUM]</h3>
-                </div>
-                <div class="addon-tags"></div>
-                <p class="addon-desc">Możliwość dostosowywania wyglądu powiadomień</p>
-            </div>
-        </div>
-    </div>
+  /* Klucz przyklejony do kursora */
+  #cursor-key {
+    position: fixed;
+    pointer-events: none;
+    font-size: 28px;
+    color: #ffd700;
+    z-index: 99999;
+    display: none;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    filter: drop-shadow(0 0 10px rgba(255,215,0,0.9));
+  }
 
-    <div class="idea-panel">
-        <i class="fa-solid fa-lightbulb"></i>
-        <h3>Masz pomysł na dodatek?</h3>
-        <p>Brakuje Ci jakiejś funkcji w grze? A może chcesz zupełnie nowy dodatek? Dołącz do naszego Discorda i opisz swój pomysł!</p>
-        <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="dc-btn"><i class="fab fa-discord"></i> Napisz propozycję</a>
-    </div>
+  /* Stylizacja Kafelka Item Info jako Sejf */
+  .safe-container {
+    perspective: 1000px;
+    position: relative;
+  }
+  .safe-door {
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: left center;
+    transform-style: preserve-3d;
+  }
+  .safe-door.open {
+    transform: rotateY(-115deg);
+  }
+  .safe-interior {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #080a0f;
+    border: 2px dashed #ffaa00;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 0;
+    box-sizing: border-box;
+  }
+  #ak47-in-safe {
+    width: 80%;
+    cursor: pointer;
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
+    transition: transform 0.2s;
+  }
+  #ak47-in-safe:hover {
+    transform: scale(1.1) rotate(-3deg);
+  }
 
-    <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="discord-icon-fixed"><i class="fab fa-discord"></i></a>
-    <div class="footer-banner">Znalazłeś błąd lub masz jakiś problem? Dołącz do <a href="https://discord.gg/rJeNVHr49f" target="_blank">discorda</a>, lub napisz do mnie na dc: besiak6</div>
-</body>
-</html>
+  /* Broń CS2 (Viewmodel) na dole ekranu */
+  #cs2-viewmodel {
+    position: fixed;
+    bottom: -30px;
+    right: 15%;
+    width: 420px;
+    pointer-events: none;
+    z-index: 100000;
+    display: none;
+    transform-origin: bottom right;
+    transition: transform 0.05s ease-out;
+  }
+  #cs2-viewmodel img {
+    width: 100%;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
+  }
+  #muzzle-flash {
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    width: 90px;
+    height: 90px;
+    background: radial-gradient(circle, #ffffff 10%, #ffaa00 40%, transparent 70%);
+    border-radius: 50%;
+    display: none;
+    box-shadow: 0 0 40px #ff5500;
+  }
+
+  /* Dziury po kulach i efekty zniszczeń */
+  .bullet-hole {
+    position: fixed;
+    width: 12px;
+    height: 12px;
+    background: #111;
+    border: 2px solid #333;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99998;
+    box-shadow: inset 0 0 4px #000, 0 0 6px rgba(0,0,0,0.8);
+    transform: translate(-50%, -50%);
+  }
+  .bullet-hole::after {
+    content: '';
+    position: absolute;
+    top: -4px; left: -4px; right: -4px; bottom: -4px;
+    border: 1px dashed rgba(255,255,255,0.3);
+    border-radius: 50%;
+  }
+
+  /* Klasy destrukcji elementów */
+  .damaged-light {
+    transform: rotate(3deg) scale(0.98);
+    filter: contrast(1.2);
+  }
+  .damaged-heavy {
+    transform: rotate(-8deg) translateY(15px) !important;
+    opacity: 0.8;
+  }
+  .destroyed-element {
+    transition: transform 0.8s ease-in, opacity 0.8s !important;
+    transform: translateY(1000px) rotate(45deg) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+</style>
+
+<!-- Pływający Klucz przy kursorze -->
+<div id="cursor-key"><i class="fas fa-key"></i></div>
+
+<!-- Widok broni CS2 -->
+<div id="cs2-viewmodel">
+  <div id="muzzle-flash"></div>
+  <img src="https://i.imgur.com/8Qp2Z5E.png" alt="AK47 CS2 Viewmodel">
+</div>
+
+<script>
+(function() {
+  let keyPicked = false;
+  let fpsMode = false;
+  const cursorKey = document.getElementById('cursor-key');
+  const viewmodel = document.getElementById('cs2-viewmodel');
+  const muzzleFlash = document.getElementById('muzzle-flash');
+
+  // --- Web Audio API (Syntetyzator dźwięków CS2 bez plików MP3) ---
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  function playSound(type) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const now = audioCtx.currentTime;
+
+    if (type === 'unlock') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(300, now);
+      osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+      osc.connect(gain); gain.connect(audioCtx.destination);
+      osc.start(now); osc.stop(now + 0.2);
+    } 
+    else if (type === 'ak47') {
+      // Dźwięk strzału AK-47 (Szum + Głębokie uderzenie)
+      const bufferSize = audioCtx.sampleRate * 0.25;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(3000, now);
+      filter.frequency.exponentialRampToValueAtTime(200, now + 0.2);
+
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.8, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+      noise.start(now);
+
+      // Basowy impuls strzału
+      const sub = audioCtx.createOscillator();
+      const subGain = audioCtx.createGain();
+      sub.type = 'sawtooth';
+      sub.frequency.setValueAtTime(160, now);
+      sub.frequency.exponentialRampToValueAtTime(30, now + 0.2);
+      subGain.gain.setValueAtTime(0.7, now);
+      subGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+      sub.connect(subGain); subGain.connect(audioCtx.destination);
+      sub.start(now); sub.stop(now + 0.2);
+    }
+  }
+
+  // --- KROK 1 & 2: Żarówka, Przesuwanie i Odkrycie Klucza ---
+  window.addEventListener('DOMContentLoaded', () => {
+    const rightPanel = document.querySelector('.right-panel');
+    const panelTitle = rightPanel ? rightPanel.querySelector('h3') : null;
+
+    if (panelTitle) {
+      panelTitle.style.position = 'relative';
+      
+      // Tworzenie ukrytego klucza pod nagłówkiem/żarówką
+      const hiddenKey = document.createElement('i');
+      hiddenKey.id = 'hidden-key';
+      hiddenKey.className = 'fas fa-key';
+      hiddenKey.style.left = '20px';
+      hiddenKey.style.top = '5px';
+      panelTitle.appendChild(hiddenKey);
+
+      // Dodanie ikonki żarówki
+      const bulb = document.createElement('i');
+      bulb.className = 'fas fa-lightbulb';
+      bulb.style.cssText = 'cursor: grab; margin-right: 8px; color: #f1e05a; position: relative; z-index: 2; transition: transform 0.1s;';
+      panelTitle.insertBefore(bulb, panelTitle.firstChild);
+
+      // Przesuwanie żarówki
+      let isDragging = false;
+      let startX, startY;
+
+      bulb.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        startX = e.clientX - bulb.offsetLeft;
+        startY = e.clientY - bulb.offsetTop;
+        bulb.style.cursor = 'grabbing';
+        hiddenKey.style.display = 'block'; // Odkryj klucz pod spodem
+      });
+
+      document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+          bulb.style.position = 'absolute';
+          bulb.style.left = (e.clientX - rightPanel.getBoundingClientRect().left - 15) + 'px';
+          bulb.style.top = (e.clientY - rightPanel.getBoundingClientRect().top - 15) + 'px';
+        }
+
+        // Podążanie klucza za kursorem po podniesieniu
+        if (keyPicked && !fpsMode) {
+          cursorKey.style.left = e.clientX + 'px';
+          cursorKey.style.top = e.clientY + 'px';
+        }
+
+        // Poruszanie bronią w trybie FPS (Sway / Ruch myszką)
+        if (fpsMode) {
+          const moveX = (e.clientX - window.innerWidth / 2) * 0.03;
+          const moveY = (e.clientY - window.innerHeight / 2) * 0.03;
+          viewmodel.style.transform = `translate(${moveX}px, ${moveY}px)`;
+        }
+      });
+
+      document.addEventListener('mouseup', () => {
+        isDragging = false;
+        if (bulb) bulb.style.cursor = 'grab';
+      });
+
+      // Podniesienie klucza
+      hiddenKey.addEventListener('click', (e) => {
+        e.stopPropagation();
+        keyPicked = true;
+        hiddenKey.style.display = 'none';
+        cursorKey.style.display = 'block';
+        playSound('unlock');
+      });
+    }
+
+    // --- KROK 3 & 4: Zamek "i" w Item Info i Sejf z AK-47 ---
+    // Szukamy kafelka z Item Info (lub dowolnego pierwszego kafelka z dodatkiem)
+    const cards = document.querySelectorAll('.right-panel, .content, div[class*="card"]');
+    let itemInfoCard = Array.from(document.querySelectorAll('div')).find(el => el.textContent.includes('Item Info')) || cards[0];
+
+    if (itemInfoCard) {
+      itemInfoCard.classList.add('safe-container');
+
+      // Tworzenie wnętrza sejfu
+      const interior = document.createElement('div');
+      interior.className = 'safe-interior';
+      interior.innerHTML = `<img id="ak47-in-safe" src="https://i.imgur.com/8Qp2Z5E.png" title="Kliknij, aby podnieść AK-47!" alt="AK-47">`;
+      
+      // Owiń dotychczasową zawartość kafelka w drzwi sejfu
+      const door = document.createElement('div');
+      door.className = 'safe-door';
+      while (itemInfoCard.firstChild) {
+        door.appendChild(itemInfoCard.firstChild);
+      }
+
+      itemInfoCard.appendChild(interior);
+      itemInfoCard.appendChild(door);
+
+      // Stworzenie niebieskiej ikonki "i" (Zamek)
+      const infoBadge = document.createElement('div');
+      infoBadge.style.cssText = 'position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; background: #388bfd; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-family: sans-serif; font-size: 13px; cursor: pointer; z-index: 10; box-shadow: 0 0 8px rgba(56, 139, 253, 0.8);';
+      infoBadge.innerText = 'i';
+      door.appendChild(infoBadge);
+
+      // Otwarcie Sejfu po kliknięciu kluczem w ikonkę "i"
+      infoBadge.addEventListener('click', (e) => {
+        if (keyPicked) {
+          e.stopPropagation();
+          keyPicked = false;
+          cursorKey.style.display = 'none';
+          playSound('unlock');
+          door.classList.add('open');
+        }
+      });
+
+      // Podniesienie AK-47 z Sejfu
+      document.getElementById('ak47-in-safe').addEventListener('click', () => {
+        fpsMode = true;
+        interior.style.display = 'none';
+        viewmodel.style.display = 'block';
+        document.body.style.cursor = 'crosshair';
+        playSound('unlock');
+      });
+    }
+  });
+
+  // --- KROK 5: Strzelanie & System Zniszczeń Strony ---
+  document.addEventListener('click', (e) => {
+    if (!fpsMode) return;
+
+    // 1. Dźwięk i animacja odrzutu broni CS2
+    playSound('ak47');
+    viewmodel.style.transform += ' translateY(25px) rotate(-8deg) scale(1.08)';
+    muzzleFlash.style.display = 'block';
+
+    setTimeout(() => {
+      muzzleFlash.style.display = 'none';
+    }, 40);
+
+    // 2. Dziura po kuli na ekranie
+    const hole = document.createElement('div');
+    hole.className = 'bullet-hole';
+    hole.style.left = e.clientX + 'px';
+    hole.style.top = e.clientY + 'px';
+    document.body.appendChild(hole);
+
+    // 3. System Zniszczeń Trafionego Elementu
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+    if (target && target !== document.body && target !== document.documentElement && !target.classList.contains('bullet-hole')) {
+      let hits = parseInt(target.dataset.hits || '0') + 1;
+      target.dataset.hits = hits;
+
+      if (hits === 1) {
+        target.classList.add('damaged-light');
+      } else if (hits === 2) {
+        target.classList.remove('damaged-light');
+        target.classList.add('damaged-heavy');
+      } else if (hits >= 3) {
+        target.classList.remove('damaged-heavy');
+        target.classList.add('destroyed-element');
+      }
+    }
+  });
+})();
+</script>
