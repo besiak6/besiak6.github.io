@@ -9,7 +9,6 @@
     <style>
         html, body { background: linear-gradient(135deg, #0d1117, #1b0033); color: #c9d1d9; font-family: 'Segoe UI', sans-serif; margin: 0; min-height: 100vh; }
         body { display: flex; flex-direction: column; align-items: center; overflow-x: hidden; position: relative; }
-        #world { transition: transform 0.05s linear; width: 100%; display: flex; flex-direction: column; align-items: center; }
 
         .top-banner { position: fixed; top: 0; left: 0; width: 100%; background-color: #FFDD00; color: #000; padding: 5px 0; font-weight: bold; font-size: 0.9em; z-index: 1001; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; gap: 5px; }
         .top-banner a { color: #000; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px; }
@@ -64,7 +63,7 @@
         .content h2 { color: #58a6ff; font-size: 2.5em; margin-bottom: 40px; text-shadow: 0 0 10px rgba(88, 166, 255, 0.3); }
 
         .addons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; text-align: left; }
-        .addon-box { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s; position: relative; }
+        .addon-box { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s, opacity 0.8s ease-in, filter 0.8s ease-in; position: relative; will-change: transform, opacity; }
         .addon-box:hover { transform: translateY(-5px); border-color: #58a6ff; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
 
         .addon-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
@@ -98,160 +97,146 @@
         #itemInfoAddon.opened .safe-door { transform: rotateY(-115deg); }
         #itemInfoAddon .safe-door .dial { width: 46px; height: 46px; border-radius: 50%; border: 4px solid #6b7280; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 10px rgba(0,0,0,0.6); }
         #itemInfoAddon .safe-door .dial i { color: #6b7280; font-size: 1.1em; }
-        #akGun {
-            font-size: 3.6em; color: #ffb347; cursor: pointer; text-shadow: 0 0 18px rgba(255,179,71,0.7);
-            animation: akFloat 2.2s ease-in-out infinite;
-            transform: rotate(-25deg);
+
+        /* ---- Rdzeń ---- */
+        #coreWrap { position: relative; width: 90px; height: 90px; cursor: pointer; }
+        #coreRing1, #coreRing2 {
+            position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(120,180,255,0.5);
+            animation: ringPulse 2.4s ease-out infinite;
         }
-        #akGun:hover { color: #ffd280; }
-        #akGun + span { display:block; font-size:0.8em; color:#8b949e; margin-top:8px; }
-        @keyframes akFloat { 0%,100%{transform:rotate(-25deg) translateY(0);} 50%{transform:rotate(-25deg) translateY(-6px);} }
-
-        /* ---- Uszkodzenia kafelków ---- */
-        .destructible { position: relative; }
-        .crack-layer { position: absolute; inset: 0; pointer-events: none; z-index: 5; opacity: 0; transition: opacity 0.15s; border-radius: inherit; overflow: hidden; }
-        .crack-layer.show { opacity: 1; }
-        .crack-layer svg { width: 100%; height: 100%; }
-        .destructible.dmg { animation: hitFlash 0.18s; }
-        @keyframes hitFlash { 0%{ filter:brightness(2) saturate(0);} 100%{ filter:none; } }
-
-        /* ---- Tryb FPS ---- */
-        body.cs-mode, body.cs-mode * { cursor: none !important; }
-        body.cs-mode, body.cs-mode * {
-            user-select: none !important; -webkit-user-select: none !important;
-            -moz-user-select: none !important; -ms-user-select: none !important;
+        #coreRing2 { animation-delay: 1.2s; }
+        @keyframes ringPulse { 0%{ transform: scale(0.6); opacity: 0.9;} 100%{ transform: scale(1.6); opacity: 0;} }
+        #coreOrb {
+            position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; transform: translate(-50%,-50%);
+            border-radius: 50%; background: radial-gradient(circle at 35% 30%, #bfe3ff, #4c8dff 45%, #16306b 100%);
+            box-shadow: 0 0 25px rgba(80,150,255,0.9), 0 0 55px rgba(80,150,255,0.5);
+            animation: orbFloat 2.2s ease-in-out infinite;
         }
-        body.cs-mode a, body.cs-mode button, body.cs-mode input, body.cs-mode label {
-            pointer-events: none !important;
+        @keyframes orbFloat { 0%,100%{ transform: translate(-50%,-50%) scale(1);} 50%{ transform: translate(-50%,-50%) scale(1.08);} }
+        #coreWrap:hover #coreOrb { box-shadow: 0 0 35px rgba(120,180,255,1), 0 0 70px rgba(120,180,255,0.7); }
+        #coreLabel { display:block; font-size:0.8em; color:#8b949e; margin-top:14px; }
+
+        /* ---- Portal / wciąganie ---- */
+        #portalCore {
+            position: fixed; left: 50%; top: 50%; width: 10px; height: 10px; z-index: 999998;
+            transform: translate(-50%,-50%); border-radius: 50%; pointer-events: none; display: none;
+            background: radial-gradient(circle, #fff 0%, #9fd0ff 20%, #3d6bff 45%, #12123a 75%, transparent 100%);
+            box-shadow: 0 0 60px 20px rgba(80,140,255,0.8);
         }
+        #portalCore.active { animation: portalGrow 2.6s cubic-bezier(.2,.7,.3,1) forwards; }
+        @keyframes portalGrow {
+            0% { width: 10px; height: 10px; opacity: 0; }
+            15% { opacity: 1; }
+            70% { width: 340px; height: 340px; opacity: 1; }
+            100% { width: 1600px; height: 1600px; opacity: 0; }
+        }
+        #portalSwirl {
+            position: fixed; left: 50%; top: 50%; width: 260px; height: 260px; z-index: 999997;
+            transform: translate(-50%,-50%); border-radius: 50%; pointer-events: none; display: none;
+            background: conic-gradient(from 0deg, #12123a, #3d6bff, #9fd0ff, #12123a, #3d6bff, #12123a);
+            filter: blur(2px);
+            opacity: 0;
+        }
+        #portalSwirl.active { display: block; animation: swirlSpin 1.1s linear infinite, swirlFade 2.6s ease forwards; }
+        @keyframes swirlSpin { from{ transform: translate(-50%,-50%) rotate(0deg);} to{ transform: translate(-50%,-50%) rotate(360deg);} }
+        @keyframes swirlFade { 0%{opacity:0;} 20%{opacity:0.9;} 80%{opacity:0.9;} 100%{opacity:0;} }
 
-        #crosshair { position: fixed; width: 40px; height: 40px; z-index: 999999; pointer-events: none; display: none; transform: translate(-50%,-50%); }
-        #crosshair .bar { position: absolute; background: #e7e7e7; box-shadow: 0 0 3px rgba(0,0,0,0.9); }
-        #crosshair .bar.top { left: 50%; top: 3px; width: 2px; height: 10px; transform: translateX(-50%); }
-        #crosshair .bar.bottom { left: 50%; bottom: 3px; width: 2px; height: 10px; transform: translateX(-50%); }
-        #crosshair .bar.left { top: 50%; left: 3px; height: 2px; width: 10px; transform: translateY(-50%); }
-        #crosshair .bar.right { top: 50%; right: 3px; height: 2px; width: 10px; transform: translateY(-50%); }
-        #crosshair .dot { position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; background: #e7e7e7; border-radius: 50%; transform: translate(-50%,-50%); }
-        #crosshair.shot .bar { background: #ff5555; }
+        #flashOverlay { position: fixed; inset: 0; background: #fff; z-index: 9999998; opacity: 0; pointer-events: none; }
+        #flashOverlay.flash { animation: flashOut 0.5s ease forwards; }
+        @keyframes flashOut { 0%{opacity:1;} 100%{opacity:0;} }
 
-        #hitmarker { position: fixed; width: 34px; height: 34px; z-index: 999999; pointer-events: none; display:none; transform: translate(-50%,-50%); }
-        #hitmarker svg { width: 100%; height: 100%; }
-        #hitmarker.show { animation: hitmarkerPop 0.25s ease-out forwards; }
-        @keyframes hitmarkerPop { 0%{ opacity:1; transform: translate(-50%,-50%) scale(0.6);} 60%{opacity:1; transform: translate(-50%,-50%) scale(1.15);} 100%{ opacity:0; transform: translate(-50%,-50%) scale(1.3);} }
+        .sucking { transition: transform 0.9s cubic-bezier(.4,0,.2,1), opacity 0.9s ease-in, filter 0.9s ease-in; filter: brightness(2) saturate(0); opacity: 0; }
 
-        #gunHud { position: fixed; bottom: -30px; right: 20px; z-index: 999998; display: none; transition: transform 0.05s ease-out; width: 340px; height: 260px; pointer-events: none; }
-        #gunHud svg { width: 100%; height: 100%; filter: drop-shadow(0 10px 12px rgba(0,0,0,0.6)); }
-        #gunHud.idle { animation: gunBob 2.6s ease-in-out infinite; }
-        #gunHud.recoil { transform: translate(6px, 26px) rotate(-4deg) !important; }
-        @keyframes gunBob { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-8px);} }
+        /* ---- Ekran końcowy ---- */
+        #endScreen {
+            position: fixed; inset: 0; background: radial-gradient(circle at 50% 40%, #1a1240, #050510 70%);
+            z-index: 9999999; display: none; align-items: center; justify-content: center; flex-direction: column;
+            text-align: center; padding: 20px; box-sizing: border-box; overflow: hidden;
+        }
+        #endScreen.show { display: flex; }
+        .trophy-wrap { position: relative; width: 180px; height: 180px; margin-bottom: 10px; }
+        .trophy-glow-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(255,221,0,0.5); animation: ringPulse 2.4s ease-out infinite; }
+        .trophy-glow-ring.r2 { animation-delay: 0.8s; }
+        .trophy-glow-ring.r3 { animation-delay: 1.6s; }
+        #trophyIcon {
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+            font-size: 5.2em; color: #FFDD00; text-shadow: 0 0 30px rgba(255,221,0,0.8);
+            animation: trophyPop 0.7s cubic-bezier(.34,1.56,.64,1);
+        }
+        @keyframes trophyPop { 0%{ transform: translate(-50%,-50%) scale(0) rotate(-30deg); opacity:0;} 100%{ transform: translate(-50%,-50%) scale(1) rotate(0); opacity:1;} }
+        #endScreen h1 { color: #fff; font-size: 2em; margin: 10px 0 6px 0; text-shadow: 0 0 20px rgba(255,255,255,0.3); }
+        #endScreen p.sub { color: #a9b4c2; font-size: 1em; margin: 0 0 28px 0; max-width: 420px; }
+        #endScreen a.supp {
+            background: linear-gradient(135deg,#FFDD00,#ffb347); color: #1a1200; padding: 15px 34px; border-radius: 10px;
+            font-weight: bold; text-decoration: none; font-size: 1.1em; transition: 0.2s; box-shadow: 0 6px 20px rgba(255,221,0,0.3);
+        }
+        #endScreen a.supp:hover { transform: scale(1.06) translateY(-2px); box-shadow: 0 10px 28px rgba(255,221,0,0.45); }
 
-        #muzzleFlash { position: fixed; z-index: 999998; width: 90px; height: 90px; pointer-events:none; display:none; transform: translate(-50%,-50%); }
-        #muzzleFlash.show { animation: flashPop 0.09s ease-out forwards; }
-        @keyframes flashPop { 0%{ opacity:1; transform: translate(-50%,-50%) scale(0.4) rotate(0deg);} 100%{ opacity:0; transform: translate(-50%,-50%) scale(1.3) rotate(20deg);} }
+        .confetti { position: fixed; top: -20px; z-index: 9999999; width: 9px; height: 14px; opacity: 0.95; pointer-events: none; }
+        @keyframes confettiFall {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(105vh) rotate(720deg); }
+        }
 
         .csHint {
             position: fixed; top: 90px; left: 50%; transform: translateX(-50%); z-index: 999997;
-            background: rgba(0,0,0,0.75); color: #ffcc66; padding: 10px 20px; border-radius: 8px;
-            font-size: 0.95em; display: none; text-align:center; border: 1px solid rgba(255,204,102,0.3);
-        }
-
-        .bullet-hole { position: fixed; z-index: 998; pointer-events: none; transform: translate(-50%,-50%) rotate(var(--r,0deg)); }
-        .bullet-hole svg { width: 34px; height: 34px; }
-
-        .smoke-puff {
-            position: fixed; z-index: 997; pointer-events: none; width: 20px; height: 20px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(140,140,140,0.55), rgba(140,140,140,0) 70%);
-            transform: translate(-50%,-50%); animation: smokeRise 0.6s ease-out forwards;
-        }
-        @keyframes smokeRise { 0%{ opacity:0.7; transform: translate(-50%,-50%) scale(0.5);} 100%{ opacity:0; transform: translate(-50%,-70%) scale(1.8);} }
-
-        .shard { position: fixed; background: #21262d; border: 1px solid #30363d; z-index: 996; pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.4); }
-
-        body.shaking { animation: bigShake 0.22s ease-in-out; }
-        @keyframes bigShake {
-            0%,100% { transform: translate(0,0) rotate(0); }
-            15% { transform: translate(-6px,4px) rotate(-0.4deg); }
-            35% { transform: translate(6px,-4px) rotate(0.4deg); }
-            55% { transform: translate(-4px,-3px) rotate(-0.2deg); }
-            75% { transform: translate(4px,3px) rotate(0.2deg); }
-        }
-
-        #vignette { position: fixed; inset: 0; z-index: 999996; pointer-events: none; box-shadow: inset 0 0 180px 40px rgba(0,0,0,0.55); opacity: 0; display:none; }
-
-        #endScreen {
-            position: fixed; inset: 0; background: #000; z-index: 9999999;
-            display: none; align-items: center; justify-content: center; flex-direction: column;
-            text-align: center; padding: 20px; box-sizing: border-box;
-        }
-        #endScreen.show { display: flex; animation: fadeIn 0.6s ease; }
-        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-        #endScreen img { width: 160px; margin-bottom: 25px; filter: drop-shadow(0 0 20px #ffdd00); animation: akFloat 2.4s ease-in-out infinite; }
-        #endScreen h1 { color: #fff; font-size: 1.8em; margin: 0 0 25px 0; }
-        #endScreen a.supp {
-            background: #FFDD00; color: #000; padding: 14px 32px; border-radius: 8px;
-            font-weight: bold; text-decoration: none; font-size: 1.1em; transition: 0.2s;
-        }
-        #endScreen a.supp:hover { transform: scale(1.06); box-shadow: 0 0 25px rgba(255,221,0,0.5); }
-
-        #destroyCounter {
-            position: fixed; top: 140px; right: 20px; z-index: 999997; color: #ff8080;
-            font-size: 0.85em; background: rgba(0,0,0,0.65); padding: 7px 14px; border-radius: 6px;
-            display: none; font-weight: 600; letter-spacing: 0.5px;
+            background: rgba(0,0,0,0.75); color: #9fd0ff; padding: 10px 20px; border-radius: 8px;
+            font-size: 0.95em; display: none; text-align:center; border: 1px solid rgba(120,180,255,0.35);
         }
     </style>
 </head>
 <body>
     <div class="top-banner">Spodobały Ci się dodatki? <a href="https://suppi.pl/besiak" target="_blank">Wesprzyj mnie <img src="https://i.imgur.com/syTg29C.png" alt="Dzik"></a></div>
 
-    <div id="world">
-    <nav class="navbar destructible" data-hp="5">
+    <nav class="navbar destructible">
         <a href="/" class="nav-brand"><img src="https://i.imgur.com/OAtRFEw.png" alt="Baddonz Logo">BADDONZ</a>
         <div class="nav-links"><a href="/dodatki"><i class="fas fa-puzzle-piece"></i> Dodatki</a></div>
-        <div class="crack-layer"></div>
     </nav>
 
     <div class="content">
         <h2>Lista Dodatków</h2>
         <div class="addons-grid" id="addons-container">
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-rocket"></i></div><h3 class="addon-title">Auto Przywo</h3></div><div class="addon-tags"></div><p class="addon-desc">Automatyczna akceptacja przywołań.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-skull-crossbones"></i></div><h3 class="addon-title">AutoX</h3></div><div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div><p class="addon-desc">Automatyczne atakowanie graczy z konfiguracją.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-gift"></i></div><h3 class="addon-title">Free Gift</h3></div><div class="addon-tags"></div><p class="addon-desc">Automatyczne odbieranie kalendarza i aktualności w grze.</p><div class="crack-layer"></div></div>
+            <div class="addon-box destructible"><div class="addon-header"><div class="addon-icon"><i class="fas fa-rocket"></i></div><h3 class="addon-title">Auto Przywo</h3></div><div class="addon-tags"></div><p class="addon-desc">Automatyczna akceptacja przywołań.</p></div>
+            <div class="addon-box destructible"><div class="addon-header"><div class="addon-icon"><i class="fas fa-skull-crossbones"></i></div><h3 class="addon-title">AutoX</h3></div><div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div><p class="addon-desc">Automatyczne atakowanie graczy z konfiguracją.</p></div>
+            <div class="addon-box destructible"><div class="addon-header"><div class="addon-icon"><i class="fas fa-gift"></i></div><h3 class="addon-title">Free Gift</h3></div><div class="addon-tags"></div><p class="addon-desc">Automatyczne odbieranie kalendarza i aktualności w grze.</p></div>
 
-            <div class="addon-box destructible" id="itemInfoAddon" data-hp="4">
+            <div class="addon-box destructible" id="itemInfoAddon">
                 <div class="addon-header"><div class="addon-icon"><i class="fas fa-circle-info"></i></div><h3 class="addon-title">ItemInfo</h3></div>
                 <div class="addon-tags"></div>
                 <p class="addon-desc">Szczegółowe informacje o itemkach.</p>
                 <div class="safe-door"><div class="dial"><i class="fas fa-lock"></i></div></div>
                 <div class="safe-inner">
-                    <i class="fas fa-gun" id="akGun"></i>
-                    <span>Kliknij, aby wziąć AK-47</span>
+                    <div id="coreWrap">
+                        <div id="coreRing1"></div>
+                        <div id="coreRing2"></div>
+                        <div id="coreOrb"></div>
+                    </div>
+                    <span id="coreLabel">Kliknij, aby aktywować Rdzeń</span>
                 </div>
-                <div class="crack-layer"></div>
             </div>
 
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-search"></i></div><h3 class="addon-title">Item Searcher</h3></div><div class="addon-tags"></div><p class="addon-desc">Wyszukuje przedmioty w ekwipunku i depozycie.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-gamepad"></i></div><h3 class="addon-title">Minigierki</h3></div><div class="addon-tags"></div><p class="addon-desc">Wizualne ułatwienie rozwiązania minigierek.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-comment"></i></div><h3 class="addon-title">MiniChat</h3></div><div class="addon-tags"></div><p class="addon-desc">Umożliwia dostosowanie wielkości chatu.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-users-slash"></i></div><h3 class="addon-title">Rozwiązywanie Grupy</h3></div><div class="addon-tags"></div><p class="addon-desc">Rozwiązywanie grupy z konfiguracją.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-bed"></i></div><h3 class="addon-title">Sleeping Commander</h3></div><div class="addon-tags"></div><p class="addon-desc">Oddaje dowodzenie.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-user-plus"></i></div><h3 class="addon-title">Szybka Grupa</h3></div><div class="addon-tags"></div><p class="addon-desc">Zapraszanie do grupy z konfiguracją.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-arrow-trend-up"></i></div><h3 class="addon-title">Ulepszara</h3></div><div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div><p class="addon-desc">Automatyczne ulepszanie wybranego itemu wraz z konfiguracją.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-trash-can"></i></div><h3 class="addon-title">Śmieciara</h3></div><div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div><p class="addon-desc">Niszczenie itemów z poziomu panelu z konfiguracją.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-crosshairs"></i></div><h3 class="addon-title">Zasięg Walki</h3></div><div class="addon-tags"></div><p class="addon-desc">Podświetla zasięg walki na ekranie.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-map-marker-alt"></i></div><h3 class="addon-title">Znacznik Teleportów</h3></div><div class="addon-tags"></div><p class="addon-desc">Podpisuje teleporty, możliwość edytowania podpisów.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4" style="border: 2px solid #ffeb3b;">
+            <div class="addon-box destructible"><div class="addon-header"><div class="addon-icon"><i class="fas fa-search"></i></div><h3 class="addon-title">Item Searcher</h3></div><div class="addon-tags"></div><p class="addon-desc">Wyszukuje przedmioty w ekwipunku i depozycie.</p></div>
+            <div class="addon-box destructible"><div class="addon-header"><div class="addon-icon"><i class="fas fa-gamepad"></i></div><h3 class="addon-title">Minigierki</h3></div><div class="addon-tags"></div><p class="addon-desc">Wizualne ułatwienie rozwiązania minigierek.</p></div>
+            <div class="addon-box destructible"><div class="addon-header"><div class="addon-icon"><i class="fas fa-comment"></i></div><h3 class="addon-title">MiniChat</h3></div><div class="addon-tags"></div><p class="addon-desc">Umożliwia dostosowanie wielkości chatu.</p></div>
+            <div class="addon-box destructible"><div class="addon-header"><div class="addon-icon"><i class="fas fa-users-slash"></i></div><h3 class="addon-title">Rozwiązywanie Grupy</h3></div><div class="addon-tags"></div><p class="addon-desc">Rozwiązywanie grupy z konfiguracją.</p></div>
+            <div class="addon-box destructible"><div class="addon-header"><div class="addon-icon"><i class="fas fa-bed"></i></div><h3 class="addon-title">Sleeping Commander</h3></div><div class="addon-tags"></div><p class="addon-desc">Oddaje dowodzenie.</p></div>
+            <div class="addon-box destructible"><div class="addon-header"><div class="addon-icon"><i class="fas fa-user-plus"></i></div><h3 class="addon-title">Szybka Grupa</h3></div><div class="addon-tags"></div><p class="addon-desc">Zapraszanie do grupy z konfiguracją.</p></div>
+            <div class="addon-box destructible"><div class="addon-header"><div class="addon-icon"><i class="fas fa-arrow-trend-up"></i></div><h3 class="addon-title">Ulepszara</h3></div><div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div><p class="addon-desc">Automatyczne ulepszanie wybranego itemu wraz z konfiguracją.</p></div>
+            <div class="addon-box destructible"><div class="addon-header"><div class="addon-icon"><i class="fas fa-trash-can"></i></div><h3 class="addon-title">Śmieciara</h3></div><div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div><p class="addon-desc">Niszczenie itemów z poziomu panelu z konfiguracją.</p></div>
+            <div class="addon-box destructible"><div class="addon-header"><div class="addon-icon"><i class="fas fa-crosshairs"></i></div><h3 class="addon-title">Zasięg Walki</h3></div><div class="addon-tags"></div><p class="addon-desc">Podświetla zasięg walki na ekranie.</p></div>
+            <div class="addon-box destructible"><div class="addon-header"><div class="addon-icon"><i class="fas fa-map-marker-alt"></i></div><h3 class="addon-title">Znacznik Teleportów</h3></div><div class="addon-tags"></div><p class="addon-desc">Podpisuje teleporty, możliwość edytowania podpisów.</p></div>
+            <div class="addon-box destructible" style="border: 2px solid #ffeb3b;">
                 <div class="addon-header">
                     <div class="addon-icon"><i class="fas fa-comments"></i></div>
                     <h3 class="addon-title" style="color: #ffeb3b;">Better Message [PREMIUM]</h3>
                 </div>
                 <div class="addon-tags"></div>
                 <p class="addon-desc">Możliwość dostosowywania wyglądu powiadomień</p>
-                <div class="crack-layer"></div>
             </div>
         </div>
     </div>
 
-    <div class="idea-panel destructible" data-hp="6">
+    <div class="idea-panel destructible">
         <div class="idea-icon-zone">
             <i class="fa-solid fa-lightbulb" id="lampIcon"></i>
             <i class="fa-solid fa-key" id="keyIcon"></i>
@@ -259,60 +244,41 @@
         <h3>Masz pomysł na dodatek?</h3>
         <p>Brakuje Ci jakiejś funkcji w grze? A może chcesz zupełnie nowy dodatek? Dołącz do naszego Discorda i opisz swój pomysł!</p>
         <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="dc-btn"><i class="fab fa-discord"></i> Napisz propozycję</a>
-        <div class="crack-layer"></div>
     </div>
 
-    <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="discord-icon-fixed destructible" data-hp="2"><i class="fab fa-discord"></i><div class="crack-layer"></div></a>
-    <div class="footer-banner destructible" data-hp="5">Znalazłeś błąd lub masz jakiś problem? Dołącz do <a href="https://discord.gg/rJeNVHr49f" target="_blank">discorda</a>, lub napisz do mnie na dc: besiak6<div class="crack-layer"></div></div>
-    </div>
+    <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="discord-icon-fixed destructible"><i class="fab fa-discord"></i></a>
+    <div class="footer-banner destructible">Znalazłeś błąd lub masz jakiś problem? Dołącz do <a href="https://discord.gg/rJeNVHr49f" target="_blank">discorda</a>, lub napisz do mnie na dc: besiak6</div>
 
     <i class="fas fa-key" id="cursorKey"></i>
 
-    <div id="crosshair"><div class="bar top"></div><div class="bar bottom"></div><div class="bar left"></div><div class="bar right"></div><div class="dot"></div></div>
-    <div id="hitmarker"><svg viewBox="0 0 34 34"><g stroke="#ff5555" stroke-width="3" stroke-linecap="round"><line x1="4" y1="4" x2="13" y2="13"/><line x1="30" y1="4" x2="21" y2="13"/><line x1="4" y1="30" x2="13" y2="21"/><line x1="30" y1="30" x2="21" y2="21"/></g></svg></div>
-    <div id="muzzleFlash"><svg viewBox="0 0 90 90"><polygon points="45,2 55,35 88,45 55,55 45,88 35,55 2,45 35,35" fill="#ffd27a"/><polygon points="45,15 50,40 75,45 50,50 45,75 40,50 15,45 40,40" fill="#fff3d0"/></svg></div>
-
-    <div id="gunHud">
-        <svg viewBox="0 0 340 260" xmlns="http://www.w3.org/2000/svg">
-            <!-- ręka -->
-            <path d="M120 260 L110 190 Q108 160 140 150 L210 140 L230 175 L200 200 L190 260 Z" fill="#c98a5e"/>
-            <path d="M150 175 L200 165 L215 190 L165 200 Z" fill="#b57a4f"/>
-            <!-- karabin AK stylizowany -->
-            <g>
-                <rect x="150" y="120" width="170" height="26" rx="4" fill="#3b2a1d"/>
-                <rect x="150" y="120" width="170" height="8" rx="3" fill="#55402c"/>
-                <rect x="300" y="105" width="18" height="55" rx="3" fill="#2a2a2a"/>
-                <rect x="60" y="150" width="95" height="20" rx="4" fill="#7a5230"/>
-                <path d="M60 170 L45 225 L65 225 L80 172 Z" fill="#5c3d20"/>
-                <rect x="180" y="95" width="14" height="30" fill="#1c1c1c"/>
-                <rect x="120" y="112" width="34" height="14" rx="2" fill="#2a2a2a"/>
-                <circle cx="318" cy="118" r="6" fill="#111"/>
-            </g>
-        </svg>
-    </div>
-
-    <div class="csHint" id="csHint">Strzelaj klikając LPM — zniszcz całą stronę.</div>
-    <div id="destroyCounter">Zniszczono: 0 / 0</div>
-    <div id="vignette"></div>
+    <div class="csHint" id="csHint">Rdzeń otwiera portal, który wciąga całą stronę...</div>
+    <div id="portalSwirl"></div>
+    <div id="portalCore"></div>
+    <div id="flashOverlay"></div>
 
     <div id="endScreen">
-        <img src="https://i.imgur.com/syTg29C.png" alt="Dzik">
-        <h1>Mam nadzieje ze się fajnie bawiłeś :)</h1>
-        <a class="supp" href="https://suppi.pl/besiak" target="_blank">Możesz wesprzeć mnie tutaj</a>
+        <div class="trophy-wrap">
+            <div class="trophy-glow-ring"></div>
+            <div class="trophy-glow-ring r2"></div>
+            <div class="trophy-glow-ring r3"></div>
+            <i class="fas fa-trophy" id="trophyIcon"></i>
+        </div>
+        <h1>Portal połknął całą stronę.</h1>
+        <p class="sub">Znalazłeś sekretny Rdzeń i otworzyłeś portal — gratulacje! Skoro tu dotarłeś, może wpadniesz też na Discorda albo wesprzesz projekt?</p>
+        <a class="supp" href="https://suppi.pl/besiak" target="_blank">Wesprzyj mnie tutaj</a>
     </div>
 
 <script>
 (function(){
     "use strict";
 
-    /* ---------------- LAMPKA (przeciąganie w obrębie panelu) ---------------- */
+    /* ---------------- LAMPKA ---------------- */
     const lamp = document.getElementById('lampIcon');
     const key = document.getElementById('keyIcon');
     const zone = lamp.parentElement;
     let dragging = false;
 
     function zoneBounds(){ return zone.getBoundingClientRect(); }
-
     function setLampPos(x, y){
         const b = zoneBounds();
         const half = 20;
@@ -321,11 +287,7 @@
         lamp.style.left = x + 'px';
         lamp.style.top = y + 'px';
     }
-
-    lamp.addEventListener('pointerdown', (e) => {
-        dragging = true;
-        lamp.setPointerCapture(e.pointerId);
-    });
+    lamp.addEventListener('pointerdown', (e) => { dragging = true; lamp.setPointerCapture(e.pointerId); });
     lamp.addEventListener('pointermove', (e) => {
         if(!dragging) return;
         const b = zoneBounds();
@@ -343,7 +305,6 @@
         document.getElementById('cursorKey').style.display = 'block';
         e.stopPropagation();
     });
-
     document.addEventListener('pointermove', (e) => {
         if(hasKey){
             const ck = document.getElementById('cursorKey');
@@ -352,7 +313,7 @@
         }
     });
 
-    /* ---------------- SEJF ITEM INFO ---------------- */
+    /* ---------------- SEJF ---------------- */
     const itemInfo = document.getElementById('itemInfoAddon');
     itemInfo.classList.add('unlockable');
     let safeOpened = false;
@@ -366,265 +327,131 @@
         setTimeout(() => { itemInfo.classList.add('opened'); }, 150);
     });
 
-    document.getElementById('akGun').addEventListener('click', (e) => {
-        e.stopPropagation();
-        enterCsMode();
-    });
-
-    /* ---------------- TRYB FPS ---------------- */
-    const crosshair = document.getElementById('crosshair');
-    const hitmarker = document.getElementById('hitmarker');
-    const muzzleFlash = document.getElementById('muzzleFlash');
-    const gunHud = document.getElementById('gunHud');
-    const csHint = document.getElementById('csHint');
-    const destroyCounter = document.getElementById('destroyCounter');
-    const vignette = document.getElementById('vignette');
-    let csActive = false;
-
-    const destructibles = Array.from(document.querySelectorAll('.destructible'));
-    const totalCount = destructibles.length;
-    let destroyedCount = 0;
-
-    function enterCsMode(){
-        if(csActive) return;
-        csActive = true;
-        document.body.classList.add('cs-mode');
-        crosshair.style.display = 'block';
-        gunHud.style.display = 'block';
-        gunHud.classList.add('idle');
-        muzzleFlash.style.display = 'block';
-        hitmarker.style.display = 'block';
-        vignette.style.display = 'block';
-        vignette.style.opacity = '1';
-        csHint.style.display = 'block';
-        destroyCounter.style.display = 'block';
-        updateCounter();
-        getCtx();
-        setTimeout(() => { csHint.style.display = 'none'; }, 4200);
-    }
-
-    function updateCounter(){
-        destroyCounter.textContent = 'Zniszczono: ' + destroyedCount + ' / ' + totalCount;
-    }
-
-    document.addEventListener('pointermove', (e) => {
-        if(!csActive) return;
-        crosshair.style.left = e.clientX + 'px';
-        crosshair.style.top = e.clientY + 'px';
-    });
-
-    /* Web Audio - syntezowany odgłos strzału, bez zewnętrznych plików */
+    /* ---------------- DŹWIĘKI (Web Audio, bez plików) ---------------- */
     let actx = null;
     function getCtx(){
-        if(!actx){
-            try{ actx = new (window.AudioContext || window.webkitAudioContext)(); }catch(err){ actx = null; }
-        }
+        if(!actx){ try{ actx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ actx = null; } }
         return actx;
     }
-    function playGunshot(){
-        const ctx = getCtx();
-        if(!ctx) return;
-        try{
-            const now = ctx.currentTime;
-            const bufferSize = Math.floor(ctx.sampleRate * 0.18);
-            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for(let i=0;i<bufferSize;i++){
-                const decay = Math.pow(1 - i/bufferSize, 2.5);
-                data[i] = (Math.random()*2 - 1) * decay;
-            }
-            const noise = ctx.createBufferSource();
-            noise.buffer = buffer;
-            const bp = ctx.createBiquadFilter();
-            bp.type = 'bandpass';
-            bp.frequency.setValueAtTime(2200, now);
-            bp.frequency.exponentialRampToValueAtTime(500, now + 0.15);
-            bp.Q.value = 0.9;
-            const gain = ctx.createGain();
-            gain.gain.setValueAtTime(1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
-            noise.connect(bp).connect(gain).connect(ctx.destination);
-            noise.start(now);
-
-            const thump = ctx.createOscillator();
-            thump.type = 'triangle';
-            thump.frequency.setValueAtTime(140, now);
-            thump.frequency.exponentialRampToValueAtTime(50, now + 0.08);
-            const tg = ctx.createGain();
-            tg.gain.setValueAtTime(0.8, now);
-            tg.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
-            thump.connect(tg).connect(ctx.destination);
-            thump.start(now);
-            thump.stop(now + 0.1);
-        }catch(err){ /* audio niedostępne - ignorujemy */ }
+    function playWhoosh(duration){
+        const ctx = getCtx(); if(!ctx) return;
+        const now = ctx.currentTime;
+        const bufferSize = Math.floor(ctx.sampleRate * duration);
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for(let i=0;i<bufferSize;i++) data[i] = Math.random()*2 - 1;
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.Q.value = 0.8;
+        bp.frequency.setValueAtTime(150, now);
+        bp.frequency.exponentialRampToValueAtTime(3500, now + duration*0.6);
+        bp.frequency.exponentialRampToValueAtTime(200, now + duration);
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.9, now + duration*0.3);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+        noise.connect(bp).connect(gain).connect(ctx.destination);
+        noise.start(now);
+        noise.stop(now + duration);
+    }
+    function playChime(){
+        const ctx = getCtx(); if(!ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        notes.forEach((freq, i) => {
+            const t = ctx.currentTime + i*0.12;
+            const osc = ctx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            const g = ctx.createGain();
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.35, t + 0.03);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+            osc.connect(g).connect(ctx.destination);
+            osc.start(t);
+            osc.stop(t + 0.55);
+        });
     }
 
-    function spawnBulletHole(x, y){
-        const hole = document.createElement('div');
-        hole.className = 'bullet-hole';
-        hole.style.left = x + 'px';
-        hole.style.top = y + 'px';
-        hole.style.setProperty('--r', (Math.random()*360) + 'deg');
-        const r = 14 + Math.random()*4;
-        hole.innerHTML = '<svg viewBox="0 0 34 34"><circle cx="17" cy="17" r="'+r/2+'" fill="#050505" opacity="0.9"/>' +
-            [...Array(6)].map(() => {
-                const a = Math.random()*360;
-                const len = 8 + Math.random()*8;
-                const x2 = 17 + Math.cos(a*Math.PI/180)*len;
-                const y2 = 17 + Math.sin(a*Math.PI/180)*len;
-                return '<line x1="17" y1="17" x2="'+x2+'" y2="'+y2+'" stroke="#050505" stroke-width="1.4" opacity="0.7"/>';
-            }).join('') + '</svg>';
-        document.body.appendChild(hole);
+    /* ---------------- PORTAL ---------------- */
+    let portalActive = false;
 
-        const puff = document.createElement('div');
-        puff.className = 'smoke-puff';
-        puff.style.left = x + 'px';
-        puff.style.top = y + 'px';
-        document.body.appendChild(puff);
-        setTimeout(() => puff.remove(), 650);
-    }
-
-    function spawnMuzzleFlash(x, y){
-        muzzleFlash.style.left = x + 'px';
-        muzzleFlash.style.top = y + 'px';
-        muzzleFlash.classList.remove('show');
-        void muzzleFlash.offsetWidth;
-        muzzleFlash.classList.add('show');
-    }
-
-    function showHitmarker(x, y){
-        hitmarker.style.left = x + 'px';
-        hitmarker.style.top = y + 'px';
-        hitmarker.classList.remove('show');
-        void hitmarker.offsetWidth;
-        hitmarker.classList.add('show');
-    }
-
-    function drawCrack(el, stage){
-        const layer = el.querySelector(':scope > .crack-layer');
-        if(!layer) return;
-        const lines = [];
-        const count = 3 + stage*3;
-        for(let i=0;i<count;i++){
-            const x1 = 50 + (Math.random()*20-10);
-            const y1 = 50 + (Math.random()*20-10);
-            const ang = Math.random()*360;
-            const len = 20 + Math.random()*35;
-            const x2 = x1 + Math.cos(ang*Math.PI/180)*len;
-            const y2 = y1 + Math.sin(ang*Math.PI/180)*len;
-            lines.push('<line x1="'+x1+'%" y1="'+y1+'%" x2="'+x2+'%" y2="'+y2+'%" stroke="#000" stroke-width="1.4" opacity="0.75"/>');
-        }
-        layer.innerHTML = '<svg preserveAspectRatio="none" viewBox="0 0 100 100">' + lines.join('') + '</svg>';
-        layer.classList.add('show');
-    }
-
-    function shatterElement(el){
-        const rect = el.getBoundingClientRect();
-        const cols = 4, rows = 3;
-        const w = rect.width / cols, h = rect.height / rows;
-        for(let r=0; r<rows; r++){
-            for(let c=0; c<cols; c++){
-                const shard = document.createElement('div');
-                shard.className = 'shard';
-                shard.style.left = (rect.left + c*w) + 'px';
-                shard.style.top = (rect.top + r*h) + 'px';
-                shard.style.width = w + 'px';
-                shard.style.height = h + 'px';
-                shard.style.transition = 'transform ' + (0.5 + Math.random()*0.3) + 's cubic-bezier(.25,.6,.4,1), opacity ' + (0.5 + Math.random()*0.3) + 's ease-in';
-                document.body.appendChild(shard);
-                requestAnimationFrame(() => {
-                    const dx = (c - (cols-1)/2) * 90 + (Math.random()*60-30);
-                    const dy = (r - (rows-1)/2) * 60 + 220 + Math.random()*120;
-                    const rot = (Math.random()*520 - 260);
-                    shard.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
-                    shard.style.opacity = '0';
-                });
-                setTimeout(() => shard.remove(), 900);
-            }
-        }
-        el.style.visibility = 'hidden';
-        el.style.pointerEvents = 'none';
-    }
-
-    function hitDestructible(el){
-        if(el.dataset.destroyed === '1') return;
-        const maxHp = parseInt(el.dataset.hp, 10);
-        let hp = (el.dataset.curHp !== undefined ? parseInt(el.dataset.curHp,10) : maxHp) - 1;
-        el.dataset.curHp = hp;
-
-        el.classList.remove('dmg');
-        void el.offsetWidth;
-        el.classList.add('dmg');
-
-        showHitmarker(lastShotX, lastShotY);
-
-        if(hp <= 0){
-            el.dataset.destroyed = '1';
-            destroyedCount++;
-            updateCounter();
-            shatterElement(el);
-            checkEnd();
-        } else {
-            const stage = Math.min(3, maxHp - hp);
-            drawCrack(el, stage);
-        }
-    }
-
-    function checkEnd(){
-        if(destroyedCount >= totalCount) setTimeout(triggerEnd, 500);
-    }
-
-    function triggerEnd(){
-        csActive = false;
-        document.body.classList.remove('cs-mode');
-        crosshair.style.display = 'none';
-        gunHud.style.display = 'none';
-        muzzleFlash.style.display = 'none';
-        hitmarker.style.display = 'none';
-        destroyCounter.style.display = 'none';
-        vignette.style.opacity = '0';
-        document.querySelectorAll('.bullet-hole').forEach(h => h.remove());
-        document.getElementById('endScreen').classList.add('show');
-    }
-
-    let lastShotX = 0, lastShotY = 0;
-
-    document.addEventListener('selectstart', (e) => {
-        if(csActive) e.preventDefault();
+    document.getElementById('coreWrap').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if(portalActive) return;
+        activatePortal();
     });
 
-    document.addEventListener('mousedown', (e) => {
-        if(!csActive) return;
-        e.preventDefault();
-    }, true);
+    function activatePortal(){
+        portalActive = true;
+        getCtx();
+        document.getElementById('csHint').style.display = 'block';
+        setTimeout(() => { document.getElementById('csHint').style.display = 'none'; }, 3000);
 
-    document.addEventListener('click', (e) => {
-        if(!csActive) return;
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        lastShotX = e.clientX; lastShotY = e.clientY;
+        playWhoosh(2.3);
 
-        playGunshot();
-        spawnBulletHole(e.clientX, e.clientY);
-        spawnMuzzleFlash(e.clientX - 40, e.clientY + 30);
+        const swirl = document.getElementById('portalSwirl');
+        const core = document.getElementById('portalCore');
+        swirl.classList.add('active');
+        core.classList.add('active');
 
-        gunHud.classList.remove('idle');
-        gunHud.classList.add('recoil');
-        setTimeout(() => { gunHud.classList.remove('recoil'); gunHud.classList.add('idle'); }, 90);
-
-        crosshair.classList.add('shot');
-        setTimeout(() => crosshair.classList.remove('shot'), 120);
-
-        document.body.classList.add('shaking');
-        setTimeout(() => document.body.classList.remove('shaking'), 220);
-
-        const target = document.elementFromPoint(e.clientX, e.clientY);
-        if(target){
-            const destructible = target.closest('.destructible');
-            if(destructible) hitDestructible(destructible);
+        const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+        const targets = Array.from(document.querySelectorAll('.destructible'));
+        // losowa kolejność wciągania
+        for(let i = targets.length - 1; i > 0; i--){
+            const j = Math.floor(Math.random() * (i+1));
+            [targets[i], targets[j]] = [targets[j], targets[i]];
         }
-    }, true);
+
+        targets.forEach((el, idx) => {
+            const delay = 250 + idx * 90 + Math.random()*80;
+            setTimeout(() => suckIn(el, cx, cy), delay);
+        });
+
+        const totalTime = 250 + targets.length * 90 + 900;
+        setTimeout(() => {
+            const flash = document.getElementById('flashOverlay');
+            flash.classList.add('flash');
+            playChime();
+            setTimeout(showEndScreen, 350);
+        }, totalTime);
+    }
+
+    function suckIn(el, cx, cy){
+        const rect = el.getBoundingClientRect();
+        const elCx = rect.left + rect.width/2;
+        const elCy = rect.top + rect.height/2;
+        const dx = cx - elCx;
+        const dy = cy - elCy;
+        el.style.transformOrigin = 'center center';
+        el.classList.add('sucking');
+        requestAnimationFrame(() => {
+            el.style.transform = `translate(${dx}px, ${dy}px) scale(0) rotate(${540 + Math.random()*360}deg)`;
+        });
+    }
+
+    function spawnConfetti(){
+        const colors = ['#FFDD00','#58a6ff','#ff5555','#7CFF6B','#c98aff','#ffffff'];
+        for(let i=0;i<90;i++){
+            const c = document.createElement('div');
+            c.className = 'confetti';
+            c.style.left = Math.random()*100 + 'vw';
+            c.style.background = colors[Math.floor(Math.random()*colors.length)];
+            c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+            const dur = 2.4 + Math.random()*2.2;
+            const delay = Math.random()*1.2;
+            c.style.animation = `confettiFall ${dur}s linear ${delay}s forwards`;
+            document.body.appendChild(c);
+            setTimeout(() => c.remove(), (dur+delay)*1000 + 200);
+        }
+    }
+
+    function showEndScreen(){
+        document.getElementById('endScreen').classList.add('show');
+        spawnConfetti();
+        setTimeout(spawnConfetti, 900);
+    }
 
 })();
 </script>
