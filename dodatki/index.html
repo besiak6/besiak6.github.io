@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
@@ -7,738 +6,92 @@
     <link rel="icon" type="image/png" href="https://i.imgur.com/OAtRFEw.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        html, body { background: linear-gradient(135deg, #0d1117, #1b0033); color: #c9d1d9; font-family: 'Segoe UI', sans-serif; margin: 0; min-height: 100vh; }
-        body { display: flex; flex-direction: column; align-items: center; overflow-x: hidden; position: relative; }
-
+        body { background: linear-gradient(135deg, #0d1117, #1b0033); color: #c9d1d9; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; overflow-x: hidden; }
+        
         .top-banner { position: fixed; top: 0; left: 0; width: 100%; background-color: #FFDD00; color: #000; padding: 5px 0; font-weight: bold; font-size: 0.9em; z-index: 1001; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; gap: 5px; }
         .top-banner a { color: #000; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px; }
         .top-banner img { height: 18px; width: auto; vertical-align: middle; }
-
+        
         .footer-banner { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #161b22; color: #ff5555; padding: 10px 0; font-size: 0.9em; z-index: 1001; border-top: 1px solid #30363d; font-weight: 500; text-align: center; }
         .footer-banner a { color: #58a6ff; text-decoration: none; font-weight: bold; }
-
+        
         .navbar { position: fixed; top: 28px; left: 0; width: 100%; background: rgba(13, 17, 23, 0.95); border-bottom: 1px solid #30363d; display: flex; justify-content: space-between; align-items: center; padding: 10px 40px; box-sizing: border-box; z-index: 1000; }
         .nav-brand { display: flex; align-items: center; gap: 10px; font-size: 1.5em; font-weight: bold; color: #58a6ff; text-decoration: none; transition: 0.2s; }
         .nav-brand:hover { filter: brightness(1.2); }
         .nav-brand img { width: 35px; height: 35px; }
-
+        
         .nav-links { display: flex; gap: 15px; }
         .nav-links a { color: #c9d1d9; text-decoration: none; font-size: 1.1em; font-weight: 600; display: flex; align-items: center; gap: 8px; background: #30363d; padding: 8px 15px; border-radius: 6px; border: 1px solid #58a6ff; transition: 0.2s; box-shadow: 0 0 10px rgba(88,166,255,0.2); }
-
+        
         .discord-icon-fixed { position: fixed; bottom: 55px; left: 20px; z-index: 1000; transition: transform 0.2s; color: #58a6ff; font-size: 40px; text-decoration: none; }
         .discord-icon-fixed:hover { transform: scale(1.1); }
-
-        .idea-panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(22, 27, 34, 0.95); border: 1px solid #30363d; border-radius: 12px; padding: 20px; width: 220px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 999; overflow: visible; }
+        
+        .idea-panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); background: rgba(22, 27, 34, 0.95); border: 1px solid #30363d; border-radius: 12px; padding: 20px; width: 220px; text-align: center; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 999; }
+        .idea-panel i.fa-lightbulb { font-size: 2.5em; color: #FFDD00; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255, 221, 0, 0.5); }
         .idea-panel h3 { margin: 0 0 10px 0; font-size: 1.1em; color: #fff; border-bottom: 1px solid #30363d; padding-bottom: 8px; }
         .idea-panel p { font-size: 0.85em; color: #c9d1d9; margin: 0 0 15px 0; line-height: 1.4; }
         .idea-panel .dc-btn { display: inline-block; width: 100%; padding: 10px 0; background: #5865F2; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 0.95em; transition: 0.2s; }
         .idea-panel .dc-btn:hover { background: #4752C4; }
-
-        .idea-icon-zone { position: relative; height: 60px; margin-bottom: 6px; }
-
-        #lampIcon {
-            position: absolute; left: 50%; top: 0; transform: translate(-50%,-50%);
-            font-size: 2.5em; color: #FFDD00; text-shadow: 0 0 10px rgba(255, 221, 0, 0.5);
-            cursor: grab; z-index: 5; user-select: none; touch-action: none;
-        }
-        #lampIcon:active { cursor: grabbing; }
-
-        #keyIcon {
-            position: absolute; left: 50%; top: 12px; transform: translateX(-50%) scale(0) rotate(0deg);
-            font-size: 1.8em; color: #ffcc66; z-index: 4; user-select: none;
-            transition: transform 0.35s cubic-bezier(.34,1.56,.64,1);
-            filter: drop-shadow(0 0 6px rgba(255,204,102,0.6));
-        }
-        #keyIcon.revealed { transform: translateX(-50%) scale(1) rotate(-15deg); cursor: pointer; }
-        #keyIcon.revealed:hover { transform: translateX(-50%) scale(1.15) rotate(-15deg); }
-        #keyIcon.picked { display: none; }
-
-        #cursorKey {
-            position: fixed; pointer-events: none; z-index: 99999; font-size: 1.6em; color: #ffcc66;
-            display: none; transform: translate(-50%,-50%) rotate(-20deg);
-            filter: drop-shadow(0 0 6px rgba(255,204,102,0.8));
-        }
-
+        
         .content { padding: 120px 20px 80px 20px; z-index: 10; width: 100%; max-width: 1200px; text-align: center; }
         .content h2 { color: #58a6ff; font-size: 2.5em; margin-bottom: 40px; text-shadow: 0 0 10px rgba(88, 166, 255, 0.3); }
-
+        
         .addons-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; text-align: left; }
         .addon-box { background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; transition: transform 0.2s, border-color 0.2s; position: relative; }
         .addon-box:hover { transform: translateY(-5px); border-color: #58a6ff; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
-
+        
         .addon-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
         .addon-icon { font-size: 1.8em; color: #58a6ff; width: 40px; text-align: center; }
         .addon-title { margin: 0; color: #fff; font-size: 1.3em; }
         .addon-desc { color: #8b949e; font-size: 0.95em; line-height: 1.5; margin-bottom: 15px; flex-grow: 1; }
         .addon-tags { display: flex; gap: 8px; margin-bottom: 5px; flex-wrap: wrap; min-height: 24px; }
         .tag { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; font-size: 0.75em; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
-
-        /* ---- ItemInfo "sejf" ---- */
-        #itemInfoAddon { perspective: 900px; }
-        #itemInfoAddon.unlockable .addon-icon { cursor: pointer; }
-        #itemInfoAddon.unlockable .addon-icon:hover { color: #ffcc66; text-shadow: 0 0 10px rgba(255,204,102,0.7); }
-        #itemInfoAddon .safe-inner {
-            position: absolute; inset: 0; background: radial-gradient(circle at 50% 40%, #14181f, #05070a); border-radius: 10px;
-            display: flex; align-items: center; justify-content: center; flex-direction: column;
-            opacity: 0; pointer-events: none; transition: opacity 0.3s;
-        }
-        #itemInfoAddon.opened .safe-inner { opacity: 1; pointer-events: auto; }
-        #itemInfoAddon.opening .addon-header, #itemInfoAddon.opening .addon-desc, #itemInfoAddon.opening .addon-tags,
-        #itemInfoAddon.opened .addon-header, #itemInfoAddon.opened .addon-desc, #itemInfoAddon.opened .addon-tags { opacity: 0; transition: opacity 0.2s; }
-        #itemInfoAddon .safe-door {
-            position: absolute; inset: 0; background: linear-gradient(135deg,#2b3038,#1a1e24); border-radius: 10px;
-            border: 3px solid #454b54; transform-origin: left center; transition: transform 0.65s cubic-bezier(.55,0,.35,1);
-            display: flex; align-items: center; justify-content: center; z-index: 3;
-            opacity: 0; pointer-events: none;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.6);
-        }
-        #itemInfoAddon.opening .safe-door,
-        #itemInfoAddon.opened .safe-door { opacity: 1; pointer-events: auto; }
-        #itemInfoAddon.opened .safe-door { transform: rotateY(-115deg); }
-        #itemInfoAddon .safe-door .dial { width: 46px; height: 46px; border-radius: 50%; border: 4px solid #6b7280; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 10px rgba(0,0,0,0.6); }
-        #itemInfoAddon .safe-door .dial i { color: #6b7280; font-size: 1.1em; }
-        #weaponsRow { display: flex; gap: 18px; }
-        .weapon-pick { font-size: 2.6em; color: #ffb347; cursor: pointer; text-shadow: 0 0 15px rgba(255,179,71,0.6); transition: transform 0.15s; }
-        .weapon-pick:hover { transform: scale(1.15); color: #ffd280; }
-        #itemInfoAddon .safe-inner > span { display:block; font-size:0.8em; color:#8b949e; margin-top:10px; }
-
-        /* ---- Uszkodzenia ---- */
-        .destructible { position: relative; }
-        .crack-layer { position: absolute; inset: 0; pointer-events: none; z-index: 5; opacity: 0; transition: opacity 0.1s; border-radius: inherit; overflow: hidden; }
-        .crack-layer.show { opacity: 1; }
-        .crack-layer svg { width: 100%; height: 100%; }
-        .destructible.dmg { animation: hitFlash 0.15s; }
-        @keyframes hitFlash { 0%{ filter:brightness(3) saturate(0) hue-rotate(-20deg);} 100%{ filter:none; } }
-        .scorch { position: fixed; z-index: 4; pointer-events: none; border-radius: 50%; background: radial-gradient(circle, rgba(10,8,6,0.85) 0%, rgba(10,8,6,0.5) 45%, transparent 75%); }
-
-        /* ---- Tryb FPS ---- */
-        body.cs-mode, body.cs-mode * { cursor: none !important; }
-        body.cs-mode, body.cs-mode * {
-            user-select: none !important; -webkit-user-select: none !important;
-            -moz-user-select: none !important; -ms-user-select: none !important;
-        }
-        body.cs-mode a, body.cs-mode button, body.cs-mode input, body.cs-mode label {
-            pointer-events: none !important;
-        }
-
-        #crosshair { position: fixed; width: 40px; height: 40px; z-index: 999999; pointer-events: none; display: none; transform: translate(-50%,-50%); }
-        #crosshair .bar { position: absolute; background: #e7e7e7; box-shadow: 0 0 3px rgba(0,0,0,0.9); }
-        #crosshair .bar.top { left: 50%; top: 3px; width: 2px; height: 10px; transform: translateX(-50%); }
-        #crosshair .bar.bottom { left: 50%; bottom: 3px; width: 2px; height: 10px; transform: translateX(-50%); }
-        #crosshair .bar.left { top: 50%; left: 3px; height: 2px; width: 10px; transform: translateY(-50%); }
-        #crosshair .bar.right { top: 50%; right: 3px; height: 2px; width: 10px; transform: translateY(-50%); }
-        #crosshair .dot { position: absolute; left: 50%; top: 50%; width: 3px; height: 3px; background: #e7e7e7; border-radius: 50%; transform: translate(-50%,-50%); }
-        #crosshair.shot .bar { background: #ff3232; }
-
-        #hitmarker { position: fixed; width: 34px; height: 34px; z-index: 999999; pointer-events: none; display:none; transform: translate(-50%,-50%); }
-        #hitmarker svg { width: 100%; height: 100%; }
-        #hitmarker.show { animation: hitmarkerPop 0.25s ease-out forwards; }
-        @keyframes hitmarkerPop { 0%{ opacity:1; transform: translate(-50%,-50%) scale(0.6);} 60%{opacity:1; transform: translate(-50%,-50%) scale(1.2);} 100%{ opacity:0; transform: translate(-50%,-50%) scale(1.4);} }
-
-        #gunHud { position: fixed; bottom: -30px; right: 10px; z-index: 999998; display: none; transition: transform 0.045s ease-out; width: 380px; height: 280px; pointer-events: none; }
-        #gunHud svg { width: 100%; height: 100%; filter: drop-shadow(0 10px 14px rgba(0,0,0,0.65)); }
-        #gunHud.idle { animation: gunBob 2.4s ease-in-out infinite; }
-        #gunHud.recoil { transform: translate(10px, 40px) rotate(-7deg) !important; }
-        @keyframes gunBob { 0%,100%{ transform: translateY(0);} 50%{ transform: translateY(-10px);} }
-
-        #muzzleFlash { position: fixed; z-index: 999998; width: 110px; height: 110px; pointer-events:none; display:none; transform: translate(-50%,-50%); }
-        #muzzleFlash.show { animation: flashPop 0.09s ease-out forwards; }
-        @keyframes flashPop { 0%{ opacity:1; transform: translate(-50%,-50%) scale(0.35) rotate(0deg);} 100%{ opacity:0; transform: translate(-50%,-50%) scale(1.5) rotate(25deg);} }
-
-        .csHint {
-            position: fixed; top: 90px; left: 50%; transform: translateX(-50%); z-index: 999997;
-            background: rgba(0,0,0,0.75); color: #ff8080; padding: 10px 20px; border-radius: 8px;
-            font-size: 0.95em; display: none; text-align:center; border: 1px solid rgba(255,80,80,0.35);
-            font-weight: 600;
-        }
-
-        .bullet-hole { position: fixed; z-index: 998; pointer-events: none; transform: translate(-50%,-50%) rotate(var(--r,0deg)); }
-        .bullet-hole svg { width: 36px; height: 36px; }
-
-        .smoke-puff {
-            position: fixed; z-index: 997; pointer-events: none; width: 26px; height: 26px; border-radius: 50%;
-            background: radial-gradient(circle, rgba(120,120,120,0.6), rgba(120,120,120,0) 70%);
-            transform: translate(-50%,-50%); animation: smokeRise 0.8s ease-out forwards;
-        }
-        @keyframes smokeRise { 0%{ opacity:0.75; transform: translate(-50%,-50%) scale(0.5);} 100%{ opacity:0; transform: translate(-50%,-80%) scale(2.4);} }
-
-        .spark { position: fixed; z-index: 998; pointer-events: none; width: 3px; height: 12px; background: linear-gradient(#fff5c2,#ff9d2e); border-radius: 2px; transform-origin: center bottom; }
-        .spark.anim { animation: sparkFly 0.35s ease-out forwards; }
-        @keyframes sparkFly { 0%{ opacity:1; transform: translate(0,0) scaleY(1);} 100%{ opacity:0; transform: translate(var(--sx), var(--sy)) scaleY(0.4);} }
-
-        .shard { position: fixed; background: #21262d; border: 1px solid #30363d; z-index: 996; pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .rubble { position: fixed; z-index: 5; pointer-events: none; background: #2a2f38; border: 1px solid #3a4149; border-radius: 2px; opacity: 0.9; }
-
-        body.shaking { animation: bigShake 0.24s ease-in-out; }
-        @keyframes bigShake {
-            0%,100% { transform: translate(0,0) rotate(0) scale(1); }
-            15% { transform: translate(-8px,5px) rotate(-0.6deg) scale(1.005); }
-            35% { transform: translate(8px,-5px) rotate(0.6deg) scale(1.005); }
-            55% { transform: translate(-6px,-4px) rotate(-0.3deg); }
-            75% { transform: translate(6px,4px) rotate(0.3deg); }
-        }
-
-        #dmgFlash { position: fixed; inset: 0; z-index: 999996; pointer-events: none; background: radial-gradient(ellipse at center, transparent 40%, rgba(255,0,0,0.35) 100%); opacity: 0; display:none; }
-        #dmgFlash.show { animation: dmgFlashAnim 0.28s ease-out; }
-        @keyframes dmgFlashAnim { 0%{opacity:0.9;} 100%{opacity:0;} }
-
-        #vignette { position: fixed; inset: 0; z-index: 999995; pointer-events: none; box-shadow: inset 0 0 200px 50px rgba(0,0,0,0.6); opacity: 0; display:none; }
-
-        #comboText {
-            position: fixed; top: 40%; left: 50%; transform: translate(-50%,-50%) scale(0.7); z-index: 999997;
-            font-size: 3em; font-weight: 900; color: #ff5555; text-shadow: 0 0 20px rgba(255,80,80,0.8), 0 0 4px #000;
-            opacity: 0; pointer-events: none; letter-spacing: 2px;
-        }
-        #comboText.pop { animation: comboPop 0.5s ease-out forwards; }
-        @keyframes comboPop { 0%{ opacity:0; transform: translate(-50%,-50%) scale(0.5) rotate(-8deg);} 30%{ opacity:1; transform: translate(-50%,-50%) scale(1.2) rotate(4deg);} 100%{ opacity:0; transform: translate(-50%,-60%) scale(1) rotate(0deg);} }
-
-        #endScreen {
-            position: fixed; inset: 0; background: radial-gradient(circle at 50% 30%, #2a0505, #000 75%);
-            z-index: 9999999; display: none; align-items: center; justify-content: center; flex-direction: column;
-            text-align: center; padding: 20px; box-sizing: border-box;
-        }
-        #endScreen.show { display: flex; animation: fadeIn 0.6s ease; }
-        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-        #endScreen img { width: 140px; margin-bottom: 20px; filter: drop-shadow(0 0 20px #ff5555); }
-        #endScreen h1 { color: #fff; font-size: 1.9em; margin: 0 0 10px 0; }
-        #endScreen p.stats { color: #ff9d9d; font-size: 1em; margin: 0 0 25px 0; letter-spacing: 1px; }
-        #endScreen a.supp {
-            background: #FFDD00; color: #000; padding: 14px 32px; border-radius: 8px;
-            font-weight: bold; text-decoration: none; font-size: 1.1em; transition: 0.2s;
-        }
-        #endScreen a.supp:hover { transform: scale(1.06); box-shadow: 0 0 25px rgba(255,221,0,0.5); }
-
-        #hud {
-            position: fixed; top: 140px; right: 20px; z-index: 999997; color: #ff9090;
-            font-size: 0.85em; background: rgba(0,0,0,0.65); padding: 8px 14px; border-radius: 6px;
-            display: none; font-weight: 700; letter-spacing: 0.5px; text-align: right; line-height: 1.6;
-        }
-        #hud span.big { font-size: 1.3em; color: #fff; }
     </style>
 </head>
 <body>
     <div class="top-banner">Spodobały Ci się dodatki? <a href="https://suppi.pl/besiak" target="_blank">Wesprzyj mnie <img src="https://i.imgur.com/syTg29C.png" alt="Dzik"></a></div>
-
-    <nav class="navbar destructible" data-hp="5">
+    
+    <nav class="navbar">
         <a href="/" class="nav-brand"><img src="https://i.imgur.com/OAtRFEw.png" alt="Baddonz Logo">BADDONZ</a>
         <div class="nav-links"><a href="/dodatki"><i class="fas fa-puzzle-piece"></i> Dodatki</a></div>
-        <div class="crack-layer"></div>
     </nav>
 
     <div class="content">
         <h2>Lista Dodatków</h2>
         <div class="addons-grid" id="addons-container">
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-rocket"></i></div><h3 class="addon-title">Auto Przywo</h3></div><div class="addon-tags"></div><p class="addon-desc">Automatyczna akceptacja przywołań.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-skull-crossbones"></i></div><h3 class="addon-title">AutoX</h3></div><div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div><p class="addon-desc">Automatyczne atakowanie graczy z konfiguracją.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-gift"></i></div><h3 class="addon-title">Free Gift</h3></div><div class="addon-tags"></div><p class="addon-desc">Automatyczne odbieranie kalendarza i aktualności w grze.</p><div class="crack-layer"></div></div>
-
-            <div class="addon-box destructible" id="itemInfoAddon" data-hp="4">
-                <div class="addon-header"><div class="addon-icon"><i class="fas fa-circle-info"></i></div><h3 class="addon-title">ItemInfo</h3></div>
-                <div class="addon-tags"></div>
-                <p class="addon-desc">Szczegółowe informacje o itemkach.</p>
-                <div class="safe-door"><div class="dial"><i class="fas fa-lock"></i></div></div>
-                <div class="safe-inner">
-                    <div id="weaponsRow">
-                        <i class="fas fa-gun weapon-pick" data-weapon="ak" title="AK"></i>
-                        <i class="fas fa-crosshairs weapon-pick" data-weapon="pistol" title="Pistolet"></i>
-                    </div>
-                    <span>Wybierz broń</span>
-                </div>
-                <div class="crack-layer"></div>
-            </div>
-
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-search"></i></div><h3 class="addon-title">Item Searcher</h3></div><div class="addon-tags"></div><p class="addon-desc">Wyszukuje przedmioty w ekwipunku i depozycie.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-gamepad"></i></div><h3 class="addon-title">Minigierki</h3></div><div class="addon-tags"></div><p class="addon-desc">Wizualne ułatwienie rozwiązania minigierek.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-comment"></i></div><h3 class="addon-title">MiniChat</h3></div><div class="addon-tags"></div><p class="addon-desc">Umożliwia dostosowanie wielkości chatu.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-users-slash"></i></div><h3 class="addon-title">Rozwiązywanie Grupy</h3></div><div class="addon-tags"></div><p class="addon-desc">Rozwiązywanie grupy z konfiguracją.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-bed"></i></div><h3 class="addon-title">Sleeping Commander</h3></div><div class="addon-tags"></div><p class="addon-desc">Oddaje dowodzenie.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-user-plus"></i></div><h3 class="addon-title">Szybka Grupa</h3></div><div class="addon-tags"></div><p class="addon-desc">Zapraszanie do grupy z konfiguracją.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-arrow-trend-up"></i></div><h3 class="addon-title">Ulepszara</h3></div><div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div><p class="addon-desc">Automatyczne ulepszanie wybranego itemu wraz z konfiguracją.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-trash-can"></i></div><h3 class="addon-title">Śmieciara</h3></div><div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div><p class="addon-desc">Niszczenie itemów z poziomu panelu z konfiguracją.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-crosshairs"></i></div><h3 class="addon-title">Zasięg Walki</h3></div><div class="addon-tags"></div><p class="addon-desc">Podświetla zasięg walki na ekranie.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4"><div class="addon-header"><div class="addon-icon"><i class="fas fa-map-marker-alt"></i></div><h3 class="addon-title">Znacznik Teleportów</h3></div><div class="addon-tags"></div><p class="addon-desc">Podpisuje teleporty, możliwość edytowania podpisów.</p><div class="crack-layer"></div></div>
-            <div class="addon-box destructible" data-hp="4" style="border: 2px solid #ffeb3b;">
+            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-rocket"></i></div><h3 class="addon-title">Auto Przywo</h3></div><div class="addon-tags"></div><p class="addon-desc">Automatyczna akceptacja przywołań.</p></div>
+            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-skull-crossbones"></i></div><h3 class="addon-title">AutoX</h3></div><div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div><p class="addon-desc">Automatyczne atakowanie graczy z konfiguracją.</p></div>
+            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-gift"></i></div><h3 class="addon-title">Free Gift</h3></div><div class="addon-tags"></div><p class="addon-desc">Automatyczne odbieranie kalendarza i aktualności w grze.</p></div>
+            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-circle-info"></i></div><h3 class="addon-title">ItemInfo</h3></div><div class="addon-tags"></div><p class="addon-desc">Szczegółowe informacje o itemkach.</p></div>
+            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-search"></i></div><h3 class="addon-title">Item Searcher</h3></div><div class="addon-tags"></div><p class="addon-desc">Wyszukuje przedmioty w ekwipunku i depozycie.</p></div>
+            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-gamepad"></i></div><h3 class="addon-title">Minigierki</h3></div><div class="addon-tags"></div><p class="addon-desc">Wizualne ułatwienie rozwiązania minigierek.</p></div>
+            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-comment"></i></div><h3 class="addon-title">MiniChat</h3></div><div class="addon-tags"></div><p class="addon-desc">Umożliwia dostosowanie wielkości chatu.</p></div>
+            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-users-slash"></i></div><h3 class="addon-title">Rozwiązywanie Grupy</h3></div><div class="addon-tags"></div><p class="addon-desc">Rozwiązywanie grupy z konfiguracją.</p></div>
+            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-bed"></i></div><h3 class="addon-title">Sleeping Commander</h3></div><div class="addon-tags"></div><p class="addon-desc">Oddaje dowodzenie.</p></div>
+            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-user-plus"></i></div><h3 class="addon-title">Szybka Grupa</h3></div><div class="addon-tags"></div><p class="addon-desc">Zapraszanie do grupy z konfiguracją.</p></div>
+            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-arrow-trend-up"></i></div><h3 class="addon-title">Ulepszara</h3></div><div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div><p class="addon-desc">Automatyczne ulepszanie wybranego itemu wraz z konfiguracją.</p></div>
+            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-trash-can"></i></div><h3 class="addon-title">Śmieciara</h3></div><div class="addon-tags"><span class="tag"><i class="fas fa-cog"></i> Ustawienia</span></div><p class="addon-desc">Niszczenie itemów z poziomu panelu z konfiguracją.</p></div>
+            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-crosshairs"></i></div><h3 class="addon-title">Zasięg Walki</h3></div><div class="addon-tags"></div><p class="addon-desc">Podświetla zasięg walki na ekranie.</p></div>
+            <div class="addon-box"><div class="addon-header"><div class="addon-icon"><i class="fas fa-map-marker-alt"></i></div><h3 class="addon-title">Znacznik Teleportów</h3></div><div class="addon-tags"></div><p class="addon-desc">Podpisuje teleporty, możliwość edytowania podpisów.</p></div>
+            <div class="addon-box" style="border: 2px solid #ffeb3b;">
                 <div class="addon-header">
                     <div class="addon-icon"><i class="fas fa-comments"></i></div>
                     <h3 class="addon-title" style="color: #ffeb3b;">Better Message [PREMIUM]</h3>
                 </div>
                 <div class="addon-tags"></div>
                 <p class="addon-desc">Możliwość dostosowywania wyglądu powiadomień</p>
-                <div class="crack-layer"></div>
             </div>
         </div>
     </div>
 
-    <div class="idea-panel destructible" data-hp="6">
-        <div class="idea-icon-zone">
-            <i class="fa-solid fa-lightbulb" id="lampIcon"></i>
-            <i class="fa-solid fa-key" id="keyIcon"></i>
-        </div>
+    <div class="idea-panel">
+        <i class="fa-solid fa-lightbulb"></i>
         <h3>Masz pomysł na dodatek?</h3>
         <p>Brakuje Ci jakiejś funkcji w grze? A może chcesz zupełnie nowy dodatek? Dołącz do naszego Discorda i opisz swój pomysł!</p>
         <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="dc-btn"><i class="fab fa-discord"></i> Napisz propozycję</a>
-        <div class="crack-layer"></div>
     </div>
 
-    <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="discord-icon-fixed destructible" data-hp="2"><i class="fab fa-discord"></i><div class="crack-layer"></div></a>
-    <div class="footer-banner destructible" data-hp="5">Znalazłeś błąd lub masz jakiś problem? Dołącz do <a href="https://discord.gg/rJeNVHr49f" target="_blank">discorda</a>, lub napisz do mnie na dc: besiak6<div class="crack-layer"></div></div>
-
-    <i class="fas fa-key" id="cursorKey"></i>
-
-    <div id="crosshair"><div class="bar top"></div><div class="bar bottom"></div><div class="bar left"></div><div class="bar right"></div><div class="dot"></div></div>
-    <div id="hitmarker"><svg viewBox="0 0 34 34"><g stroke="#ff3232" stroke-width="3.5" stroke-linecap="round"><line x1="4" y1="4" x2="13" y2="13"/><line x1="30" y1="4" x2="21" y2="13"/><line x1="4" y1="30" x2="13" y2="21"/><line x1="30" y1="30" x2="21" y2="21"/></g></svg></div>
-    <div id="muzzleFlash"><svg viewBox="0 0 90 90"><polygon points="45,2 55,35 88,45 55,55 45,88 35,55 2,45 35,35" fill="#ffd27a"/><polygon points="45,15 50,40 75,45 50,50 45,75 40,50 15,45 40,40" fill="#fff3d0"/></svg></div>
-
-    <div id="gunHud">
-        <svg viewBox="0 0 340 260" xmlns="http://www.w3.org/2000/svg" id="gunSvg">
-            <g id="handGroup">
-                <path d="M120 260 L110 190 Q108 160 140 150 L210 140 L230 175 L200 200 L190 260 Z" fill="#c98a5e"/>
-                <path d="M150 175 L200 165 L215 190 L165 200 Z" fill="#b57a4f"/>
-            </g>
-            <g id="akGroup">
-                <rect x="150" y="120" width="170" height="26" rx="4" fill="#3b2a1d"/>
-                <rect x="150" y="120" width="170" height="8" rx="3" fill="#55402c"/>
-                <rect x="300" y="105" width="18" height="55" rx="3" fill="#2a2a2a"/>
-                <rect x="60" y="150" width="95" height="20" rx="4" fill="#7a5230"/>
-                <path d="M60 170 L45 225 L65 225 L80 172 Z" fill="#5c3d20"/>
-                <rect x="180" y="95" width="14" height="30" fill="#1c1c1c"/>
-                <rect x="120" y="112" width="34" height="14" rx="2" fill="#2a2a2a"/>
-                <circle cx="318" cy="118" r="6" fill="#111"/>
-            </g>
-            <g id="pistolGroup" style="display:none;">
-                <rect x="170" y="130" width="110" height="20" rx="4" fill="#2b2b2b"/>
-                <rect x="270" y="126" width="20" height="10" fill="#111"/>
-                <path d="M190 150 L200 210 L225 210 L225 150 Z" fill="#1c1c1c"/>
-                <rect x="205" y="120" width="30" height="12" rx="2" fill="#3a3a3a"/>
-            </g>
-        </svg>
-    </div>
-
-    <div class="csHint" id="csHint">Strzelaj klikając LPM — zniszcz całą stronę.</div>
-    <div id="hud">STREAK: <span class="big" id="streakVal">0</span><br>ZNISZCZONO: <span class="big" id="destroyedVal">0</span> / <span id="totalVal">0</span></div>
-    <div id="comboText"></div>
-    <div id="dmgFlash"></div>
-    <div id="vignette"></div>
-
-    <div id="endScreen">
-        <img src="https://i.imgur.com/syTg29C.png" alt="Dzik">
-        <h1>Strona zrównana z ziemią.</h1>
-        <p class="stats" id="finalStats"></p>
-        <a class="supp" href="https://suppi.pl/besiak" target="_blank">Wesprzyj mnie tutaj</a>
-    </div>
-
-<script>
-(function(){
-    "use strict";
-
-    /* ---------------- LAMPKA ---------------- */
-    const lamp = document.getElementById('lampIcon');
-    const key = document.getElementById('keyIcon');
-    const zone = lamp.parentElement;
-    let dragging = false;
-
-    function zoneBounds(){ return zone.getBoundingClientRect(); }
-    function setLampPos(x, y){
-        const b = zoneBounds();
-        const half = 20;
-        x = Math.max(half, Math.min(b.width - half, x));
-        y = Math.max(half, Math.min(b.height - half, y));
-        lamp.style.left = x + 'px';
-        lamp.style.top = y + 'px';
-    }
-    lamp.addEventListener('pointerdown', (e) => { dragging = true; lamp.setPointerCapture(e.pointerId); });
-    lamp.addEventListener('pointermove', (e) => {
-        if(!dragging) return;
-        const b = zoneBounds();
-        setLampPos(e.clientX - b.left, e.clientY - b.top);
-        if(!key.classList.contains('revealed')) key.classList.add('revealed');
-    });
-    lamp.addEventListener('pointerup', () => { dragging = false; });
-    lamp.addEventListener('pointercancel', () => { dragging = false; });
-
-    let hasKey = false;
-    key.addEventListener('click', (e) => {
-        if(!key.classList.contains('revealed') || hasKey) return;
-        hasKey = true;
-        key.classList.add('picked');
-        document.getElementById('cursorKey').style.display = 'block';
-        e.stopPropagation();
-    });
-    document.addEventListener('pointermove', (e) => {
-        if(hasKey){
-            const ck = document.getElementById('cursorKey');
-            ck.style.left = e.clientX + 'px';
-            ck.style.top = e.clientY + 'px';
-        }
-    });
-
-    /* ---------------- SEJF ---------------- */
-    const itemInfo = document.getElementById('itemInfoAddon');
-    itemInfo.classList.add('unlockable');
-    let safeOpened = false;
-
-    itemInfo.querySelector('.addon-icon').addEventListener('click', () => {
-        if(!hasKey || safeOpened) return;
-        safeOpened = true;
-        hasKey = false;
-        document.getElementById('cursorKey').style.display = 'none';
-        itemInfo.classList.add('opening');
-        setTimeout(() => { itemInfo.classList.add('opened'); }, 150);
-    });
-
-    document.querySelectorAll('.weapon-pick').forEach(el => {
-        el.addEventListener('click', (e) => {
-            e.stopPropagation();
-            enterCsMode(el.dataset.weapon);
-        });
-    });
-
-    /* ---------------- TRYB FPS ---------------- */
-    const crosshair = document.getElementById('crosshair');
-    const hitmarker = document.getElementById('hitmarker');
-    const muzzleFlash = document.getElementById('muzzleFlash');
-    const gunHud = document.getElementById('gunHud');
-    const csHint = document.getElementById('csHint');
-    const hud = document.getElementById('hud');
-    const dmgFlash = document.getElementById('dmgFlash');
-    const vignette = document.getElementById('vignette');
-    const comboText = document.getElementById('comboText');
-    let csActive = false;
-    let weapon = 'ak';
-
-    const destructibles = Array.from(document.querySelectorAll('.destructible'));
-    const totalCount = destructibles.length;
-    let destroyedCount = 0;
-    let streak = 0;
-    let lastKillTime = 0;
-
-    document.getElementById('totalVal').textContent = totalCount;
-
-    function enterCsMode(w){
-        if(csActive) return;
-        csActive = true;
-        weapon = w || 'ak';
-        document.getElementById('akGroup').style.display = weapon === 'ak' ? '' : 'none';
-        document.getElementById('pistolGroup').style.display = weapon === 'pistol' ? '' : 'none';
-
-        document.body.classList.add('cs-mode');
-        crosshair.style.display = 'block';
-        gunHud.style.display = 'block';
-        gunHud.classList.add('idle');
-        muzzleFlash.style.display = 'block';
-        hitmarker.style.display = 'block';
-        vignette.style.display = 'block';
-        vignette.style.opacity = '1';
-        csHint.style.display = 'block';
-        hud.style.display = 'block';
-        getCtx();
-        setTimeout(() => { csHint.style.display = 'none'; }, 4200);
-    }
-
-    function updateHud(){
-        document.getElementById('destroyedVal').textContent = destroyedCount;
-        document.getElementById('streakVal').textContent = streak;
-    }
-
-    document.addEventListener('pointermove', (e) => {
-        if(!csActive) return;
-        crosshair.style.left = e.clientX + 'px';
-        crosshair.style.top = e.clientY + 'px';
-    });
-
-    /* ---------------- DŹWIĘK ---------------- */
-    let actx = null;
-    function getCtx(){
-        if(!actx){ try{ actx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ actx = null; } }
-        return actx;
-    }
-    function playGunshot(){
-        const ctx = getCtx(); if(!ctx) return;
-        try{
-            const now = ctx.currentTime;
-            const pitch = weapon === 'pistol' ? 1.35 : 1;
-            const bufferSize = Math.floor(ctx.sampleRate * 0.18);
-            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for(let i=0;i<bufferSize;i++){
-                const decay = Math.pow(1 - i/bufferSize, 2.5);
-                data[i] = (Math.random()*2 - 1) * decay;
-            }
-            const noise = ctx.createBufferSource();
-            noise.buffer = buffer;
-            const bp = ctx.createBiquadFilter();
-            bp.type = 'bandpass';
-            bp.frequency.setValueAtTime(2200 * pitch, now);
-            bp.frequency.exponentialRampToValueAtTime(500 * pitch, now + 0.15);
-            bp.Q.value = 0.9;
-            const gain = ctx.createGain();
-            gain.gain.setValueAtTime(1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
-            noise.connect(bp).connect(gain).connect(ctx.destination);
-            noise.start(now);
-
-            const thump = ctx.createOscillator();
-            thump.type = 'triangle';
-            thump.frequency.setValueAtTime(140 * pitch, now);
-            thump.frequency.exponentialRampToValueAtTime(50 * pitch, now + 0.08);
-            const tg = ctx.createGain();
-            tg.gain.setValueAtTime(0.8, now);
-            tg.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
-            thump.connect(tg).connect(ctx.destination);
-            thump.start(now);
-            thump.stop(now + 0.1);
-        }catch(err){}
-    }
-    function playExplosionBit(){
-        const ctx = getCtx(); if(!ctx) return;
-        try{
-            const now = ctx.currentTime;
-            const bufferSize = Math.floor(ctx.sampleRate * 0.35);
-            const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for(let i=0;i<bufferSize;i++){
-                const decay = Math.pow(1 - i/bufferSize, 1.8);
-                data[i] = (Math.random()*2 - 1) * decay;
-            }
-            const noise = ctx.createBufferSource();
-            noise.buffer = buffer;
-            const lp = ctx.createBiquadFilter();
-            lp.type = 'lowpass';
-            lp.frequency.setValueAtTime(1800, now);
-            lp.frequency.exponentialRampToValueAtTime(120, now + 0.3);
-            const gain = ctx.createGain();
-            gain.gain.setValueAtTime(0.9, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-            noise.connect(lp).connect(gain).connect(ctx.destination);
-            noise.start(now);
-        }catch(err){}
-    }
-
-    function spawnBulletHole(x, y){
-        const hole = document.createElement('div');
-        hole.className = 'bullet-hole';
-        hole.style.left = x + 'px';
-        hole.style.top = y + 'px';
-        hole.style.setProperty('--r', (Math.random()*360) + 'deg');
-        const r = 15 + Math.random()*5;
-        hole.innerHTML = '<svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="'+r/2+'" fill="#050505" opacity="0.92"/>' +
-            [...Array(7)].map(() => {
-                const a = Math.random()*360;
-                const len = 9 + Math.random()*10;
-                const x2 = 18 + Math.cos(a*Math.PI/180)*len;
-                const y2 = 18 + Math.sin(a*Math.PI/180)*len;
-                return '<line x1="18" y1="18" x2="'+x2+'" y2="'+y2+'" stroke="#050505" stroke-width="1.6" opacity="0.75"/>';
-            }).join('') + '</svg>';
-        document.body.appendChild(hole);
-
-        const puff = document.createElement('div');
-        puff.className = 'smoke-puff';
-        puff.style.left = x + 'px';
-        puff.style.top = y + 'px';
-        document.body.appendChild(puff);
-        setTimeout(() => puff.remove(), 850);
-
-        for(let i=0;i<6;i++){
-            const s = document.createElement('div');
-            s.className = 'spark';
-            s.style.left = x + 'px';
-            s.style.top = y + 'px';
-            const ang = Math.random()*Math.PI*2;
-            const dist = 20 + Math.random()*35;
-            s.style.setProperty('--sx', Math.cos(ang)*dist + 'px');
-            s.style.setProperty('--sy', Math.sin(ang)*dist + 'px');
-            s.style.transform = 'rotate(' + (ang*180/Math.PI) + 'deg)';
-            document.body.appendChild(s);
-            requestAnimationFrame(() => s.classList.add('anim'));
-            setTimeout(() => s.remove(), 400);
-        }
-    }
-
-    function spawnMuzzleFlash(x, y){
-        muzzleFlash.style.left = x + 'px';
-        muzzleFlash.style.top = y + 'px';
-        muzzleFlash.classList.remove('show');
-        void muzzleFlash.offsetWidth;
-        muzzleFlash.classList.add('show');
-    }
-    function showHitmarker(x, y){
-        hitmarker.style.left = x + 'px';
-        hitmarker.style.top = y + 'px';
-        hitmarker.classList.remove('show');
-        void hitmarker.offsetWidth;
-        hitmarker.classList.add('show');
-    }
-    function showDmgFlash(){
-        dmgFlash.style.display = 'block';
-        dmgFlash.classList.remove('show');
-        void dmgFlash.offsetWidth;
-        dmgFlash.classList.add('show');
-    }
-
-    function drawCrack(el, stage){
-        const layer = el.querySelector(':scope > .crack-layer');
-        if(!layer) return;
-        const lines = [];
-        const count = 4 + stage*4;
-        for(let i=0;i<count;i++){
-            const x1 = 50 + (Math.random()*20-10);
-            const y1 = 50 + (Math.random()*20-10);
-            const ang = Math.random()*360;
-            const len = 22 + Math.random()*38;
-            const x2 = x1 + Math.cos(ang*Math.PI/180)*len;
-            const y2 = y1 + Math.sin(ang*Math.PI/180)*len;
-            lines.push('<line x1="'+x1+'%" y1="'+y1+'%" x2="'+x2+'%" y2="'+y2+'%" stroke="#000" stroke-width="1.6" opacity="0.8"/>');
-        }
-        layer.innerHTML = '<svg preserveAspectRatio="none" viewBox="0 0 100 100">' + lines.join('') + '</svg>';
-        layer.classList.add('show');
-    }
-
-    function scorchMark(rect){
-        const scorch = document.createElement('div');
-        scorch.className = 'scorch';
-        const size = Math.min(rect.width, rect.height) * 0.9;
-        scorch.style.width = size + 'px';
-        scorch.style.height = size + 'px';
-        scorch.style.left = (rect.left + rect.width/2 - size/2) + 'px';
-        scorch.style.top = (rect.top + rect.height/2 - size/2) + 'px';
-        document.body.appendChild(scorch);
-    }
-
-    function spawnRubble(rect, n){
-        for(let i=0;i<n;i++){
-            const r = document.createElement('div');
-            r.className = 'rubble';
-            const size = 4 + Math.random()*7;
-            r.style.width = size + 'px';
-            r.style.height = size + 'px';
-            const x = rect.left + Math.random()*rect.width;
-            r.style.left = x + 'px';
-            r.style.top = (rect.bottom - 4) + 'px';
-            r.style.transform = 'rotate(' + (Math.random()*90-45) + 'deg)';
-            document.body.appendChild(r);
-        }
-    }
-
-    function shatterElement(el){
-        const rect = el.getBoundingClientRect();
-        const cols = 5, rows = 4;
-        const w = rect.width / cols, h = rect.height / rows;
-        for(let r=0; r<rows; r++){
-            for(let c=0; c<cols; c++){
-                const shard = document.createElement('div');
-                shard.className = 'shard';
-                shard.style.left = (rect.left + c*w) + 'px';
-                shard.style.top = (rect.top + r*h) + 'px';
-                shard.style.width = w + 'px';
-                shard.style.height = h + 'px';
-                shard.style.transition = 'transform ' + (0.55 + Math.random()*0.35) + 's cubic-bezier(.2,.7,.3,1), opacity ' + (0.55 + Math.random()*0.35) + 's ease-in';
-                document.body.appendChild(shard);
-                requestAnimationFrame(() => {
-                    const dx = (c - (cols-1)/2) * 100 + (Math.random()*80-40);
-                    const dy = (r - (rows-1)/2) * 60 + 260 + Math.random()*160;
-                    const rot = (Math.random()*640 - 320);
-                    shard.style.transform = `translate(${dx}px, ${dy}px) rotate(${rot}deg)`;
-                    shard.style.opacity = '0';
-                });
-                setTimeout(() => shard.remove(), 1000);
-            }
-        }
-        scorchMark(rect);
-        spawnRubble(rect, 10);
-        el.style.visibility = 'hidden';
-        el.style.pointerEvents = 'none';
-    }
-
-    function showCombo(n){
-        if(n < 2) return;
-        comboText.textContent = 'x' + n + ' STREAK!';
-        comboText.classList.remove('pop');
-        void comboText.offsetWidth;
-        comboText.classList.add('pop');
-    }
-
-    function hitDestructible(el){
-        if(el.dataset.destroyed === '1') return;
-        const maxHp = parseInt(el.dataset.hp, 10);
-        let hp = (el.dataset.curHp !== undefined ? parseInt(el.dataset.curHp,10) : maxHp) - 1;
-        el.dataset.curHp = hp;
-
-        el.classList.remove('dmg');
-        void el.offsetWidth;
-        el.classList.add('dmg');
-
-        showHitmarker(lastShotX, lastShotY);
-        showDmgFlash();
-
-        if(hp <= 0){
-            el.dataset.destroyed = '1';
-            destroyedCount++;
-            const t = Date.now();
-            if(t - lastKillTime < 1400) streak++; else streak = 1;
-            lastKillTime = t;
-            showCombo(streak);
-            updateHud();
-            playExplosionBit();
-            shatterElement(el);
-            checkEnd();
-        } else {
-            const stage = Math.min(3, maxHp - hp);
-            drawCrack(el, stage);
-        }
-    }
-
-    function checkEnd(){
-        if(destroyedCount >= totalCount) setTimeout(triggerEnd, 500);
-    }
-
-    function triggerEnd(){
-        csActive = false;
-        document.body.classList.remove('cs-mode');
-        crosshair.style.display = 'none';
-        gunHud.style.display = 'none';
-        muzzleFlash.style.display = 'none';
-        hitmarker.style.display = 'none';
-        hud.style.display = 'none';
-        vignette.style.opacity = '0';
-        document.querySelectorAll('.bullet-hole, .rubble, .scorch').forEach(h => h.remove());
-        document.getElementById('finalStats').textContent = 'Zniszczono ' + destroyedCount + ' / ' + totalCount + ' elementów • najlepszy streak: ' + streak;
-        document.getElementById('endScreen').classList.add('show');
-    }
-
-    let lastShotX = 0, lastShotY = 0;
-
-    document.addEventListener('selectstart', (e) => { if(csActive) e.preventDefault(); });
-    document.addEventListener('mousedown', (e) => { if(csActive) e.preventDefault(); }, true);
-
-    document.addEventListener('click', (e) => {
-        if(!csActive) return;
-        e.preventDefault();
-        e.stopPropagation();
-        e.stopImmediatePropagation();
-        lastShotX = e.clientX; lastShotY = e.clientY;
-
-        playGunshot();
-        spawnBulletHole(e.clientX, e.clientY);
-        spawnMuzzleFlash(e.clientX - 40, e.clientY + 30);
-
-        gunHud.classList.remove('idle');
-        gunHud.classList.add('recoil');
-        setTimeout(() => { gunHud.classList.remove('recoil'); gunHud.classList.add('idle'); }, 90);
-
-        crosshair.classList.add('shot');
-        setTimeout(() => crosshair.classList.remove('shot'), 120);
-
-        document.body.classList.add('shaking');
-        setTimeout(() => document.body.classList.remove('shaking'), 240);
-
-        const target = document.elementFromPoint(e.clientX, e.clientY);
-        if(target){
-            const destructible = target.closest('.destructible');
-            if(destructible) hitDestructible(destructible);
-        }
-    }, true);
-
-})();
-</script>
+    <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="discord-icon-fixed"><i class="fab fa-discord"></i></a>
+    <div class="footer-banner">Znalazłeś błąd lub masz jakiś problem? Dołącz do <a href="https://discord.gg/rJeNVHr49f" target="_blank">discorda</a>, lub napisz do mnie na dc: besiak6</div>
 </body>
-</html>
+</html> 
