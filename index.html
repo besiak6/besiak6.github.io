@@ -11,7 +11,7 @@
         
         .top-banner { position: fixed; top: 0; left: 0; width: 100%; background-color: #FFDD00; color: #000; padding: 5px 0; font-weight: bold; font-size: 0.9em; z-index: 1001; box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; gap: 5px; }
         .top-banner a { color: #000; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px; }
-        .top-banner img { height: 18px; width: auto; vertical-align: middle; }
+        .top-banner img { height: 18px; width: auto; vertical-align: middle; cursor: pointer; }
         
         .footer-banner { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #161b22; color: #ff5555; padding: 10px 0; font-size: 0.9em; z-index: 1001; border-top: 1px solid #30363d; font-weight: 500; }
         .footer-banner a { color: #58a6ff; text-decoration: none; font-weight: bold; }
@@ -45,10 +45,19 @@
         .right-panel p { font-size: 0.85em; color: #8b949e; margin: 0 0 15px 0; }
         .right-panel .dc-btn { display: inline-block; width: 100%; padding: 8px 0; background: #5865F2; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 0.9em; transition: 0.2s; }
         .right-panel .dc-btn:hover { background: #4752C4; }
+
+        /* Styl dla Dzika Uciekiniera */
+        #runner-dzik {
+            position: fixed;
+            width: 80px;
+            z-index: 9999;
+            transition: left 0.25s ease-out, top 0.25s ease-out; /* Płynne uciekanie */
+            pointer-events: none; /* Żeby nie blokował klikania w strone */
+        }
     </style>
 </head>
 <body>
-    <div class="top-banner">Spodobały Ci się dodatki? <a href="https://suppi.pl/besiak" target="_blank">Wesprzyj mnie <img src="https://i.imgur.com/syTg29C.png" alt="Dzik"></a></div>
+    <div class="top-banner">Spodobały Ci się dodatki? <a href="https://suppi.pl/besiak" target="_blank">Wesprzyj mnie <img id="banner-dzik" src="https://i.imgur.com/syTg29C.png" alt="Dzik"></a></div>
     
     <nav class="navbar">
         <a href="/" class="nav-brand"><img src="https://i.imgur.com/OAtRFEw.png" alt="Baddonz Logo">BADDONZ</a>
@@ -72,5 +81,66 @@
     </div>
     
     <div class="footer-banner">Znalazłeś błąd lub masz jakiś problem? Dołącz do <a href="https://discord.gg/rJeNVHr49f" target="_blank">discorda</a>, lub napisz do mnie na dc: besiak6</div>
+
+    <!-- Dzik Uciekinier ukryty poza ekranem na start -->
+    <img id="runner-dzik" src="https://i.imgur.com/syTg29C.png" alt="Dzik Uciekinier" style="top: 150%; left: 50%;">
+
+    <script>
+        const bannerDzik = document.getElementById('banner-dzik');
+        const runnerDzik = document.getElementById('runner-dzik');
+        let hoverTimer;
+        let isRunnerActive = false;
+
+        // Odliczanie 5 sekund
+        bannerDzik.addEventListener('mouseenter', () => {
+            if (isRunnerActive) return;
+            hoverTimer = setTimeout(() => {
+                isRunnerActive = true;
+                
+                // Dzik wyskakuje ze stopki
+                runnerDzik.style.top = (window.innerHeight - 150) + 'px';
+                runnerDzik.style.left = (window.innerWidth / 2 - 40) + 'px';
+
+                // Nasłuchiwacz uciekania
+                document.addEventListener('mousemove', runawayDzik);
+            }, 5000); // 5000ms = 5 sekund
+        });
+
+        // Przerwanie odliczania, jeśli zjedziesz wcześniej
+        bannerDzik.addEventListener('mouseleave', () => {
+            clearTimeout(hoverTimer);
+        });
+
+        // Funkcja spierdalania dzika xD
+        function runawayDzik(e) {
+            const dzikRect = runnerDzik.getBoundingClientRect();
+            const dzikCenterX = dzikRect.left + (dzikRect.width / 2);
+            const dzikCenterY = dzikRect.top + (dzikRect.height / 2);
+            
+            const mouseX = e.clientX;
+            const mouseY = e.clientY;
+            
+            const distX = dzikCenterX - mouseX;
+            const distY = dzikCenterY - mouseY;
+            const distance = Math.sqrt(distX * distX + distY * distY);
+            
+            // Jeśli kursor jest bliżej niż 200px - dzik ucieka
+            if (distance < 200) {
+                // Odpychamy go o 300px w przeciwnym kierunku do kursora
+                let moveX = (distX / distance) * 300;
+                let moveY = (distY / distance) * 300;
+                
+                let newLeft = dzikRect.left + moveX;
+                let newTop = dzikRect.top + moveY;
+                
+                // Trzymamy go w granicach ekranu (żeby nie uciekł za monitor)
+                newLeft = Math.max(20, Math.min(window.innerWidth - 100, newLeft));
+                newTop = Math.max(60, Math.min(window.innerHeight - 120, newTop));
+                
+                runnerDzik.style.left = newLeft + 'px';
+                runnerDzik.style.top = newTop + 'px';
+            }
+        }
+    </script>
 </body>
 </html>
