@@ -117,6 +117,13 @@
 
         /* ---- Tryb FPS ---- */
         body.cs-mode, body.cs-mode * { cursor: none !important; }
+        body.cs-mode, body.cs-mode * {
+            user-select: none !important; -webkit-user-select: none !important;
+            -moz-user-select: none !important; -ms-user-select: none !important;
+        }
+        body.cs-mode a, body.cs-mode button, body.cs-mode input, body.cs-mode label {
+            pointer-events: none !important;
+        }
 
         #crosshair { position: fixed; width: 40px; height: 40px; z-index: 999999; pointer-events: none; display: none; transform: translate(-50%,-50%); }
         #crosshair .bar { position: absolute; background: #e7e7e7; box-shadow: 0 0 3px rgba(0,0,0,0.9); }
@@ -582,8 +589,20 @@
 
     let lastShotX = 0, lastShotY = 0;
 
+    document.addEventListener('selectstart', (e) => {
+        if(csActive) e.preventDefault();
+    });
+
+    document.addEventListener('mousedown', (e) => {
+        if(!csActive) return;
+        e.preventDefault();
+    }, true);
+
     document.addEventListener('click', (e) => {
         if(!csActive) return;
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
         lastShotX = e.clientX; lastShotY = e.clientY;
 
         playGunshot();
@@ -605,7 +624,7 @@
             const destructible = target.closest('.destructible');
             if(destructible) hitDestructible(destructible);
         }
-    });
+    }, true);
 
 })();
 </script>
