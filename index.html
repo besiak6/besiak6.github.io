@@ -9,9 +9,9 @@
     <style>
         body { background: linear-gradient(135deg, #0d1117, #1b0033); color: #c9d1d9; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; text-align: center; overflow-x: hidden; }
         
-        .top-banner { position: fixed; top: 0; left: 0; width: 100%; background-color: #FFDD00; color: #000; padding: 5px 0; font-weight: bold; font-size: 0.9em; z-index: 1001; box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; gap: 5px; }
-        .top-banner a { color: #000; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px; }
-        .top-banner img { height: 18px; width: auto; vertical-align: middle; cursor: pointer; }
+        .top-banner { position: fixed; top: 0; left: 0; width: 100%; background-color: #FFDD00; color: #000; padding: 5px 0; font-weight: bold; font-size: 0.9em; z-index: 1001; box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; gap: 5px; cursor: pointer; }
+        .top-banner a { color: #000; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px; pointer-events: none; }
+        .top-banner img { height: 18px; width: auto; vertical-align: middle; }
         
         .footer-banner { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #161b22; color: #ff5555; padding: 10px 0; font-size: 0.9em; z-index: 1001; border-top: 1px solid #30363d; font-weight: 500; }
         .footer-banner a { color: #58a6ff; text-decoration: none; font-weight: bold; }
@@ -33,7 +33,7 @@
         .content { padding: 40px 20px; z-index: 10; margin-top: 50px; }
         h1 { font-size: 5em; margin-bottom: 5px; color: #58a6ff; text-shadow: 0 0 15px rgba(88, 166, 255, 0.5); font-weight: 800; opacity: 0; animation: slideDown 1s ease-out forwards; animation-delay: 0.3s; }
         .subtitle { font-size: 1.2em; margin-bottom: 40px; color: #c9d1d9; opacity: 0; animation: slideUp 1s ease-out forwards; animation-delay: 0.7s; }
-        .install-button { display: inline-block; padding: 12px 30px; font-size: 1.1em; font-weight: 600; text-decoration: none; color: #ffffff; background-color: #58a6ff; border-radius: 6px; transition: 0.2s; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); border: none; opacity: 0; animation: slideUp 1s ease-out forwards; animation-delay: 1.1s; }
+        .install-button { display: inline-block; padding: 12px 30px; font-size: 1.1em; font-weight: 600; text-decoration: none; color: #ffffff; background-color: #58a6ff; border-radius: 6px; transition: 0.2s; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); border: none; opacity: 0; animation: slideUp 1s ease-out forwards; animation-delay: 1.1s; cursor: pointer; }
         .install-button:hover { background-color: #79b7ff; transform: translateY(-2px); }
         .discord-icon-fixed { position: fixed; bottom: 55px; left: 20px; z-index: 1000; transition: transform 0.2s; color: #58a6ff; font-size: 40px; text-decoration: none; opacity: 0; animation: slideLeft 1s ease-out forwards; animation-delay: 1.5s; }
         .discord-icon-fixed:hover { transform: scale(1.1); }
@@ -43,7 +43,7 @@
         .right-panel img.ni-img { width: 100%; border-radius: 6px; margin-bottom: 10px; position: relative; z-index: 2; cursor: pointer; }
         .right-panel h4 { margin: 0 0 5px 0; color: #58a6ff; font-size: 1em; }
         .right-panel p { font-size: 0.85em; color: #8b949e; margin: 0 0 15px 0; }
-        .right-panel .dc-btn { display: inline-block; width: 100%; padding: 8px 0; background: #5865F2; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 0.9em; transition: 0.2s; }
+        .right-panel .dc-btn { display: inline-block; width: 100%; padding: 8px 0; background: #5865F2; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 0.9em; transition: 0.2s; cursor: pointer; border: none; }
         .right-panel .dc-btn:hover { background: #4752C4; }
 
         /* Styl dla Dzika Uciekiniera */
@@ -51,13 +51,85 @@
             position: fixed;
             width: 80px;
             z-index: 9999;
-            transition: left 0.25s ease-out, top 0.25s ease-out; /* Płynne uciekanie */
-            pointer-events: none; /* Żeby nie blokował klikania w strone */
+            transition: left 0.25s ease-out, top 0.25s ease-out;
+            pointer-events: auto; /* Zmienione na auto, żeby dało się go kliknąć! */
+            cursor: crosshair; /* Celownik dla zabawy */
         }
+
+        /* --- NOWE STYLE (SKACZĄCY DZIK, EKSPLOZJA, MODAL) --- */
+
+        /* Dzik wyskakujący z panelu */
+        #panel-dzik {
+            position: absolute;
+            width: 50px;
+            top: 70px; /* Początkowa ukryta pozycja */
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            z-index: 1; /* Pod tekstem h3, ale nad tłem */
+            cursor: pointer;
+            pointer-events: none; 
+            display: none;
+        }
+
+        .panel-dzik-jump {
+            display: block !important;
+            /* Faktyczny "skok" z wykorzystaniem krzywej beizera dla efektu wybicia i opadania */
+            animation: boarJump 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            pointer-events: auto !important;
+        }
+
+        @keyframes boarJump {
+            0% { top: 60px; transform: translateX(-50%) scale(0); z-index: 4; }
+            50% { top: -80px; transform: translateX(-50%) scale(1.2); z-index: 4; }
+            100% { top: -48px; transform: translateX(-50%) scale(1); z-index: 4; } /* -48px ląduje idealnie na górnej krawędzi */
+        }
+
+        /* Małe dziki wybuchające */
+        .mini-dzik {
+            position: fixed;
+            width: 30px;
+            pointer-events: none;
+            z-index: 10000;
+            animation: miniExplode 0.6s ease-out forwards;
+        }
+
+        @keyframes miniExplode {
+            0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translate(var(--dx), var(--dy)) scale(0) rotate(360deg); opacity: 0; }
+        }
+
+        /* Modal po złapaniu uciekiniera */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 100000;
+            display: none; justify-content: center; align-items: center;
+            opacity: 0; animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        .modal-content {
+            background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+            padding: 30px; text-align: center; max-width: 450px; color: #c9d1d9;
+            box-shadow: 0 0 30px rgba(255, 221, 0, 0.15); position: relative;
+        }
+
+        .modal-content h2 { color: #FFDD00; margin-top: 0; font-size: 1.8em;}
+        .modal-content p { font-size: 1.05em; line-height: 1.5; margin-bottom: 20px;}
+        
+        .modal-content .support-box {
+            background: rgba(13, 17, 23, 0.8); padding: 15px; border-radius: 8px;
+            border: 1px dashed #30363d; margin: 20px 0;
+        }
+        .modal-content .support-box p { font-size: 0.95em; margin-top: 0; }
+
+        .modal-content .small-print { font-size: 0.7em; color: #666; margin-top: 25px; margin-bottom: 0; }
+        .close-btn { width: auto !important; padding: 10px 25px !important; margin-top: 10px; font-size: 1em !important; }
     </style>
 </head>
 <body>
-    <div class="top-banner">Spodobały Ci się dodatki? <a href="https://suppi.pl/besiak" target="_blank">Wesprzyj mnie <img id="banner-dzik" src="https://i.imgur.com/syTg29C.png" alt="Dzik"></a></div>
+    <!-- Dodane id top-banner-trigger, żeby najechanie na cały baner działało -->
+    <div class="top-banner" id="top-banner-trigger">Spodobały Ci się dodatki? <a href="https://suppi.pl/besiak" target="_blank">Wesprzyj mnie <img src="https://i.imgur.com/syTg29C.png" alt="Dzik"></a></div>
     
     <nav class="navbar">
         <a href="/" class="nav-brand"><img src="https://i.imgur.com/OAtRFEw.png" alt="Baddonz Logo">BADDONZ</a>
@@ -73,6 +145,9 @@
     <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="discord-icon-fixed"><i class="fab fa-discord"></i></a>
     
     <div class="right-panel">
+        <!-- Ukryty skaczący dzik dodany wewnątrz panela -->
+        <img id="panel-dzik" src="https://i.imgur.com/syTg29C.png" alt="Dzik z panelu">
+        
         <h3>Polecane Serwery</h3>
         <img src="https://i.imgur.com/tFnmBzB.png" class="ni-img" alt="NI Theme">
         <h4>NI Theme</h4>
@@ -83,35 +158,52 @@
     <div class="footer-banner">Znalazłeś błąd lub masz jakiś problem? Dołącz do <a href="https://discord.gg/rJeNVHr49f" target="_blank">discorda</a>, lub napisz do mnie na dc: besiak6</div>
 
     <!-- Dzik Uciekinier ukryty poza ekranem na start -->
-    <img id="runner-dzik" src="https://i.imgur.com/syTg29C.png" alt="Dzik Uciekinier" style="top: 150%; left: 50%;">
+    <img id="runner-dzik" src="https://i.imgur.com/syTg29C.png" alt="Dzik Uciekinier" style="top: -150%; left: 50%;">
+
+    <!-- Modal wyskakujący po złapaniu uciekiniera -->
+    <div id="catch-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Dzik to najlepszy energol! 🐗</h2>
+            <p>Gratulacje, udało Ci się złapać uciekającego Dzika!</p>
+            
+            <div class="support-box">
+                <p>Jeżeli chcesz serio pomóc w rozwoju dodatków, albo po prostu wesprzeć mnie w ich tworzeniu, możesz to zrobić tutaj:</p>
+                <a href="https://suppi.pl/besiak" target="_blank" class="install-button">Wesprzyj na Suppi</a>
+            </div>
+            
+            <button id="close-modal" class="dc-btn close-btn">Zamknij</button>
+            <p class="small-print">Wykorzystano logo dzika w celach humorystycznych. Wszelkie prawa należą do firmy WK Dzik.</p>
+        </div>
+    </div>
 
     <script>
-        const bannerDzik = document.getElementById('banner-dzik');
+        // === LOGIKA UCIEKAJĄCEGO DZIKA Z GÓRNEGO PASKA ===
+        const topBanner = document.getElementById('top-banner-trigger');
         const runnerDzik = document.getElementById('runner-dzik');
         let hoverTimer;
         let isRunnerActive = false;
 
-        // Odliczanie 5 sekund
-        bannerDzik.addEventListener('mouseenter', () => {
+        // Odliczanie 2 sekund na CAŁYM pasku
+        topBanner.addEventListener('mouseenter', () => {
             if (isRunnerActive) return;
             hoverTimer = setTimeout(() => {
                 isRunnerActive = true;
                 
-                // Dzik wyskakuje ze stopki
-                runnerDzik.style.top = (window.innerHeight - 150) + 'px';
-                runnerDzik.style.left = (window.innerWidth / 2 - 40) + 'px';
+                // Dzik wyskakuje
+                runnerDzik.style.top = (window.innerHeight / 2) + 'px';
+                runnerDzik.style.left = (window.innerWidth / 2) + 'px';
 
                 // Nasłuchiwacz uciekania
                 document.addEventListener('mousemove', runawayDzik);
-            }, 5000); // 5000ms = 5 sekund
+            }, 2000); // Zmienione z 5000ms na 2000ms (2 sekundy)
         });
 
         // Przerwanie odliczania, jeśli zjedziesz wcześniej
-        bannerDzik.addEventListener('mouseleave', () => {
+        topBanner.addEventListener('mouseleave', () => {
             clearTimeout(hoverTimer);
         });
 
-        // Funkcja spierdalania dzika xD
+        // Funkcja uciekania
         function runawayDzik(e) {
             const dzikRect = runnerDzik.getBoundingClientRect();
             const dzikCenterX = dzikRect.left + (dzikRect.width / 2);
@@ -124,16 +216,14 @@
             const distY = dzikCenterY - mouseY;
             const distance = Math.sqrt(distX * distX + distY * distY);
             
-            // Jeśli kursor jest bliżej niż 200px - dzik ucieka
             if (distance < 200) {
-                // Odpychamy go o 300px w przeciwnym kierunku do kursora
                 let moveX = (distX / distance) * 300;
                 let moveY = (distY / distance) * 300;
                 
                 let newLeft = dzikRect.left + moveX;
                 let newTop = dzikRect.top + moveY;
                 
-                // Trzymamy go w granicach ekranu (żeby nie uciekł za monitor)
+                // Trzymamy go w granicach ekranu
                 newLeft = Math.max(20, Math.min(window.innerWidth - 100, newLeft));
                 newTop = Math.max(60, Math.min(window.innerHeight - 120, newTop));
                 
@@ -141,6 +231,68 @@
                 runnerDzik.style.top = newTop + 'px';
             }
         }
+
+        // === ŁAPANIE UCIEKINIERA (MODAL) ===
+        const catchModal = document.getElementById('catch-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+
+        // Używamy mousedown, żeby złapał od razu przy kliknięciu (szybsze niż click)
+        runnerDzik.addEventListener('mousedown', () => {
+            // Zatrzymujemy uciekanie
+            document.removeEventListener('mousemove', runawayDzik);
+            runnerDzik.style.display = 'none'; // Chowamy dzika
+            catchModal.style.display = 'flex'; // Pokazujemy modal
+        });
+
+        // Zamykanie modala
+        closeModalBtn.addEventListener('click', () => {
+            catchModal.style.display = 'none';
+        });
+
+        // === LOGIKA SKACZĄCEGO I WYBUCHAJĄCEGO DZIKA (PANEL BOCZNY) ===
+        const panelDzik = document.getElementById('panel-dzik');
+        const niImg = document.querySelector('.ni-img');
+
+        // Najechanie na obrazek aktywuje skok
+        niImg.addEventListener('mouseenter', () => {
+            // Jeśli już skoczył, ignorujemy
+            if (!panelDzik.classList.contains('panel-dzik-jump')) {
+                panelDzik.classList.add('panel-dzik-jump');
+            }
+        });
+
+        // Kliknięcie skaczącego dzika wyzwala eksplozję
+        panelDzik.addEventListener('click', (e) => {
+            // Ukrywamy oryginalnego dzika
+            panelDzik.style.display = 'none';
+            panelDzik.classList.remove('panel-dzik-jump');
+            
+            const rect = panelDzik.getBoundingClientRect();
+            
+            // Tworzymy 8 małych dziczków
+            for(let i = 0; i < 8; i++) {
+                let mini = document.createElement('img');
+                mini.src = "https://i.imgur.com/syTg29C.png";
+                mini.className = 'mini-dzik';
+                
+                // Centrujemy je w miejscu klikniętego dzika
+                mini.style.left = (rect.left + rect.width / 2 - 15) + 'px'; 
+                mini.style.top = (rect.top + rect.height / 2 - 15) + 'px';
+                document.body.appendChild(mini);
+
+                // Losowy kierunek i siła wybuchu dla każdego z nich
+                let angle = Math.random() * Math.PI * 2;
+                let distance = Math.random() * 90 + 50; 
+                let dx = Math.cos(angle) * distance;
+                let dy = Math.sin(angle) * distance;
+
+                mini.style.setProperty('--dx', dx + 'px');
+                mini.style.setProperty('--dy', dy + 'px');
+                
+                // Usuwamy je z HTML po zakończeniu animacji eksplozji (600ms)
+                setTimeout(() => mini.remove(), 600);
+            }
+        });
     </script>
 </body>
 </html>
