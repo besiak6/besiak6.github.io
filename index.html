@@ -9,9 +9,12 @@
     <style>
         body { background: linear-gradient(135deg, #0d1117, #1b0033); color: #c9d1d9; font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; text-align: center; overflow-x: hidden; }
         
-        .top-banner { position: fixed; top: 0; left: 0; width: 100%; background-color: #FFDD00; color: #000; padding: 5px 0; font-weight: bold; font-size: 0.9em; z-index: 1001; box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; gap: 5px; cursor: default; }
-        .top-banner a { color: #000; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px; pointer-events: auto; }
-        .top-banner img { height: 18px; width: auto; vertical-align: middle; cursor: pointer; }
+        .top-banner { position: fixed; top: 0; left: 0; width: 100%; background-color: #FFDD00; color: #000; padding: 5px 0; font-weight: bold; font-size: 0.9em; z-index: 1001; box-shadow: 0 2px 5px rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; cursor: default; }
+        
+        /* Obszar aktywujący uciekającego dzika - tylko tekst */
+        .hover-area { display: inline-flex; align-items: center; gap: 5px; }
+        .hover-area a { color: #000; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px; pointer-events: auto; }
+        .hover-area img { height: 18px; width: auto; vertical-align: middle; cursor: pointer; }
         
         .footer-banner { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #161b22; color: #ff5555; padding: 10px 0; font-size: 0.9em; z-index: 1001; border-top: 1px solid #30363d; font-weight: 500; }
         .footer-banner a { color: #58a6ff; text-decoration: none; font-weight: bold; }
@@ -51,43 +54,89 @@
             position: fixed;
             width: 80px;
             z-index: 9999;
-            transition: left 0.25s ease-out, top 0.25s ease-out; /* Płynne uciekanie */
-            cursor: pointer; /* Zmienione - można w niego kliknąć! */
+            transition: left 0.25s ease-out, top 0.25s ease-out; 
+            cursor: pointer; 
         }
 
-        /* Modal Złapanego Dzika */
+        /* Nowe, epickie Modal Złapanego Dzika */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px);
             display: flex; justify-content: center; align-items: center;
             z-index: 10000; opacity: 0; visibility: hidden; transition: 0.3s;
         }
         .modal-overlay.active { opacity: 1; visibility: visible; }
         
         .modal-content {
-            background: #161b22; border: 1px solid #30363d; border-radius: 12px;
-            padding: 30px; text-align: center; max-width: 400px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            transform: scale(0.8); transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: #161b22; 
+            border: 2px solid #58a6ff; 
+            border-radius: 12px;
+            padding: 20px 30px 30px; 
+            text-align: center; 
+            max-width: 420px;
+            box-shadow: 0 15px 40px rgba(88, 166, 255, 0.2);
+            transform: scale(0.8); 
+            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
         }
         .modal-overlay.active .modal-content { transform: scale(1); }
-        .modal-content h2 { color: #FFDD00; margin-top: 0; }
-        .modal-content p { color: #c9d1d9; font-size: 1.1em; }
-        .modal-content .fine-print { font-size: 0.7em; color: #8b949e; margin-top: 25px; border-top: 1px solid #30363d; padding-top: 10px; }
-        .modal-content button {
-            background: #58a6ff; color: #fff; border: none; padding: 10px 20px;
-            border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 15px;
-            transition: 0.2s;
+        
+        /* Wystający dzik w oknie */
+        .modal-dzik-img {
+            width: 120px;
+            margin-top: -80px; /* Wypycha obrazek do góry */
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 10px rgba(255, 221, 0, 0.6));
         }
-        .modal-content button:hover { background: #79b7ff; }
+
+        .modal-content h2 { color: #58a6ff; margin-top: 0; font-size: 1.8em; text-shadow: 0 0 8px rgba(88,166,255,0.4); }
+        .modal-content p { color: #c9d1d9; font-size: 1.05em; margin-bottom: 20px; }
+        
+        /* Sekcja wsparcia twórcy w oknie */
+        .support-box {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .support-box p {
+            font-size: 0.9em;
+            color: #8b949e;
+            margin-bottom: 15px;
+        }
+        .btn-support-link {
+            display: inline-block;
+            background: #FFDD00;
+            color: #000;
+            text-decoration: none;
+            font-weight: 800;
+            padding: 10px 24px;
+            border-radius: 6px;
+            transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(255, 221, 0, 0.3);
+        }
+        .btn-support-link:hover {
+            background: #ffea00;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 221, 0, 0.5);
+        }
+
+        /* Przycisk zamknięcia */
+        .close-btn {
+            background: transparent; color: #8b949e; border: 1px solid #30363d; padding: 8px 20px;
+            border-radius: 6px; cursor: pointer; transition: 0.2s; font-weight: bold;
+        }
+        .close-btn:hover { background: #30363d; color: #fff; }
 
     </style>
 </head>
 <body>
-    <!-- Zmieniony tekst baneru i ID aby reagował cały pasek -->
-    <div class="top-banner" id="main-banner">
-        Jeżeli chcesz pomóc w rozwoju dodatków, możesz mnie wesprzeć tutaj 
-        <a href="https://suppi.pl/besiak" target="_blank">Link <img id="banner-dzik" src="https://i.imgur.com/syTg29C.png" alt="Dzik"></a>
+    
+    <div class="top-banner">
+        <span class="hover-area" id="dzik-hover-trigger">
+            Spodobały Ci się dodatki? <a href="https://suppi.pl/besiak" target="_blank">Wesprzyj mnie <img src="https://i.imgur.com/syTg29C.png" alt="Dzik"></a>
+        </span>
     </div>
     
     <nav class="navbar">
@@ -103,7 +152,6 @@
 
     <a href="https://discord.gg/rJeNVHr49f" target="_blank" class="discord-icon-fixed"><i class="fab fa-discord"></i></a>
     
-    <!-- Dodane ID dla panelu, żeby łatwo było obliczyć gdzie Dzik ma wylądować -->
     <div class="right-panel" id="right-panel">
         <h3>Polecane Serwery</h3>
         <img src="https://i.imgur.com/tFnmBzB.png" class="ni-img" id="ni-theme-img" alt="NI Theme">
@@ -114,46 +162,50 @@
     
     <div class="footer-banner">Znalazłeś błąd lub masz jakiś problem? Dołącz do <a href="https://discord.gg/rJeNVHr49f" target="_blank">discorda</a>, lub napisz do mnie na dc: besiak6</div>
 
-    <!-- Dzik Uciekinier ukryty poza ekranem na start -->
     <img id="runner-dzik" src="https://i.imgur.com/syTg29C.png" alt="Dzik Uciekinier" style="top: -500px; left: -500px;">
 
-    <!-- Okno po złapaniu Dzika -->
     <div class="modal-overlay" id="dzik-modal">
         <div class="modal-content">
+            <img src="https://i.imgur.com/syTg29C.png" class="modal-dzik-img" alt="Złapany Dzik">
+            
             <h2>Dzik to najlepszy energol!</h2>
-            <p>Gratulacje! Udało Ci się złapać uciekającego Dzika. Jesteś szybszy niż wiatr!</p>
-            <button onclick="closeModal()">Rozumiem</button>
-            <div class="fine-print">Wykorzystano logo dzika. Wszelkie prawa autorskie należą do firmy WK Dzik. Złapany dzik to dzik udomowiony.</div>
+            <p>Gratulacje! Udało Ci się złapać uciekającego Dzika.</p>
+            
+            <div class="support-box">
+                <p>Jeżeli chcesz pomóc w rozwoju dodatków i wesprzeć ich tworzenie, możesz to zrobić tutaj:</p>
+                <a href="https://suppi.pl/besiak" target="_blank" class="btn-support-link">Wesprzyj twórcę</a>
+            </div>
+
+            <button class="close-btn" onclick="closeModal()">Zamknij</button>
         </div>
     </div>
 
     <script>
         // ==========================================
-        // 1. MECHANIKA UCIEKAJĄCEGO DZIKA (TOP BANNER)
+        // 1. MECHANIKA UCIEKAJĄCEGO DZIKA (TYLKO NA NAPISIE)
         // ==========================================
-        const mainBanner = document.getElementById('main-banner');
+        const hoverTrigger = document.getElementById('dzik-hover-trigger');
         const runnerDzik = document.getElementById('runner-dzik');
         const modal = document.getElementById('dzik-modal');
         let hoverTimer;
         let isRunnerActive = false;
 
-        // Odliczanie 2 sekund na CAŁYM górnym pasku
-        mainBanner.addEventListener('mouseenter', () => {
+        // Odliczanie 2 sekund TYLKO na tekście (hoverTrigger)
+        hoverTrigger.addEventListener('mouseenter', () => {
             if (isRunnerActive) return;
             hoverTimer = setTimeout(() => {
                 isRunnerActive = true;
                 
-                // Dzik wyskakuje ze stopki
+                // Dzik wyskakuje
                 runnerDzik.style.top = (window.innerHeight - 150) + 'px';
                 runnerDzik.style.left = (window.innerWidth / 2 - 40) + 'px';
 
-                // Nasłuchiwacz uciekania
                 document.addEventListener('mousemove', runawayDzik);
-            }, 2000); // 2000ms = 2 sekundy!
+            }, 2000);
         });
 
         // Przerwanie odliczania, jeśli zjedziesz wcześniej
-        mainBanner.addEventListener('mouseleave', () => {
+        hoverTrigger.addEventListener('mouseleave', () => {
             clearTimeout(hoverTimer);
         });
 
@@ -171,7 +223,7 @@
             const distY = dzikCenterY - mouseY;
             const distance = Math.sqrt(distX * distX + distY * distY);
             
-            // Jeśli kursor jest bliżej niż 150px - dzik ucieka (zmniejszono promień, żeby dało się go "ustrzelić" myszką)
+            // Dzik ucieka
             if (distance < 150) {
                 let moveX = (distX / distance) * 300;
                 let moveY = (distY / distance) * 300;
@@ -179,7 +231,6 @@
                 let newLeft = dzikRect.left + moveX;
                 let newTop = dzikRect.top + moveY;
                 
-                // Trzymamy go w granicach ekranu
                 newLeft = Math.max(20, Math.min(window.innerWidth - 100, newLeft));
                 newTop = Math.max(60, Math.min(window.innerHeight - 120, newTop));
                 
@@ -188,15 +239,14 @@
             }
         }
 
-        // Złapanie Dzika!
+        // Złapanie Dzika
         runnerDzik.addEventListener('click', () => {
-            // Ukrywamy Dzika i resetujemy
             runnerDzik.style.top = '-500px';
             runnerDzik.style.left = '-500px';
             isRunnerActive = false;
             document.removeEventListener('mousemove', runawayDzik);
             
-            // Pokazujemy okienko Modal
+            // Otwieramy nowe, poprawione okno
             modal.classList.add('active');
         });
 
@@ -206,7 +256,7 @@
 
 
         // ==========================================
-        // 2. SKACZĄCY DZIK NA PANEL (NI THEME HOVER)
+        // 2. SKACZĄCY/WYBUCHAJĄCY DZIK NA PANEL (NI THEME HOVER)
         // ==========================================
         const niThemeImg = document.getElementById('ni-theme-img');
         const rightPanel = document.getElementById('right-panel');
@@ -216,43 +266,35 @@
             if (dropDzikActive) return;
             dropDzikActive = true;
 
-            // Tworzymy dzika spadającego z góry
             const dropDzik = document.createElement('img');
             dropDzik.src = 'https://i.imgur.com/syTg29C.png';
             dropDzik.style.position = 'fixed';
             dropDzik.style.width = '70px';
-            dropDzik.style.zIndex = '998'; // Pod panelem z indexem 999 lub nad, zrobmy 1000 zeby byl widoczny
+            dropDzik.style.zIndex = '998'; 
             dropDzik.style.cursor = 'pointer';
             
-            // Efekt spadania ("wyskakuje z góry")
             dropDzik.style.transition = 'top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; 
             document.body.appendChild(dropDzik);
 
-            // Gdzie jest panel "Polecane serwery"?
             const panelRect = rightPanel.getBoundingClientRect();
             
-            // Ustawiamy dzika na start (poza ekranem u góry, na środku panelu w osi X)
             dropDzik.style.left = (panelRect.left + (panelRect.width / 2) - 35) + 'px';
             dropDzik.style.top = '-100px';
 
-            // Zmuszamy przeglądarkę do przeliczenia pozycji przed animacją
             void dropDzik.offsetWidth;
 
-            // Wypuszczamy dzika tak, żeby wylądował idealnie na krawędzi okna right-panel
-            dropDzik.style.top = (panelRect.top - 68) + 'px'; // 68 to prawie jego wysokość
+            dropDzik.style.top = (panelRect.top - 68) + 'px'; 
 
             // WYBUCH DZIKA PO KLIKNIĘCIU
             dropDzik.addEventListener('click', () => {
                 const dzikRect = dropDzik.getBoundingClientRect();
-                dropDzik.remove(); // Główny dzik znika
+                dropDzik.remove(); 
                 
-                // Generujemy 8 małych dzików lecących w różne strony
                 for(let i = 0; i < 8; i++) {
                     const particle = document.createElement('img');
                     particle.src = 'https://i.imgur.com/syTg29C.png';
                     particle.style.position = 'fixed';
                     particle.style.width = '25px';
-                    // Startują ze środka klikniętego dzika
                     particle.style.left = (dzikRect.left + 22) + 'px';
                     particle.style.top = (dzikRect.top + 22) + 'px';
                     particle.style.zIndex = '1005';
@@ -262,29 +304,20 @@
                     document.body.appendChild(particle);
                     void particle.offsetWidth;
 
-                    // Matematyka do rozrzutu po kole (kąt i odległość)
                     const angle = (Math.PI * 2 / 8) * i;
-                    const distance = 80 + Math.random() * 40; // losowa odleglosc
+                    const distance = 80 + Math.random() * 40; 
                     const moveX = Math.cos(angle) * distance;
                     const moveY = Math.sin(angle) * distance;
                     const rotation = Math.random() * 360;
 
                     particle.style.transform = `translate(${moveX}px, ${moveY}px) rotate(${rotation}deg) scale(0.5)`;
-                    particle.style.opacity = '0'; // Znikają podczas lotu
+                    particle.style.opacity = '0'; 
 
-                    // Usuwamy cząsteczki z HTML po zakończeniu animacji
                     setTimeout(() => { particle.remove(); }, 500);
                 }
 
-                // Reset, można wywołać znowu jeśli gracz zjedzie i najedzie ponownie na obrazek
                 setTimeout(() => { dropDzikActive = false; }, 1000);
             });
-        });
-
-        // Żeby można było wywołać opadającego dzika wielokrotnie (jeśli nie został kliknięty)
-        niThemeImg.addEventListener('mouseleave', () => {
-            // Jeśli dzik sobie siedzi, a my zjechaliśmy z obrazka NI Theme
-            // Zostawiamy go tam dopóki gracz w niego nie kliknie!
         });
 
     </script>
