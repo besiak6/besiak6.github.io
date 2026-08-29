@@ -9,7 +9,8 @@
         difficulty: 'master',
         rebitki: false,
         windowOpacity: 2,
-        windowVisible: true
+        windowVisible: true,
+        isExpanded: false
     };
 
     const DIFF_CODES = {
@@ -119,7 +120,7 @@
 
             if (distanceX <= 1 && distanceY <= 1) {
                 isProcessing = true;
-                lastInteractedId = npcId; 
+                lastInteractedId = npcId;
                 interactionCooldown = Date.now() + 15000;
 
                 try {
@@ -130,27 +131,30 @@
                     console.log(`[TROPH] Rozpoczynam rozmowę z NPC ID: ${npcId}`);
                     window._g(`talk&id=${npcId}`);
                     await delay(400);
-                    
+
                     console.log("[TROPH] Wybieram opcję wejścia.");
                     window._g(`talk&id=${npcId}&c=20.1`);
-                    await delay(1500); 
-                    
-                    if (latestAskToken && currentSettings.rebitki) {
-                        console.log(`[TROPH] Wykryto płatność walutą. Odsyłam token: ${latestAskToken}=0`);
-                        window._g(`talk&${latestAskToken}=0`);
-                        latestAskToken = null; 
+                    await delay(1500);
 
+                    if (latestAskToken) {
+                        console.log(`[TROPH] Wykryto płatność walutą. Odsyłam token: ${latestAskToken}=0`);
+                        
+                        if (currentSettings.rebitki) {
+                            window._g(`talk&${latestAskToken}=0`);
+                        }
+                        
+                        latestAskToken = null;
                         closeAskAlertWindow();
                         await delay(1000);
                     }
 
-                    const diffCode = DIFF_CODES[currentSettings.difficulty] || DIFF_CODES['master'];
+                    const DIFFICULTY_CODE = DIFF_CODES[currentSettings.difficulty] || DIFF_CODES['master'];
                     console.log(`[TROPH] Wybieram poziom trudności: ${currentSettings.difficulty}`);
-                    window._g(`talk&id=${npcId}&c=${diffCode}`);
-                    
+                    window._g(`talk&id=${npcId}&c=${DIFFICULTY_CODE}`);
+
                 } catch (e) {
                     console.error("[TROPH] Wystąpił błąd:", e);
-                    lastInteractedId = null; 
+                    lastInteractedId = null;
                 } finally {
                     isProcessing = false;
                 }
@@ -173,10 +177,14 @@
     function startScript() {
         if (intervalId) clearInterval(intervalId);
         intervalId = setInterval(tryEnterCrypt, 800);
+        console.log("[TROPH] Skrypt z natywnym zamykaniem został uruchomiony.");
     }
 
     function stopScript() {
-        if (intervalId) { clearInterval(intervalId); intervalId = null; }
+        if (intervalId) { 
+            clearInterval(intervalId); 
+            intervalId = null; 
+        }
     }
 
     function buildUI() {
@@ -259,8 +267,14 @@
 
     function addonStop() {
         stopScript();
-        if (currencyIntervalId) { clearInterval(currencyIntervalId); currencyIntervalId = null; }
-        if (uiMainWindow) { uiMainWindow.remove(); uiMainWindow = null; }
+        if (currencyIntervalId) { 
+            clearInterval(currencyIntervalId); 
+            currencyIntervalId = null; 
+        }
+        if (uiMainWindow) { 
+            uiMainWindow.remove(); 
+            uiMainWindow = null; 
+        }
     }
 
     function onStateToggle(isEnabled) {
@@ -286,8 +300,15 @@
     }
 
     const checkApi = () => {
-        if (!window.BaddonzAPI?.registerAddon) { setTimeout(checkApi, 500); return; }
-        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle });
+        if (!window.BaddonzAPI?.registerAddon) { 
+            setTimeout(checkApi, 500); 
+            return; 
+        }
+        window.BaddonzAPI.registerAddon(ADDON_ID, { 
+            init: addonInit, 
+            stop: addonStop, 
+            onStateToggle 
+        });
     };
     
     checkApi();
