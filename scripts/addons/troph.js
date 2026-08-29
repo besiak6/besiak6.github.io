@@ -2,14 +2,12 @@
     'use strict';
 
     const ADDON_ID = "TROPH";
-
-    // Klucze zapisywane indywidualnie dla danej postaci
     const CHAR_SPECIFIC_KEYS = ['difficulty', 'rebitki'];
 
     let currentSettings = {
-        enabled: true,       // Zapis do konta
-        difficulty: 'master', // Zapis do postaci
-        rebitki: false,       // Zapis do postaci
+        enabled: true,
+        difficulty: 'master',
+        rebitki: false,
         windowOpacity: 2,
         windowVisible: true,
         isExpanded: false
@@ -23,13 +21,13 @@
 
     let uiMainWindow = null;
     let intervalId = null;
+    let currencyIntervalId = null;
     let isProcessing = false;
     let lastInteractedId = null;
     let interactionCooldown = 0;
 
     const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-    // Przechwytywanie tokenów płatności z JSON
     const _originalParse = JSON.parse;
     let latestAskToken = null;
 
@@ -68,6 +66,13 @@
             }
         }
         return count;
+    }
+
+    function updateCurrencyDisplay() {
+        const countElem = document.getElementById('troph-currency-count');
+        if (countElem) {
+            countElem.textContent = getStoneCount();
+        }
     }
 
     function closeAskAlertWindow() {
@@ -125,7 +130,6 @@
                             closeAskAlertWindow();
                             await delay(1000);
                         } else {
-                            // Jeśli opcja Rebitki jest wyłączona – przerywamy działanie
                             closeAskAlertWindow();
                             onStateToggle(false);
                             if (window.message) window.message('Rebitki wyłączone! Zatrzymano wchodzenie do krypty.');
@@ -148,13 +152,13 @@
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
-        const saved = window.BaddonzAPI.getAddonSettings(ADDON_ID);[cite: 2]
+        const saved = window.BaddonzAPI.getAddonSettings(ADDON_ID);
         currentSettings = { ...currentSettings, ...saved };
     }
 
     function saveSettings() {
         if (!window.BaddonzAPI) return;
-        window.BaddonzAPI.saveAddonSettings(ADDON_ID, { ...currentSettings }, CHAR_SPECIFIC_KEYS);[cite: 2]
+        window.BaddonzAPI.saveAddonSettings(ADDON_ID, { ...currentSettings }, CHAR_SPECIFIC_KEYS);
     }
 
     function startScript() {
@@ -168,6 +172,9 @@
 
     function buildUI() {
         const mainBodyHtml = `
+            <div class="baddonz-setting-row" style="margin-bottom: 8px; justify-content: center; font-weight: bold; color: #f5da55; text-shadow: 1px 1px 2px #000;">
+                Ilość waluty: <span id="troph-currency-count" style="margin-left: 5px;">0</span>
+            </div>
             <div class="baddonz-setting-row" style="margin-bottom: 5px;">
                 <div class="baddonz-checkbox troph-enabled-checkbox ${currentSettings.enabled ? 'active' : ''}"></div>
                 <span class="baddonz-label baddonz-text">Włączony</span>
@@ -192,7 +199,9 @@
             hasSettings: false,
             hasCollapse: true,
             hasClose: false
-        });[cite: 2]
+        });
+
+        updateCurrencyDisplay();
 
         const enabledCheckbox = uiMainWindow.querySelector('.troph-enabled-checkbox');
         const difficultySelect = uiMainWindow.querySelector('.troph-difficulty-select');
@@ -234,10 +243,14 @@
         if (currentSettings.enabled) {
             startScript();
         }
+
+        if (currencyIntervalId) clearInterval(currencyIntervalId);
+        currencyIntervalId = setInterval(updateCurrencyDisplay, 1000);
     }
 
     function addonStop() {
         stopScript();
+        if (currencyIntervalId) { clearInterval(currencyIntervalId); currencyIntervalId = null; }
         if (uiMainWindow) { uiMainWindow.remove(); uiMainWindow = null; }
     }
 
@@ -259,7 +272,7 @@
 
     const checkApi = () => {
         if (!window.BaddonzAPI?.registerAddon) { setTimeout(checkApi, 500); return; }
-        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle });[cite: 2, 3]
+        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle });
     };
     
     checkApi();
