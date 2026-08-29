@@ -40,11 +40,7 @@
         }
         return _originalParse.call(this, text, reviver);
     };
-
-    hookedParse.toString = function() {
-        return _originalParse.toString();
-    };
-    
+    hookedParse.toString = function() { return _originalParse.toString(); };
     JSON.parse = hookedParse;
 
     function getStoneCount() {
@@ -60,9 +56,7 @@
                 } else if (item.amount !== undefined) {
                     amt = parseInt(item.amount, 10);
                 }
-                if (!isNaN(amt)) {
-                    count += amt;
-                }
+                if (!isNaN(amt)) count += amt;
             }
         }
         return count;
@@ -70,23 +64,17 @@
 
     function updateCurrencyDisplay() {
         const countElem = document.getElementById('troph-currency-count');
-        if (countElem) {
-            countElem.textContent = getStoneCount();
-        }
+        if (countElem) countElem.textContent = getStoneCount();
     }
 
     function closeAskAlertWindow() {
         try {
             if (!window.Engine || !window.Engine.windowManager) return;
-
             const list = window.Engine.windowManager.getList();
-
             for (const windowType in list) {
                 const windowsGroup = list[windowType];
-
                 for (const id in windowsGroup) {
                     const wnd = windowsGroup[id];
-
                     if (wnd && wnd.$ && wnd.$.hasClass('askAlert')) {
                         if (typeof wnd.close === 'function') {
                             wnd.close();
@@ -126,20 +114,24 @@
                     await delay(400);
 
                     window._g(`talk&id=${npcId}&c=20.1`);
-                    await delay(1500);
 
-                    if (latestAskToken) {
-                        if (currentSettings.rebitki) {
-                            window._g(`talk&${latestAskToken}=0`);
-                            latestAskToken = null;
-                            closeAskAlertWindow();
-                            await delay(1000);
-                        }
+                    let waited = 0;
+                    while (!latestAskToken && waited < 3000) {
+                        await delay(100);
+                        waited += 100;
                     }
 
-                    const DIFFICULTY_CODE = DIFF_CODES[currentSettings.difficulty] || DIFF_CODES['master'];
-                    window._g(`talk&id=${npcId}&c=${DIFFICULTY_CODE}`);
+                    if (latestAskToken) {
+                        window._g(`talk&${latestAskToken}=0`);
+                        latestAskToken = null;
+                        closeAskAlertWindow();
+                        await delay(500); // czas na odrobienie zamknięcia
+                    }
 
+                    await delay(450); // bufer przed wyborem trudności
+
+                    const diffCode = DIFF_CODES[currentSettings.difficulty] || DIFF_CODES['master'];
+                    window._g(`talk&id=${npcId}&c=${diffCode}`);
                 } catch (e) {
                     lastInteractedId = null;
                 } finally {
@@ -153,7 +145,7 @@
     function loadSettings() {
         if (!window.BaddonzAPI) return;
         const saved = window.BaddonzAPI.getAddonSettings(ADDON_ID);
-        currentSettings = { ...currentSettings, ...saved };
+        if (saved) currentSettings = { ...currentSettings, ...saved };
     }
 
     function saveSettings() {
@@ -167,10 +159,7 @@
     }
 
     function stopScript() {
-        if (intervalId) { 
-            clearInterval(intervalId); 
-            intervalId = null; 
-        }
+        if (intervalId) { clearInterval(intervalId); intervalId = null; }
     }
 
     function buildUI() {
@@ -231,6 +220,7 @@
             closeBtn.addEventListener('click', () => {
                 currentSettings.windowVisible = false;
                 saveSettings();
+                if (uiMainWindow) uiMainWindow.style.display = 'none';
             });
         }
     }
@@ -238,45 +228,27 @@
     function addonInit() {
         loadSettings();
         if (!uiMainWindow) buildUI();
-        
         if (uiMainWindow) {
             uiMainWindow.style.display = currentSettings.windowVisible ? '' : 'none';
         }
-        
-        if (currentSettings.enabled) {
-            startScript();
-        }
-
+        if (currentSettings.enabled) startScript();
         if (currencyIntervalId) clearInterval(currencyIntervalId);
         currencyIntervalId = setInterval(updateCurrencyDisplay, 1000);
     }
 
     function addonStop() {
         stopScript();
-        if (currencyIntervalId) { 
-            clearInterval(currencyIntervalId); 
-            currencyIntervalId = null; 
-        }
-        if (uiMainWindow) { 
-            uiMainWindow.remove(); 
-            uiMainWindow = null; 
-        }
+        if (currencyIntervalId) { clearInterval(currencyIntervalId); currencyIntervalId = null; }
+        if (uiMainWindow) { uiMainWindow.remove(); uiMainWindow = null; }
     }
 
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
         saveSettings();
-
-        if (isEnabled) {
-            startScript();
-        } else {
-            stopScript();
-        }
-
+        if (isEnabled) startScript(); else stopScript();
         if (uiMainWindow) {
             const enabledCheckbox = uiMainWindow.querySelector('.troph-enabled-checkbox');
             if (enabledCheckbox) enabledCheckbox.classList.toggle('active', isEnabled);
-            
             if (isEnabled && !currentSettings.windowVisible) {
                 currentSettings.windowVisible = true;
                 uiMainWindow.style.display = '';
@@ -286,16 +258,8 @@
     }
 
     const checkApi = () => {
-        if (!window.BaddonzAPI?.registerAddon) { 
-            setTimeout(checkApi, 500); 
-            return; 
-        }
-        window.BaddonzAPI.registerAddon(ADDON_ID, { 
-            init: addonInit, 
-            stop: addonStop, 
-            onStateToggle 
-        });
+        if (!window.BaddonzAPI?.registerAddon) { setTimeout(checkApi, 500); return; }
+        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle });
     };
-    
     checkApi();
 })();
