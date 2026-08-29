@@ -182,8 +182,8 @@
             <div class="baddonz-setting-row" style="margin-bottom: 5px;">
                 <span class="baddonz-label baddonz-text" style="padding:0; margin-right:5px;">Poziom:</span>
                 <select class="baddonz-input baddonz-select troph-difficulty-select" style="flex-grow:1;">
-                    <option value="normal" ${currentSettings.difficulty === 'normal' ? 'selected' : ''}>Normalny</option>
-                    <option value="hard" ${currentSettings.difficulty === 'hard' ? 'selected' : ''}>Koszmar</option>
+                    <option value="normal" ${currentSettings.difficulty === 'normal' ? 'selected' : ''}>Łatwy</option>
+                    <option value="hard" ${currentSettings.difficulty === 'hard' ? 'selected' : ''}>Trudny</option>
                     <option value="master" ${currentSettings.difficulty === 'master' ? 'selected' : ''}>Mistrz</option>
                 </select>
             </div>
@@ -197,8 +197,8 @@
             width: '140px',
             customId: 'baddonz-troph-wnd',
             hasSettings: false,
-            hasCollapse: true,
-            hasClose: false
+            hasCollapse: false,
+            hasClose: true
         });
 
         updateCurrencyDisplay();
@@ -206,7 +206,7 @@
         const enabledCheckbox = uiMainWindow.querySelector('.troph-enabled-checkbox');
         const difficultySelect = uiMainWindow.querySelector('.troph-difficulty-select');
         const rebitkiCheckbox = uiMainWindow.querySelector('.troph-rebitki-checkbox');
-        const collapsedBtn = uiMainWindow.querySelector('.baddonz-collapsed');
+        const closeBtn = uiMainWindow.querySelector('.baddonz-close');
 
         enabledCheckbox.addEventListener('click', () => {
             currentSettings.enabled = enabledCheckbox.classList.toggle('active');
@@ -224,9 +224,9 @@
             saveSettings();
         });
 
-        if (collapsedBtn) {
-            collapsedBtn.addEventListener('click', () => {
-                currentSettings.isExpanded = !currentSettings.isExpanded;
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                currentSettings.windowVisible = false;
                 saveSettings();
             });
         }
@@ -267,6 +267,12 @@
         if (uiMainWindow) {
             const enabledCheckbox = uiMainWindow.querySelector('.troph-enabled-checkbox');
             if (enabledCheckbox) enabledCheckbox.classList.toggle('active', isEnabled);
+            
+            if (isEnabled && !currentSettings.windowVisible) {
+                currentSettings.windowVisible = true;
+                uiMainWindow.style.display = '';
+                saveSettings();
+            }
         }
     }
 
