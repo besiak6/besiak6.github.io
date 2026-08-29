@@ -9,8 +9,7 @@
         difficulty: 'master',
         rebitki: false,
         windowOpacity: 2,
-        windowVisible: true,
-        isExpanded: false
+        windowVisible: true
     };
 
     const DIFF_CODES = {
@@ -36,6 +35,7 @@
             const match = text.match(/(answer[a-zA-Z0-9]+)/);
             if (match) {
                 latestAskToken = match[1];
+                console.log("[TROPH] Przechwycono token:", latestAskToken);
             }
         }
         return _originalParse.call(this, text, reviver);
@@ -78,20 +78,27 @@
     function closeAskAlertWindow() {
         try {
             if (!window.Engine || !window.Engine.windowManager) return;
+
             const list = window.Engine.windowManager.getList();
+
             for (const windowType in list) {
                 const windowsGroup = list[windowType];
+
                 for (const id in windowsGroup) {
                     const wnd = windowsGroup[id];
+
                     if (wnd && wnd.$ && wnd.$.hasClass('askAlert')) {
                         if (typeof wnd.close === 'function') {
                             wnd.close();
+                            console.log(`[TROPH] Zamknięto okno askAlert (Grupa: ${windowType}, ID: ${id}).`);
                             return;
                         }
                     }
                 }
             }
-        } catch (err) {}
+        } catch (err) {
+            console.error("[TROPH] Błąd podczas zamykania okna:", err);
+        }
     }
 
     async function tryEnterCrypt() {
@@ -116,31 +123,33 @@
                 interactionCooldown = Date.now() + 15000;
 
                 try {
+                    const stones = getStoneCount();
+                    console.log(`[TROPH] Znaleziono wejście. Ilość kamieni: ${stones}`);
                     latestAskToken = null;
+
+                    console.log(`[TROPH] Rozpoczynam rozmowę z NPC ID: ${npcId}`);
                     window._g(`talk&id=${npcId}`);
                     await delay(400);
                     
+                    console.log("[TROPH] Wybieram opcję wejścia.");
                     window._g(`talk&id=${npcId}&c=20.1`);
                     await delay(1500); 
                     
-                    if (latestAskToken) {
-                        if (currentSettings.rebitki) {
-                            window._g(`talk&${latestAskToken}=0`);
-                            latestAskToken = null; 
-                            closeAskAlertWindow();
-                            await delay(1000);
-                        } else {
-                            closeAskAlertWindow();
-                            onStateToggle(false);
-                            if (window.message) window.message('Rebitki wyłączone! Zatrzymano wchodzenie do krypty.');
-                            break; 
-                        }
+                    if (latestAskToken && currentSettings.rebitki) {
+                        console.log(`[TROPH] Wykryto płatność walutą. Odsyłam token: ${latestAskToken}=0`);
+                        window._g(`talk&${latestAskToken}=0`);
+                        latestAskToken = null; 
+
+                        closeAskAlertWindow();
+                        await delay(1000);
                     }
 
                     const diffCode = DIFF_CODES[currentSettings.difficulty] || DIFF_CODES['master'];
+                    console.log(`[TROPH] Wybieram poziom trudności: ${currentSettings.difficulty}`);
                     window._g(`talk&id=${npcId}&c=${diffCode}`);
                     
                 } catch (e) {
+                    console.error("[TROPH] Wystąpił błąd:", e);
                     lastInteractedId = null; 
                 } finally {
                     isProcessing = false;
