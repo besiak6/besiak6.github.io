@@ -27,7 +27,7 @@
     }
 
     const log = (...args) => console.log('%c[Auto Otchłań]', 'color:#4CAF50;font-weight:bold;', ...args);
-    const closeAlertWindow = () => {
+    const closeAlertWindow = (targetEl) => {
         try {
             const windowsData = window.Engine?.windowsData;
             const windowManager = window.Engine?.windowManager;
@@ -38,15 +38,28 @@
 
             for (const id in alertWindows) {
                 const wnd = alertWindows[id];
-                if (wnd && typeof wnd.isShow === 'function' && wnd.isShow() && typeof wnd.close === 'function') {
-                    wnd.close();
-                    return true;
-                }
+                if (!wnd || typeof wnd.close !== 'function') continue;
+
+                const wndEl = wnd.$ && wnd.$[0];
+                if (targetEl && wndEl !== targetEl) continue;
+                if (!targetEl && (!wnd.isShow || !wnd.isShow())) continue;
+
+                wnd.close();
+                return true;
             }
         } catch (e) {
             log('closeAlertWindow - błąd:', e);
         }
         return false;
+    };
+    const findAlertByText = (text) => {
+        const innerContents = document.querySelectorAll('.mAlert .inner-content');
+        for (const el of innerContents) {
+            if (el.offsetParent !== null && el.textContent.includes(text)) {
+                return el.closest('.mAlert');
+            }
+        }
+        return null;
     };
 
     function loadSettings() {
