@@ -6,7 +6,6 @@
     const CHAR_SPECIFIC_KEYS = ['changeSets', 'profSets'];
 
     const DEFAULT_SETTINGS = {
-        // ---- konto (wspólne dla wszystkich postaci) ----
         enabled: true,
         autoAbyss: false,
         collectChests: false,
@@ -15,7 +14,6 @@
         autoF: true,
         lastFinishedChars: {},
         lastResetDate: '',
-        // ---- postać (per charId, przez CHAR_SPECIFIC_KEYS) ----
         changeSets: false,
         profSets: { h: '0', b: '0', m: '0', p: '0', w: '0', t: '0' }
     };
@@ -29,7 +27,6 @@
     }
 
     const log = (...args) => console.log('%c[Auto Otchłań]', 'color:#4CAF50;font-weight:bold;', ...args);
-
     const invokeClickHandler = (el) => {
         if (!el) return false;
         try {
