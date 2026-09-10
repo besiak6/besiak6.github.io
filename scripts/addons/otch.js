@@ -6,6 +6,7 @@
     const CHAR_SPECIFIC_KEYS = ['changeSets', 'profSets'];
 
     const DEFAULT_SETTINGS = {
+        // ---- konto (wspólne dla wszystkich postaci) ----
         enabled: true,
         autoAbyss: false,
         collectChests: false,
@@ -14,6 +15,7 @@
         autoF: true,
         lastFinishedChars: {},
         lastResetDate: '',
+        // ---- postać (per charId, przez CHAR_SPECIFIC_KEYS) ----
         changeSets: false,
         profSets: { h: '0', b: '0', m: '0', p: '0', w: '0', t: '0' }
     };
@@ -25,6 +27,25 @@
     async function wait(ms) {
         return new Promise(r => setTimeout(r, ms));
     }
+
+    const log = (...args) => console.log('%c[Auto Otchłań]', 'color:#4CAF50;font-weight:bold;', ...args);
+
+    const invokeClickHandler = (el) => {
+        if (!el) return false;
+        try {
+            if (typeof $ === 'function') {
+                const events = $._data(el, 'events');
+                const handler = events?.click?.[0]?.handler;
+                if (handler) {
+                    handler.call(el, $.Event('click'));
+                    return true;
+                }
+            }
+        } catch (e) {
+            log('invokeClickHandler - nie udało się pobrać handlera:', e);
+        }
+        return false;
+    };
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
@@ -80,6 +101,7 @@
     const performDailyResetCheck = () => {
         const todayKey = new Date().toDateString();
         if (currentSettings.lastResetDate !== todayKey) {
+            log('Nowy dzień - czyszczę listę postaci oznaczonych jako "skończone".');
             currentSettings.lastFinishedChars = {};
             currentSettings.lastResetDate = todayKey;
             saveSettings();
@@ -94,13 +116,23 @@
         }
 
         let chars = d.charList.filter(char => char.world === d.world);
+        log(`Wykryte postacie na koncie (świat ${d.world}):`,
+            chars.map(c => `${c.nick || c.id} (lvl ${c.lvl})`));
+
         if (chars.length <= 1) {
+            log('Tylko jedna postać na tym świecie - nie ma na co przełączyć.');
             return;
         }
 
         chars.sort((a, b) => b.lvl - a.lvl);
+        log('Kolejność przelogowywania (od najwyższego levelu):',
+            chars.map(c => c.nick || c.id));
+
         const currentIdx = chars.findIndex(char => char.id === d.currentId);
-        if (currentIdx === -1) return;
+        if (currentIdx === -1) {
+            log('Aktualna postać nie znaleziona na liście - przerywam.');
+            return;
+        }
 
         let nextCharToSwitch = null;
         const todayKey = new Date().toDateString();
@@ -119,6 +151,7 @@
         if (nextCharToSwitch) {
             const nextCharId = nextCharToSwitch.id;
             const previousCharId = d.currentId;
+            log(`Przełączam z postaci ${previousCharId} na ${nextCharToSwitch.nick || nextCharId}.`);
 
             let isSwitched = false;
             let attempts = 0;
@@ -132,16 +165,24 @@
 
                 if (heroIdOnPage === nextCharId) {
                     isSwitched = true;
+                    log(`Przełączono pomyślnie na postać ${nextCharId}. Oznaczam poprzednią (${previousCharId}) jako skończoną na dziś.`);
                     currentSettings.lastFinishedChars[previousCharId] = todayKey;
                     saveSettings();
                     break;
                 } else if (heroIdOnPage && heroIdOnPage !== nextCharId) {
+                    log('Przełączenie się nie powiodło - ponawiam żądanie.');
                     window.Engine.changePlayer.changePlayerRequest(nextCharId);
                     attempts++;
                 } else {
                     attempts++;
                 }
             }
+
+            if (!isSwitched) {
+                log('Nie udało się przełączyć postaci w wyznaczonym czasie.');
+            }
+        } else {
+            log('Brak dostępnej postaci do przełączenia (wszystkie już skończone na dziś).');
         }
     };
 
@@ -163,8 +204,10 @@
                 const ratioText = ratioElement.textContent.trim();
 
                 if (stageText === "Etap IV" && ratioText === "15/15") {
+                    log('Osiągnięto maksymalny etap (Etap IV, 15/15).');
 
                     if (currentSettings.collectChests) {
+                        log('Odbieram skrzynki.');
                         collectRewards();
                         await wait(1000);
                     }
@@ -173,16 +216,20 @@
                     const shouldAutoSwitch = currentSettings.autoSwitch;
 
                     if (shouldStopGlobally) {
+                        log('Ustawienie "Zatrzymuj" aktywne - wyłączam Auto Otchłań na tej postaci.');
                         updateAutoAbyssState(false, autoAbyssEl);
                         currentSettings.autoAbyss = false;
                         saveSettings();
 
                         if (shouldAutoSwitch) {
+                            log('Przelogowywanie aktywne - szukam kolejnej postaci.');
                             startCharacterSwitch();
                         }
                     } else if (shouldAutoSwitch) {
+                        log('Max etap osiągnięty, przelogowywanie aktywne - szukam kolejnej postaci.');
                         startCharacterSwitch();
                     } else {
+                        log('Max etap osiągnięty, brak przelogowywania - wyłączam Auto Otchłań.');
                         updateAutoAbyssState(false, autoAbyssEl);
                         currentSettings.autoAbyss = false;
                         saveSettings();
@@ -214,7 +261,11 @@
 
         if (warningContent && warningContent.offsetParent !== null && okButton && okButton.offsetParent !== null) {
             if (warningContent.textContent.includes('Punkt ostrzeżenia dodany!')) {
-                okButton.click();
+                log('Wykryto alert "Punkt ostrzeżenia dodany!" - zamykam.');
+                if (!invokeClickHandler(okButton)) {
+                    log('Nie udało się wywołać handlera bezpośrednio - pomijam zamknięcie, spróbuję ponownie w kolejnej pętli.');
+                    return false;
+                }
                 await wait(500);
                 return true;
             }
@@ -308,10 +359,12 @@
                     continue;
                 }
 
+                log('Znalazłem przeciwnika - akceptuję.');
                 window._g("match&a=accept_opp&ans=1");
                 const acceptedSuccessfully = await waitForOpponentAccept();
 
                 if (!acceptedSuccessfully) {
+                    log('Akceptacja przeciwnika nie powiodła się (okno wyboru EQ nie pojawiło się) - ponawiam.');
                     await wait(1500);
                     continue;
                 }
@@ -330,8 +383,10 @@
                     }
 
                     if (opponentProfKey) {
+                        log(`Profesja przeciwnika: ${opponentProfKey}`);
                         const profSets = currentSettings.profSets || {};
                         const setId = profSets[opponentProfKey];
+                        log(`Przypisany zestaw dla tej profesji: ${setId || '(brak)'}`);
 
                         let buildsCommons = null;
                         if (window.Engine && window.Engine.buildsManager) {
@@ -341,16 +396,22 @@
                         if (buildsCommons) {
                             const currentSetId = buildsCommons.getCurrentId();
                             if (setId && setId !== "0" && setId != currentSetId) {
+                                log(`Zmieniam zestaw z ${currentSetId} na ${setId}.`);
                                 window._g(`builds&action=updateCurrent&id=${setId}`);
                                 await wait(750);
+                            } else {
+                                log('Zestaw nie wymaga zmiany.');
                             }
                         }
+                    } else {
+                        log('Nie udało się wykryć profesji przeciwnika w wyznaczonym czasie.');
                     }
                 }
 
                 window._g("match&a=prepared");
                 await waitForBattleToStart();
                 if (!isRunning) return;
+                log('Jestem w walce.');
 
                 if (currentSettings.autoF) {
                     window._g("fight&a=f");
@@ -358,6 +419,7 @@
 
                 await waitForBattleToFinish();
                 if (!isRunning) return;
+                log('Skończyłem walkę.');
 
                 window._g("fight&a=exit");
                 await wait(250);
@@ -391,6 +453,7 @@
 
                     await wait(2000);
                     if (autoAbyssEl.classList.contains("active")) {
+                        log('Zapisuję się do kolejki.');
                         window._g("match&a=signin");
                         await wait(500);
                     } else {
