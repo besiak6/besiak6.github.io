@@ -37,12 +37,12 @@
                 if (checkDistance) {
                     isProcessing = true;
                     try {
-                        await delay(300);
+                        await delay(150);
                         if (typeof window._g === 'function') {
                             window._g(`talk&id=${npcId}`);
-                            await delay(300);
+                            await delay(100);
                             window._g(`talk&id=${npcId}&c=20.1`);
-                            await delay(300);
+                            await delay(100);
                             window._g(`talk&id=${npcId}&c=20.1`);
                         }
                     } catch (e) {
@@ -61,7 +61,7 @@
 
         intervalId = setInterval(() => {
             talkToNpcByName("Tropiciel Herosów");
-        }, 1000);
+        }, 250);
     }
 
     function addonStop() {
