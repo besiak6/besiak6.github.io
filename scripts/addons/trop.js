@@ -37,12 +37,12 @@
                 if (checkDistance) {
                     isProcessing = true;
                     try {
-                        await delay(150);
+                        await delay(250);
                         if (typeof window._g === 'function') {
                             window._g(`talk&id=${npcId}`);
-                            await delay(100);
+                            await delay(200);
                             window._g(`talk&id=${npcId}&c=20.1`);
-                            await delay(100);
+                            await delay(200);
                             window._g(`talk&id=${npcId}&c=20.1`);
                         }
                     } catch (e) {
