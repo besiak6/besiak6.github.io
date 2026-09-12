@@ -1,8 +1,16 @@
+// ==UserScript==
+// @name          Auto Otchłań baddonz
+// @namespace     http://tampermonkey.net/
+// @version       2.0
+// @author        besiak
+// @match         https://*.margonem.pl/*
+// @grant         none
+// ==/UserScript==
+
 (function() {
     'use strict';
 
     const ADDON_ID = "OTCH";
-
     const CHAR_SPECIFIC_KEYS = ['changeSets', 'profSets'];
 
     const DEFAULT_SETTINGS = {
@@ -22,53 +30,40 @@
     let uiWindowElement = null;
     let isRunning = false;
 
-    async function wait(ms) {
-        return new Promise(r => setTimeout(r, ms));
-    }
-
+    const wait = (ms) => new Promise(r => setTimeout(r, ms));
     const log = (...args) => console.log('%c[Auto Otchłań]', 'color:#4CAF50;font-weight:bold;', ...args);
-    const closeAlertWindow = (targetEl) => {
+
+    const closeWarningAlert = () => {
         try {
-            const windowsData = window.Engine?.windowsData;
-            const windowManager = window.Engine?.windowManager;
-            if (!windowsData || !windowManager) return false;
-
-            const alertWindows = windowManager.getList?.()?.[windowsData.name.ALERT_WND];
-            if (!alertWindows) return false;
-
-            for (const id in alertWindows) {
-                const wnd = alertWindows[id];
-                if (!wnd || typeof wnd.close !== 'function') continue;
-
-                const wndEl = wnd.$ && wnd.$[0];
-                if (targetEl && wndEl !== targetEl) continue;
-                if (!targetEl && (!wnd.isShow || !wnd.isShow())) continue;
-
-                wnd.close();
-                return true;
+            const list = window.Engine?.windowManager?.getList?.();
+            const name = window.Engine?.windowsData?.name?.ALERT_WND;
+            if (!list || !name || !list[name]) return false;
+            for (const id in list[name]) {
+                const wnd = list[name][id];
+                if (wnd && typeof wnd.close === 'function' && wnd.isShow?.()) {
+                    wnd.close();
+                    return true;
+                }
             }
-        } catch (e) {
-            log('closeAlertWindow - błąd:', e);
-        }
+        } catch (e) {}
         return false;
     };
-    const findAlertByText = (text) => {
-        const innerContents = document.querySelectorAll('.mAlert .inner-content');
-        for (const el of innerContents) {
-            if (el.offsetParent !== null && el.textContent.includes(text)) {
-                return el.closest('.mAlert');
+
+    const isWarningAlertVisible = () => {
+        const els = document.querySelectorAll('.mAlert .inner-content');
+        for (const el of els) {
+            if (el.offsetParent !== null && el.textContent.includes('Punkt ostrzeżenia dodany!')) {
+                return true;
             }
         }
-        return null;
+        return false;
     };
 
     function loadSettings() {
         if (!window.BaddonzAPI) return;
         const saved = window.BaddonzAPI.getAddonSettings(ADDON_ID);
         currentSettings = { ...DEFAULT_SETTINGS, ...saved };
-        if (!currentSettings.profSets) {
-            currentSettings.profSets = { ...DEFAULT_SETTINGS.profSets };
-        }
+        if (!currentSettings.profSets) currentSettings.profSets = { ...DEFAULT_SETTINGS.profSets };
     }
 
     function saveSettings() {
@@ -77,9 +72,7 @@
     }
 
     const fetchGameData = () => {
-        if (!window.Engine || !window.Engine.changePlayer || !window.Engine.hero) {
-            return null;
-        }
+        if (!window.Engine || !window.Engine.changePlayer || !window.Engine.hero) return null;
         try {
             return {
                 charList: window.Engine.changePlayer.charlist.list,
@@ -93,30 +86,21 @@
     };
 
     const isCaptchaVisible = () => {
-        const captchaWindow = document.querySelector('.captcha-window');
-        return captchaWindow && captchaWindow.offsetParent !== null && captchaWindow.querySelector('.header-label .text')?.textContent === 'Zagadka';
+        const w = document.querySelector('.captcha-window');
+        return w && w.offsetParent !== null && w.querySelector('.header-label .text')?.textContent === 'Zagadka';
     };
 
     const updateAutoAbyssState = (isActive, autoAbyssEl) => {
-        if (isActive) {
-            autoAbyssEl.classList.add("active");
-            autoAbyssEl.classList.add("baddonz-state-button--active");
-            if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
-                $(autoAbyssEl).tip('Włączony');
-            }
-        } else {
-            autoAbyssEl.classList.remove("active");
-            autoAbyssEl.classList.remove("baddonz-state-button--active");
-            if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
-                $(autoAbyssEl).tip('Wyłączony');
-            }
+        autoAbyssEl.classList.toggle('active', isActive);
+        autoAbyssEl.classList.toggle('baddonz-state-button--active', isActive);
+        if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
+            $(autoAbyssEl).tip(isActive ? 'Włączony' : 'Wyłączony');
         }
     };
 
     const performDailyResetCheck = () => {
         const todayKey = new Date().toDateString();
         if (currentSettings.lastResetDate !== todayKey) {
-            log('Nowy dzień - czyszczę listę postaci oznaczonych jako "skończone".');
             currentSettings.lastFinishedChars = {};
             currentSettings.lastResetDate = todayKey;
             saveSettings();
@@ -125,333 +109,227 @@
 
     const startCharacterSwitch = async () => {
         performDailyResetCheck();
-        let d = fetchGameData();
-        if (!d || !currentSettings.autoSwitch) {
-            return;
-        }
+        const d = fetchGameData();
+        if (!d || !currentSettings.autoSwitch) return;
 
-        let chars = d.charList.filter(char => char.world === d.world);
-        log(`Wykryte postacie na koncie (świat ${d.world}):`,
-            chars.map(c => `${c.nick || c.id} (lvl ${c.lvl})`));
-
-        if (chars.length <= 1) {
-            log('Tylko jedna postać na tym świecie - nie ma na co przełączyć.');
-            return;
-        }
+        let chars = d.charList.filter(c => c.world === d.world);
+        if (chars.length <= 1) return;
 
         chars.sort((a, b) => b.lvl - a.lvl);
-        log('Kolejność przelogowywania (od najwyższego levelu):',
-            chars.map(c => c.nick || c.id));
+        log('Wykryte postacie na koncie:', chars.map(c => `${c.nick || c.id} (lvl ${c.lvl})`));
+        log('Kolejność przelogowywania:', chars.map(c => c.nick || c.id));
 
-        const currentIdx = chars.findIndex(char => char.id === d.currentId);
-        if (currentIdx === -1) {
-            log('Aktualna postać nie znaleziona na liście - przerywam.');
-            return;
-        }
+        const currentIdx = chars.findIndex(c => c.id === d.currentId);
+        if (currentIdx === -1) return;
 
-        let nextCharToSwitch = null;
         const todayKey = new Date().toDateString();
+        let nextChar = null;
 
         for (let i = 1; i < chars.length; i++) {
-            const nextIdx = (currentIdx + i) % chars.length;
-            const nextChar = chars[nextIdx];
-
-            if (nextChar.id !== d.currentId &&
-                currentSettings.lastFinishedChars[nextChar.id] !== todayKey) {
-                nextCharToSwitch = nextChar;
+            const c = chars[(currentIdx + i) % chars.length];
+            if (c.id !== d.currentId && currentSettings.lastFinishedChars[c.id] !== todayKey) {
+                nextChar = c;
                 break;
             }
         }
 
-        if (nextCharToSwitch) {
-            const nextCharId = nextCharToSwitch.id;
-            const previousCharId = d.currentId;
-            log(`Przełączam z postaci ${previousCharId} na ${nextCharToSwitch.nick || nextCharId}.`);
-
-            let isSwitched = false;
-            let attempts = 0;
-            const maxWaitTime = 18000;
-            const checkInterval = 6000;
-            window.Engine.changePlayer.changePlayerRequest(nextCharId);
-
-            while (!isSwitched && attempts * checkInterval < maxWaitTime) {
-                await wait(checkInterval);
-                const heroIdOnPage = window.Engine?.hero?.d?.id;
-
-                if (heroIdOnPage === nextCharId) {
-                    isSwitched = true;
-                    log(`Przełączono pomyślnie na postać ${nextCharId}. Oznaczam poprzednią (${previousCharId}) jako skończoną na dziś.`);
-                    currentSettings.lastFinishedChars[previousCharId] = todayKey;
-                    saveSettings();
-                    break;
-                } else if (heroIdOnPage && heroIdOnPage !== nextCharId) {
-                    log('Przełączenie się nie powiodło - ponawiam żądanie.');
-                    window.Engine.changePlayer.changePlayerRequest(nextCharId);
-                    attempts++;
-                } else {
-                    attempts++;
-                }
-            }
-
-            if (!isSwitched) {
-                log('Nie udało się przełączyć postaci w wyznaczonym czasie.');
-            }
-        } else {
+        if (!nextChar) {
             log('Brak dostępnej postaci do przełączenia (wszystkie już skończone na dziś).');
+            return;
         }
-    };
 
-    const collectRewards = () => {
-        window._g('match&a=collect');
+        const nextId = nextChar.id;
+        const prevId = d.currentId;
+        log(`Przełączam na: ${nextChar.nick || nextId}`);
+
+        window.Engine.changePlayer.changePlayerRequest(nextId);
+
+        let switched = false;
+        for (let i = 0; i < 3; i++) {
+            await wait(6000);
+            const heroId = window.Engine?.hero?.d?.id;
+            if (heroId === nextId) {
+                switched = true;
+                currentSettings.lastFinishedChars[prevId] = todayKey;
+                saveSettings();
+                log(`Przełączono pomyślnie na ${nextId}.`);
+                break;
+            }
+            window.Engine.changePlayer.changePlayerRequest(nextId);
+        }
+
+        if (!switched) log('Nie udało się przełączyć postaci.');
     };
 
     const checkAbyssCompletion = async () => {
-        const progressStageDiv = document.querySelector(".matchmaking-progress-stage");
-        const autoAbyssEl = document.getElementById("autoAbyss");
+        const autoAbyssEl = document.getElementById('autoAbyss');
         if (!autoAbyssEl) return false;
 
-        if (progressStageDiv && progressStageDiv.offsetParent !== null) {
-            const stageElement = progressStageDiv.querySelector(".stage");
-            const ratioElement = progressStageDiv.querySelector(".ratio");
+        const progressDiv = document.querySelector('.matchmaking-progress-stage');
+        if (!progressDiv || progressDiv.offsetParent === null) return false;
 
-            if (stageElement && ratioElement) {
-                const stageText = stageElement.textContent.trim();
-                const ratioText = ratioElement.textContent.trim();
+        const stage = progressDiv.querySelector('.stage')?.textContent.trim();
+        const ratio = progressDiv.querySelector('.ratio')?.textContent.trim();
+        if (stage !== 'Etap IV' || ratio !== '15/15') return false;
 
-                if (stageText === "Etap IV" && ratioText === "15/15") {
-                    log('Osiągnięto maksymalny etap (Etap IV, 15/15).');
+        log('Osiągnięto maksymalny etap (Etap IV, 15/15).');
 
-                    if (currentSettings.collectChests) {
-                        log('Odbieram skrzynki.');
-                        collectRewards();
-                        await wait(1000);
-                    }
-
-                    const shouldStopGlobally = currentSettings.stopOnMaxStage;
-                    const shouldAutoSwitch = currentSettings.autoSwitch;
-
-                    if (shouldStopGlobally) {
-                        log('Ustawienie "Zatrzymuj" aktywne - wyłączam Auto Otchłań na tej postaci.');
-                        updateAutoAbyssState(false, autoAbyssEl);
-                        currentSettings.autoAbyss = false;
-                        saveSettings();
-
-                        if (shouldAutoSwitch) {
-                            log('Przelogowywanie aktywne - szukam kolejnej postaci.');
-                            startCharacterSwitch();
-                        }
-                    } else if (shouldAutoSwitch) {
-                        log('Max etap osiągnięty, przelogowywanie aktywne - szukam kolejnej postaci.');
-                        startCharacterSwitch();
-                    } else {
-                        log('Max etap osiągnięty, brak przelogowywania - wyłączam Auto Otchłań.');
-                        updateAutoAbyssState(false, autoAbyssEl);
-                        currentSettings.autoAbyss = false;
-                        saveSettings();
-                    }
-
-                    return true;
-                }
-            }
+        if (currentSettings.collectChests) {
+            log('Odbieram skrzynki.');
+            window._g('match&a=collect');
+            await wait(1000);
         }
-        return false;
+
+        if (currentSettings.stopOnMaxStage) {
+            log('Zatrzymuję - wyłączam Auto Otchłań.');
+            updateAutoAbyssState(false, autoAbyssEl);
+            currentSettings.autoAbyss = false;
+            saveSettings();
+            if (currentSettings.autoSwitch) startCharacterSwitch();
+        } else if (currentSettings.autoSwitch) {
+            log('Przelogowywanie aktywne.');
+            startCharacterSwitch();
+        } else {
+            updateAutoAbyssState(false, autoAbyssEl);
+            currentSettings.autoAbyss = false;
+            saveSettings();
+        }
+
+        return true;
+    };
+
+    const handleWarningAlert = async () => {
+        if (!isWarningAlertVisible()) return false;
+        log('Wykryto "Punkt ostrzeżenia dodany!" - zamykam okno i czekam 60 sekund.');
+        closeWarningAlert();
+        await wait(60000);
+        log('Minęła minuta kary - wznawiam.');
+        return true;
     };
 
     const waitForOpponentAccept = async () => {
-        const maxWaitTime = 5000;
-        let elapsedTime = 0;
-        const checkInterval = 250;
-
-        while ((!document.querySelector(".choose-eq") || document.querySelector(".choose-eq").offsetParent === null) && elapsedTime < maxWaitTime) {
-            await wait(checkInterval);
-            elapsedTime += checkInterval;
-        }
-
-        return document.querySelector(".choose-eq") && document.querySelector(".choose-eq").offsetParent !== null;
-    };
-
-    const handleAlerts = async () => {
-        const warningContent = document.querySelector('.alert-content .inner-content');
-        const okButton = document.querySelector('.alert-content .button.alert-accept-hotkey');
-
-        if (warningContent && warningContent.offsetParent !== null && okButton && okButton.offsetParent !== null) {
-            if (warningContent.textContent.includes('Punkt ostrzeżenia dodany!')) {
-                log('Wykryto alert "Punkt ostrzeżenia dodany!" - zamykam przez wnd.close().');
-                if (!closeAlertWindow()) {
-                    log('Nie udało się zamknąć okna przez API gry - pomijam, spróbuję ponownie w kolejnej pętli.');
-                    return false;
-                }
-                await wait(500);
-                return true;
-            }
+        const max = 5000;
+        let elapsed = 0;
+        while (elapsed < max) {
+            const el = document.querySelector('.choose-eq');
+            if (el && el.offsetParent !== null) return true;
+            await wait(250);
+            elapsed += 250;
         }
         return false;
     };
 
     const waitForBattleToStart = async () => {
-        while (!window.Engine || !window.Engine.battle || !window.Engine.battle.show) {
-            await wait(500);
-            if (!isRunning) return;
-        }
+        while (isRunning && (!window.Engine?.battle?.show)) await wait(500);
     };
 
     const waitForBattleToFinish = async () => {
-        while (!window.Engine || !window.Engine.battle || !window.Engine.battle.endBattle) {
-            await wait(500);
-            if (!isRunning) return;
-        }
+        while (isRunning && (!window.Engine?.battle?.endBattle)) await wait(500);
     };
 
     const fetchOpponentProfessionKey = async () => {
-        let attempts = 0;
-        const maxAttempts = 30;
-        const sleepTime = 250;
         const profClassMap = {
             'hidden-prof--h': 'h', 'hidden-prof--b': 'b', 'hidden-prof--m': 'm',
             'hidden-prof--p': 'p', 'hidden-prof--w': 'w', 'hidden-prof--t': 't'
         };
-        while (attempts < maxAttempts) {
-            const opponentInfoDiv = document.querySelector(".opponent-info");
-            if (opponentInfoDiv && opponentInfoDiv.offsetParent !== null) {
-                const opponentAvatar = opponentInfoDiv.querySelector(".avatar-icon");
-                if (opponentAvatar) {
-                    for (const className in profClassMap) {
-                        if (opponentAvatar.classList.contains(className)) {
-                            return profClassMap[className];
-                        }
+        const profNameMap = {
+            'Łowca': 'h', 'Tancerz Ostrzy': 'b', 'Mag': 'm',
+            'Paladyn': 'p', 'Wojownik': 'w', 'Tropiciel': 't'
+        };
+
+        for (let i = 0; i < 30; i++) {
+            const infoDiv = document.querySelector('.opponent-info');
+            if (infoDiv && infoDiv.offsetParent !== null) {
+                const avatar = infoDiv.querySelector('.avatar-icon');
+                if (avatar) {
+                    for (const cls in profClassMap) {
+                        if (avatar.classList.contains(cls)) return profClassMap[cls];
                     }
                 }
-                const levelRatingElement = opponentInfoDiv.querySelector(".level-rating");
-                if (levelRatingElement) {
-                    const profName = levelRatingElement.textContent.trim();
-                    switch (profName) {
-                        case 'Łowca': return 'h';
-                        case 'Tancerz Ostrzy': return 'b';
-                        case 'Mag': return 'm';
-                        case 'Paladyn': return 'p';
-                        case 'Wojownik': return 'w';
-                        case 'Tropiciel': return 't';
-                    }
+                const lvlRating = infoDiv.querySelector('.level-rating');
+                if (lvlRating) {
+                    const key = profNameMap[lvlRating.textContent.trim()];
+                    if (key) return key;
                 }
             }
-            await wait(sleepTime);
-            attempts++;
+            await wait(250);
         }
         return null;
     };
 
     async function runAbyssAutomation() {
-        const autoAbyssEl = document.getElementById("autoAbyss");
-        const changeSetsEl = document.getElementById("changeSets");
-        if (!autoAbyssEl) return;
-
-        if (!currentSettings.enabled) return;
+        const autoAbyssEl = document.getElementById('autoAbyss');
+        if (!autoAbyssEl || !currentSettings.enabled) return;
 
         isRunning = true;
 
-        while (autoAbyssEl.classList.contains("active") && isRunning) {
+        while (autoAbyssEl.classList.contains('active') && isRunning) {
             await wait(250);
-            if (await checkAbyssCompletion()) {
-                isRunning = false;
-                return;
-            }
 
-            if (await handleAlerts()) {
-                await wait(1000);
-                continue;
-            }
+            if (await checkAbyssCompletion()) { isRunning = false; return; }
+            if (await handleWarningAlert()) continue;
 
-            let foundOpponentTimer = document.querySelector("#matchmaking-timer");
-            let isOpponentPromptVisible = foundOpponentTimer && foundOpponentTimer.offsetParent !== null;
+            const opponentTimer = document.querySelector('#matchmaking-timer');
+            const opponentPromptVisible = opponentTimer && opponentTimer.offsetParent !== null;
 
-            if (isOpponentPromptVisible) {
+            if (opponentPromptVisible) {
                 if (isCaptchaVisible()) {
+                    log('Captcha - czekam.');
                     while (isCaptchaVisible()) {
                         await wait(1000);
-                        if (!autoAbyssEl.classList.contains("active") || !isRunning) { isRunning = false; return; }
+                        if (!autoAbyssEl.classList.contains('active') || !isRunning) { isRunning = false; return; }
                     }
                     await wait(500);
                     continue;
                 }
 
                 log('Znalazłem przeciwnika - akceptuję.');
-                window._g("match&a=accept_opp&ans=1");
-                const acceptedSuccessfully = await waitForOpponentAccept();
+                window._g('match&a=accept_opp&ans=1');
 
-                if (!acceptedSuccessfully) {
-                    log('Akceptacja przeciwnika nie powiodła się (okno wyboru EQ nie pojawiło się) - ponawiam.');
+                if (!await waitForOpponentAccept()) {
+                    log('Okno wyboru EQ nie pojawiło się - ponawiam.');
                     await wait(1500);
                     continue;
                 }
 
-                if (changeSetsEl && changeSetsEl.classList.contains("active")) {
-                    let opponentProfKey = null;
-                    let changeSetAttempts = 0;
-                    const maxChangeSetAttempts = 30;
-                    const changeSetSleepTime = 250;
-                    while (opponentProfKey === null && changeSetAttempts < maxChangeSetAttempts) {
-                        opponentProfKey = await fetchOpponentProfessionKey();
-                        if (opponentProfKey === null) {
-                            await wait(changeSetSleepTime);
-                        }
-                        changeSetAttempts++;
-                    }
-
-                    if (opponentProfKey) {
-                        log(`Profesja przeciwnika: ${opponentProfKey}`);
-                        const profSets = currentSettings.profSets || {};
-                        const setId = profSets[opponentProfKey];
-                        log(`Przypisany zestaw dla tej profesji: ${setId || '(brak)'}`);
-
-                        let buildsCommons = null;
-                        if (window.Engine && window.Engine.buildsManager) {
-                            buildsCommons = window.Engine.buildsManager.getBuildsCommons();
-                        }
-
-                        if (buildsCommons) {
-                            const currentSetId = buildsCommons.getCurrentId();
-                            if (setId && setId !== "0" && setId != currentSetId) {
-                                log(`Zmieniam zestaw z ${currentSetId} na ${setId}.`);
-                                window._g(`builds&action=updateCurrent&id=${setId}`);
-                                await wait(750);
-                            } else {
-                                log('Zestaw nie wymaga zmiany.');
-                            }
+                const changeSetsEl = document.getElementById('changeSets');
+                if (changeSetsEl?.classList.contains('active')) {
+                    const profKey = await fetchOpponentProfessionKey();
+                    if (profKey) {
+                        log(`Profesja przeciwnika: ${profKey}`);
+                        const setId = currentSettings.profSets?.[profKey];
+                        const buildsCommons = window.Engine?.buildsManager?.getBuildsCommons?.();
+                        if (buildsCommons && setId && setId !== '0' && setId != buildsCommons.getCurrentId()) {
+                            log(`Zmieniam zestaw na: ${setId}`);
+                            window._g(`builds&action=updateCurrent&id=${setId}`);
+                            await wait(750);
                         }
                     } else {
-                        log('Nie udało się wykryć profesji przeciwnika w wyznaczonym czasie.');
+                        log('Nie wykryto profesji przeciwnika.');
                     }
                 }
 
-                window._g("match&a=prepared");
+                window._g('match&a=prepared');
                 await waitForBattleToStart();
                 if (!isRunning) return;
                 log('Jestem w walce.');
 
-                if (currentSettings.autoF) {
-                    window._g("fight&a=f");
-                }
+                if (currentSettings.autoF) window._g('fight&a=f');
 
                 await waitForBattleToFinish();
                 if (!isRunning) return;
                 log('Skończyłem walkę.');
 
-                window._g("fight&a=exit");
+                window._g('fight&a=exit');
                 await wait(250);
 
-                if (await checkAbyssCompletion()) {
-                    isRunning = false;
-                    return;
-                }
-
+                if (await checkAbyssCompletion()) { isRunning = false; return; }
                 await wait(2000);
-                if (await checkAbyssCompletion()) {
-                    isRunning = false;
-                    return;
-                }
+                if (await checkAbyssCompletion()) { isRunning = false; return; }
 
-                if (autoAbyssEl.classList.contains("active")) {
-                    window._g("fight&a=nextmatch");
+                if (autoAbyssEl.classList.contains('active')) {
+                    log('Zapisuję się ponownie do kolejki.');
+                    window._g('fight&a=nextmatch');
                     await wait(500);
                 } else {
                     isRunning = false;
@@ -459,23 +337,19 @@
                 }
 
             } else {
-                let isInQueue = document.querySelector(".matchmaking-timer") && document.querySelector(".matchmaking-timer").offsetParent !== null;
-                if (!isInQueue && !isCaptchaVisible()) {
-                    if (await checkAbyssCompletion()) {
-                        isRunning = false;
-                        return;
-                    }
-
+                const inQueue = document.querySelector('.matchmaking-timer')?.offsetParent !== null;
+                if (!inQueue && !isCaptchaVisible()) {
+                    if (await checkAbyssCompletion()) { isRunning = false; return; }
                     await wait(2000);
-                    if (autoAbyssEl.classList.contains("active")) {
+                    if (autoAbyssEl.classList.contains('active')) {
                         log('Zapisuję się do kolejki.');
-                        window._g("match&a=signin");
+                        window._g('match&a=signin');
                         await wait(500);
                     } else {
                         isRunning = false;
                         return;
                     }
-                } else if (isInQueue || isCaptchaVisible()) {
+                } else {
                     await wait(1000);
                 }
             }
@@ -486,57 +360,29 @@
 
     const populateBuilds = async (setSelects) => {
         let buildsCommons = null;
-        let attempts = 0;
-        const maxAttempts = 10;
-        while (!buildsCommons && attempts < maxAttempts) {
-            if (window.Engine && window.Engine.buildsManager) {
-                buildsCommons = window.Engine.buildsManager.getBuildsCommons();
-            }
-            if (!buildsCommons) {
-                await wait(500);
-                attempts++;
-            }
+        for (let i = 0; i < 10; i++) {
+            buildsCommons = window.Engine?.buildsManager?.getBuildsCommons?.();
+            if (buildsCommons) break;
+            await wait(500);
         }
-
         if (!buildsCommons) return;
+
         const allBuilds = buildsCommons.getBuildsName();
-        const optionsHtml = ['<option value="0">Brak</option>'];
-
+        const opts = ['<option value="0">Brak</option>'];
         for (const id in allBuilds) {
-            if (allBuilds.hasOwnProperty(id) && allBuilds[id] && allBuilds[id].name) {
-                let displayName = allBuilds[id].name;
-                if (allBuilds[id].name.startsWith('[SET.')) {
-                    displayName = id;
-                }
-                optionsHtml.push(`<option value="${id}">${displayName}</option>`);
-            } else if (allBuilds.hasOwnProperty(id) && allBuilds[id] === null) {
-                optionsHtml.push(`<option value="${id}">[Anonimowy Zestaw ${id}]</option>`);
-            }
+            const b = allBuilds[id];
+            const name = b?.name?.startsWith('[SET.') ? id : (b?.name || `[Zestaw ${id}]`);
+            opts.push(`<option value="${id}">${name}</option>`);
         }
-
-        const allOptions = optionsHtml.join('');
-        const savedProfSets = currentSettings.profSets || {};
+        const html = opts.join('');
 
         for (const profKey in setSelects) {
-            if (setSelects.hasOwnProperty(profKey) && setSelects[profKey]) {
-                const currentSelectedValue = setSelects[profKey].value;
-
-                setSelects[profKey].innerHTML = allOptions;
-
-                const savedValue = savedProfSets[profKey] || "0";
-                const optionExists = Array.from(setSelects[profKey].options).some(opt => opt.value === savedValue);
-
-                if (optionExists) {
-                    setSelects[profKey].value = savedValue;
-                    currentSettings.profSets[profKey] = savedValue;
-                } else if (currentSelectedValue !== "0" && Array.from(setSelects[profKey].options).some(opt => opt.value === currentSelectedValue)) {
-                    setSelects[profKey].value = currentSelectedValue;
-                    currentSettings.profSets[profKey] = currentSelectedValue;
-                } else {
-                    setSelects[profKey].value = "0";
-                    currentSettings.profSets[profKey] = "0";
-                }
-            }
+            const sel = setSelects[profKey];
+            if (!sel) continue;
+            sel.innerHTML = html;
+            const saved = currentSettings.profSets?.[profKey] || '0';
+            sel.value = Array.from(sel.options).some(o => o.value === saved) ? saved : '0';
+            currentSettings.profSets[profKey] = sel.value;
         }
         saveSettings();
     };
@@ -545,93 +391,64 @@
 
     function buildUI() {
         const bodyHtml = `
-            <div class="baddonz-setting-row" style="margin-bottom: 4px !important; display: flex; align-items: center;">
+            <div class="baddonz-setting-row" style="margin-bottom:4px;display:flex;align-items:center;">
                 <div class="baddonz-state-button ${currentSettings.autoAbyss ? 'active baddonz-state-button--active' : ''}" id="autoAbyss"></div>
-                <span class="baddonz-text" style="padding: 0; margin-left: 5px;">Auto Otchłań</span>
+                <span class="baddonz-text" style="padding:0;margin-left:5px;">Auto Otchłań</span>
             </div>
-
             <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox ${currentSettings.collectChests ? 'active' : ''}" id="collectChests"></div>
                 <span class="baddonz-text" style="padding:0;">Odbieraj skrzynki</span>
             </div>
-
             <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox ${currentSettings.stopOnMaxStage ? 'active' : ''}" id="stopOnMaxStage"></div>
                 <span class="baddonz-text" style="padding:0;">Zatrzymuj na Etapie IV</span>
             </div>
-
             <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox ${currentSettings.autoSwitch ? 'active' : ''}" id="autoSwitch"></div>
                 <span class="baddonz-text" style="padding:0;">Przelogowywanie</span>
             </div>
-
             <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox ${currentSettings.autoF ? 'active' : ''}" id="autoF"></div>
                 <span class="baddonz-text" style="padding:0;">AutoF</span>
             </div>
-
-            <hr style="width: 100%; border-color: #303030; margin: 5px 0;">
-
+            <hr style="width:100%;border-color:#303030;margin:5px 0;">
             <div class="baddonz-setting-row">
                 <div class="baddonz-checkbox ${currentSettings.changeSets ? 'active' : ''}" id="changeSets"></div>
-                <span class="baddonz-text" style="padding: 0;">Zmieniaj Zestawy</span>
+                <span class="baddonz-text" style="padding:0;">Zmieniaj Zestawy</span>
             </div>
-
-            <div id="set-change-config" class="baddonz-flex column" style="gap: 3px; display: ${currentSettings.changeSets ? 'flex' : 'none'}; padding: 0 5px;">
-                <div class="baddonz-label-wrapper" style="justify-content: space-between; align-items: center;">
-                    <div class="baddonz-text" style="padding: 0; min-width: 90px;">Łowca</div>
-                    <select class="baddonz-input baddonz-select" id="set-h" style="flex-grow: 1;"></select>
-                </div>
-                <div class="baddonz-label-wrapper" style="justify-content: space-between; align-items: center;">
-                    <div class="baddonz-text" style="padding: 0; min-width: 90px;">Tancerz Ostrzy</div>
-                    <select class="baddonz-input baddonz-select" id="set-b" style="flex-grow: 1;"></select>
-                </div>
-                <div class="baddonz-label-wrapper" style="justify-content: space-between; align-items: center;">
-                    <div class="baddonz-text" style="padding: 0; min-width: 90px;">Mag</div>
-                    <select class="baddonz-input baddonz-select" id="set-m" style="flex-grow: 1;"></select>
-                </div>
-                <div class="baddonz-label-wrapper" style="justify-content: space-between; align-items: center;">
-                    <div class="baddonz-text" style="padding: 0; min-width: 90px;">Paladyn</div>
-                    <select class="baddonz-input baddonz-select" id="set-p" style="flex-grow: 1;"></select>
-                </div>
-                <div class="baddonz-label-wrapper" style="justify-content: space-between; align-items: center;">
-                    <div class="baddonz-text" style="padding: 0; min-width: 90px;">Wojownik</div>
-                    <select class="baddonz-input baddonz-select" id="set-w" style="flex-grow: 1;"></select>
-                </div>
-                <div class="baddonz-label-wrapper" style="justify-content: space-between; align-items: center;">
-                    <div class="baddonz-text" style="padding: 0; min-width: 90px;">Tropiciel</div>
-                    <select class="baddonz-input baddonz-select" id="set-t" style="flex-grow: 1;"></select>
-                </div>
+            <div id="set-change-config" class="baddonz-flex column" style="gap:3px;display:${currentSettings.changeSets ? 'flex' : 'none'};padding:0 5px;">
+                ${['h:Łowca','b:Tancerz Ostrzy','m:Mag','p:Paladyn','w:Wojownik','t:Tropiciel'].map(s => {
+                    const [key, label] = s.split(':');
+                    return `<div class="baddonz-label-wrapper" style="justify-content:space-between;align-items:center;">
+                        <div class="baddonz-text" style="padding:0;min-width:90px;">${label}</div>
+                        <select class="baddonz-input baddonz-select" id="set-${key}" style="flex-grow:1;"></select>
+                    </div>`;
+                }).join('')}
             </div>
         `;
 
-        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, "Auto Otchłań", bodyHtml, {
+        uiWindowElement = window.BaddonzAPI.createAddonWindow(ADDON_ID, 'Auto Otchłań', bodyHtml, {
             width: '210px',
             customId: 'baddonz-otch-wnd',
             hasSettings: false,
             hasCollapse: false
         });
 
-        const autoAbyssEl = uiWindowElement.querySelector("#autoAbyss");
-        const collectChestsEl = uiWindowElement.querySelector("#collectChests");
-        const stopOnMaxStageEl = uiWindowElement.querySelector("#stopOnMaxStage");
-        const changeSetsEl = uiWindowElement.querySelector("#changeSets");
-        const setChangeConfigEl = uiWindowElement.querySelector("#set-change-config");
-        const autoSwitchEl = uiWindowElement.querySelector("#autoSwitch");
-        const autoFEl = uiWindowElement.querySelector("#autoF");
+        const get = (id) => uiWindowElement.querySelector(`#${id}`);
 
-        const setSelects = {
-            h: uiWindowElement.querySelector("#set-h"),
-            b: uiWindowElement.querySelector("#set-b"),
-            m: uiWindowElement.querySelector("#set-m"),
-            p: uiWindowElement.querySelector("#set-p"),
-            w: uiWindowElement.querySelector("#set-w"),
-            t: uiWindowElement.querySelector("#set-t")
-        };
+        const autoAbyssEl    = get('autoAbyss');
+        const collectChestsEl = get('collectChests');
+        const stopOnMaxEl    = get('stopOnMaxStage');
+        const changeSetsEl   = get('changeSets');
+        const setConfigEl    = get('set-change-config');
+        const autoSwitchEl   = get('autoSwitch');
+        const autoFEl        = get('autoF');
+
+        const setSelects = { h: get('set-h'), b: get('set-b'), m: get('set-m'), p: get('set-p'), w: get('set-w'), t: get('set-t') };
 
         if (typeof $ === 'function' && typeof $.fn.tip === 'function') {
             $(collectChestsEl).tip('Automatyczne odbieranie skrzynek gdy Etap IV (15/15)');
-            $(stopOnMaxStageEl).tip('Zatrzymuje dodatek po osiągnięciu Etapu IV (15/15)');
+            $(stopOnMaxEl).tip('Zatrzymuje dodatek po osiągnięciu Etapu IV (15/15)');
             $(changeSetsEl).tip('Zmieniaj zestawy w zależności od profesji przeciwnika');
             $(autoSwitchEl).tip('Automatyczne przelogowywanie postaci po ukończeniu Otchłani');
         }
@@ -640,50 +457,28 @@
 
         autoAbyssEl.addEventListener('click', () => {
             if (!currentSettings.enabled) return;
-            const newState = !autoAbyssEl.classList.contains("active");
+            const newState = !autoAbyssEl.classList.contains('active');
             updateAutoAbyssState(newState, autoAbyssEl);
             currentSettings.autoAbyss = newState;
             saveSettings();
-            if (newState) {
-                runAbyssAutomation();
-            } else {
-                isRunning = false;
-            }
+            if (newState) runAbyssAutomation();
+            else isRunning = false;
         });
 
-        collectChestsEl.addEventListener('click', () => {
-            currentSettings.collectChests = collectChestsEl.classList.toggle("active");
-            saveSettings();
-        });
-
-        stopOnMaxStageEl.addEventListener('click', () => {
-            currentSettings.stopOnMaxStage = stopOnMaxStageEl.classList.toggle("active");
-            saveSettings();
-        });
+        collectChestsEl.addEventListener('click', () => { currentSettings.collectChests = collectChestsEl.classList.toggle('active'); saveSettings(); });
+        stopOnMaxEl.addEventListener('click', () => { currentSettings.stopOnMaxStage = stopOnMaxEl.classList.toggle('active'); saveSettings(); });
+        autoSwitchEl.addEventListener('click', () => { currentSettings.autoSwitch = autoSwitchEl.classList.toggle('active'); saveSettings(); });
+        autoFEl.addEventListener('click', () => { currentSettings.autoF = autoFEl.classList.toggle('active'); saveSettings(); });
 
         changeSetsEl.addEventListener('click', () => {
-            currentSettings.changeSets = changeSetsEl.classList.toggle("active");
-            setChangeConfigEl.style.display = currentSettings.changeSets ? 'flex' : 'none';
-            saveSettings();
-        });
-
-        autoSwitchEl.addEventListener('click', () => {
-            currentSettings.autoSwitch = autoSwitchEl.classList.toggle("active");
-            saveSettings();
-        });
-
-        autoFEl.addEventListener('click', () => {
-            currentSettings.autoF = autoFEl.classList.toggle("active");
+            currentSettings.changeSets = changeSetsEl.classList.toggle('active');
+            setConfigEl.style.display = currentSettings.changeSets ? 'flex' : 'none';
             saveSettings();
         });
 
         for (const profKey in setSelects) {
-            if (setSelects.hasOwnProperty(profKey) && setSelects[profKey]) {
-                setSelects[profKey].addEventListener('change', () => {
-                    currentSettings.profSets[profKey] = setSelects[profKey].value;
-                    saveSettings();
-                });
-            }
+            const sel = setSelects[profKey];
+            if (sel) sel.addEventListener('change', () => { currentSettings.profSets[profKey] = sel.value; saveSettings(); });
         }
 
         populateBuilds(setSelects);
@@ -695,43 +490,27 @@
         loadSettings();
         if (!uiWindowElement) buildUI();
         performDailyResetCheck();
-
-        if (currentSettings.autoAbyss && currentSettings.enabled) {
-            runAbyssAutomation();
-        }
+        if (currentSettings.autoAbyss && currentSettings.enabled) runAbyssAutomation();
     }
 
     function addonStop() {
         isRunning = false;
-        if (populateInterval) {
-            clearInterval(populateInterval);
-            populateInterval = null;
-        }
-        if (uiWindowElement) {
-            uiWindowElement.remove();
-            uiWindowElement = null;
-        }
+        if (populateInterval) { clearInterval(populateInterval); populateInterval = null; }
+        if (uiWindowElement) { uiWindowElement.remove(); uiWindowElement = null; }
     }
 
     function onStateToggle(isEnabled) {
         currentSettings.enabled = isEnabled;
         if (!isEnabled) {
             isRunning = false;
-            const autoAbyssEl = document.getElementById("autoAbyss");
-            if (autoAbyssEl) {
-                updateAutoAbyssState(false, autoAbyssEl);
-                currentSettings.autoAbyss = false;
-                saveSettings();
-            }
+            const autoAbyssEl = document.getElementById('autoAbyss');
+            if (autoAbyssEl) { updateAutoAbyssState(false, autoAbyssEl); currentSettings.autoAbyss = false; saveSettings(); }
         }
     }
 
     const checkApi = () => {
-        if (!window.BaddonzAPI || !window.BaddonzAPI.registerAddon) {
-            setTimeout(checkApi, 500);
-            return;
-        }
-        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle: onStateToggle });
+        if (!window.BaddonzAPI?.registerAddon) { setTimeout(checkApi, 500); return; }
+        window.BaddonzAPI.registerAddon(ADDON_ID, { init: addonInit, stop: addonStop, onStateToggle });
     };
 
     checkApi();
