@@ -7,7 +7,7 @@
 .baddonz-icon, .baddonz-state, .baddonz-button, .baddonz-checkbox, .baddonz-tab, .baddonz-select, .baddonz-keybind, .baddonz-dock-switch, .baddonz-dock-item, .baddonz-slider-track { cursor: var(--bz-c5) !important; }
 .baddonz-input:not(.baddonz-keybind), .baddonz-textarea { cursor: text !important; }
 
-.baddonz-window { position: absolute; display: flex; flex-direction: column; box-sizing: border-box; color: #fff; font: 12px sans-serif; line-height: 1; text-shadow: 1px 1px 1px #000; background: #0009; border-radius: 7px; box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66; pointer-events: all; }
+.baddonz-window {z-index: 10; position: absolute; display: flex; flex-direction: column; box-sizing: border-box; color: #fff; font: 12px sans-serif; line-height: 1; text-shadow: 1px 1px 1px #000; background: #0009; border-radius: 7px; box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66; pointer-events: all; }
 .baddonz-window.opacity-0 { background: none; }
 .baddonz-window.opacity-1 { background: #0000004d; }
 .baddonz-window.opacity-2 { background: #0009; }
