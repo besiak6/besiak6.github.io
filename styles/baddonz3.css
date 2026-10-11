@@ -15,7 +15,7 @@
 .baddonz-window.opacity-4 { background: #000; }
 .baddonz-window.blur { -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 .baddonz-window-header { position: relative; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; height: 28px; box-sizing: border-box; border-bottom: 1px solid var(--bz-line); white-space: nowrap; }
-.baddonz-window-controls { position: relative; z-index: 1; display: flex; align-items: center; gap: 2px; padding: 0 3px; }
+.baddonz-window-controls { position: relative; z-index: 10; display: flex; align-items: center; gap: 2px; padding: 0 3px; }
 .baddonz-window-title { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: beige; font-size: 11px; }
 .baddonz-window-body { --bz-pad: 10px; display: flex; flex-direction: column; flex: 1; gap: 6px; min-height: 0; box-sizing: border-box; padding: var(--bz-pad); overflow: hidden; }
 .baddonz-window.collapsed .bz-extra { display: none; }
@@ -119,7 +119,7 @@
 .baddonz-slider-thumb { position: absolute; top: 50%; width: 13px; height: 13px; background: #d1d5db; border: 2px solid #4ade80; border-radius: 50%; box-shadow: 0 0 6px #4ade804d; transform: translate(-50%, -50%); transition: box-shadow .12s, transform .12s; pointer-events: none; }
 .baddonz-slider-thumb.dragging, .baddonz-slider-track:hover .baddonz-slider-thumb { box-shadow: 0 0 10px #4ade808c; transform: translate(-50%, -50%) scale(1.25); }
 
-.baddonz-dock { position: absolute; z-index: 5; display: flex; gap: 1px; margin: 8px; overflow: hidden; background: #555; border: 1px solid #777; border-radius: 8px; box-shadow: 0 2px 8px #000a; pointer-events: auto; }
+.baddonz-dock { position: absolute; z-index: 995; display: flex; gap: 1px; margin: 8px; overflow: hidden; background: #555; border: 1px solid #777; border-radius: 8px; box-shadow: 0 2px 8px #000a; pointer-events: auto; }
 .baddonz-dock[data-p^="top"] { top: 0; }
 .baddonz-dock[data-p^="bottom"] { bottom: 0; }
 .baddonz-dock[data-p$="left"] { left: 0; }
