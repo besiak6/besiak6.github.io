@@ -6,7 +6,7 @@ body .baddonz-window .baddonz-window-title { cursor: var(--bz-c4) !important; }
 body .baddonz-window :is(.baddonz-button, .baddonz-checkbox, .baddonz-tab, .baddonz-icon, .baddonz-select, .baddonz-keybind, .baddonz-card-btn, .baddonz-card-btn *, .baddonz-list-row input[readonly], button, select) { cursor: var(--bz-c5) !important; }
 body .baddonz-dock :is(.baddonz-dock-switch, .baddonz-dock-item, .baddonz-dock-switch *, .baddonz-dock-item *) { cursor: var(--bz-c5) !important; }
 
-.baddonz-window { position: absolute; z-index: 8; display: flex; flex-direction: column; box-sizing: border-box; min-height: 22px; color: #fff; font: 12px sans-serif; line-height: 1; text-shadow: 1px 1px 1px #000; background: #0009; border-radius: 7px; box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66; pointer-events: all; }
+.baddonz-window { position: absolute; z-index: 11; display: flex; flex-direction: column; box-sizing: border-box; min-height: 22px; color: #fff; font: 12px sans-serif; line-height: 1; text-shadow: 1px 1px 1px #000; background: #0009; border-radius: 7px; box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66; pointer-events: all; }
 .baddonz-window.opacity-0 { background: none; }
 .baddonz-window.opacity-1 { background: #0000004d; }
 .baddonz-window.opacity-2 { background: #0009; }
@@ -100,7 +100,7 @@ body .baddonz-dock :is(.baddonz-dock-switch, .baddonz-dock-item, .baddonz-dock-s
 .baddonz-list-row input:not([readonly]) { background: #ffffff14; }
 .baddonz-list-row .baddonz-close-button { position: absolute; top: 1px; right: 1px; }
 
-.baddonz-dock { position: absolute; z-index: 9; display: flex; gap: 2px; box-sizing: border-box; padding: 2px; background: #0009; border: 1px solid #777; border-radius: 8px; box-shadow: 0 0 0 1px #0c0d0d, 1px 1px 3px 1px #0c0d0d66; pointer-events: auto; }
+.baddonz-dock { position: absolute; z-index: 9999; display: flex; gap: 2px; box-sizing: border-box; padding: 2px; background: #0009; border: 1px solid #777; border-radius: 8px; box-shadow: 0 0 0 1px #0c0d0d, 1px 1px 3px 1px #0c0d0d66; pointer-events: auto; }
 .baddonz-dock[data-p^="top"] { top: 12px; }
 .baddonz-dock[data-p^="bottom"] { bottom: 12px; }
 .baddonz-dock[data-p$="left"] { left: 12px; }
@@ -116,3 +116,6 @@ body .baddonz-dock :is(.baddonz-dock-switch, .baddonz-dock-item, .baddonz-dock-s
 .baddonz-dock.open .baddonz-dock-switch i { transform: rotate(180deg); }
 .baddonz-dock-switch:hover, .baddonz-dock-item:hover { color: #fff; background: #ffffff1f; }
 .baddonz-dock-item.active { color: var(--bz-green); }
+
+.layer.sticky-tips-layer { z-index: 99999 !important; }
+.layer.sticky-tips-layer .tip-wrapper { z-index: 99999 !important; }
