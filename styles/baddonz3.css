@@ -6,6 +6,7 @@ body .baddonz-window .baddonz-window-header, body .baddonz-window .baddonz-windo
 body .baddonz-window .baddonz-window-controls { cursor: var(--bz-c1) !important; }
 body .baddonz-window :is(.baddonz-button, .baddonz-checkbox, .baddonz-tab, .baddonz-icon, .baddonz-select, .baddonz-keybind, .baddonz-card-btn, .baddonz-card-btn *, .baddonz-list-row input[readonly], button, select) { cursor: var(--bz-c5) !important; }
 body .baddonz-dock :is(.baddonz-dock-switch, .baddonz-dock-item, .baddonz-dock-switch *, .baddonz-dock-item *) { cursor: var(--bz-c5) !important; }
+body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { cursor: var(--bz-c1) !important; }
 
 .baddonz-window { position: absolute; z-index: 11; display: flex; flex-direction: column; box-sizing: border-box; min-height: 22px; color: #fff; font: 12px sans-serif; line-height: 1; text-shadow: 1px 1px 1px #000; background: #0009; border-radius: 7px; box-shadow: 0 0 1px #010101, 0 0 0 1px #ccc, 0 0 0 2px #0c0d0d, 1px 1px 2px 2px #0c0d0d66; pointer-events: all; }
 .baddonz-window.opacity-0 { background: none; }
