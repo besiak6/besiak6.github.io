@@ -28,7 +28,7 @@ body .baddonz-dock :is(.baddonz-dock-switch, .baddonz-dock-item, .baddonz-dock-s
 .baddonz-settings-button { width: 13px; height: 13px; background: var(--bz-sprite) -607px -117px; }
 .baddonz-settings-button:hover { background-position: -659px -117px; }
 .baddonz-collapse-button { width: 16px; height: 14px; background: var(--bz-sprite) -556px -399px; }
-.baddonz-close-button { width: 22px; height: 22px; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='none' stroke='%23c6c6c6' stroke-width='2' d='M18 6L6 18M6 6l12 12'/></svg>") center / contain no-repeat; border: none; }
+.baddonz-close-button { width: 20px; height: 20px; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='none' stroke='%23c6c6c6' stroke-width='2' d='M18 6L6 18M6 6l12 12'/></svg>") center / contain no-repeat; border: none; }
 .baddonz-opacity-button:hover, .baddonz-collapse-button:hover, .baddonz-close-button:hover { filter: brightness(1.3); }
 
 .baddonz-manager.collapsed { width: auto !important; height: auto !important; min-width: 0 !important; min-height: 0 !important; overflow: hidden; }
@@ -102,9 +102,9 @@ body .baddonz-dock :is(.baddonz-dock-switch, .baddonz-dock-item, .baddonz-dock-s
 .baddonz-list-row:hover { background: #ffffff0d; }
 .baddonz-list-row input { flex: 1; min-width: 0; height: 24px; box-sizing: border-box; padding: 2px 26px 2px 6px; color: #fff; font: 12px Arial, sans-serif; background: transparent; border: 0; outline: 0; }
 .baddonz-list-row input:not([readonly]) { background: #ffffff14; }
-.baddonz-list-row .baddonz-close-button { position: absolute; top: 1px; right: 1px; }
+.baddonz-list-row .baddonz-close-button { position: absolute; top: 2px; right: 2px; }
 
-.baddonz-dock { position: absolute; z-index: 9999; display: flex; gap: 2px; box-sizing: border-box; padding: 2px; background: #0009; border: 1px solid #777; border-radius: 8px; box-shadow: 0 0 0 1px #0c0d0d, 1px 1px 3px 1px #0c0d0d66; pointer-events: auto; }
+.baddonz-dock { --bz-ease: cubic-bezier(.22, 1, .36, 1); --bz-pop: cubic-bezier(.34, 1.56, .64, 1); --tx: 0px; --ty: 0px; --rc: 0deg; position: absolute; z-index: 9999; display: flex; box-sizing: border-box; padding: 1px; background: #0009; border: 1px solid #777; border-radius: 8px; box-shadow: 0 0 0 1px #0c0d0d, 1px 1px 3px 1px #0c0d0d66; pointer-events: auto; }
 .baddonz-dock[data-p^="top"] { top: 12px; }
 .baddonz-dock[data-p^="bottom"] { bottom: 12px; }
 .baddonz-dock[data-p$="left"] { left: 12px; }
@@ -113,19 +113,20 @@ body .baddonz-dock :is(.baddonz-dock-switch, .baddonz-dock-item, .baddonz-dock-s
 .baddonz-dock[data-o="v"][data-p^="bottom"] { flex-direction: column-reverse; }
 .baddonz-dock[data-o="h"] { flex-direction: row; }
 .baddonz-dock[data-o="h"][data-p$="right"] { flex-direction: row-reverse; }
-.baddonz-dock { transition: gap .4s cubic-bezier(.22, 1, .36, 1); }
-.baddonz-dock:not(.open) { gap: 0; }
-.baddonz-dock-items { display: grid; flex-direction: inherit; overflow: hidden; transition: grid-template-rows .4s cubic-bezier(.22, 1, .36, 1), grid-template-columns .4s cubic-bezier(.22, 1, .36, 1), opacity .3s; }
-.baddonz-dock[data-o="v"] .baddonz-dock-items { grid-template-rows: 1fr; }
-.baddonz-dock[data-o="h"] .baddonz-dock-items { grid-template-columns: 1fr; }
-.baddonz-dock[data-o="v"]:not(.open) .baddonz-dock-items { grid-template-rows: 0fr; opacity: 0; }
-.baddonz-dock[data-o="h"]:not(.open) .baddonz-dock-items { grid-template-columns: 0fr; opacity: 0; }
-.baddonz-dock-track { display: flex; flex-direction: inherit; gap: 2px; min-width: 0; min-height: 0; overflow: hidden; }
-.baddonz-dock-item { transition: background .2s, border-color .2s, color .2s, transform .45s cubic-bezier(.34, 1.56, .64, 1), opacity .3s; transition-delay: 0s, 0s, 0s, calc(var(--i, 0) * 50ms), calc(var(--i, 0) * 50ms); }
-.baddonz-dock:not(.open) .baddonz-dock-item { opacity: 0; transform: scale(.4); transition-delay: 0s; }
-.baddonz-dock-switch, .baddonz-dock-item { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 26px; height: 26px; color: #ddd; font-size: 14px; border: 1px solid transparent; border-radius: 5px; transition: background .2s, border-color .2s, color .2s; }
-.baddonz-dock-switch i { transition: transform .3s; }
-.baddonz-dock.open .baddonz-dock-switch i { transform: rotate(180deg); }
+.baddonz-dock[data-o="v"][data-p^="top"] { --ty: -10px; --rc: -90deg; }
+.baddonz-dock[data-o="v"][data-p^="bottom"] { --ty: 10px; --rc: 90deg; }
+.baddonz-dock[data-o="h"][data-p$="left"] { --tx: -10px; --rc: 180deg; }
+.baddonz-dock[data-o="h"][data-p$="right"] { --tx: 10px; --rc: 0deg; }
+.baddonz-dock-items { display: grid; flex-direction: inherit; grid-template-rows: 1fr; grid-template-columns: 1fr; transition: grid-template-rows .5s var(--bz-ease), grid-template-columns .5s var(--bz-ease), visibility 0s; }
+.baddonz-dock[data-o="v"]:not(.open) .baddonz-dock-items { grid-template-rows: 0fr; }
+.baddonz-dock[data-o="h"]:not(.open) .baddonz-dock-items { grid-template-columns: 0fr; }
+.baddonz-dock:not(.open) .baddonz-dock-items { visibility: hidden; transition: grid-template-rows .45s var(--bz-ease) .15s, grid-template-columns .45s var(--bz-ease) .15s, visibility 0s .6s; }
+.baddonz-dock-track { display: flex; flex-direction: inherit; min-width: 0; min-height: 0; overflow: hidden; }
+.baddonz-dock-switch, .baddonz-dock-item { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 26px; height: 26px; margin: 1px; color: #ddd; font-size: 14px; border: 1px solid transparent; border-radius: 5px; transition: background .2s, border-color .2s, color .2s; }
+.baddonz-dock-item { opacity: 1; transform: none; transition: transform .55s var(--bz-pop) calc(var(--i, 0) * 45ms + 70ms), opacity .3s ease calc(var(--i, 0) * 45ms + 70ms), background .2s, border-color .2s, color .2s; }
+.baddonz-dock:not(.open) .baddonz-dock-item { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(.3); transition: transform .3s ease calc((var(--n, 1) - var(--i, 0) - 1) * 35ms), opacity .2s ease calc((var(--n, 1) - var(--i, 0) - 1) * 35ms), background .2s, border-color .2s, color .2s; }
+.baddonz-dock-switch i { transform: rotate(var(--rc)); transition: transform .5s var(--bz-pop); }
+.baddonz-dock.open .baddonz-dock-switch i { transform: rotate(calc(var(--rc) + 180deg)); }
 .baddonz-dock-switch:hover, .baddonz-dock-item:hover { color: #fff; background: #ffffff1f; }
 .baddonz-dock-item.active { color: var(--bz-green); }
 
