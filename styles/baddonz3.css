@@ -67,12 +67,7 @@ body .baddonz-dock :is(.baddonz-dock-switch, .baddonz-dock-item, .baddonz-dock-s
 .baddonz-tab.active, .baddonz-button.active, .baddonz-card.active, .baddonz-dock-item.active, .baddonz-dock.open .baddonz-dock-switch, .baddonz-keybind.listening { background: var(--bz-active-bg); border-color: var(--bz-green); box-shadow: var(--bz-active-shadow); }
 .baddonz-tab.active { transform: translateY(0); pointer-events: none; }
 
-.baddonz-window *::-webkit-scrollbar, .baddonz-window *::-webkit-scrollbar-track, .baddonz-window *::-webkit-scrollbar-thumb, .baddonz-window *::-webkit-scrollbar-corner { cursor: var(--bz-c1) !important; }
-.baddonz-window *::-webkit-scrollbar { width: 6px; height: 6px; }
-.baddonz-window *::-webkit-scrollbar-track { background: #1414148f; border-radius: 3px; }
-.baddonz-window *::-webkit-scrollbar-thumb { background: #505050; border-radius: 3px; }
-.baddonz-window *::-webkit-scrollbar-thumb:hover { background: #808080; }
-@supports not selector(::-webkit-scrollbar) { .baddonz-window * { scrollbar-width: thin; scrollbar-color: #505050 #1414148f; } }
+.baddonz-window * { scrollbar-width: thin; scrollbar-color: #505050 #1414148f; }
 .baddonz-scroll { overflow-y: auto; scroll-behavior: smooth; }
 
 .baddonz-box { --bz-pad: 10px; flex: 1; min-height: 0; box-sizing: border-box; padding: 10px; background: #0003; border: 1px solid gray; box-shadow: var(--bz-inset); }
