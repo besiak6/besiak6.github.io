@@ -72,17 +72,17 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 .baddonz-scroll { overflow-y: auto; scroll-behavior: smooth; }
 .baddonz-sb-host { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .baddonz-sb-host:has(> .baddonz-listbox:empty) { display: none; }
-.baddonz-sb-host > .baddonz-sb { flex: 1 1 auto; min-height: 0; scroll-behavior: auto; scrollbar-width: none; }
+.baddonz-sb-host > .baddonz-sb { flex: 1 1 auto; min-height: 0; overflow-y: auto; scroll-behavior: auto; scrollbar-width: none; }
 .baddonz-sb::-webkit-scrollbar { display: none; }
-.baddonz-sb-bar { position: absolute; top: 1px; right: 1px; bottom: 1px; display: none; flex-direction: column; width: 11px; background: #1414148f; }
+.baddonz-sb-bar { position: absolute; top: 1px; right: 1px; bottom: 1px; display: none; flex-direction: column; width: 8px; background: #1414148f; }
 .baddonz-sb-host.bz-sb-on > .baddonz-sb-bar { display: flex; }
-.baddonz-sb-btn { position: relative; flex-shrink: 0; height: 11px; color: #a0a0a0; }
-.baddonz-sb-btn::before { content: ""; position: absolute; top: 50%; left: 50%; width: 0; height: 0; margin: -2px 0 0 -3px; border-left: 3px solid transparent; border-right: 3px solid transparent; }
-.baddonz-sb-btn.up::before { border-bottom: 4px solid currentColor; }
-.baddonz-sb-btn.down::before { border-top: 4px solid currentColor; }
+.baddonz-sb-btn { position: relative; flex-shrink: 0; height: 8px; color: #a0a0a0; }
+.baddonz-sb-btn::before { content: ""; position: absolute; top: 50%; left: 50%; width: 0; height: 0; transform: translate(-50%, -50%); border-left: 2px solid transparent; border-right: 2px solid transparent; }
+.baddonz-sb-btn.up::before { border-bottom: 3px solid currentColor; }
+.baddonz-sb-btn.down::before { border-top: 3px solid currentColor; }
 .baddonz-sb-btn:hover { color: #fff; background: #ffffff1f; }
 .baddonz-sb-track { position: relative; flex: 1; min-height: 0; }
-.baddonz-sb-thumb { position: absolute; top: 0; right: 1px; left: 1px; background: #505050; border-radius: 2px; }
+.baddonz-sb-thumb { position: absolute; top: 0; right: 1px; left: 1px; background: #505050; border-radius: 1px; }
 .baddonz-sb-thumb:hover, .baddonz-sb-thumb.drag { background: #808080; }
 
 .baddonz-box { --bz-pad: 10px; flex: 1; min-height: 0; box-sizing: border-box; padding: 10px; background: #0003; border: 1px solid gray; box-shadow: var(--bz-inset); }
