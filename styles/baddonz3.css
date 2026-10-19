@@ -100,8 +100,13 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 .baddonz-card-name { font-weight: 700; }
 .baddonz-card-desc { color: #ccc; font-size: 11px; line-height: 1.3; }
 .baddonz-card-buttons { display: flex; align-items: center; gap: 4px; }
-.baddonz-card-btn { display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; color: #ccc; font-size: 13px; background: #3c3c3c99; border: 1px solid gray; border-radius: 4px; transition: background .15s, color .15s; }
+.baddonz-card-btn { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 24px; height: 24px; color: #ccc; font-size: 13px; background: #3c3c3c99; border: 1px solid gray; border-radius: 4px; transition: background .15s, color .15s; }
 .baddonz-card-btn:hover { color: #fff; background: #5a5a5a99; }
+.baddonz-card-btn.spin i { animation: bz-spin .8s linear infinite; }
+@keyframes bz-spin { to { transform: rotate(360deg); } }
+
+.baddonz-dropzone { display: flex; align-items: center; justify-content: center; min-height: 56px; background: #0003; border: 1px dashed #777; border-radius: 4px; box-shadow: var(--bz-inset); transition: background .15s, border-color .15s; }
+.baddonz-dropzone.over { background: var(--bz-active-bg); border-color: var(--bz-green); }
 
 .baddonz-stringlist { display: flex; flex-direction: column; gap: 5px; width: 100%; }
 .baddonz-input-add { display: flex; overflow: hidden; background: #0003; border: 1px solid #777; border-radius: 4px; box-shadow: var(--bz-inset); }
