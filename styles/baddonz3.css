@@ -32,12 +32,13 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 .baddonz-close-button { width: 20px; height: 20px; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='none' stroke='%23c6c6c6' stroke-width='2' d='M18 6L6 18M6 6l12 12'/></svg>") center / contain no-repeat; border: none; }
 .baddonz-opacity-button:hover, .baddonz-collapse-button:hover, .baddonz-close-button:hover { filter: brightness(1.3); }
 
-/* przycisk stanu dodatku: szara "dioda", po włączeniu płynnie zapala się na zielono */
-.baddonz-state-button { position: relative; box-sizing: border-box; width: 13px; height: 13px; background: radial-gradient(circle at 35% 30%, #5c5c5c, #1a1a1a); border: 1px solid var(--bz-line); border-radius: 50%; box-shadow: inset 0 0 3px #000; transition: border-color .25s ease, box-shadow .25s ease, filter .15s ease; }
-.baddonz-state-button::after { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 35% 30%, #d2ffd2, #34d956 50%, #0c6a21); border-radius: 50%; opacity: 0; transition: opacity .25s ease; }
-.baddonz-state-button[data-state="on"] { border-color: var(--bz-green); box-shadow: 0 0 6px 1px #3dff5f66, inset 0 0 2px #0008; }
+/* przycisk stanu dodatku: szary guzik, po włączeniu płynnie przechodzi w ciemną zieleń */
+.baddonz-state-button { position: relative; box-sizing: border-box; width: 14px; height: 14px; background: linear-gradient(180deg, #5b5b5b, #2c2c2c 55%, #1b1b1b); border: 1px solid #0c0d0d; border-radius: 50%; box-shadow: 0 0 0 1px #6e6e6e, inset 0 1px 0 #ffffff2e, inset 0 -2px 3px #000000b3; transition: box-shadow .25s ease, filter .15s ease; }
+.baddonz-state-button::before { content: ""; position: absolute; z-index: 1; top: 1px; left: 2px; right: 2px; height: 4px; background: linear-gradient(180deg, #ffffff3d, #ffffff00); border-radius: 50%; pointer-events: none; }
+.baddonz-state-button::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, #3f8a4e, #1f5a2d 55%, #0f3318); border-radius: 50%; opacity: 0; transition: opacity .25s ease; }
+.baddonz-state-button[data-state="on"] { box-shadow: 0 0 0 1px #4f9a5e, 0 0 5px 1px #2f8f4440, inset 0 1px 0 #ffffff40, inset 0 -2px 3px #000000b3; }
 .baddonz-state-button[data-state="on"]::after { opacity: 1; }
-.baddonz-state-button:hover { filter: brightness(1.25); }
+.baddonz-state-button:hover { filter: brightness(1.15); }
 
 .baddonz-manager.collapsed { width: auto !important; height: auto !important; min-width: 0 !important; min-height: 0 !important; overflow: hidden; }
 .baddonz-manager:not(.has-close) .baddonz-close-button, .baddonz-manager.has-close .baddonz-collapse-button { display: none; }
