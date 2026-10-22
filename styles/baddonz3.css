@@ -33,7 +33,7 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 .baddonz-opacity-button:hover, .baddonz-collapse-button:hover, .baddonz-close-button:hover { filter: brightness(1.3); }
 
 /* przycisk stanu dodatku: mała szara kulka, po włączeniu płynnie przechodzi w ciemną zieleń */
-.baddonz-state-button { position: relative; box-sizing: border-box; width: 12px; height: 12px; background: linear-gradient(180deg, #4d4d4d, #262626); border: 1px solid #0c0d0d; border-radius: 50%; box-shadow: 0 0 0 1px #6e6e6e, inset 0 1px 0 #ffffff26, inset 0 -1px 2px #0000008c; transition: box-shadow .25s ease, filter .15s ease; }
+.baddonz-state-button { position: relative; box-sizing: border-box; width: 11px; height: 11px; background: linear-gradient(180deg, #4d4d4d, #262626); border: 1px solid #0c0d0d; border-radius: 50%; box-shadow: 0 0 0 1px #6e6e6e, inset 0 1px 0 #ffffff26, inset 0 -1px 2px #0000008c; transition: box-shadow .25s ease, filter .15s ease; }
 .baddonz-state-button::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, #2f6f3d, #163b20); border-radius: 50%; opacity: 0; transition: opacity .25s ease; }
 .baddonz-state-button[data-state="on"] { box-shadow: 0 0 0 1px #4f9a5e, 0 0 4px 1px #2f8f4433, inset 0 1px 0 #ffffff30, inset 0 -1px 2px #0000008c; }
 .baddonz-state-button[data-state="on"]::after { opacity: 1; }
@@ -209,3 +209,10 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 .bz-lc-badge[data-tier="high"] .bz-lc-text { filter: brightness(1.2); text-shadow: 0 0 4px var(--lc-bg), 1px 1px 1px #000; }
 .bz-lc-badge[data-tier="full"] { --lc-bg: color-mix(in srgb, var(--lc-color, #fff) 50%, transparent); background: linear-gradient(180deg, var(--lc-bg), #0009); box-shadow: var(--bz-inset), inset 0 1px 0 #ffffff2e; }
 .bz-lc-badge[data-tier="full"] .bz-lc-text { filter: brightness(1.3); letter-spacing: .5px; }
+
+/* podpowiedzi */
+.bz-tipt { font-size: 10px; }
+.bz-tipt .bz-hint { font-size: 9px; }
+
+/* Zasięg walki */
+.nickname-text.bz-zw-out { color: red !important; }
