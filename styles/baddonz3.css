@@ -192,6 +192,8 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 .baddonz-type-icon.cl-13 { background-position: -241px -100px; }
 .baddonz-type-icon.cl-14 { background-position: -261px -100px; }
 .baddonz-type-icon.cl-29 { background-position: -401px -100px; }
+
+/* Szansa na Łupy */
 .loot-window { --lc-h: 16px; }
 .loot-window .loot-item-wrapper { position: relative; }
 .loot-window .loot-item-wrapper[data-lc-space] > .slot,
