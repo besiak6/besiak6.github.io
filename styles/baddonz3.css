@@ -250,3 +250,22 @@ body.bz-ii-opis.bz-ii-r-common .bz-ii-desc-common, body.bz-ii-opis.bz-ii-r-upgra
 /* Śmieciara */
 .bz-trash-grid { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 6px; min-height: 42px; padding: 2px; }
 .bz-trash-cell { position: relative; flex-shrink: 0; width: 32px; height: 32px; background: #0000008c; border-radius: 3px; box-shadow: 0 0 0 1px #ffffff99, 0 0 0 2px #000000d9, inset 0 0 6px #000000b3; }
+
+/* Item Searcher: pasek wyszukiwania
+   Pozycja presetów jest w CSS, wysokość z --bz-sh. W trybie light LM ustawia to inline (i zdejmuje przy wyłączeniu, więc wraca preset). */
+.bz-search { position: absolute; z-index: 10; box-sizing: border-box; left: 7px; top: 176px; width: 98px; height: var(--bz-sh, 16px); }
+.bz-search[data-preset="darknes"] { left: 3px; top: 100px; width: 94px; }
+.bz-search-wrap { position: relative; width: 100%; height: 100%; }
+.bz-search-input { display: block; box-sizing: border-box; width: 100%; height: 100%; margin: 0; padding: 0 15px 0 5px; color: #fff; font: 10px/1 Arial, sans-serif; text-shadow: 1px 1px 1px #000; background: #000000b3; border: 1px solid #777; border-radius: 3px; outline: 0; box-shadow: var(--bz-inset); transition: border-color .15s, background .15s; cursor: text !important; }
+.bz-search-input::placeholder { color: #9a9a9a; text-shadow: none; }
+.bz-search-input:hover { border-color: #a0a0a0; }
+.bz-search-input:focus { background: #000000d9; border-color: var(--bz-green); }
+.bz-search-clear { position: absolute; top: 50%; right: 2px; display: none; width: 12px; height: 12px; transform: translateY(-50%); background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='none' stroke='%23c6c6c6' stroke-width='3' d='M18 6L6 18M6 6l12 12'/></svg>") center / contain no-repeat; cursor: var(--bz-c5) !important; }
+.bz-search-clear:hover { filter: brightness(1.4); }
+.bz-search-dim { opacity: .2 !important; filter: grayscale(1) brightness(.8); }
+.bz-search-count { position: absolute; top: -1px; right: -1px; z-index: 3; box-sizing: border-box; min-width: 14px; padding: 0 3px; color: #ffe27a; font: 700 12px/14px Arial, sans-serif; text-align: center; text-shadow: 1px 1px 1px #000; background: #000000cc; border: 1px solid #ffe27a80; border-radius: 7px; pointer-events: none; }
+
+/* Sortownik */
+.bz-sort-ghost { opacity: .3 !important; background-color: #ffffff1a; }
+.ib-item-list .item, .bz-sort-fallback { cursor: var(--bz-c4) !important; }
+body.bz-sorting, body.bz-sorting * { cursor: var(--bz-c4) !important; }
