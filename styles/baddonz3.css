@@ -172,7 +172,7 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 .upg-name { color: #ffcc00; font-size: 11px; font-weight: 700; text-align: center; }
 .upg-daily { color: #ccc; font-size: 11px; text-align: center; }
 .upg-item-clone { cursor: var(--bz-c5) !important; }
-.upg-item-gif { position: absolute; top: 0; left: 0; z-index: 0; width: 32px; height: 32px; }
+.bz-item-gif { position: absolute; top: 0; left: 0; z-index: 0; width: 32px; height: 32px; }
 .upg-types { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
 .upg-type { display: flex; align-items: center; justify-content: center; padding: 4px 2px; background: #00000059; border: 1px solid transparent; border-radius: 4px; transition: background .15s, border-color .15s; }
 .upg-type:hover { background: #ffffff14; }
@@ -238,3 +238,15 @@ body.bz-ii-opis.bz-ii-r-common .bz-ii-desc-common, body.bz-ii-opis.bz-ii-r-upgra
 .bz-ii-center { text-align: center; }
 .bz-ii-small { font-size: 11px; }
 .bz-ii-ico { display: inline-block; width: 22px; height: 22px; margin-left: 2px; vertical-align: middle; background-size: 100%; }
+
+/* Znacznik Teleportów */
+.bz-zt-mark { position: absolute !important; top: 0 !important; left: 0 !important; z-index: 2 !important; width: 100% !important; height: 100% !important; overflow: visible !important; color: #fff !important; font-family: "Arial Black", Gadget, sans-serif !important; line-height: 1.5 !important; text-align: center !important; white-space: normal !important; text-shadow: -2px -2px 0 #000, -2px -1px 0 #000, -2px 0px 0 #000, -2px 1px 0 #000, -2px 2px 0 #000, -1px -2px 0 #000, -1px 2px 0 #000, 0px -2px 0 #000, 0px 2px 0 #000, 1px -2px 0 #000, 1px 2px 0 #000, 2px -2px 0 #000, 2px -1px 0 #000, 2px 0px 0 #000, 2px 1px 0 #000, 2px 2px 0 #000 !important; text-rendering: optimizeLegibility; user-select: none !important; pointer-events: none !important; }
+.bz-zt-mark[data-auto="1"] { overflow: hidden !important; white-space: nowrap !important; }
+.bz-zt-mark[data-size="9"] { font-size: 9px !important; }
+.bz-zt-mark[data-size="8"] { font-size: 8px !important; }
+.bz-zt-mark[data-size="7"] { font-size: 7px !important; }
+.bz-zt-mark[data-size="6"] { font-size: 6px !important; }
+
+/* Śmieciara */
+.bz-trash-grid { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 6px; min-height: 42px; padding: 2px; }
+.bz-trash-cell { position: relative; flex-shrink: 0; width: 32px; height: 32px; }
