@@ -196,9 +196,7 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 /* Szansa na Łupy */
 .loot-window { --lc-h: 16px; }
 .loot-window .loot-item-wrapper { position: relative; }
-.loot-window .loot-item-wrapper[data-lc-space] > .slot,
-.loot-window .loot-item-wrapper[data-lc-space] > .text-info,
-.loot-window .loot-item-wrapper[data-lc-space] > .button-holder { transform: translateY(var(--lc-h)); }
+.loot-window .loot-item-wrapper[data-lc-space] > .slot, .loot-window .loot-item-wrapper[data-lc-space] > .text-info, .loot-window .loot-item-wrapper[data-lc-space] > .button-holder { transform: translateY(var(--lc-h)); }
 .bz-lc-badge { --lc-bg: color-mix(in srgb, var(--lc-color, #fff) 20%, transparent); position: absolute; top: 0; left: 0; right: 0; z-index: 5; display: flex; align-items: center; justify-content: center; box-sizing: border-box; height: var(--lc-h); background: linear-gradient(90deg, #0000, var(--lc-bg) 50%, #0000), #0009; border-bottom: 1px solid var(--lc-color, var(--bz-line)); box-shadow: var(--bz-inset); pointer-events: none; }
 .bz-lc-text { color: var(--lc-color, #fff); font: 700 11px/1 sans-serif; letter-spacing: .3px; text-shadow: 1px 1px 1px #000; }
 .bz-lc-badge[data-tier="zero"] { --lc-bg: color-mix(in srgb, var(--lc-color, #fff) 8%, transparent); }
@@ -251,21 +249,21 @@ body.bz-ii-opis.bz-ii-r-common .bz-ii-desc-common, body.bz-ii-opis.bz-ii-r-upgra
 .bz-trash-grid { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: center; gap: 6px; min-height: 42px; padding: 2px; }
 .bz-trash-cell { position: relative; flex-shrink: 0; width: 32px; height: 32px; background: #0000008c; border-radius: 3px; box-shadow: 0 0 0 1px #ffffff99, 0 0 0 2px #000000d9, inset 0 0 6px #000000b3; }
 
-/* Item Searcher: pasek wyszukiwania
-   Pozycja presetów jest w CSS, wysokość z --bz-sh. W trybie light LM ustawia to inline (i zdejmuje przy wyłączeniu, więc wraca preset). */
-.bz-search { position: absolute; z-index: 10; box-sizing: border-box; left: 7px; top: 176px; width: 98px; height: var(--bz-sh, 16px); }
-.bz-search[data-preset="darknes"] { left: 3px; top: 100px; width: 94px; }
-.bz-search-wrap { position: relative; width: 100%; height: 100%; }
-.bz-search-input { display: block; box-sizing: border-box; width: 100%; height: 100%; margin: 0; padding: 0 15px 0 5px; color: #fff; font: 10px/1 Arial, sans-serif; text-shadow: 1px 1px 1px #000; background: #000000b3; border: 1px solid #777; border-radius: 3px; outline: 0; box-shadow: var(--bz-inset); transition: border-color .15s, background .15s; cursor: text !important; }
-.bz-search-input::placeholder { color: #9a9a9a; text-shadow: none; }
-.bz-search-input:hover { border-color: #a0a0a0; }
-.bz-search-input:focus { background: #000000d9; border-color: var(--bz-green); }
-.bz-search-clear { position: absolute; top: 50%; right: 2px; display: none; width: 12px; height: 12px; transform: translateY(-50%); background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='none' stroke='%23c6c6c6' stroke-width='3' d='M18 6L6 18M6 6l12 12'/></svg>") center / contain no-repeat; cursor: var(--bz-c5) !important; }
-.bz-search-clear:hover { filter: brightness(1.4); }
-.bz-search-dim { opacity: .2 !important; filter: grayscale(1) brightness(.8); }
-.bz-search-count { position: absolute; top: -1px; right: -1px; z-index: 3; box-sizing: border-box; min-width: 14px; padding: 0 3px; color: #ffe27a; font: 700 12px/14px Arial, sans-serif; text-align: center; text-shadow: 1px 1px 1px #000; background: #000000cc; border: 1px solid #ffe27a80; border-radius: 7px; pointer-events: none; }
+/* Item Searcher: pasek (pozycja i rozmiar z presetu przez zmienne --sr-*, tryb LightMode nadpisuje je inline) */
+.bz-srch { position: absolute; z-index: 5; box-sizing: border-box; left: var(--sr-l, 7px); top: var(--sr-t, 176px); width: var(--sr-w, 98px); height: var(--sr-h, 16px); }
+.bz-srch-input { display: block; box-sizing: border-box; width: 100%; height: 100%; margin: 0; padding: 0 18px 0 5px; color: #fff; font: 10px Arial, sans-serif; text-shadow: 1px 1px 1px #000; background: #0009; border: 1px solid #777; border-radius: 3px; outline: 0; box-shadow: var(--bz-inset); cursor: text !important; transition: border-color .15s, background .15s, box-shadow .15s; }
+.bz-srch-input::placeholder { color: #8c8c8c; text-shadow: none; }
+.bz-srch-input:hover { border-color: #999; }
+.bz-srch-input:focus { background: #000c; border-color: var(--bz-green); box-shadow: var(--bz-inset), 0 0 5px #96f09644; }
+.bz-srch-clear { position: absolute; top: 50%; right: 3px; display: none; width: 11px; height: 11px; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='none' stroke='%23c6c6c6' stroke-width='3' d='M18 6L6 18M6 6l12 12'/></svg>") center / contain no-repeat; transform: translateY(-50%); cursor: var(--bz-c5) !important; }
+.bz-srch-clear:hover { filter: brightness(1.4); }
+.bz-srch.has-text .bz-srch-clear { display: block; }
+.bz-srch-dim { opacity: .22 !important; filter: grayscale(.7) brightness(.85); transition: opacity .15s, filter .15s; }
+.bz-srch-cnt { position: absolute; z-index: 3; box-sizing: border-box; min-width: 14px; padding: 2px 3px; color: #fff; font: 700 12px/1 sans-serif; text-align: center; text-shadow: 1px 1px 1px #000; background: linear-gradient(180deg, #2f6f3d, #163b20); border: 1px solid var(--bz-green); border-radius: 8px; box-shadow: 0 0 4px #000000bf; pointer-events: none; }
+.bz-srch-cnt.bag { top: -3px; right: -3px; }
+.bz-srch-cnt.depo { top: 1px; right: 1px; }
 
 /* Sortownik */
 .bz-sort-ghost { opacity: .3 !important; background-color: #ffffff1a; }
-.ib-item-list .item, .bz-sort-fallback { cursor: var(--bz-c4) !important; }
-body.bz-sorting, body.bz-sorting * { cursor: var(--bz-c4) !important; }
+body.bz-sort-on .ib-item-list .item, body.bz-sort-on .bz-sort-fallback { cursor: var(--bz-c4) !important; }
+body.bz-sort-dragging, body.bz-sort-dragging * { cursor: var(--bz-c4) !important; }
