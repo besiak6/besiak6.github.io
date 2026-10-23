@@ -32,12 +32,13 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 .baddonz-close-button { width: 20px; height: 20px; background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='none' stroke='%23c6c6c6' stroke-width='2' d='M18 6L6 18M6 6l12 12'/></svg>") center / contain no-repeat; border: none; }
 .baddonz-opacity-button:hover, .baddonz-collapse-button:hover, .baddonz-close-button:hover { filter: brightness(1.3); }
 
-/* przycisk stanu dodatku: mała szara kulka, po włączeniu płynnie przechodzi w ciemną zieleń */
-.baddonz-state-button { position: relative; box-sizing: border-box; width: 11px; height: 11px; background: linear-gradient(180deg, #4d4d4d, #262626); border: 1px solid #0c0d0d; border-radius: 50%; box-shadow: 0 0 0 1px #6e6e6e, inset 0 1px 0 #ffffff26, inset 0 -1px 2px #0000008c; transition: box-shadow .25s ease, filter .15s ease; }
-.baddonz-state-button::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, #2f6f3d, #163b20); border-radius: 50%; opacity: 0; transition: opacity .25s ease; }
-.baddonz-state-button[data-state="on"] { box-shadow: 0 0 0 1px #4f9a5e, 0 0 4px 1px #2f8f4433, inset 0 1px 0 #ffffff30, inset 0 -1px 2px #0000008c; }
-.baddonz-state-button[data-state="on"]::after { opacity: 1; }
-.baddonz-state-button:hover { filter: brightness(1.15); }
+/* przycisk stanu dodatku: grafitowa "dioda", po włączeniu płynnie przechodzi w ciemną zieleń z lekkim połyskiem */
+.baddonz-state-button { position: relative; box-sizing: border-box; width: 13px; height: 13px; background: linear-gradient(145deg, #5b5b5b 0%, #2b2b2b 55%, #171717 100%); border: 1px solid #767676; border-radius: 50%; box-shadow: inset 0 1px 1px #ffffff2e, inset 0 -1px 2px #000000a6, 0 0 0 1px #000000a6; transition: border-color .3s ease, box-shadow .3s ease, filter .15s ease; }
+.baddonz-state-button::before { content: ""; position: absolute; inset: 0; background: linear-gradient(145deg, #4aa464 0%, #2a7a42 50%, #12482a 100%); border-radius: 50%; opacity: 0; transition: opacity .3s ease; }
+.baddonz-state-button::after { content: ""; position: absolute; top: 1px; right: 2px; left: 2px; height: 4px; background: linear-gradient(#ffffff59, #ffffff00); border-radius: 50%; pointer-events: none; }
+.baddonz-state-button[data-state="on"] { border-color: #7fcf98; box-shadow: inset 0 1px 1px #ffffff40, inset 0 -1px 2px #00000080, 0 0 0 1px #000000a6, 0 0 5px 1px #3fa65f4d; }
+.baddonz-state-button[data-state="on"]::before { opacity: 1; }
+.baddonz-state-button:hover { filter: brightness(1.18); }
 
 .baddonz-manager.collapsed { width: auto !important; height: auto !important; min-width: 0 !important; min-height: 0 !important; overflow: hidden; }
 .baddonz-manager:not(.has-close) .baddonz-close-button, .baddonz-manager.has-close .baddonz-collapse-button { display: none; }
@@ -165,9 +166,9 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 .layer.sticky-tips-layer .tip-wrapper { z-index: 99999 !important; }
 
 .upgrader-crafting-window { display: none !important; }
-/* pole upuszczania itemu: podświetla się tylko ono, a nie całe okno */
-.upg-item-box { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 4px 7px; border: 1px dashed #6e6e6e; border-radius: 5px; transition: border-color .15s, background .15s, box-shadow .15s; }
-.upg-item-box.over { background: #96f09619; border-color: var(--bz-green); border-style: solid; box-shadow: inset 0 0 8px #96f09655, 0 0 6px #96f09644; }
+/* pole upuszczania itemu: ramka pojawia się tylko podczas przeciągania nad polem (przezroczysta ramka zachowuje układ) */
+.upg-item-box { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 4px 7px; border: 1px solid transparent; border-radius: 5px; transition: border-color .15s, background .15s, box-shadow .15s; }
+.upg-item-box.over { background: #96f09619; border-color: var(--bz-green); box-shadow: inset 0 0 8px #96f09655, 0 0 6px #96f09644; }
 .upg-slot { display: flex; justify-content: center; }
 .upg-name { color: #ffcc00; font-size: 11px; font-weight: 700; text-align: center; }
 .upg-daily { color: #ccc; font-size: 11px; text-align: center; }
@@ -192,27 +193,3 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 .baddonz-type-icon.cl-13 { background-position: -241px -100px; }
 .baddonz-type-icon.cl-14 { background-position: -261px -100px; }
 .baddonz-type-icon.cl-29 { background-position: -401px -100px; }
-
-/* Szansa na Łupy */
-.loot-window { --lc-h: 16px; }
-.loot-window .loot-item-wrapper { position: relative; }
-.loot-window .loot-item-wrapper[data-lc-space] > .slot,
-.loot-window .loot-item-wrapper[data-lc-space] > .text-info,
-.loot-window .loot-item-wrapper[data-lc-space] > .button-holder { transform: translateY(var(--lc-h)); }
-.bz-lc-badge { --lc-bg: color-mix(in srgb, var(--lc-color, #fff) 20%, transparent); position: absolute; top: 0; left: 0; right: 0; z-index: 5; display: flex; align-items: center; justify-content: center; box-sizing: border-box; height: var(--lc-h); background: linear-gradient(90deg, #0000, var(--lc-bg) 50%, #0000), #0009; border-bottom: 1px solid var(--lc-color, var(--bz-line)); box-shadow: var(--bz-inset); pointer-events: none; }
-.bz-lc-text { color: var(--lc-color, #fff); font: 700 11px/1 sans-serif; letter-spacing: .3px; text-shadow: 1px 1px 1px #000; }
-.bz-lc-badge[data-tier="zero"] { --lc-bg: color-mix(in srgb, var(--lc-color, #fff) 8%, transparent); }
-.bz-lc-badge[data-tier="zero"] .bz-lc-text { opacity: .38; filter: brightness(.75); }
-.bz-lc-badge[data-tier="mid"] { --lc-bg: color-mix(in srgb, var(--lc-color, #fff) 32%, transparent); }
-.bz-lc-badge[data-tier="mid"] .bz-lc-text { filter: brightness(1.1); }
-.bz-lc-badge[data-tier="high"] { --lc-bg: color-mix(in srgb, var(--lc-color, #fff) 42%, transparent); box-shadow: var(--bz-inset), 0 1px 5px var(--lc-bg); }
-.bz-lc-badge[data-tier="high"] .bz-lc-text { filter: brightness(1.2); text-shadow: 0 0 4px var(--lc-bg), 1px 1px 1px #000; }
-.bz-lc-badge[data-tier="full"] { --lc-bg: color-mix(in srgb, var(--lc-color, #fff) 50%, transparent); background: linear-gradient(180deg, var(--lc-bg), #0009); box-shadow: var(--bz-inset), inset 0 1px 0 #ffffff2e; }
-.bz-lc-badge[data-tier="full"] .bz-lc-text { filter: brightness(1.3); letter-spacing: .5px; }
-
-/* podpowiedzi */
-.bz-tipt { font-size: 10px; }
-.bz-tipt .bz-hint { font-size: 9px; }
-
-/* Zasięg walki */
-.nickname-text.bz-zw-out { color: red !important; }
