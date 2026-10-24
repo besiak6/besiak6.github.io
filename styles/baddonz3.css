@@ -279,6 +279,10 @@ body.bz-ii-opis.bz-ii-r-common .bz-ii-desc-common, body.bz-ii-opis.bz-ii-r-upgra
 body .baddonz-dd-list, body .baddonz-dd-list * { cursor: var(--bz-c1) !important; }
 body .baddonz-dd-list .baddonz-dd-opt { cursor: var(--bz-c5) !important; }
 
+/* LightMode: powiadomienia */
+body.bz-lm-notifs .bottom-right, body.bz-lm-notifs .bottom-right .game-notifications { display: block !important; visibility: visible !important; opacity: 1 !important; }
+body.bz-lm-nok .mail-notifier-light-mode { display: none !important; }
+
 /* Sortownik */
 .bz-sort-ghost { opacity: .3 !important; background-color: #ffffff1a; }
 body.bz-sort-on .ib-item-list .item, body.bz-sort-on .bz-sort-fallback { cursor: var(--bz-c4) !important; }
