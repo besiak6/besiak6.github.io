@@ -110,8 +110,6 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 .baddonz-card-btn { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 24px; height: 24px; color: #ccc; font-size: 13px; background: #3c3c3c99; border: 1px solid gray; border-radius: 4px; transition: background .15s, color .15s; }
 .baddonz-card-btn:hover { color: #fff; background: #5a5a5a99; }
 .bz-iconbtn { display: inline-flex; align-items: center; gap: 8px; }
-.bz-iconbtn.spin i { animation: bz-spin .8s linear infinite; }
-@keyframes bz-spin { to { transform: rotate(360deg); } }
 
 .baddonz-stringlist { display: flex; flex-direction: column; gap: 5px; width: 100%; }
 .baddonz-input-add { display: flex; overflow: hidden; background: #0003; border: 1px solid #777; border-radius: 4px; box-shadow: var(--bz-inset); }
@@ -278,10 +276,6 @@ body.bz-ii-opis.bz-ii-r-common .bz-ii-desc-common, body.bz-ii-opis.bz-ii-r-upgra
 .baddonz-dd-opt.active, .baddonz-dd-opt.active:hover { background: var(--bz-active-bg); border-color: var(--bz-green); box-shadow: var(--bz-active-shadow); }
 body .baddonz-dd-list, body .baddonz-dd-list * { cursor: var(--bz-c1) !important; }
 body .baddonz-dd-list .baddonz-dd-opt { cursor: var(--bz-c5) !important; }
-
-/* Powiadomienia i dock */
-body.bz-dock-br .bottom-right .game-notifications { transform: translate(var(--bz-nx, 0px), var(--bz-ny, 0px)); transition: transform .2s ease; }
-body.bz-lm-nok .mail-notifier-light-mode { display: none !important; }
 
 /* Sortownik */
 .bz-sort-ghost { opacity: .3 !important; background-color: #ffffff1a; }
