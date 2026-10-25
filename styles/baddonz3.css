@@ -159,8 +159,8 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 .baddonz-dock.bz-out[data-o="h"][data-p="bottom-left"] { left: var(--gl); top: calc(var(--gb) + 6px); }
 .baddonz-dock.bz-out[data-o="h"][data-p="bottom-right"] { right: calc(100% - var(--gr)); top: calc(var(--gb) + 6px); }
 
-.layer.sticky-tips-layer { z-index: 99999 !important; }
-.layer.sticky-tips-layer .tip-wrapper { z-index: 99999 !important; }
+.layer.sticky-tips-layer, .layer.tip-layer { z-index: 99999 !important; }
+.layer.sticky-tips-layer .tip-wrapper, .layer.tip-layer .tip-wrapper { z-index: 99999 !important; }
 
 .upgrader-crafting-window { display: none !important; }
 /* pole upuszczania itemu: podświetla się tylko ono, a nie całe okno */
@@ -270,7 +270,7 @@ body.bz-ii-opis.bz-ii-r-common .bz-ii-desc-common, body.bz-ii-opis.bz-ii-r-upgra
 .baddonz-dd-text { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .baddonz-dd-head i { flex-shrink: 0; color: #ccc; font-size: 10px; transition: transform .25s ease; }
 .baddonz-dd.open .baddonz-dd-head i { transform: rotate(180deg); }
-.baddonz-dd-list { position: fixed; z-index: 5000; display: flex; flex-direction: column; gap: 3px; box-sizing: border-box; max-height: 190px; padding: 4px; overflow-y: auto; background: #000d; border: 1px solid gray; border-radius: 5px; box-shadow: 0 0 0 1px #0c0d0d, 1px 1px 3px 2px #0c0d0d66, var(--bz-inset); scrollbar-width: thin; scrollbar-color: #505050 #1414148f; }
+.baddonz-dd-list { position: fixed; z-index: 50; display: flex; flex-direction: column; gap: 3px; box-sizing: border-box; max-height: 190px; padding: 4px; overflow-y: auto; background: #000d; border: 1px solid gray; border-radius: 5px; box-shadow: 0 0 0 1px #0c0d0d, 1px 1px 3px 2px #0c0d0d66, var(--bz-inset); scrollbar-width: thin; scrollbar-color: #505050 #1414148f; }
 .baddonz-dd-opt { flex-shrink: 0; box-sizing: border-box; padding: 4px 8px; color: #fff; font: 12px Arial, sans-serif; text-shadow: 1px 1px 1px #000; background: #3c3c3c99; border: 1px solid gray; border-radius: 5px; box-shadow: var(--bz-inset); transition: background .15s, border-color .15s; }
 .baddonz-dd-opt:hover { background: #5a5a5a99; border-color: #808080; }
 .baddonz-dd-opt.active, .baddonz-dd-opt.active:hover { background: var(--bz-active-bg); border-color: var(--bz-green); box-shadow: var(--bz-active-shadow); }
