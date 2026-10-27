@@ -309,7 +309,7 @@ body .baddonz-window .bz-spin-btns i { cursor: var(--bz-c5) !important; }
 
 /* Better Message - okno ustawień */
 .bz-cols.flush { align-items: stretch; }
-.bm-scroll { flex: 1 1 auto; min-height: 0; max-height: min(64vh, 480px); margin: -5px -10px -4px; overflow-y: auto; }
+.bm-scroll { flex: 1 1 auto; min-height: 0; max-height: min(54vh, 400px); margin: -5px -10px -4px; overflow-y: auto; }
 .bm-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 -10px -7px; padding: 8px 10px; border-top: 1px solid var(--bz-line); }
 .bz-cols.c3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .bz-cols.flush > .bz-col { gap: 6px; padding: 8px 10px 10px; }
