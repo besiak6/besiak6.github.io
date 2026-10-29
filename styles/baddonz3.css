@@ -376,9 +376,4 @@ body .baddonz-window .bm-chip { cursor: var(--bz-c5) !important; }
 .baddonz_game-layer[data-out="wipe"] .bm-msg.bm-out { opacity: 1; clip-path: inset(-40px -40px -40px 100%); }
 
 /* Activity Info */
-.bz-ai-layer { position: fixed; left: 0; top: 0; width: 0; height: 0; z-index: 2147483000; pointer-events: none; }
-.bz-ai-mon, .bz-ai-cal { position: fixed; display: flex; align-items: center; justify-content: center; box-sizing: border-box; color: #fff; background: #d62828; box-shadow: 0 0 0 1px #000, 0 0 4px #f006; pointer-events: none; }
-.bz-ai-mon { min-width: 13px; height: 13px; padding: 0 3px; border-radius: 7px; font: 700 10px/13px Arial, sans-serif; }
-.bz-ai-cal { width: 14px; height: 14px; border-radius: 3px; font-size: 9px; }
-.bz-ai-mon.old, .bz-ai-cal.old { opacity: .55; }
 .bz-zs-note { padding: 6px 8px; text-align: center; font-size: 12px; color: #e8c76a; }
