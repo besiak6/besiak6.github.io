@@ -470,3 +470,16 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .battle-window .one-warrior.bz-bh-taunted .canvas-warrior-icon { filter: drop-shadow(0 0 2px #ff3030) drop-shadow(0 0 4px #ff3030d9); }
 .battle-window .one-warrior.bz-bh-taunting .canvas-warrior-icon { filter: drop-shadow(0 0 2px #3fa9ff) drop-shadow(0 0 4px #3fa9ffd9); }
 .battle-window .one-warrior.bz-bh-enemy-taunting .canvas-warrior-icon { filter: drop-shadow(0 0 2px #ff9a1f) drop-shadow(0 0 5px #ff9a1fe6); }
+
+/* Battle Helper: okno w walce */
+.bz-bh-panel { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.bz-bh-ptitle { margin-top: 4px; font-size: 12px; font-weight: 700; text-align: center; color: #fff; text-shadow: 1px 1px 1px #000; }
+.bz-bh-ptitle:first-child { margin-top: 0; }
+.bz-bh-prow { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; column-gap: 6px; align-items: center; font-size: 12px; }
+.bz-bh-prow .bz-bh-ico { grid-row: auto; align-self: center; }
+.bz-bh-prow.bz-bh-taunt .bz-bh-name { color: #ff7070; }
+.bz-bh-prow.bz-bh-debuff .bz-bh-name { color: #ffb59a; }
+.bz-bh-prow.bz-bh-buff .bz-bh-name { color: #b5efbd; }
+.bz-bh-prow.bz-bh-own .bz-bh-ico { box-shadow: 0 0 0 1px #e8c45a; }
+.bz-bh-prow.bz-bh-ending .bz-bh-left { color: #ffa733; font-weight: 700; }
+.bz-bh-none { font-size: 11px; color: #9a9a9a; text-align: center; }
