@@ -454,6 +454,7 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .bz-bhw-t.bz-bhw-high { color: #ffe14d; }
 .bz-bhw-t.bz-bhw-mid { color: #ff9f2e; }
 .bz-bhw-t.bz-bhw-low { color: #ff3b3b; }
+.bz-bhw-t.bz-bhw-leg { color: #ffd27a; }
 .bz-bhw-sep { color: #888; }
 .bz-bhw-none { color: #888; text-align: center; }
 
