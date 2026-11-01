@@ -458,6 +458,9 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .bz-bhw-sep { color: #888; }
 .bz-bhw-none { color: #888; text-align: center; }
 .bz-bhw-line .bz-bhw-legn { color: #ff8400; font-weight: 700 !important; text-shadow: 0 0 3px #000; }
+/* bonusy legendarne: "Nick - Bonus 3, Bonus", długie wpisy zawijają się zamiast wychodzić poza okno */
+.bz-bhw-line.bz-bhw-legline { white-space: normal; }
+.bz-bhw-legline .bz-bhw-name { font-weight: 700 !important; }
 
 /* ikonki efektów nad postaciami i w kolejce tur */
 .bz-bh-effects { position: absolute; top: -38px; z-index: 1; display: flex; justify-content: center; gap: 2px; width: 80px; height: 16px; pointer-events: none; }
@@ -491,6 +494,9 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .bz-bh-tip-row.bz-bh-ending .bz-bh-tip-turns { color: #ffa733; font-weight: 700; }
 .bz-bh-tip-what { grid-column: 2 / -1; color: #c8c8c8; font-size: 10px; }
 .bz-bh-tip-from { grid-column: 2 / -1; color: #9a9a9a; font-size: 10px; }
+.bz-bh-tip-head.bz-bh-tip-leg { color: #ff8400; }
+.bz-bh-tip-leg .bz-bh-tip-name { color: #ffb056; }
+.bz-bh-tip-mark.bz-bh-tip-legmark { background: #8a4a00; }
 .bz-bh-tip-taunt .bz-bh-tip-from { color: #ddd; }
 .bz-bh-tip-you { color: #e8c45a; font-weight: 700; }
 .bz-bh-tip-row.bz-bh-own .bz-bh-tip-icon { box-shadow: 0 0 0 1px #e8c45a; }
