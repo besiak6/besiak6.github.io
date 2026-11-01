@@ -450,7 +450,6 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .bz-bhw-tot { color: #bbb; }
 .bz-bhw-none { color: #888; text-align: center; }
 
-/* ikonki efektów nad postaciami i w kolejce tur */
 .bz-bh-effects { position: absolute; top: -38px; z-index: 1; display: flex; justify-content: center; gap: 2px; width: 80px; height: 16px; pointer-events: none; }
 .bz-bh-effect { position: relative; flex: none; width: 16px; height: 16px; overflow: hidden; border-radius: 3px; box-shadow: 0 0 0 1px #000, 0 1px 2px #0009; }
 .bz-bh-effect .skill-icon { transform: scale(.5); transform-origin: 0 0; }
@@ -461,8 +460,6 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .turn-prediction__av .bz-bh-queue { position: absolute; right: 0; bottom: 0; left: 0; display: flex; justify-content: flex-end; gap: 1px; pointer-events: none; }
 .bz-bh-queue .bz-bh-effect { width: 10px; height: 10px; }
 .bz-bh-queue .bz-bh-effect .skill-icon { transform: scale(.3125); }
-
-/* dymek postaci */
 .bz-bh-tip { max-width: 100%; margin-top: 4px; font-size: 11px; text-align: left; }
 .bz-bh-tip-head { margin: 6px 0 2px; font-size: 10px; font-weight: 700; letter-spacing: .5px; text-align: center; text-transform: uppercase; }
 .bz-bh-tip > .line + .bz-bh-tip-head { margin-top: 0; }
@@ -486,7 +483,6 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .bz-bh-tip-you { color: #e8c45a; font-weight: 700; }
 .bz-bh-tip-row.bz-bh-own .bz-bh-tip-icon { box-shadow: 0 0 0 1px #e8c45a; }
 
-/* poświata przy prowokacji */
 .battle-window .one-warrior.bz-bh-taunted .canvas-warrior-icon { filter: drop-shadow(0 0 2px #ff3030) drop-shadow(0 0 4px #ff3030d9); }
 .battle-window .one-warrior.bz-bh-taunting .canvas-warrior-icon { filter: drop-shadow(0 0 2px #3fa9ff) drop-shadow(0 0 4px #3fa9ffd9); }
 .battle-window .one-warrior.bz-bh-enemy-taunting .canvas-warrior-icon { filter: drop-shadow(0 0 2px #ff9a1f) drop-shadow(0 0 5px #ff9a1fe6); }
