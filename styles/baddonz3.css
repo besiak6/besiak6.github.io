@@ -457,6 +457,7 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .bz-bhw-t.bz-bhw-leg { color: #ffd27a; }
 .bz-bhw-sep { color: #888; }
 .bz-bhw-none { color: #888; text-align: center; }
+.bz-bhw-line .bz-bhw-legn { color: #ff8400; font-weight: 700 !important; text-shadow: 0 0 3px #000; }
 
 /* ikonki efektów nad postaciami i w kolejce tur */
 .bz-bh-effects { position: absolute; top: -38px; z-index: 1; display: flex; justify-content: center; gap: 2px; width: 80px; height: 16px; pointer-events: none; }
