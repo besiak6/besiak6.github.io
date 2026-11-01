@@ -432,11 +432,6 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .bz-site-frame { position: absolute; width: 1px; height: 1px; border: 0; opacity: 0; pointer-events: none; }
 .bz-hint-small { display: block; margin-top: -2px; font-size: 10px; opacity: .65; line-height: 1.3; }
 
-/* ======================================================================
-   Battle Helper
-   ====================================================================== */
-
-/* okno w walce: zwykły, drobny tekst w stylu titanHelpera, bez ikonek i teł */
 .bz-bhw { display: flex; flex-direction: column; gap: 0; min-width: 0; font: 11px/1.35 Arial, sans-serif; white-space: nowrap; }
 .bz-bhw-spec { color: #ff4d4d; font-weight: 700; text-shadow: 0 0 3px #000; }
 .bz-bhw-spec small { color: #ff9a9a; font-weight: 400; }
