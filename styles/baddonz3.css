@@ -436,23 +436,23 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
    Battle Helper
    ====================================================================== */
 
-/* okno w walce: zwykły tekst w stylu titanHelpera, bez ikonek i teł */
-.bz-bhw { display: flex; flex-direction: column; gap: 1px; min-width: 0; font: 12px/1.4 Arial, sans-serif; }
-.bz-bhw-spec { color: #ff3b3b; font-weight: 700; text-shadow: 0 0 3px #000; }
+/* okno w walce: zwykły, drobny tekst w stylu titanHelpera, bez ikonek i teł */
+.bz-bhw { display: flex; flex-direction: column; gap: 0; min-width: 0; font: 11px/1.35 Arial, sans-serif; white-space: nowrap; }
+.bz-bhw-spec { color: #ff4d4d; font-weight: 700; text-shadow: 0 0 3px #000; }
 .bz-bhw-spec small { color: #ff9a9a; font-weight: 400; }
 .bz-bhw-spec.bz-bhw-ready { animation: bz-bhw-blink .8s infinite alternate; }
 @keyframes bz-bhw-blink { from { opacity: 1; } to { opacity: .45; } }
-.bz-bhw-head { margin-top: 4px; font-weight: 700; }
-.bz-bhw-head:first-child, .bz-bhw-spec + .bz-bhw-head { margin-top: 2px; }
-.bz-bhw-head.bz-bhw-ally { color: #fff; }
-.bz-bhw-head.bz-bhw-foe { color: #ffb59a; }
-.bz-bhw-line { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bz-bhw-ally .bz-bhw-name { color: #b5efbd; }
-.bz-bhw-foe .bz-bhw-name { color: #ffb59a; }
-.bz-bhw-line.bz-bhw-own .bz-bhw-name { color: #e8c45a; }
-.bz-bhw-val { color: #ffe14d; font-weight: 700; }
-.bz-bhw-t { color: #ddd; }
-.bz-bhw-line.bz-bhw-end .bz-bhw-t { color: #ffa733; font-weight: 700; }
+.bz-bhw-head { margin-top: 3px; font-size: 11px; font-weight: 700; }
+.bz-bhw-head:first-child, .bz-bhw-spec + .bz-bhw-head { margin-top: 1px; }
+.bz-bhw-head.bz-bhw-ally, .bz-bhw-ally .bz-bhw-name { color: #7ee08c; }
+.bz-bhw-head.bz-bhw-foe, .bz-bhw-foe .bz-bhw-name { color: #ff8a8a; }
+.bz-bhw-line.bz-bhw-own .bz-bhw-name { font-weight: 700; }
+.bz-bhw-t { font-weight: 700; }
+.bz-bhw-t.bz-bhw-high { color: #ffe14d; }
+.bz-bhw-t.bz-bhw-mid { color: #ff9f2e; }
+.bz-bhw-t.bz-bhw-low { color: #ff3b3b; }
+.bz-bhw-sep { color: #888; }
+.bz-bhw-tot { color: #bbb; }
 .bz-bhw-none { color: #888; text-align: center; }
 
 /* ikonki efektów nad postaciami i w kolejce tur */
