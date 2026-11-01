@@ -445,7 +445,7 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 @keyframes bz-bhw-blink { from { opacity: 1; } to { opacity: .45; } }
 .bz-bhw-head { margin-top: 3px; }
 .bz-bhw-head, .bz-bhw-spec, .bz-bhw-t { font-weight: 700 !important; }
-.bz-bhw-spec small, .bz-bhw-name, .bz-bhw-tot, .bz-bhw-sep { font-weight: 400 !important; }
+.bz-bhw-spec small, .bz-bhw-name, .bz-bhw-sep { font-weight: 400 !important; }
 .bz-bhw-head:first-child, .bz-bhw-spec + .bz-bhw-head { margin-top: 1px; }
 .bz-bhw-head.bz-bhw-ally, .bz-bhw-ally .bz-bhw-name { color: #7ee08c; }
 .bz-bhw-head.bz-bhw-foe, .bz-bhw-foe .bz-bhw-name { color: #ff8a8a; }
@@ -455,7 +455,6 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .bz-bhw-t.bz-bhw-mid { color: #ff9f2e; }
 .bz-bhw-t.bz-bhw-low { color: #ff3b3b; }
 .bz-bhw-sep { color: #888; }
-.bz-bhw-tot { color: #bbb; }
 .bz-bhw-none { color: #888; text-align: center; }
 
 /* ikonki efektów nad postaciami i w kolejce tur */
