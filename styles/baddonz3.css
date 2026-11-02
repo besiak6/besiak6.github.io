@@ -473,8 +473,8 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .bz-bhw-legcol { display: flex; flex-direction: column; }
 /* nicki: zwykły biały tekst */
 .bz-bhw-line .bz-bhw-nick { color: #fff; font-weight: 700 !important; }
-/* walka 1 na 1: bez kresek między postaciami z bonusami (kreska między drużynami zostaje) */
-.bz-bhw-duel .bz-bhw-line.bz-bhw-legline { border-top: 0; }
+/* bonusy bez nicków (tylko moje albo walka 1 na 1): bez kreski, po prostu kolejne linie listy */
+.bz-bhw-line.bz-bhw-legline.bz-bhw-nonick { border-top: 0; padding-top: 0; }
 
 /* ikonki efektów nad postaciami i w kolejce tur */
 .bz-bh-effects { position: absolute; top: -38px; z-index: 1; display: flex; justify-content: center; gap: 2px; width: 80px; height: 16px; pointer-events: none; }
