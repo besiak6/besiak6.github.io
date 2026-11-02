@@ -448,7 +448,7 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .bz-bhw-spec small, .bz-bhw-name, .bz-bhw-sep { font-weight: 400 !important; }
 .bz-bhw-head:first-child, .bz-bhw-spec + .bz-bhw-head { margin-top: 1px; }
 /* nagłówki drużyn: zawsze widoczne, białe i wyróżnione */
-.bz-bhw-head { color: #fff; padding-bottom: 1px; border-bottom: 1px solid #ffffff40; text-shadow: 0 0 3px #000; }
+.bz-bhw-head { color: #fff; margin: 0 calc(var(--bz-pad, 10px) * -1); padding: 0 var(--bz-pad, 10px) 1px; border-bottom: 1px solid var(--bz-line, #6e6e6e); text-shadow: 0 0 3px #000; }
 .bz-bhw-ally .bz-bhw-name { color: #7ee08c; }
 .bz-bhw-foe .bz-bhw-name { color: #ff8a8a; }
 .bz-bhw-line.bz-bhw-own .bz-bhw-name { font-weight: 700; }
@@ -459,11 +459,21 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .bz-bhw-t.bz-bhw-leg { color: #ffd27a; }
 .bz-bhw-sep { color: #888; }
 .bz-bhw-none { color: #888; text-align: center; }
-.bz-bhw-line .bz-bhw-legn { color: #ff8400; font-weight: 700 !important; text-shadow: 0 0 3px #000; }
+/* bonusy legendarne: kolory jak w logu walki w grze */
+.bz-lg-holytouch, .bz-lg-lastheal { --lg: #00fff0; }
+.bz-lg-anguish { --lg: #ecb608; }
+.bz-lg-curse, .bz-lg-glare { --lg: #ffe25b; }
+.bz-lg-cleanse { --lg: #ff9999; }
+.bz-bhw .bz-lg-holytouch { font-style: italic !important; }
+.bz-bhw-line .bz-bhw-legn { color: var(--lg, #ff8400); font-weight: 700 !important; text-shadow: 0 0 3px #000; }
 /* bonusy legendarne: "Nick - Bonus 3, Bonus", długie wpisy zawijają się zamiast wychodzić poza okno */
-.bz-bhw-line.bz-bhw-legline { display: flex; align-items: flex-start; }
+.bz-bhw-line.bz-bhw-legline { display: flex; align-items: flex-start; margin: 0 calc(var(--bz-pad, 10px) * -1); padding: 2px var(--bz-pad, 10px) 1px; border-top: 1px solid var(--bz-line, #6e6e6e); }
+.bz-bhw-head + .bz-bhw-legline { border-top: 0; }
 .bz-bhw-legcol { display: flex; flex-direction: column; }
-.bz-bhw-legline .bz-bhw-name { font-weight: 700 !important; }
+/* nicki: biały tekst z obwódką w kolorze drużyny */
+.bz-bhw-line .bz-bhw-nick { color: #fff; font-weight: 700 !important; }
+.bz-bhw-ally .bz-bhw-nick { text-shadow: -1px 0 #1f9d3a, 1px 0 #1f9d3a, 0 -1px #1f9d3a, 0 1px #1f9d3a; }
+.bz-bhw-foe .bz-bhw-nick { text-shadow: -1px 0 #c92a2a, 1px 0 #c92a2a, 0 -1px #c92a2a, 0 1px #c92a2a; }
 
 /* ikonki efektów nad postaciami i w kolejce tur */
 .bz-bh-effects { position: absolute; top: -38px; z-index: 1; display: flex; justify-content: center; gap: 2px; width: 80px; height: 16px; pointer-events: none; }
@@ -498,7 +508,7 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .bz-bh-tip-what { grid-column: 2 / -1; color: #c8c8c8; font-size: 10px; }
 .bz-bh-tip-from { grid-column: 2 / -1; color: #9a9a9a; font-size: 10px; }
 .bz-bh-tip-head.bz-bh-tip-leg { color: #ff8400; }
-.bz-bh-tip-leg .bz-bh-tip-name { color: #ffb056; }
+.bz-bh-tip-leg .bz-bh-tip-name { color: var(--lg, #ffb056); }
 .bz-bh-tip-mark.bz-bh-tip-legmark { background: #8a4a00; }
 .bz-bh-tip-taunt .bz-bh-tip-from { color: #ddd; }
 .bz-bh-tip-you { color: #e8c45a; font-weight: 700; }
