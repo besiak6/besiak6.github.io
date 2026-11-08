@@ -435,31 +435,35 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 
 /* ======================================================================
    Battle Helper
+   (ZASTĄP w baddonz3.css wszystko od tego komentarza do końca pliku)
    ====================================================================== */
 
-/* okno w walce: zwykły, drobny tekst w stylu titanHelpera, bez ikonek i teł; jeden rozmiar i krój dla wszystkiego */
+/* okno w walce: zwykły, drobny tekst w stylu titanHelpera; jeden rozmiar i krój dla wszystkiego */
 .bz-bhw, .bz-bhw * { font: 11px/1.35 Arial, sans-serif !important; }
 .bz-bhw { display: flex; flex-direction: column; gap: 0; min-width: 0; white-space: nowrap; margin: 0 calc(var(--bz-pad, 10px) * -1); padding: 0 var(--bz-pad, 10px); max-height: 75vh; overflow-x: hidden; overflow-y: auto; }
 .bz-bhw-spec { color: #ff4d4d; font-weight: 700; text-shadow: 0 0 3px #000; }
 .bz-bhw-spec small { color: #ff9a9a; font-weight: 400; }
 .bz-bhw-spec.bz-bhw-ready { animation: bz-bhw-blink .8s infinite alternate; }
 @keyframes bz-bhw-blink { from { opacity: 1; } to { opacity: .45; } }
-.bz-bhw-head { margin-top: 3px; }
-.bz-bhw-head, .bz-bhw-spec, .bz-bhw-t { font-weight: 700 !important; }
 .bz-bhw-spec small, .bz-bhw-name, .bz-bhw-sep { font-weight: 400 !important; }
+.bz-bhw-spec { font-weight: 700 !important; }
+
+/* nagłówki drużyn: zawsze widoczne, białe, z kreską nad sobą */
+.bz-bhw-head { color: #fff; font-weight: 700 !important; margin: 3px calc(var(--bz-pad, 10px) * -1) 0; padding: 2px var(--bz-pad, 10px) 0; border-top: 1px solid var(--bz-line, #6e6e6e); text-shadow: 0 0 3px #000; }
 .bz-bhw-head:first-child, .bz-bhw-spec + .bz-bhw-head { margin-top: 1px; padding-top: 0; border-top: 0; }
-/* nagłówki drużyn: zawsze widoczne, białe i wyróżnione */
-.bz-bhw-head { color: #fff; margin: 3px calc(var(--bz-pad, 10px) * -1) 0; padding: 2px var(--bz-pad, 10px) 0; border-top: 1px solid var(--bz-line, #6e6e6e); text-shadow: 0 0 3px #000; }
+
+/* nazwa efektu zawsze w kolorze drużyny */
 .bz-bhw-ally .bz-bhw-name { color: #7ee08c; }
 .bz-bhw-foe .bz-bhw-name { color: #ff8a8a; }
-.bz-bhw-line.bz-bhw-own .bz-bhw-name { font-weight: 700; }
-.bz-bhw-t { font-weight: 700; }
-.bz-bhw-t.bz-bhw-high { color: #ffe14d; }
-.bz-bhw-t.bz-bhw-mid { color: #ff9f2e; }
-.bz-bhw-t.bz-bhw-low { color: #ff3b3b; }
-.bz-bhw-t.bz-bhw-leg { color: #ffd27a; }
+
+/* liczba tur: kolor drużyny, a gdy efekt nałożyła twoja postać - żółta */
+.bz-bhw-line .bz-bhw-n { font-weight: 700 !important; }
+.bz-bhw-line.bz-bhw-ally .bz-bhw-n { color: #7ee08c; }
+.bz-bhw-line.bz-bhw-foe .bz-bhw-n { color: #ff8a8a; }
+.bz-bhw-line .bz-bhw-n.bz-bhw-mine { color: #ffe14d; }
 .bz-bhw-sep { color: #888; }
 .bz-bhw-none { color: #888; text-align: center; }
+
 /* bonusy legendarne: kolory jak w logu walki w grze */
 .bz-lg-holytouch, .bz-lg-lastheal { --lg: #00fff0; }
 .bz-lg-anguish { --lg: #ecb608; }
@@ -467,53 +471,42 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .bz-lg-cleanse { --lg: #ff9999; }
 .bz-bhw .bz-lg-holytouch { font-style: italic !important; }
 .bz-bhw-line .bz-bhw-legn { color: var(--lg, #ff8400); font-weight: 700 !important; text-shadow: 0 0 3px #000; }
-/* bonusy legendarne: "Nick - Bonus 3, Bonus", długie wpisy zawijają się zamiast wychodzić poza okno */
+/* bonus legendarny: "Nick - Bonus 3, Bonus", długie wpisy zawijają się w kolumnie */
 .bz-bhw-line.bz-bhw-legline { display: flex; align-items: flex-start; margin: 0 calc(var(--bz-pad, 10px) * -1); padding: 2px var(--bz-pad, 10px) 1px; border-top: 1px solid var(--bz-line, #6e6e6e); }
 .bz-bhw-head + .bz-bhw-legline { border-top: 0; }
 .bz-bhw-legcol { display: flex; flex-direction: column; }
-/* nicki: zwykły biały tekst */
 .bz-bhw-line .bz-bhw-nick { color: #fff; font-weight: 700 !important; }
-/* bonusy bez nicków (tylko moje albo walka 1 na 1): bez kreski, po prostu kolejne linie listy */
+/* bonusy bez nicków (tylko moje albo walka 1 na 1): zwykłe kolejne linie listy */
 .bz-bhw-line.bz-bhw-legline.bz-bhw-nonick { border-top: 0; padding-top: 0; }
 
-/* ikonki efektów nad postaciami i w kolejce tur */
-.bz-bh-effects { position: absolute; top: -38px; z-index: 1; display: flex; justify-content: center; gap: 2px; width: 80px; height: 16px; pointer-events: none; }
-.bz-bh-effect { position: relative; flex: none; width: 16px; height: 16px; overflow: hidden; border-radius: 3px; box-shadow: 0 0 0 1px #000, 0 1px 2px #0009; }
-.bz-bh-effect .skill-icon { transform: scale(.5); transform-origin: 0 0; }
-.bz-bh-effect.bz-bh-own { box-shadow: 0 0 0 1px #e8c45a, 0 1px 2px #0009; }
-.bz-bh-turns { position: absolute; right: 1px; bottom: 0; color: #fff; font: 700 9px/9px "Arimo", sans-serif; text-shadow: -1px 0 #000, 0 1px #000, 1px 0 #000, 0 -1px #000; }
-.bz-bh-more { color: #ccc; font: 700 8px/16px "Arimo", sans-serif; text-shadow: -1px 0 #000, 0 1px #000, 1px 0 #000, 0 -1px #000; }
+/* ikonki efektów w kolejce tur */
 .turn-prediction__av { position: relative; }
 .turn-prediction__av .bz-bh-queue { position: absolute; right: 0; bottom: 0; left: 0; display: flex; justify-content: flex-end; gap: 1px; pointer-events: none; }
-.bz-bh-queue .bz-bh-effect { width: 10px; height: 10px; }
-.bz-bh-queue .bz-bh-effect .skill-icon { transform: scale(.3125); }
+.bz-bh-effect { position: relative; flex: none; width: 10px; height: 10px; overflow: hidden; border-radius: 3px; box-shadow: 0 0 0 1px #000, 0 1px 2px #0009; }
+.bz-bh-effect .skill-icon { transform: scale(.3125); transform-origin: 0 0; }
+.bz-bh-effect.bz-bh-own { box-shadow: 0 0 0 1px #e8c45a, 0 1px 2px #0009; }
 
-/* dymek postaci */
+/* dymek postaci: same napisy "Nazwa 30%   6 tur", bez ikon i dopisków */
 .bz-bh-tip { max-width: 100%; margin-top: 4px; font-size: 11px; text-align: left; }
 .bz-bh-tip-head { margin: 6px 0 2px; font-size: 10px; font-weight: 700; letter-spacing: .5px; text-align: center; text-transform: uppercase; }
 .bz-bh-tip > .line + .bz-bh-tip-head { margin-top: 0; }
 .bz-bh-tip-head.bz-bh-tip-taunt { color: #ff5050; }
 .bz-bh-tip-head.bz-bh-tip-debuff { color: #ff9a6b; }
 .bz-bh-tip-head.bz-bh-tip-buff { color: #7fe08c; }
-.bz-bh-tip-row { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; column-gap: 6px; align-items: center; margin-top: 3px; }
-.bz-bh-tip-icon { position: relative; grid-row: span 3; align-self: start; width: 16px; height: 16px; overflow: hidden; border-radius: 3px; box-shadow: 0 0 0 1px #000; }
-.bz-bh-tip-icon .skill-icon { transform: scale(.5); transform-origin: 0 0; }
-.bz-bh-tip-mark { display: block; width: 16px; height: 16px; color: #fff; font-size: 11px; font-weight: 700; line-height: 16px; text-align: center; background: #8b1010; }
-.bz-bh-tip-name { min-width: 0; overflow-wrap: anywhere; }
-.bz-bh-tip-taunt .bz-bh-tip-name { color: #ff7070; }
-.bz-bh-tip-debuff .bz-bh-tip-name { color: #ffb59a; }
+.bz-bh-tip-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 8px; align-items: baseline; margin-top: 2px; }
+.bz-bh-tip-name { min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
 .bz-bh-tip-buff .bz-bh-tip-name { color: #b5efbd; }
+.bz-bh-tip-debuff .bz-bh-tip-name { color: #ffb59a; }
+.bz-bh-tip-taunt .bz-bh-tip-name { color: #ff7070; }
+.bz-bh-tip-row .bz-bh-tip-name[class*="bz-lg-"] { color: var(--lg, #ffb056); }
 .bz-bh-tip-value { color: #fff; font-weight: 700; }
-.bz-bh-tip-turns { color: #ddd; text-align: right; white-space: nowrap; }
+.bz-bh-tip-turns { text-align: right; white-space: nowrap; }
+.bz-bh-tip-buff .bz-bh-tip-turns { color: #7fe08c; }
+.bz-bh-tip-debuff .bz-bh-tip-turns { color: #ff9a6b; }
+.bz-bh-tip-taunt .bz-bh-tip-turns { color: #ff7070; }
 .bz-bh-tip-row.bz-bh-ending .bz-bh-tip-turns { color: #ffa733; font-weight: 700; }
-.bz-bh-tip-what { grid-column: 2 / -1; color: #c8c8c8; font-size: 10px; }
-.bz-bh-tip-from { grid-column: 2 / -1; color: #9a9a9a; font-size: 10px; }
-.bz-bh-tip-head.bz-bh-tip-leg { color: #ff8400; }
-.bz-bh-tip-leg .bz-bh-tip-name { color: var(--lg, #ffb056); }
-.bz-bh-tip-mark.bz-bh-tip-legmark { background: #8a4a00; }
-.bz-bh-tip-taunt .bz-bh-tip-from { color: #ddd; }
-.bz-bh-tip-you { color: #e8c45a; font-weight: 700; }
-.bz-bh-tip-row.bz-bh-own .bz-bh-tip-icon { box-shadow: 0 0 0 1px #e8c45a; }
+.bz-bh-tip-n { font-weight: 700; }
+.bz-bh-tip-row .bz-bh-tip-n.bz-bh-tip-mine { color: #ffe14d; }
 
 /* poświata przy prowokacji */
 .battle-window .one-warrior.bz-bh-taunted .canvas-warrior-icon { filter: drop-shadow(0 0 2px #ff3030) drop-shadow(0 0 4px #ff3030d9); }
