@@ -489,4 +489,6 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .bz-tl-arrow:hover { color: #fff; background: #5a5a5a99; }
 .bz-tl-arrow.dis { opacity: .35; pointer-events: none; }
 .bz-tl-short { font-size: 10px; white-space: nowrap; }
-body .baddonz-window .bz-tl-arrow { cursor: var(--bz-c5) !important; }
+body .baddonz-window :is(.bz-tl-arrow, .bz-tl-arrow *, .baddonz-info-button, .baddonz-info-button *) { cursor: var(--bz-c5) !important; }
+.bz-tl-miss { gap: 3px; }
+.bz-tl-miss .bz-title { margin-top: 4px; }
