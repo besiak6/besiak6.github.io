@@ -475,16 +475,13 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .battle-window .one-warrior.bz-bh-taunting .canvas-warrior-icon { filter: drop-shadow(0 0 2px #3fa9ff) drop-shadow(0 0 4px #3fa9ffd9); }
 .battle-window .one-warrior.bz-bh-enemy-taunting .canvas-warrior-icon { filter: drop-shadow(0 0 2px #ff9a1f) drop-shadow(0 0 5px #ff9a1fe6); }
 
-/* ===== Wspólne: małe okienka i slot na item ===== */
 .bz-compact .baddonz-window-header { grid-template-columns: auto 1fr auto; }
 .bz-compact .baddonz-window-title { padding: 0 6px; font-size: 10px; }
 .bz-compact .baddonz-window-body { gap: 3px; padding: 4px 5px 5px; }
 .bz-slot { position: relative; flex-shrink: 0; width: 32px; height: 32px; background: #0000008c; border-radius: 3px; box-shadow: 0 0 0 1px #ffffff99, 0 0 0 2px #000000d9, inset 0 0 6px #000000b3; }
 
-/* ===== Wild Hunt ===== */
 .bz-whx [data-key="levelRange"] { width: 44px; }
 
-/* ===== Teleport Light ===== */
 .bz-tl-win { min-width: 112px; }
 .bz-tl-win .baddonz-window-body { align-items: center; }
 .bz-tl-nav { display: flex; gap: 4px; }
@@ -497,10 +494,9 @@ body .baddonz-window :is(.bz-tl-arrow, .bz-tl-arrow *, .baddonz-info-button, .ba
 .bz-tl-e2 { box-sizing: border-box; padding: 4px 6px; background: #0003; border: 1px solid #555; border-radius: 4px; transition: background .15s, border-color .15s; }
 .bz-tl-e2:hover { background: #8c8c8c33; }
 .bz-tl-e2.open { background: var(--bz-active-bg); border-color: var(--bz-green); }
-.bz-tl-e2b { display: flex; justify-content: center; padding: 6px 0 2px; }
+.bz-tl-e2b { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; padding: 6px 0 2px; }
 body .baddonz-window :is(.bz-tl-e2h, .bz-tl-e2h *) { cursor: var(--bz-c5) !important; }
 body.bz-tl-menu .popup-menu { visibility: hidden !important; }
 
-/* ===== Zmiana rozmiaru okna (opcja resize) ===== */
 .baddonz-resize { position: absolute; right: 0; bottom: 0; z-index: 3; width: 14px; height: 14px; border-bottom-right-radius: 7px; background: linear-gradient(135deg, transparent 0 50%, #aaa 50% 56%, transparent 56% 66%, #aaa 66% 72%, transparent 72% 82%, #aaa 82% 88%, transparent 88%); }
 body .baddonz-window .baddonz-resize { cursor: nwse-resize !important; }
