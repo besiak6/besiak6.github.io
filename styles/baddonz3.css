@@ -149,7 +149,7 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 .baddonz-dock-switch i { transform: rotate(var(--rc)); transition: transform .5s var(--bz-pop); }
 .baddonz-dock.open .baddonz-dock-switch i { transform: rotate(calc(var(--rc) + 180deg)); }
 .baddonz-dock-switch:hover, .baddonz-dock-item:hover { color: #fff; background: #ffffff1f; }
-.baddonz-dock-item.bz-dock-on i { color: var(--bz-green); }
+.baddonz-dock-item.active { color: var(--bz-green); }
 .baddonz-dock-item.bz-dock-off i { opacity: .4; }
 .baddonz-dock.bz-out[data-p] { position: fixed; top: auto; right: auto; bottom: auto; left: auto; z-index: 10; }
 .baddonz-dock.bz-out[data-o="v"][data-p="top-left"] { right: calc(100% - var(--gl) + 6px); top: var(--gt); }
