@@ -56,11 +56,13 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 .bz-hint { color: #aaa; font-size: 10px; }
 .bz-title { color: beige; font-size: 11px; }
 .bz-empty { padding: 8px 0; color: #aaa; text-align: center; }
+.bz-newver { color: var(--bz-green); }
 
 .baddonz-text { padding: 0; color: #fff; font-size: 12px; text-shadow: 1px 1px 1px #000; word-break: break-word; }
 .baddonz-input, .baddonz-textarea, .baddonz-select { box-sizing: border-box; max-width: 100%; padding: 4px 6px; color: #fff; font: 13px Arial, sans-serif; background: #0003; border: 1px solid #777; border-radius: 3px; outline: 0; box-shadow: var(--bz-inset); }
 .baddonz-textarea { width: 100%; height: 40px; resize: none; font-size: 12px; line-height: 1.5; }
 .baddonz-select { padding: 2px 3px; font-size: 12px; }
+.bz-dd-src { display: none !important; }
 .baddonz-small { height: 20px; padding: 1px 0; font-size: 11px; text-align: center; }
 .baddonz-search { width: 100%; }
 .baddonz-input[type="number"] { width: 50px; text-align: right; appearance: textfield; }
@@ -279,7 +281,6 @@ body.bz-sort-dragging, body.bz-sort-dragging * { cursor: var(--bz-c4) !important
 .bz-range .baddonz-input[type="number"] { width: 100%; text-align: center; }
 .baddonz-input.bz-num[type="number"] { width: 70px; flex: none; text-align: center; }
 .baddonz-input.bz-num.bz-wide[type="number"] { width: 90px; }
-.bz-left { text-align: left !important; padding-left: 6px !important; }
 .baddonz-input[type="color"] { width: 40px; height: 22px; padding: 0; background: none; cursor: pointer; }
 
 .bz-spin { position: relative; display: inline-flex; flex: none; min-width: 0; }
@@ -305,7 +306,6 @@ body .baddonz-window .bz-spin-btns i { cursor: var(--bz-c5) !important; }
 .bz-cols.flush > .bz-col { gap: 6px; padding: 8px 10px 10px; }
 .bz-cols.flush > .bz-col + .bz-col { padding-left: 10px; }
 .bz-cols.flush .bz-sep { margin: 2px -10px; }
-.bz-bottom { margin-top: auto; }
 .bm-prev { display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; min-height: 150px; padding: 8px; gap: 6px; overflow: hidden; border: 1px solid #ffffff1f; border-radius: 5px; background: repeating-linear-gradient(45deg, #2a3626 0 10px, #32402c 10px 20px); }
 .bm-prev .bm-msg { max-width: 100%; }
 .bm-chips-wrap { position: relative; }
@@ -316,6 +316,8 @@ body .baddonz-window .bz-spin-btns i { cursor: var(--bz-c5) !important; }
 .bm-chip .bm-msg { padding: 2px 10px; animation: none; --bm-font-size: 14px; }
 .bm-chip small { color: #ddd; font-size: 10px; text-shadow: 1px 1px 1px #000; }
 body .baddonz-window .bm-chip { cursor: var(--bz-c5) !important; }
+
+.bm-layer { position: fixed; z-index: 9999999; display: flex; flex-direction: column; box-sizing: border-box; gap: 6px; pointer-events: none; }
 
 @keyframes bm-a-none { }
 @keyframes bm-a-fade { from { opacity: 0; } }
@@ -475,16 +477,13 @@ body.bz-lm-on .bz-srch {height:var(--lm-sh,24px) !important;}
 .battle-window .one-warrior.bz-bh-taunting .canvas-warrior-icon { filter: drop-shadow(0 0 2px #3fa9ff) drop-shadow(0 0 4px #3fa9ffd9); }
 .battle-window .one-warrior.bz-bh-enemy-taunting .canvas-warrior-icon { filter: drop-shadow(0 0 2px #ff9a1f) drop-shadow(0 0 5px #ff9a1fe6); }
 
-/* ===== Wspólne: małe okienka i slot na item ===== */
 .bz-compact .baddonz-window-header { grid-template-columns: auto 1fr auto; }
 .bz-compact .baddonz-window-title { padding: 0 6px; font-size: 10px; }
 .bz-compact .baddonz-window-body { gap: 3px; padding: 4px 5px 5px; }
 .bz-slot { position: relative; flex-shrink: 0; width: 32px; height: 32px; background: #0000008c; border-radius: 3px; box-shadow: 0 0 0 1px #ffffff99, 0 0 0 2px #000000d9, inset 0 0 6px #000000b3; }
 
-/* ===== Wild Hunt ===== */
 .bz-whx [data-key="levelRange"] { width: 44px; }
 
-/* ===== Teleport Light ===== */
 .bz-tl-win { min-width: 112px; }
 .bz-tl-win .baddonz-window-body { align-items: center; }
 .bz-tl-nav { display: flex; gap: 4px; }
@@ -501,11 +500,9 @@ body .baddonz-window :is(.bz-tl-arrow, .bz-tl-arrow *, .baddonz-info-button, .ba
 body .baddonz-window :is(.bz-tl-e2h, .bz-tl-e2h *) { cursor: var(--bz-c5) !important; }
 body.bz-tl-menu .popup-menu { visibility: hidden !important; }
 
-/* ===== Zmiana rozmiaru okna (opcja resize) ===== */
 .baddonz-resize { position: absolute; right: 0; bottom: 0; z-index: 3; width: 14px; height: 14px; border-bottom-right-radius: 7px; background: linear-gradient(135deg, transparent 0 50%, #aaa 50% 56%, transparent 56% 66%, #aaa 66% 72%, transparent 72% 82%, #aaa 82% 88%, transparent 88%); }
 body .baddonz-window .baddonz-resize { cursor: nwse-resize !important; }
 
-/* ===== Interfejs Plus ===== */
 .baddonz-slider { flex: 1; min-width: 0; accent-color: var(--bz-green); }
 .bz-sl-l { flex: none; width: 70px; }
 .bz-sl-v { flex: none; width: 36px; text-align: right; }
