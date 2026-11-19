@@ -1,4 +1,4 @@
-:root { --bz-c1: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, auto; --bz-c4: url("https://gordion.margonem.pl/img/gui/cursor/4n.png") 4 0, move; --bz-c5: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer; --bz-green: #96f096; --bz-line: #6e6e6e; --bz-sprite: url("https://gordion.margonem.pl/img/gui/buttony.png"); --bz-inset: inset 0 0 6px 1px #000000bf; --bz-active-bg: linear-gradient(90deg, #96f0961f 50%, #46464600); --bz-active-shadow: inset 0 0 6px 1px #000000bf, inset 0 0 0 0 #96f09680; }
+:root { --bz-c1: url("https://gordion.margonem.pl/img/gui/cursor/1n.png") 4 0, auto; --bz-c4: url("https://gordion.margonem.pl/img/gui/cursor/4n.png") 4 0, move; --bz-c5: url("https://gordion.margonem.pl/img/gui/cursor/5n.png") 4 0, pointer; --bz-green: #96f096; --bz-red: #f09696; --bz-red-bg: linear-gradient(90deg, #f096961f 50%, #46464600); --bz-line: #6e6e6e; --bz-sprite: url("https://gordion.margonem.pl/img/gui/buttony.png"); --bz-inset: inset 0 0 6px 1px #000000bf; --bz-active-bg: linear-gradient(90deg, #96f0961f 50%, #46464600); --bz-active-shadow: inset 0 0 6px 1px #000000bf, inset 0 0 0 0 #96f09680; }
 
 .baddonz-window, .baddonz-window *, .baddonz-dock, .baddonz-dock * { cursor: var(--bz-c1) !important; }
 body .baddonz-window :is(.baddonz-input, .baddonz-textarea):not(.baddonz-keybind) { cursor: text !important; }
@@ -150,10 +150,11 @@ body .baddonz-window .baddonz-sb-bar, body .baddonz-window .baddonz-sb-bar * { c
 .baddonz-dock:not(.open) .baddonz-dock-item { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(.3); transition: transform .3s ease calc((var(--n, 1) - var(--i, 0) - 1) * 35ms), opacity .2s ease calc((var(--n, 1) - var(--i, 0) - 1) * 35ms), background .2s, border-color .2s, color .2s; }
 .baddonz-dock-switch i { transform: rotate(var(--rc)); transition: transform .5s var(--bz-pop); }
 .baddonz-dock.open .baddonz-dock-switch i { transform: rotate(calc(var(--rc) + 180deg)); }
-.baddonz-dock-switch:hover, .baddonz-dock-item:hover { color: #fff; background: #ffffff1f; }
-.baddonz-dock-item.active { color: var(--bz-green); }
-.baddonz-dock-item.bz-dock-on { color: #55ff55; }
-.baddonz-dock-item.bz-dock-off { color: #ff5555; }
+.baddonz-dock-switch:hover, .baddonz-dock-item:hover { background: #ffffff1f; }
+.baddonz-dock-switch:hover, .baddonz-dock-item:not(.active):not(.bz-dock-on):not(.bz-dock-off):hover { color: #fff; }
+.baddonz-dock-item.active, .baddonz-dock-item.bz-dock-on { color: var(--bz-green); }
+.baddonz-dock-item.bz-dock-off { color: var(--bz-red); }
+.baddonz-dock-item.bz-dock-off.active { background: var(--bz-red-bg); border-color: var(--bz-red); box-shadow: inset 0 0 6px 1px #000000bf; }
 .baddonz-dock.bz-out[data-p] { position: fixed; top: auto; right: auto; bottom: auto; left: auto; z-index: 10; }
 .baddonz-dock.bz-out[data-o="v"][data-p="top-left"] { right: calc(100% - var(--gl) + 6px); top: var(--gt); }
 .baddonz-dock.bz-out[data-o="v"][data-p="top-right"] { left: calc(var(--gr) + 6px); top: var(--gt); }
