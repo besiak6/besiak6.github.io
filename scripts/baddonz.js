@@ -1,6 +1,5 @@
 (() => {
     const INSTALL_URL = 'https://besiak6.github.io/scripts/baddonz3.user.js';
-    const CSS_URL = window.CSS_URL || 'https://besiak6.github.io/styles/baddonz2.css';
     const ID = 'baddonz-migration';
 
     if (/^(www|commons)\./.test(location.hostname) || document.getElementById(ID)) return;
