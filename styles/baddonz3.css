@@ -237,6 +237,7 @@ body.bz-ii-essence .bz-ii-essence-mark { display: inline; }
 .bz-ii-levels-box, .bz-ii-summary-box { display: none; }
 body.bz-ii-levels.bz-ii-r-common .bz-ii-levels-box.bz-ii-rar-common, body.bz-ii-levels.bz-ii-r-upgraded .bz-ii-levels-box.bz-ii-rar-upgraded, body.bz-ii-levels.bz-ii-r-unique .bz-ii-levels-box.bz-ii-rar-unique, body.bz-ii-levels.bz-ii-r-heroic .bz-ii-levels-box.bz-ii-rar-heroic, body.bz-ii-levels.bz-ii-r-legendary .bz-ii-levels-box.bz-ii-rar-legendary, body.bz-ii-summary.bz-ii-r-common .bz-ii-summary-box.bz-ii-rar-common, body.bz-ii-summary.bz-ii-r-upgraded .bz-ii-summary-box.bz-ii-rar-upgraded, body.bz-ii-summary.bz-ii-r-unique .bz-ii-summary-box.bz-ii-rar-unique, body.bz-ii-summary.bz-ii-r-heroic .bz-ii-summary-box.bz-ii-rar-heroic, body.bz-ii-summary.bz-ii-r-legendary .bz-ii-summary-box.bz-ii-rar-legendary { display: block; }
 body.bz-ii-opis.bz-ii-r-common .bz-ii-desc-common, body.bz-ii-opis.bz-ii-r-upgraded .bz-ii-desc-upgraded, body.bz-ii-opis.bz-ii-r-unique .bz-ii-desc-unique, body.bz-ii-opis.bz-ii-r-heroic .bz-ii-desc-heroic, body.bz-ii-opis.bz-ii-r-legendary .bz-ii-desc-legendary { display: none; }
+.bz-ii-done { display: none; }
 .bz-ii-center { text-align: center; }
 .bz-ii-small { font-size: 11px; }
 .bz-ii-ico { display: inline-block; width: 22px; height: 22px; margin-left: 2px; vertical-align: middle; background-size: 100%; }
@@ -314,6 +315,7 @@ body .baddonz-window .bz-spin-btns i { cursor: var(--bz-c5) !important; }
 .bz-cols.flush .bz-sep { margin: 2px -10px; }
 .bm-prev { display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; min-height: 150px; padding: 8px; gap: 6px; overflow: hidden; border: 1px solid #ffffff1f; border-radius: 5px; background: repeating-linear-gradient(45deg, #2a3626 0 10px, #32402c 10px 20px); }
 .bm-prev .bm-msg { max-width: 100%; }
+.baddonz_game-layer .bm-msg .bm-demo-item { color: #3aa0ff; }
 .bm-chips-wrap { position: relative; }
 .bm-chips { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .bm-chip { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; box-sizing: border-box; min-height: 56px; padding: 6px 4px; overflow: hidden; border: 1px solid #ffffff1f; border-radius: 5px; background: repeating-linear-gradient(45deg, #2a3626 0 8px, #32402c 8px 16px); transition: border-color .15s, box-shadow .15s; }
