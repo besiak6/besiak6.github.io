@@ -530,3 +530,9 @@ body .baddonz-window .baddonz-slider { cursor: var(--bz-c5) !important; }
 .bz-inp-mini.on { display: block; }
 body.bz-inp-chat-h .new-chat-window { height: var(--bz-inp-chat-h) !important; }
 body.bz-inp-chat-hide .new-chat-window { display: none !important; }
+
+.bz-opt-sub { padding-left: 20px; }
+.bz-opt-freeze { position: absolute; z-index: 11; background: #000; image-rendering: pixelated; pointer-events: none; animation: bz-opt-dim 80ms ease-in forwards; }
+.bz-opt-freeze.bz-opt-out { animation: bz-opt-reveal 120ms ease-out forwards; }
+@keyframes bz-opt-dim { to { filter: brightness(0); } }
+@keyframes bz-opt-reveal { from { filter: brightness(0); opacity: 1; } to { filter: brightness(0); opacity: 0; } }
